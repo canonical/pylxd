@@ -43,7 +43,7 @@ class Client(object):
 
     # host
     def host_ping(self):
-        pass
+        return self.hosts.host_ping()
 
     def host_info(self):
         pass
