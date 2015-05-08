@@ -16,6 +16,7 @@ import json
 
 from . import utils
 
+
 class LXDHost(object):
     def __init__(self, connection):
         self.connection = connection
@@ -40,20 +41,31 @@ class LXDHost(object):
             raise Exception(msg)
 
     def host_info(self):
-        (state, data) = self._make_request('GET', '/1.0')
-        if state == 200 or (state == 202 and data.get('status_code') == 100):
-            metadata = data.get('metadata')
-
-            return {
-                'lxd_api_compat_level': self.get_lxd_api_compat(metadata),
-                'lxd_trusted_host': self.get_lxd_host_trust(metadata)
+        return {
+            'lxd_api_compat_level': self.get_lxd_api_compat(),
+            'lxd_trusted_host': self.get_lxd_host_trust(),
+            'lxd_backing_fs': self.get_lxd_backing_fs()
             }
 
     def get_lxd_api_compat(self, metadata):
+        metadata = self._get_host_metadata()
         return metadata['api_compat']
 
     def get_lxd_host_trust(self, metadata):
+        metadata = self._get_host_metadata()
         if metadata['auth'] == "trusted":
             return True
         else:
             return False
+
+    def get_lxd_backing_fs(self):
+        metadata = self._get_host_metadata()
+        return metadata['environment']['backing_fs']
+
+    def _get_host_metadata(self):
+        (state, data) = self._make_request('GET', '/1.0')
+        if state == 200 or (state == 202 and data.get('status_code') == 100):
+            metadata = data.get('metadata')
+            return metadata
+        else:
+            utils.get_container_error(state, data)
