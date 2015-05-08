@@ -34,7 +34,7 @@ class LXDHost(object):
             if state == 200 or (state == 202 and data.get('status_code') == 100):
                 host_up = True
             else:
-                utils.get_container_error(state, data)
+                utils.get_lxd_error(state, data)
             return host_up
         except Exception:
             msg = ('LXD service is unavailable.')
@@ -68,4 +68,4 @@ class LXDHost(object):
             metadata = data.get('metadata')
             return metadata
         else:
-            utils.get_container_error(state, data)
+            utils.get_lxd_error(state, data)
