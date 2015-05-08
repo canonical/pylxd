@@ -9,4 +9,4 @@ if c.host_ping():
 else:
     print "Host is not available"
 
-return c.host_info()
+print c.host_info()

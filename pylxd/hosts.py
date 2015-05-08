@@ -43,4 +43,10 @@ class LXDHost(object):
         (state, data) = self._make_request('GET', '/1.0')
         if state == 200 or (state == 202 and data.get('status_code') == 100):
             metadata = data.get('metadata')
-            return metadata
+
+            return {
+                'lxd_api_compat_level': self.get_lxd_api_compat(metadata)
+            }
+
+    def get_lxd_api_compat(self, metadata):
+        return metadata['api_compat']
