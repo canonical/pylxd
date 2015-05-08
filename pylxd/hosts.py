@@ -45,7 +45,7 @@ class LXDHost(object):
             metadata = data.get('metadata')
 
             return {
-                'lxd_api_compat_level': self.get_lxd_api_compat(metadata)
+                'lxd_api_compat_level': self.get_lxd_api_compat(metadata),
                 'lxd_trusted_host': self.get_lxd_host_trust(metadata)
             }
 
