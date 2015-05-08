@@ -18,7 +18,7 @@ import json
 from . import connection
 from . import container
 from . import certificate
-from . import host
+from . import hosts
 from . import image
 from . import network
 from . import profiles
@@ -34,7 +34,7 @@ class Client(object):
         else:
             self.connection = connection.UnixHTTPConnection(self.unix_socket)
 
-        self.host = host.LXDHost(self.connection)
+        self.hosts = hosts.LXDHost(self.connection)
         self.certificate = certificate.LXDCertificate(self.connection)
         self.image = image.LXDImage(self.connecton)
         self.network = network.LXDNetwork(self.connection)
