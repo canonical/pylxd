@@ -47,11 +47,11 @@ class LXDHost(object):
             'lxd_backing_fs': self.get_lxd_backing_fs()
             }
 
-    def get_lxd_api_compat(self, metadata):
+    def get_lxd_api_compat(self):
         metadata = self._get_host_metadata()
         return metadata['api_compat']
 
-    def get_lxd_host_trust(self, metadata):
+    def get_lxd_host_trust(self):
         metadata = self._get_host_metadata()
         if metadata['auth'] == "trusted":
             return True
