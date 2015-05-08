@@ -25,5 +25,5 @@ class LXDHost(object):
         return (response.status, data)
 
     def host_ping(self):
-        (status, data) = self._make_request('GET, '/1.0'')
+        (status, data) = self._make_request('GET, '/1.0')
         print data
