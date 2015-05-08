@@ -46,7 +46,7 @@ class Client(object):
         return self.hosts.host_ping()
 
     def host_info(self):
-        pass
+        return self.hosts.host_info()
 
     # images
     def image_list(self):

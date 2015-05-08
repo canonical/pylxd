@@ -23,4 +23,4 @@ class LXDContainer(object):
         self.connection.request(*args, **kwargs)
         response = self.connection.getresponse()
         data = json.loads(response.read())
-        return (response.status, data)
+        return response.status, data

@@ -24,7 +24,7 @@ class LXDHost(object):
         self.connection.request(*args, **kwargs)
         response = self.connection.getresponse()
         data = json.loads(response.read())
-        return (response.status, data)
+        return response.status, data
 
     def host_ping(self):
         try:
@@ -36,5 +36,11 @@ class LXDHost(object):
                 utils.get_container_error(state, data)
             return host_up
         except Exception:
-            msg = ('LXD service is unavailable')
+            msg = ('LXD service is unavailable.')
             raise Exception(msg)
+
+    def host_info(self):
+        (state, data) = self._make_request('GET', '/1.0')
+        if state == 200 or (state == 202 and data.get('status_code') == 100):
+            metadata = data.get('metadata')
+            return metadata
