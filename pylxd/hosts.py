@@ -14,6 +14,8 @@
 
 import json
 
+from . import utils
+
 class LXDHost(object):
     def __init__(self, connection):
         self.connection = connection
@@ -25,5 +27,14 @@ class LXDHost(object):
         return (response.status, data)
 
     def host_ping(self):
-        (status, data) = self._make_request('GET', '/1.0')
-        print data
+        try:
+            host_up = False
+            (state, data) = self._make_request('GET', '/1.0')
+            if state == 200 or (state == 202 and data.get('status_code') == 100):
+                host_up = True
+            else:
+                utils.get_container_error(state, data)
+            return host_up
+        except Exception:
+            msg = ('LXD service is unavailable')
+            raise(msg)
