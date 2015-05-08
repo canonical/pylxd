@@ -37,4 +37,4 @@ class LXDHost(object):
             return host_up
         except Exception:
             msg = ('LXD service is unavailable')
-            raise(msg)
+            raise Exception(msg)
