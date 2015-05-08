@@ -16,6 +16,12 @@
 import json
 
 from . import connection
+from . import container
+from . import certificate
+from . import host
+from . import image
+from . import network
+from . import profiles
 
 class Client(object):
     def __init__(self, base_url, host):
@@ -28,12 +34,13 @@ class Client(object):
         else:
             self.connection = connection.UnixHTTPConnection(self.unix_socket)
 
-    def _make_request(self, *args, **kwargs):
-        self.connection.request(*args, **kwargs)
-        response = self.connection.getresponse()
-        data = json.loads(response.read())
-        return (response.status, data)
-        
+        self.host = host.LXDHost(self.connection)
+        self.certificate = certificate.LXDCertificate(self.connection)
+        self.image = image.LXDImage(self.connecton)
+        self.network = network.LXDNetwork(self.connection)
+        self.container = container.LXDContainer(self.connection)
+        self.profile = profiles.LXDProfile(self.connection)
+
     # host
     def host_ping(self):
         pass

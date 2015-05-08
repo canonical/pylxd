@@ -13,5 +13,11 @@
 #    under the License.
 
 class LXDProfile(object):
-    def __init__(self):
-        pass
+    def __init__(self, connection):
+        self.connection = connection
+
+    def _make_request(self, *args, **kwargs):
+        self.connection.request(*args, **kwargs)
+        response = self.connection.getresponse()
+        data = json.loads(response.read())
+        return (response.status, data)

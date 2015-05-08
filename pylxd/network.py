@@ -13,6 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-class LXDNetwork(objcet):
-    def __init__(self):
-        pass
+import json
+
+class LXDNetwork(object):
+    def __init__(self, connection):
+        self.connection = connection
+
+    def _make_request(self, *args, **kwargs):
+        self.connection.request(*args, **kwargs)
+        response = self.connection.getresponse()
+        data = json.loads(response.read())
+        return (response.status, data)
