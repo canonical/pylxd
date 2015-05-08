@@ -46,7 +46,14 @@ class LXDHost(object):
 
             return {
                 'lxd_api_compat_level': self.get_lxd_api_compat(metadata)
+                'lxd_trusted_host': self.get_lxd_host_trust(metadata)
             }
 
     def get_lxd_api_compat(self, metadata):
         return metadata['api_compat']
+
+    def get_lxd_host_trust(self, metadata):
+        if metadata['auth'] == "trusted":
+            return True
+        else:
+            return False
