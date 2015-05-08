@@ -37,7 +37,7 @@ class LXDHost(object):
                 utils.get_lxd_error(state, data)
             return host_up
         except Exception:
-            msg = ('LXD service is unavailable.')
+            msg = 'LXD service is unavailable.'
             raise Exception(msg)
 
     def host_info(self):
@@ -66,7 +66,7 @@ class LXDHost(object):
         return metadata['environment']['backing_fs']
 
     def get_lxd_driver(self):
-        metadata = self._get_host_metdata()
+        metadata = self._get_host_metadata()
         return metadata['environment']['driver']
 
     def get_lxc_version(self):
