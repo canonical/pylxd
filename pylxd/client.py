@@ -36,7 +36,7 @@ class Client(object):
 
         self.hosts = hosts.LXDHost(self.connection)
         self.certificate = certificate.LXDCertificate(self.connection)
-        self.image = image.LXDImage(self.connecton)
+        self.image = image.LXDImage(self.connection)
         self.network = network.LXDNetwork(self.connection)
         self.container = container.LXDContainer(self.connection)
         self.profile = profiles.LXDProfile(self.connection)
