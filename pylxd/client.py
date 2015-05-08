@@ -13,10 +13,27 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-class Client(object):
-    def __init__(self):
-        pass
+import json
 
+from . import connection
+
+class Client(object):
+    def __init__(self, base_url, host):
+        self.unix_socket = '/var/lib/lxd/unix.socket'
+        self.base_url = base_url
+        self.host = host
+
+        if base_url == 'https':
+            self.connection = connection.HTTPSConnection(host, port="8443")
+        else:
+            self.connection = connection.UnixHTTPConnection(self.unix_socket)
+
+    def _make_request(self, *args, **kwargs):
+        self.connection.request(*args, **kwargs)
+        response = self.connection.getresponse()
+        data = json.loads(response.read())
+        return (response.status, data)
+        
     # host
     def host_ping(self):
         pass
