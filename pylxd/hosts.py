@@ -44,7 +44,10 @@ class LXDHost(object):
         return {
             'lxd_api_compat_level': self.get_lxd_api_compat(),
             'lxd_trusted_host': self.get_lxd_host_trust(),
-            'lxd_backing_fs': self.get_lxd_backing_fs()
+            'lxd_backing_fs': self.get_lxd_backing_fs(),
+            'lxd_driver': self.get_lxd_driver(),
+            'lxc_version': self.get_lxc_version(),
+            'kernel_version': self.get_kernel_version()
             }
 
     def get_lxd_api_compat(self):
@@ -61,6 +64,18 @@ class LXDHost(object):
     def get_lxd_backing_fs(self):
         metadata = self._get_host_metadata()
         return metadata['environment']['backing_fs']
+
+    def get_lxd_driver(self):
+        metadata = self._get_host_metdata()
+        return metadata['environment']['driver']
+
+    def get_lxc_version(self):
+        metadata = self._get_host_metadata()
+        return metadata['environment']['lxc_version']
+
+    def get_kernel_version(self):
+        metadata = self._get_host_metadata()
+        return metadata['environment']['kernel_version']
 
     def _get_host_metadata(self):
         (state, data) = self._make_request('GET', '/1.0')
