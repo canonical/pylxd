@@ -23,3 +23,7 @@ class LXDHost(object):
         response = self.connection.getresponse()
         data = json.loads(response.read())
         return (response.status, data)
+
+    def host_ping(self):
+        (status, data) = self._make_request('GET, '/1.0)
+        print data
