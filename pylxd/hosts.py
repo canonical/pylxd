@@ -27,6 +27,7 @@ class LXDHost(object):
         data = json.loads(response.read())
         return response.status, data
 
+
     def host_ping(self):
         try:
             host_up = False
