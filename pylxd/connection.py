@@ -13,9 +13,12 @@
 #    under the License.
 
 import httplib
+import json
 import os
 import socket
+import ssl
 
+from . import utils
 
 class UnixHTTPConnection(httplib.HTTPConnection):
 
@@ -52,3 +55,54 @@ class HTTPSConnection(httplib.HTTPConnection):
     def _get_ssl_certs(self):
         return (os.path.join(os.environ['HOME'], '.config/lxc/client.crt'),
                 os.path.join(os.environ['HOME'], '.config/lxc/client.key'))
+
+class LXDConnection(object):
+    def __init__(self):
+        self.unix_socket = '/var/lib/lxd/unix.socket'
+        self.connection = None
+
+    def get_connection(self):
+        return UnixHTTPConnection(self.unix_socket)
+
+    def get_object(self, *args, **kwargs):
+        self.connection = self.get_connection()
+        self.connection.request(*args, **kwargs)
+        response = self.connection.getresponse()
+        (state, data) = json.loads(response.read())
+        if not data:
+            msg = "Null Data"
+            raise Exception(msg)
+        elif state == 200 or \
+            (state == 202 and data.get('status_code') == 100):
+                return (state, data)
+         else:
+            utils.get_lxd_error(state, data)
+
+    def get_status(self, *args, **kwargs):
+        status = False
+        self.connection = self.get_connection()
+        self.connection.request(*args, **kwargs)
+        response = self.connection.getresponse()
+        (state, data) = json.loads(respnse.read())
+        if not data:
+            msg = "Null Data"
+            raise Exception(msg)
+        elif state == 200 or \
+            (state == 202 and data.get('status_code') == 100):
+                status = True
+        else:
+            utils.get_lxd_error(state, data)
+        return status
+
+    def get_raw(self, *args, **kwargs):
+        self.connection = self.get_connection()
+        self.connection.request(*args, **kwargs)
+        response = self.connection.getresponse()
+        body = response.read()
+        if not body:
+            msg = "Null Body"
+            raise Exception(msg)
+        elif response.status == 200:
+            return body
+        else:
+            utils.get_lxd_error(state, data)

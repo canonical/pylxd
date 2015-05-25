@@ -24,22 +24,8 @@ from . import network
 from . import profiles
 
 class Client(object):
-    def __init__(self, base_url, host):
-        self.unix_socket = '/var/lib/lxd/unix.socket'
-        self.base_url = base_url
-        self.host = host
-
-        if base_url == 'https':
-            self.connection = connection.HTTPSConnection(host, port="8443")
-        else:
-            self.connection = connection.UnixHTTPConnection(self.unix_socket)
-
-        self.hosts = hosts.LXDHost(self.connection)
-        self.certificate = certificate.LXDCertificate(self.connection)
-        self.image = image.LXDImage(self.connection)
-        self.network = network.LXDNetwork(self.connection)
-        self.container = container.LXDContainer(self.connection)
-        self.profile = profiles.LXDProfile(self.connection)
+    def __init__(self):
+        sel.hosts = hosts.LXDHost()
 
     # host
     def host_ping(self):
