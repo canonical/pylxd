@@ -26,6 +26,7 @@ class Client(object):
     def __init__(self):
         self.hosts = hosts.LXDHost()
         self.image = image.LXDImage()
+        self.alias = image.LXDAlias()
 
     # host
     def host_ping(self):
@@ -88,16 +89,22 @@ class Client(object):
 
     # alias
     def alias_list(self):
-        pass
+        return self.alias.alias_list()
 
-    def alias_create(self):
-        pass
+    def alias_create(self, alias):
+        return self.alias.alias_create(alias)
 
     def alias_update(self):
-        pass
+        return self.alias.alias_update(alias)
 
-    def alias_delete(self):
-        pass
+    def alias_show(self, alias):
+        return self.alias.alias_show(alias)
+
+    def alias_rename(self, alias):
+        return self.alias.alias_rename(alias)
+
+    def alias_delete(self, alias):
+        return self.alias.alias_delete(alias)
 
     # containers:
     def container_init(self):

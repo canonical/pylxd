@@ -182,3 +182,28 @@ class LXDImage(object):
         except Exception as e:
             print "Unable to upload image - %s" % e
             raise
+
+class LXDAlias(object):
+    def __init__(self):
+        self.connection = connection.LXDConnection()
+
+    def alias_lias(self):
+        (state, data) = self.connection.get_object('GET', '/1.0/images/aliases')
+        return [alias.split('/1.0/images/aliases/')[-1]
+                for alias in data('metadata')]
+
+    def alias_show(self, alias):
+        return self.connection.get_object('GET', '/1.0/iamges/aliases/%s'
+                                          % alias)
+
+    def alias_update(self, alias):
+        return self.connection.get_status('PUT', '/1.0/images/aliases',
+                                          json.dumps(alias))
+
+    def alias_rename(self, alias):
+        return self.connection.get_status('POST', '/1.0/images/aliases',
+                                          json.dumps(alias))
+
+    def alias_create(self, alias):
+        return self.connection.get_status('POST', '/1.0/images/aliases',
+                                          json.dumps(alias))
