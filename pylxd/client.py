@@ -25,6 +25,7 @@ from . import profiles
 class Client(object):
     def __init__(self):
         self.hosts = hosts.LXDHost()
+        self.image = image.LXDImage()
 
     # host
     def host_ping(self):
@@ -53,22 +54,37 @@ class Client(object):
 
     # images
     def image_list(self):
-        pass
+        return self.image.image_list()
 
-    def image_list_by_key(self):
-        pass
+    def image_search(self, params):
+        return self.image.image_list_by_key(params)
 
-    def image_upload(self):
-        pass
+    def image_info(self, image):
+        return self.image.image_info(image)
 
-    def image_info(self):
-        pass
+    def image_upload_date(self, image, data=None):
+        return self.image.get_image_date(image, data, 'uploaded_at')
 
-    def image_delete(self):
-        pass
+    def image_create_date(self, image, data=None):
+        return self.image.get_image_date(image, data, 'created_at')
 
-    def image_export(self):
-        pass
+    def image_expire_date(self, image, data=None):
+        return self.image.get_image_date(image, data, 'expires_at')
+
+    def image_upload(self, path, filename):
+        return self.image.image_upload(path, filename)
+
+    def image_delete(self, image):
+        return self.image.image_delete(image)
+
+    def image_export(self, image):
+        return self.image.image_export(image)
+
+    def image_update(self, image):
+        return self.image.image_update(image)
+
+    def image_rename(self, image):
+        return self.image.image_rename(image)
 
     # alias
     def alias_list(self):

@@ -11,3 +11,6 @@ class ContainerProfileCreateFail(Exception):
 
 class ContainerProfileDeleteFail(Exception):
     pass
+
+class ImageInvalidSize(Exception):
+    pass
