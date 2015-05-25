@@ -73,13 +73,13 @@ class LXDConnection(object):
         self.connection = self.get_connection()
         self.connection.request(*args, **kwargs)
         response = self.connection.getresponse()
-        (state, data) = json.loads(response.read())
+        state = response.status
+        data = json.loads(response.read())
         if not data:
             msg = "Null Data"
             raise Exception(msg)
-        elif state == 200 or \
-                (state == 202 and data.get('status_code') == 100):
-            return state, data
+        elif state == 200 or (state == 202 and data.get('status_code') == 100):
+                return state, data
         else:
             utils.get_lxd_error(state, data)
 
@@ -88,16 +88,17 @@ class LXDConnection(object):
         self.connection = self.get_connection()
         self.connection.request(*args, **kwargs)
         response = self.connection.getresponse()
-        (state, data) = json.loads(response.read())
+        state = response.status
+        data = json.loads(response.read())
         if not data:
             msg = "Null Data"
             raise Exception(msg)
-        elif state == 200 or \
-                (state == 202 and data.get('status_code') == 100):
-            status = True
+        elif state == 200 or (state == 202 and data.get('status_code') == 100):
+                status = True
         else:
             utils.get_lxd_error(state, data)
         return status
+
 
     def get_raw(self, *args, **kwargs):
         self.connection = self.get_connection()

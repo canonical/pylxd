@@ -15,7 +15,6 @@
 
 import json
 
-from . import connection
 from . import container
 from . import certificate
 from . import hosts
@@ -25,7 +24,7 @@ from . import profiles
 
 class Client(object):
     def __init__(self):
-        sel.hosts = hosts.LXDHost()
+        self.hosts = hosts.LXDHost()
 
     # host
     def host_ping(self):
@@ -33,6 +32,24 @@ class Client(object):
 
     def host_info(self):
         return self.hosts.host_info()
+
+    def get_lxd_api_compat(self, data=None):
+        return self.hosts.get_lxd_api_compat(data)
+
+    def get_lxd_host_trust(self, data=None):
+        return self.hosts.get_lxd_host_trust(data)
+
+    def get_lxd_backing_fs(self, data=None):
+        return self.hosts.get_lxd_backing_fs(data)
+
+    def get_lxd_driver(self, data=None):
+        return self.hosts.get_lxd_driver(data)
+
+    def get_lxc_version(self, data=None):
+        return self.get_lxc_version(data)
+
+    def get_kernel_version(self, data=None):
+        return self.get_kernel_version(data)
 
     # images
     def image_list(self):

@@ -14,74 +14,86 @@
 
 import json
 
+from . import connection
+
 from . import utils
 
 
 class LXDHost(object):
-    def __init__(self, connection):
-        self.connection = connection
-
-    def _make_request(self, *args, **kwargs):
-        self.connection.request(*args, **kwargs)
-        response = self.connection.getresponse()
-        data = json.loads(response.read())
-        return response.status, data
-
+    def __init__(self):
+        self.connection = connection.LXDConnection()
 
     def host_ping(self):
         try:
-            host_up = False
-            (state, data) = self._make_request('GET', '/1.0')
-            if state == 200 or (state == 202 and data.get('status_code') == 100):
-                host_up = True
-            else:
-                utils.get_lxd_error(state, data)
-            return host_up
-        except Exception:
-            msg = 'LXD service is unavailable.'
+            return self.connection.get_status('GET', '/1.0')
+        except Exception as e:
+            msg = 'LXD service is unavailable. %s' % e
             raise Exception(msg)
 
     def host_info(self):
+        (state, data) = self.connection.get_object('GET', '/1.0')
+
         return {
-            'lxd_api_compat_level': self.get_lxd_api_compat(),
-            'lxd_trusted_host': self.get_lxd_host_trust(),
-            'lxd_backing_fs': self.get_lxd_backing_fs(),
-            'lxd_driver': self.get_lxd_driver(),
-            'lxc_version': self.get_lxc_version(),
-            'kernel_version': self.get_kernel_version()
-            }
+            'lxd_api_compat_level': self.get_lxd_api_compat(data.get('metadata')),
+            'lxd_trusted_host': self.get_lxd_host_trust(data.get('metadata')),
+            'lxd_backing_fs': self.get_lxd_backing_fs(data.get('metadata')),
+            'lxd_driver': self.get_lxd_driver(data.get('metadata')),
+            'lxc_version': self.get_lxc_version(data.get('metadata')),
+            'kernel_version': self.get_kernel_version(data.get('metadata'))
+        }
 
-    def get_lxd_api_compat(self):
-        metadata = self._get_host_metadata()
-        return metadata['api_compat']
+    def get_lxd_api_compat(self, data):
+        try:
+            if data is None:
+                (state, data) = self.connection.get_object('GET', '/1.0')
+                data = data.get('metadata')
+            return data['api_compat']
+        except Exception as e:
+             print 'Handling run-time error:', e
 
-    def get_lxd_host_trust(self):
-        metadata = self._get_host_metadata()
-        if metadata['auth'] == "trusted":
-            return True
-        else:
-            return False
+    def get_lxd_host_trust(self, data):
+        try:
+            if data is None:
+                (state, data) = self.connection.get_object('GET', '/1.0')
+                data = data.get('metadata')
+            return True if data['auth'] == 'trusted' else False
+        except Exception as e:
+            print 'Handling run-time error:', e
 
-    def get_lxd_backing_fs(self):
-        metadata = self._get_host_metadata()
-        return metadata['environment']['backing_fs']
+    def get_lxd_backing_fs(self, data):
+        try:
+            if data is None:
+                (state, data) = self.connection.get_object('GET', '/1.0')
+                data = data.get('metadata')
+            return data['environment']['backing_fs']
+        except Exception as e:
+            print 'Handling run-time error:', e
 
-    def get_lxd_driver(self):
-        metadata = self._get_host_metadata()
-        return metadata['environment']['driver']
+    def get_lxd_driver(self, data):
+        try:
+            if data is None:
+                (state, data) = self.connection.get_object('GET', '/1.0')
+                data = data.get('metadata')
+            return data['environment']['driver']
+        except Exception as e:
+            print 'Handling run-time error:', e
 
-    def get_lxc_version(self):
-        metadata = self._get_host_metadata()
-        return metadata['environment']['lxc_version']
+    def get_lxc_version(self, data):
+        try:
+            if data is None:
+                (state, data) = self.connection.get_object('GET', '/1.0')
+                data = data.get('metadata')
+            return data['environment']['lxc_version']
+        except Exception as e:
+            print 'Handling run-time error:', e
 
-    def get_kernel_version(self):
-        metadata = self._get_host_metadata()
-        return metadata['environment']['kernel_version']
+    def get_kernel_version(self, data):
+        try:
+            if data is None:
+                (state, data) = self.connection.get_object('GET', '/1.0')
+                data = data.get('metadata')
+            return data['environment']['kernel_version']
+        except Exception as e:
+            print 'Handling run-time error:', e
 
-    def _get_host_metadata(self):
-        (state, data) = self._make_request('GET', '/1.0')
-        if state == 200 or (state == 202 and data.get('status_code') == 100):
-            metadata = data.get('metadata')
-            return metadata
-        else:
-            utils.get_lxd_error(state, data)
+
