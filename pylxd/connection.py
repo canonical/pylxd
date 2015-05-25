@@ -20,10 +20,11 @@ import ssl
 
 from . import utils
 
+
 class UnixHTTPConnection(httplib.HTTPConnection):
 
     def __init__(self, path, host='localhost', port=None, strict=None,
-                timeout=None):
+                 timeout=None):
         httplib.HTTPConnection.__init__(self, host, port=port,
                                         strict=strict,
                                         timeout=timeout)
@@ -35,6 +36,7 @@ class UnixHTTPConnection(httplib.HTTPConnection):
         sock.connect(self.path)
         self.sock = sock
 
+
 class HTTPSConnection(httplib.HTTPConnection):
     default_port = 8443
 
@@ -43,7 +45,7 @@ class HTTPSConnection(httplib.HTTPConnection):
 
     def connect(self):
         sock = socket.create_connection((self.host, self.port),
-                                         self.timeout, self.source_address)
+                                        self.timeout, self.source_address)
         if self._tunnel_host:
             self.sock = sock
             self._tunnel()
@@ -52,11 +54,14 @@ class HTTPSConnection(httplib.HTTPConnection):
         self.sock = ssl.wrap_socket(sock, certfile=cert_file,
                                     keyfile=key_file)
 
-    def _get_ssl_certs(self):
+    @staticmethod
+    def _get_ssl_certs():
         return (os.path.join(os.environ['HOME'], '.config/lxc/client.crt'),
                 os.path.join(os.environ['HOME'], '.config/lxc/client.key'))
 
+
 class LXDConnection(object):
+
     def __init__(self):
         self.unix_socket = '/var/lib/lxd/unix.socket'
         self.connection = None
@@ -73,9 +78,9 @@ class LXDConnection(object):
             msg = "Null Data"
             raise Exception(msg)
         elif state == 200 or \
-            (state == 202 and data.get('status_code') == 100):
-                return (state, data)
-         else:
+                (state == 202 and data.get('status_code') == 100):
+            return state, data
+        else:
             utils.get_lxd_error(state, data)
 
     def get_status(self, *args, **kwargs):
@@ -83,13 +88,13 @@ class LXDConnection(object):
         self.connection = self.get_connection()
         self.connection.request(*args, **kwargs)
         response = self.connection.getresponse()
-        (state, data) = json.loads(respnse.read())
+        (state, data) = json.loads(response.read())
         if not data:
             msg = "Null Data"
             raise Exception(msg)
         elif state == 200 or \
-            (state == 202 and data.get('status_code') == 100):
-                status = True
+                (state == 202 and data.get('status_code') == 100):
+            status = True
         else:
             utils.get_lxd_error(state, data)
         return status
@@ -105,4 +110,5 @@ class LXDConnection(object):
         elif response.status == 200:
             return body
         else:
-            utils.get_lxd_error(state, data)
+            msg = "Failed to get raw response"
+            raise Exception(msg)
