@@ -31,6 +31,7 @@ class API(object):
         self.operation = operation.LXDOperation()
         self.profiles = profiles.LXDProfile()
         self.certificate = certificate.LXDCertificate()
+        self.container = container.LXDContainer()
 
     # host
     def host_ping(self):
@@ -111,44 +112,37 @@ class API(object):
         return self.alias.alias_delete(alias)
 
     # containers:
-    def container_init(self):
-        pass
+    def container_init(self, container):
+        return self.container.container_init(container)
 
-    def container_start(self):
-        pass
+    def container_state(self, container):
+        return self.container.container_state(container)
 
-    def container_stop(self):
-        pass
+    def container_start(self, container):
+        return self.container.container_start(container)
 
-    def container_destroy(self):
-        pass
+    def container_stop(self, container):
+        return self.container.container_stop(container)
 
-    def container_suspend(self):
-        pass
+    def container_suspend(self, container):
+        return self.container.container_suspend(container)
 
-    def container_reboot(self):
-        pass
+    def container_resume(self, container):
+        return self.container.container_resume(container)
 
-    def container_info(self):
-        pass
+    def container_reboot(self, container):
+        return self.container.container_reboot(container)
 
-    def container_resume(self):
-        pass
+    def container_destroy(self, container):
+        return self.container.container_destroy(container)
 
-    def get_container_log(self):
-        pass
+    def get_container_log(self, container):
+        return self.container.get_container_log(container)
 
     def get_container_console(self):
         pass
 
     def get_container_syslog(self):
-        pass
-
-    # container state
-    def get_container_state(self):
-        pass
-
-    def update_container_state(self):
         pass
 
     # file operations

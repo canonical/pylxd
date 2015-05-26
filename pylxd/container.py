@@ -15,12 +15,98 @@
 
 import json
 
-class LXDContainer(object):
-    def __init__(self, connection):
-        self.connection = connection
+from . import connection
 
-    def _make_request(self, *args, **kwargs):
-        self.connection.request(*args, **kwargs)
-        response = self.connection.getresponse()
-        data = json.loads(response.read())
-        return response.status, data
+class LXDContainer(object):
+    def __init__(self):
+        self.connection = connection.LXDConnection()
+
+    # containers:
+    def container_list(self):
+        (state, data) = self.connection.get_object('GET', '/1.0/containers')
+        return [container.split('/1.0/images/')[-1] for container in data['metadata']]
+
+    def container_init(self, container):
+        return self.connection.get_object('POST', '/1.0/containers',
+                                          json.dumps(container))
+
+    def container_state(self, container):
+        (state, data) = self.connection.get_object('GET', '/1.0/containers/%s/state'
+                                                   % container)
+        return data.get('status')
+
+
+    def container_start(self, container, timeout):
+        action = {'action': 'start', 'timeout': timeout}
+        return self.connection.get_object('PUT', '/1.0/containers/%s/state'
+                                          % container,
+                                          json.dumps(action))
+
+    def container_stop(self, container, timeout):
+        action = {'action': 'stop', 'timeout': timeout}
+        return self.connection.get_object('PUT', '/1.0/containers/%s/state'
+                                          % container,
+                                          json.dumps(action))
+
+    def container_suspend(self, container, timeout):
+        action = {'action': 'freeze', 'timeout': timeout}
+        return self.connection.get_object('PUT', '/1.0/containers/%s/state'
+                                          % container,
+                                          json.dumps(action))
+
+    def container_resume(self, container, timeout):
+        action = {'action': 'unfreeze', 'timeout': timeout}
+        return self.connection.get_object('PUT', '/1.0/containers/%s/state'
+                                          % container,
+                                          json.dumps(action))
+
+    def container_reboot(self, container, timeout):
+        action = {'action': 'restart', 'timeout': timeout}
+        return self.connection.get_object('PUT', '/1.0/containers/%s/state'
+                                          % container,
+                                          json.dumps(action))
+
+    def container_destroy(self, container):
+        return self.connection.get_object('DELETE', '/1.0/containers/%s'
+                                          % container)
+
+    def get_container_log(self, container):
+        (status, data) = self.connection.get_object('GET', '/1.0/containers/%s?log=true'
+                                                            % container)
+        print data
+
+    def get_container_console(self):
+        pass
+
+    def get_container_syslog(self):
+        pass
+
+    # container state
+    def get_container_state(self):
+        pass
+
+    def update_container_state(self):
+        pass
+
+    # file operations
+    def get_container_file(self):
+        pass
+
+    def put_container_file(self):
+        pass
+
+    # snapshots
+    def container_snapshot_list(self):
+        pass
+
+    def container_snapshot_create(self):
+        pass
+
+    def container_snapshot_info(self):
+        pass
+
+    def container_snaphsot_delete(self):
+        pass
+
+    def container_run_command(self):
+        pass
