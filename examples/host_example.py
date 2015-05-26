@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from pylxd import client
+from pylxd import api
 
-c = client.Client()
-print c.get_lxd_backing_fs()
+client = api.API()
+print client.get_lxd_backing_fs()

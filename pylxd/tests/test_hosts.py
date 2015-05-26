@@ -14,17 +14,17 @@
 
 import unittest
 
-from pylxd import client
+from pylxd import api
 
 class LXDTestHost(unittest.TestCase):
     def setUp(self):
-        self.client = client.Client()
+        self.api = api.API()
 
     def test_host_available(self):
-        self.assertTrue(self.client.host_ping())
+        self.assertTrue(self.api.host_ping())
 
     def test_host_info(self):
-        host = self.client.host_info()
+        host = self.api.host_info()
 
         self.assertIn('kernel_version', host)
         self.assertIn('lxd_api_compat_level', host)
@@ -35,17 +35,17 @@ class LXDTestHost(unittest.TestCase):
         self.assertIn('kernel_version', host)
 
     def test_lxd_api_compat(self):
-        host = self.client.get_lxd_api_compat(data=None)
+        host = self.api.get_lxd_api_compat(data=None)
         self.assertEquals(host, 1)
 
     def test_lxd_trusted_host(self):
-        host = self.client.get_lxd_host_trust(data=None)
+        host = self.api.get_lxd_host_trust(data=None)
         self.assertTrue(host)
 
     def test_lxd_backing_fs(self):
-        host = self.client.get_lxd_backing_fs(data=None)
+        host = self.api.get_lxd_backing_fs(data=None)
         self.assertIn('ext4', host)
 
     def test_lxd_driver(self):
-        host = self.client.get_lxd_driver(data=None)
+        host = self.api.get_lxd_driver(data=None)
         self.assertIn('lxc', host)

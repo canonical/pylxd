@@ -22,7 +22,7 @@ from . import network
 from . import operation
 from . import profiles
 
-class Client(object):
+class API(object):
     def __init__(self):
         self.hosts = hosts.LXDHost()
         self.image = image.LXDImage()

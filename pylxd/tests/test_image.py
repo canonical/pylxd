@@ -17,7 +17,7 @@ import hashlib
 
 import unittest
 
-from pylxd import client
+from pylxd import api
 
 TESTDIR = os.path.dirname(os.path.abspath(__file__))
 ROOTDIR = os.path.normpath(os.path.join(TESTDIR, '..', '..', '..'))
@@ -25,30 +25,30 @@ IMAGE = os.path.join(ROOTDIR, 'images', 'lxd.tar.xz')
 
 class LXDTestHost(unittest.TestCase):
     def setUp(self):
-        self.client = client.Client()
+        self.api = api.API()
 
     def test_image_upload_and_delete(self):
         image = IMAGE
-        self.assertTrue(self.client.image_upload(image, image.split('/')[-1]))
+        self.assertTrue(self.api.image_upload(image, image.split('/')[-1]))
 
         with open(image, "rb") as fd:
             fingerprint = hashlib.sha256(fd.read()).hexdigest()
-            self.assertTrue(self.client.image_delete(fingerprint))
+            self.assertTrue(self.api.image_delete(fingerprint))
 
     def test_list_images(self):
-        self.assertEqual(0, len(self.client.image_list()))
+        self.assertEqual(0, len(self.api.image_list()))
 
     def test_list_images_with_key(self):
         self._image_upload()
         params = {'architecture': 'x86_64'}
-        self.assertEquals(1, len(self.client.image_search(params)))
+        self.assertEquals(1, len(self.api.image_search(params)))
         self._image_delete()
 
     def test_image_info(self):
         self._image_upload()
 
         local_img = IMAGE
-        image = self.client.image_info(local_img)
+        image = self.api.image_info(local_img)
 
         self.assertIn('image_upload_date', image)
         self.assertIn('image_created_date', image)
@@ -62,10 +62,10 @@ class LXDTestHost(unittest.TestCase):
 
     def _image_upload(self):
         image = IMAGE
-        self.client.image_upload(image, image.split('/')[-1])
+        self.api.image_upload(image, image.split('/')[-1])
 
     def _image_delete(self):
         image = IMAGE
         with open(image, "rb") as fd:
             fingerprint = hashlib.sha256(fd.read()).hexdigest()
-            self.client.image_delete(fingerprint)
+            self.api.image_delete(fingerprint)

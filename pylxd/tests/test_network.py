@@ -14,14 +14,14 @@
 
 import unittest
 
-from pylxd import client
+from pylxd import api
 
 class LXDTestNetwork(unittest.TestCase):
     def setUp(self):
-        self.client = client.Client()
+        self.api = api.API()
 
     def test_show_network_info(self):
-        network = self.client.network_show('lxcbr0')
+        network = self.api.network_show('lxcbr0')
 
         self.assertIn('network_name', network)
         self.assertIn('network_type', network)
