@@ -112,6 +112,12 @@ class API(object):
         return self.alias.alias_delete(alias)
 
     # containers:
+    def container_list(self):
+        return self.container.container_list()
+
+    def container_defined(self, container):
+        return self.container.container_defined(container)
+
     def container_init(self, container):
         return self.container.container_init(container)
 
@@ -159,6 +165,7 @@ class API(object):
     def container_snaphsot_delete(self):
         raise NotImplemented()
 
+    # misc container
     def container_run_command(self):
         raise NotImplemented()
 
