@@ -19,6 +19,7 @@ from . import certificate
 from . import hosts
 from . import image
 from . import network
+from . import operation
 from . import profiles
 
 class Client(object):
@@ -27,6 +28,7 @@ class Client(object):
         self.image = image.LXDImage()
         self.alias = image.LXDAlias()
         self.network = network.LXDNetwork()
+        self.operation = operation.LXDOperation()
 
     # host
     def host_ping(self):
@@ -192,10 +194,25 @@ class Client(object):
 
     # lxd operations
     def list_operations(self):
-        pass
+        return self.operation.operation_list()
 
-    def get_container_operation(self):
-        pass
+    def wait_container_operatoin(self, operation, status_code, timeout):
+        return self.operation.operation_wait(operation, status_code, timeout)
+
+    def operation_delete(self, operation):
+        return self.operation.operation_delete(operation)
+
+    def operation_info(self, operation):
+        return self.operation.operation_show(operation)
+
+    def operation_show_create_time(self, operation, data=None):
+        return self.operation.operation_create_time(operation, data)
+
+    def operation_show_update_time(self, operation, data=None):
+        return self.operation.operation_update_time(operation, data)
+
+    def operation_show_status(self, operation, data=None):
+        return self.operation.operation_status_code(operation, data)
 
     # networks
     def network_list(self):
