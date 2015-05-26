@@ -139,34 +139,28 @@ class API(object):
     def get_container_log(self, container):
         return self.container.get_container_log(container)
 
-    def get_container_console(self):
-        pass
-
-    def get_container_syslog(self):
-        pass
-
     # file operations
-    def get_container_file(self):
-        pass
+    def get_container_file(self, container, filename):
+        return self.container.get_container_file(container, filename)
 
     def put_container_file(self):
-        pass
+        raise NotImplemented()
 
     # snapshots
     def container_snapshot_list(self):
-        pass
+        raise NotImplemented()
 
     def container_snapshot_create(self):
-        pass
+        raise NotImplemented()
 
     def container_snapshot_info(self):
-        pass
+        raise NotImplemented()
 
     def container_snaphsot_delete(self):
-        pass
+        raise NotImplemented()
 
     def container_run_command(self):
-        pass
+        raise NotImplemented()
 
     # certificates
     def certificate_list(self):
