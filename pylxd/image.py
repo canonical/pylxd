@@ -1,4 +1,3 @@
-
 # Copyright (c) 2015 Canonical Ltd
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -23,18 +22,18 @@ from . import connection
 from . import exceptions
 
 image_architecture = {
- 0: 'Unknown',
- 1: 'i686',
- 2: 'x86_64',
- 3: 'armv7l',
- 4: 'aarch64',
- 5: 'ppc',
- 6: 'ppc64',
- 7: 'ppc64le'
+    0: 'Unknown',
+    1: 'i686',
+    2: 'x86_64',
+    3: 'armv7l',
+    4: 'aarch64',
+    5: 'ppc',
+    6: 'ppc64',
+    7: 'ppc64le'
 }
 
-class LXDImage(object):
 
+class LXDImage(object):
     def __init__(self):
         self.connection = connection.LXDConnection()
 
@@ -86,8 +85,8 @@ class LXDImage(object):
                                                            % image)
                 data = data.get('metadata')
             if data[key] != 0:
-                return  datetime.datetime.fromtimestamp(
-                        data[key]).strftime('%Y-%m-%d %H:%M:%S')
+                return datetime.datetime.fromtimestamp(
+                    data[key]).strftime('%Y-%m-%d %H:%M:%S')
             else:
                 return 'Unknown'
         except Exception as e:
@@ -98,13 +97,12 @@ class LXDImage(object):
         try:
             if data is None:
                 (state, data) = self.connection.get_object('GET', '/1.0/images/%s'
-                                                          % image)
+                                                           % image)
                 data = data.get('metadata')
             return True if data['public'] == 1 else False
         except Exception as e:
             print "Unable to fetch image info - %s" % e
             raise
-
 
     def get_image_size(self, image, data):
         try:
@@ -141,7 +139,6 @@ class LXDImage(object):
         except Exception as e:
             print "Unable to fetch image info - %s" % e
             raise
-
 
     # image operations
     def image_upload(self, path, filename):
@@ -182,6 +179,7 @@ class LXDImage(object):
         except Exception as e:
             print "Unable to upload image - %s" % e
             raise
+
 
 class LXDAlias(object):
     def __init__(self):

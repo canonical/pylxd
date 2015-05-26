@@ -16,6 +16,7 @@ import datetime
 
 from . import connection
 
+
 class LXDOperation(object):
     def __init__(self):
         self.connection = connection.LXDConnection()
@@ -40,7 +41,7 @@ class LXDOperation(object):
                                                        % operation)
             data = data.get('metadata')
         return datetime.datetime.fromtimestamp(data['created_at']) \
-                    .strftime('%Y-%m-%d %H:%M:%S')
+            .strftime('%Y-%m-%d %H:%M:%S')
 
     def operation_update_time(self, operation, data):
         if data is None:
@@ -48,7 +49,7 @@ class LXDOperation(object):
                                                        % operation)
             data = data.get('metadata')
         return datetime.datetime.fromtimestamp(data['updated_at']) \
-                    .strftime('%Y-%m-%d %H:%M:%S')
+            .strftime('%Y-%m-%d %H:%M:%S')
 
     def operation_status_code(self, operation, data):
         if data is None:
@@ -59,9 +60,8 @@ class LXDOperation(object):
 
     def operation_wait(self, operation, status_code, timeout):
         return self.connection.get_status('GET', '/1.0/operations/%s/wait?status_code=%s&timeout=%s'
-                                            % (operation, status_code, timeout))
+                                          % (operation, status_code, timeout))
 
     def operation_delete(self, operation):
         return self.connection.get_status('DELETE', '/1.0/operations/%s'
                                           % operation)
-

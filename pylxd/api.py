@@ -196,7 +196,7 @@ class API(object):
     def profile_rename(self, profile):
         return self.profiles.profile_rename(profile)
 
-    def profile_delete(self):
+    def profile_delete(self, profile):
         return self.profiles.profile_delete(profile)
 
     # lxd operations

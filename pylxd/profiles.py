@@ -16,6 +16,7 @@ import json
 
 from . import connection
 
+
 class LXDProfile(object):
     def __init__(self):
         self.connection = connection.LXDConnection()

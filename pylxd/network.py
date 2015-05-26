@@ -14,6 +14,7 @@
 
 from . import connection
 
+
 class LXDNetwork(object):
     def __init__(self):
         self.connection = connection.LXDConnection()
@@ -32,22 +33,22 @@ class LXDNetwork(object):
 
     def show_network_name(self, network, data):
         if data is None:
-            (state,data) = self.connection.get_object('GET','/1.0/networks/%s'
-                                                     % network)
+            (state, data) = self.connection.get_object('GET', '/1.0/networks/%s'
+                                                       % network)
             data = data.get('metadata')
         return data['name']
 
     def show_network_type(self, network, data):
         if data is None:
-            (state, data) = self.connection.get_object('GET','/1.0/networks/%s'
-                                                     % network)
+            (state, data) = self.connection.get_object('GET', '/1.0/networks/%s'
+                                                       % network)
             data = data.get('metadata')
         return data['type']
 
-    def show_network_members(self,network, data):
+    def show_network_members(self, network, data):
         if data is None:
             (state, data) = self.connection.get_object('GET', '/1.0/networks/%s'
-                                                      % network)
+                                                       % network)
             data = data.get('metadata')
         return [network_members.split('/1.0/networks/')[-1]
                 for network_members in data['members']]

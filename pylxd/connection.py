@@ -22,7 +22,6 @@ from . import utils
 
 
 class UnixHTTPConnection(httplib.HTTPConnection):
-
     def __init__(self, path, host='localhost', port=None, strict=None,
                  timeout=None):
         httplib.HTTPConnection.__init__(self, host, port=port,
@@ -61,7 +60,6 @@ class HTTPSConnection(httplib.HTTPConnection):
 
 
 class LXDConnection(object):
-
     def __init__(self):
         self.unix_socket = '/var/lib/lxd/unix.socket'
         self.connection = None
@@ -79,7 +77,7 @@ class LXDConnection(object):
             msg = "Null Data"
             raise Exception(msg)
         elif state == 200 or (state == 202 and data.get('status_code') == 100):
-                return state, data
+            return state, data
         else:
             utils.get_lxd_error(state, data)
 
@@ -94,11 +92,10 @@ class LXDConnection(object):
             msg = "Null Data"
             raise Exception(msg)
         elif state == 200 or (state == 202 and data.get('status_code') == 100):
-                status = True
+            status = True
         else:
             utils.get_lxd_error(state, data)
         return status
-
 
     def get_raw(self, *args, **kwargs):
         self.connection = self.get_connection()
