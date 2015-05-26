@@ -14,12 +14,24 @@
 
 import json
 
-class LXDCertificate(object):
-    def __init__(self, connection):
-        self.connection = connection
+from . import connection
 
-    def _make_request(self, *args, **kwargs):
-        self.connection.request(*args, **kwargs)
-        response = self.connection.getresponse()
-        data = json.loads(response.read())
-        return response.status, data
+class LXDCertificate(object):
+    def __init__(self):
+        self.connection = connection.LXDConnection()
+
+    def certificate_list(self):
+        (state, data) = self.connection.get_object('GET', '/1.0/certificates')
+        return [certificate.split('/1.0/certitifcates/')[-1] for certificate in data['metadata']]
+
+    def certificate_show(self, fingerprint):
+        return self.connection.get_object('GET', '/1.0/certificates/%s'
+                                          % fingerprint)
+
+    def certificate_create(self, certificate):
+        return self.connection.get_status('POST', '/1.0/certificates/',
+                                          json.dumps(certificate))
+
+    def certificate_delete(self, fingerprint):
+        return self.connection.get_status('DELETE', '/1.0/certificates/%s'
+                                          % fingerprint)

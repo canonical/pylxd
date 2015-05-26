@@ -30,6 +30,7 @@ class API(object):
         self.network = network.LXDNetwork()
         self.operation = operation.LXDOperation()
         self.profiles = profiles.LXDProfile()
+        self.certificate = certificate.LXDCertificate()
 
     # host
     def host_ping(self):
@@ -175,10 +176,16 @@ class API(object):
 
     # certificates
     def certificate_list(self):
-        pass
+        return self.certificate.certificate_list()
 
-    def certificate_show(self):
-        pass
+    def certificate_show(self, fingerprint):
+        return self.certificate.certificate_show(fingerprint)
+
+    def certificate_delete(self, fingerprint):
+        return self.certificate.certificate_delete(fingerprint)
+
+    def certificate_create(self, fingerprint):
+        return self.certificate.certificate_create(fingerprint)
 
     # profiles
     def profile_create(self, profile):
