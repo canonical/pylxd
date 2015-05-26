@@ -29,7 +29,7 @@ class LXDNetwork(object):
                                                    % network)
         return {'network_name': self.show_network_name(network, data.get('metadata')),
                 'network_type': self.show_network_type(network, data.get('metadata')),
-                'network_members': self.show_network_members(network, data.get('meadata'))}
+                'network_members': self.show_network_members(network, data.get('metadata'))}
 
     def show_network_name(self, network, data):
         if data is None:
