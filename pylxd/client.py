@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 
 from . import container
 from . import certificate
@@ -27,6 +26,7 @@ class Client(object):
         self.hosts = hosts.LXDHost()
         self.image = image.LXDImage()
         self.alias = image.LXDAlias()
+        self.network = network.LXDNetwork()
 
     # host
     def host_ping(self):
@@ -94,7 +94,7 @@ class Client(object):
     def alias_create(self, alias):
         return self.alias.alias_create(alias)
 
-    def alias_update(self):
+    def alias_update(self, alias):
         return self.alias.alias_update(alias)
 
     def alias_show(self, alias):
@@ -199,7 +199,16 @@ class Client(object):
 
     # networks
     def network_list(self):
-        pass
+        return self.network.network_list()
 
-    def network_show(self):
-        pass
+    def network_show(self, network):
+        return self.network.network_show(network)
+
+    def network_show_name(self, network, data=None):
+        return self.network.show_network_name(network, data)
+
+    def network_show_type(self, network, data=None):
+        return self.network.show_network_type(network, data)
+
+    def network_show_members(self, network, data=None):
+        return self.network.show_network_members(network, data)

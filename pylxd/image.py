@@ -207,3 +207,7 @@ class LXDAlias(object):
     def alias_create(self, alias):
         return self.connection.get_status('POST', '/1.0/images/aliases',
                                           json.dumps(alias))
+
+    def alias_delete(self, alias):
+        return self.connection.get_status('DELETE', '/1.0/images/aliases/%s'
+                                          % alias)
