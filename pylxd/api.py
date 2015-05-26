@@ -29,6 +29,7 @@ class API(object):
         self.alias = image.LXDAlias()
         self.network = network.LXDNetwork()
         self.operation = operation.LXDOperation()
+        self.profiles = profiles.LXDProfile()
 
     # host
     def host_ping(self):
@@ -180,17 +181,23 @@ class API(object):
         pass
 
     # profiles
-    def profile_init(self):
-        pass
+    def profile_create(self, profile):
+        return self.profiles.profile_create(profile)
 
-    def profile_show(self):
-        pass
+    def profile_show(self, profile):
+        return self.profiles.profile_show(profile)
 
-    def profile_update(self):
-        pass
+    def profile_list(self):
+        return self.profiles.profile_list()
+
+    def profile_update(self, profile):
+        return self.profiles.profile_update(profile)
+
+    def profile_rename(self, profile):
+        return self.profiles.profile_rename(profile)
 
     def profile_delete(self):
-        pass
+        return self.profiles.profile_delete(profile)
 
     # lxd operations
     def list_operations(self):

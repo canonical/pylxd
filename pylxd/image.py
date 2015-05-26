@@ -187,7 +187,7 @@ class LXDAlias(object):
     def __init__(self):
         self.connection = connection.LXDConnection()
 
-    def alias_lias(self):
+    def alias_list(self):
         (state, data) = self.connection.get_object('GET', '/1.0/images/aliases')
         return [alias.split('/1.0/images/aliases/')[-1]
                 for alias in data('metadata')]
