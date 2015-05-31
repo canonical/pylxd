@@ -11,7 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
+from __future__ import print_function
 import datetime
 import json
 import urllib
@@ -43,7 +43,7 @@ class LXDImage(object):
             (state, data) = self.connection.get_object('GET', '/1.0/images')
             return [image.split('/1.0/images/')[-1] for image in data['metadata']]
         except Exception as e:
-            print "Unable to fetch image info - %s" % e
+            print("Unable to fetch image info - {}".format(e))
             raise
 
     def image_list_by_key(self, params):
@@ -52,7 +52,7 @@ class LXDImage(object):
                                                        urllib.urlencode(params))
             return [image.split('/1.0/images/')[-1] for image in data['metadata']]
         except Exception as e:
-            print "Unable to fetch image info - %s" % e
+            print("Unable to fetch image info - {}".format(e))
             raise
 
     # image info
@@ -75,7 +75,7 @@ class LXDImage(object):
 
             return image
         except Exception as e:
-            print "Unable to fetch image info - %s" % e
+            print("Unable to fetch image info - {}".format(e))
             raise
 
     def get_image_date(self, image, data, key):
@@ -90,7 +90,7 @@ class LXDImage(object):
             else:
                 return 'Unknown'
         except Exception as e:
-            print "Unable to fetch image info - %s" % e
+            print("Unable to fetch image info - {}".format(e))
             raise
 
     def get_image_permission(self, image, data):
@@ -101,7 +101,7 @@ class LXDImage(object):
                 data = data.get('metadata')
             return True if data['public'] == 1 else False
         except Exception as e:
-            print "Unable to fetch image info - %s" % e
+            print("Unable to fetch image info - {}".format(e))
             raise
 
     def get_image_size(self, image, data):
@@ -115,7 +115,7 @@ class LXDImage(object):
                 raise exceptions.ImageInvalidSize()
             return image_size / units.Mi
         except Exception as e:
-            print "Unable to fetch image info - %s" % e
+            print("Unable to fetch image info - {}".format(e))
             raise
 
     def get_image_fingerprint(self, image, data):
@@ -126,7 +126,7 @@ class LXDImage(object):
                 data = data.get('metadata')
             return data['fingerprint']
         except Exception as e:
-            print "Unable to fetch image info - %s" % e
+            print("Unable to fetch image info - {}".format(e))
             raise
 
     def get_image_architecture(self, image, data):
@@ -137,7 +137,7 @@ class LXDImage(object):
                 data = data.get('metadata')
             return image_architecture[data['architecture']]
         except Exception as e:
-            print "Unable to fetch image info - %s" % e
+            print("Unable to fetch image info - {}".format(e))
             raise
 
     # image operations
@@ -146,7 +146,7 @@ class LXDImage(object):
             return self.connection.get_status('POST', '/1.0/images',
                                               open(path, 'rb'))
         except Exception as e:
-            print "Unable to upload image - %s" % e
+            print("Unable to upload image - {}".format(e))
             raise
 
     def image_delete(self, image):
@@ -154,14 +154,14 @@ class LXDImage(object):
             return self.connection.get_status('DELETE', '/1.0/images/%s'
                                               % image)
         except Exception as e:
-            print "Unable to upload image - %s" % e
+            print("Unable to delete image - {}".format(e))
             raise
 
     def image_export(self, image):
         try:
             return self.connection.get_object('GET', '/1.0/images/%s/export' % image)
         except Exception as e:
-            print "Unable to upload image - %s" % e
+            print("Unable to export image - {}".format(e))
             raise
 
     def image_update(self, image):
@@ -169,7 +169,7 @@ class LXDImage(object):
             return self.connection.get_status('PUT', '/1.0/images',
                                               json.dumps(image))
         except Exception as e:
-            print "Unable to upload image - %s" % e
+            print("Unable to update image - {}".format(e))
             raise
 
     def image_rename(self, image):
@@ -177,7 +177,7 @@ class LXDImage(object):
             return self.connection.get_status('POST', '/1.0/images',
                                               json.dumps(image))
         except Exception as e:
-            print "Unable to upload image - %s" % e
+            print("Unable to rename image - {}".format(e))
             raise
 
 

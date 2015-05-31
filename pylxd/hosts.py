@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from __future__ import print_function
 
 import json
 
@@ -49,7 +50,7 @@ class LXDHost(object):
                 data = data.get('metadata')
             return data['api_compat']
         except Exception as e:
-             print 'Handling run-time error:', e
+            print('Handling run-time error:'.format(e))
 
     def get_lxd_host_trust(self, data):
         try:
@@ -58,7 +59,7 @@ class LXDHost(object):
                 data = data.get('metadata')
             return True if data['auth'] == 'trusted' else False
         except Exception as e:
-            print 'Handling run-time error:', e
+            print('Handling run-time error:'.format(e))
 
     def get_lxd_backing_fs(self, data):
         try:
@@ -67,7 +68,7 @@ class LXDHost(object):
                 data = data.get('metadata')
             return data['environment']['backing_fs']
         except Exception as e:
-            print 'Handling run-time error:', e
+            print('Handling run-time error:'.format(e))
 
     def get_lxd_driver(self, data):
         try:
@@ -76,7 +77,7 @@ class LXDHost(object):
                 data = data.get('metadata')
             return data['environment']['driver']
         except Exception as e:
-            print 'Handling run-time error:', e
+            print('Handling run-time error:'.format(e))
 
     def get_lxc_version(self, data):
         try:
@@ -85,7 +86,7 @@ class LXDHost(object):
                 data = data.get('metadata')
             return data['environment']['lxc_version']
         except Exception as e:
-            print 'Handling run-time error:', e
+            print('Handling run-time error:'.format(e))
 
     def get_kernel_version(self, data):
         try:
@@ -94,6 +95,6 @@ class LXDHost(object):
                 data = data.get('metadata')
             return data['environment']['kernel_version']
         except Exception as e:
-            print 'Handling run-time error:', e
+            print('Handling run-time error:'.format(e))
 
 
