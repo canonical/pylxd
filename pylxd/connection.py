@@ -91,10 +91,10 @@ class LXDConnection(object):
         if not data:
             msg = "Null Data"
             raise Exception(msg)
+        elif data.get('error'):
+            utils.get_lxd_error(state, data)
         elif state == 200 or (state == 202 and data.get('status_code') == 100):
             status = True
-        else:
-            utils.get_lxd_error(state, data)
         return status
 
     def get_raw(self, *args, **kwargs):
