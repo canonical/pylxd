@@ -205,7 +205,7 @@ class API(object):
     def list_operations(self):
         return self.operation.operation_list()
 
-    def wait_container_operatoin(self, operation, status_code, timeout):
+    def wait_container_operation(self, operation, status_code, timeout):
         return self.operation.operation_wait(operation, status_code, timeout)
 
     def operation_delete(self, operation):
