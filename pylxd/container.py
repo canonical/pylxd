@@ -27,6 +27,12 @@ class LXDContainer(object):
         (state, data) = self.connection.get_object('GET', '/1.0/containers')
         return [container.split('/1.0/containers/')[-1] for container in data['metadata']]
 
+    def container_defined(self, container):
+        (state, data) = self.connection.get_object('GET', '/1.0/containers/%s/state'
+                                                % container)
+        return data.get('status')
+
+
     def container_init(self, container):
         return self.connection.get_object('POST', '/1.0/containers',
                                           json.dumps(container))
