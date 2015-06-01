@@ -116,7 +116,11 @@ class API(object):
         return self.container.container_list()
 
     def container_defined(self, container):
-        return self.container.container_defined(container)
+        try:
+            self.container.container_defined(container)
+            return True
+         except:
+            return False
 
     def container_init(self, container):
         return self.container.container_init(container)
