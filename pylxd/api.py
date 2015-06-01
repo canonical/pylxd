@@ -124,20 +124,20 @@ class API(object):
     def container_state(self, container):
         return self.container.container_state(container)
 
-    def container_start(self, container):
-        return self.container.container_start(container)
+    def container_start(self, container, timeout):
+        return self.container.container_start(container, timeout)
 
-    def container_stop(self, container):
-        return self.container.container_stop(container)
+    def container_stop(self, container, timeout):
+        return self.container.container_stop(container, timeout)
 
-    def container_suspend(self, container):
-        return self.container.container_suspend(container)
+    def container_suspend(self, container, timeout):
+        return self.container.container_suspend(container, timeout)
 
-    def container_resume(self, container):
-        return self.container.container_resume(container)
+    def container_resume(self, container, timeout):
+        return self.container.container_resume(container, timeout)
 
-    def container_reboot(self, container):
-        return self.container.container_reboot(container)
+    def container_reboot(self, container, timeout):
+        return self.container.container_reboot(container, timeout)
 
     def container_destroy(self, container):
         return self.container.container_destroy(container)
