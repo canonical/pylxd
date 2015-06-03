@@ -32,6 +32,17 @@ class LXDContainer(object):
                                                 % container)
         return data.get('status')
 
+    def container_running(self, container):
+        (state, data) = self.connection.get_object('GET',
+                                                  '/1.0/containers/%s/state'
+                                                  % container)
+        data = data.get('metadata')
+        container_running = False
+        if data['status'] in ['RUNNING', 'STARTING', 'FREEZING,FROZEN',
+                                'THAWED']:
+           container_running = True
+        return container_running
+
 
     def container_init(self, container):
         return self.connection.get_object('POST', '/1.0/containers',

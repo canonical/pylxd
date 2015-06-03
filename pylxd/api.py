@@ -119,8 +119,11 @@ class API(object):
         try:
             self.container.container_defined(container)
             return True
-         except:
+        except:
             return False
+
+    def container_running(self, container):
+        return self.container.container_running(container)
 
     def container_init(self, container):
         return self.container.container_init(container)
