@@ -160,17 +160,20 @@ class API(object):
         raise NotImplemented()
 
     # snapshots
-    def container_snapshot_list(self):
-        raise NotImplemented()
+    def container_snapshot_list(self, container):
+        return self.container.snapshot_list(container)
 
-    def container_snapshot_create(self):
-        raise NotImplemented()
+    def container_snapshot_create(self, container, config):
+        return self.container.snapshot_create(container, config)
 
-    def container_snapshot_info(self):
-        raise NotImplemented()
+    def container_snapshot_info(self, container, snapshot):
+        return self.container.snapshot_info(container, snapshot)
 
-    def container_snaphsot_delete(self):
-        raise NotImplemented()
+    def container_snapshot_reanme(self, container, snapshot, config):
+        return self.container.snapshot_rename(container, snapshot, config)
+
+    def container_snaphsot_delete(self, container, snapshot):
+        return self.container.snapshot_delete(container, snapshot)
 
     # misc container
     def container_run_command(self):

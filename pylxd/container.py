@@ -98,9 +98,38 @@ class LXDContainer(object):
                                                             % container)
         return data['metadata']['log']
 
-
-
     # file operations
     def get_container_file(self, container, filename):
         return self.connection.get_raw('GET', '/1.0/containers/%s/files?path=%s'
                                           % (container, filename))
+
+    # snapshots
+    def snapshot_list(self, container):
+        (state, data) = self.connection.get_object('GET',
+                                            '/1.0/containers/%s/snapshots'
+                                            % container)
+        return [snapshot.split('/1.0/containers/%s/snapshots/%s/'
+                                % (container, container))[-1] \
+                for snapshot in data['metadata']]
+
+    def snapshot_create(self, container, config):
+        return self.connection.get_object('POST',
+                                                '/1.0/containers/%s/snapshots'
+                                                % container,
+                                                json.dumps(config))
+
+    def snapshot_info(self, container, snapshot):
+        return self.conncetion.get_object('GET',
+                                          '/1.0/containers/%s/snapshsots/%s'
+                                          % (container, snapshot))
+
+    def snapshot_rename(self, container, snapshot, config):
+        return self.connection.get_object('POST',
+                                          '/1.0/containers/%s/snapshots/%s'
+                                          % (contianer, snapshot),
+                                          json.dumps(config))
+
+    def snapshot_delete(self, container, snapshot):
+        return self.connection.get_object('DELETE',
+                                          '/1.0/containers/%s/snapshots/%s'
+                                          % (container, snapshot))
