@@ -108,7 +108,7 @@ class LXDContainer(object):
         env = env or {}
         data = {'command': args,
                 'interactive': interactive,
-                'wait-for-web-socket': web_sockets,
+                'wait-for-websocket': web_sockets,
                 'environment': env}
         return self.connection.get_object('POST', '/1.0/containers/%s/exec'
                                           % container, json.dumps(data))
