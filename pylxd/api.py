@@ -176,8 +176,10 @@ class API(object):
         return self.container.snapshot_delete(container, snapshot)
 
     # misc container
-    def container_run_command(self):
-        raise NotImplemented()
+    def container_run_command(self, container, args, interactive=False,
+                              web_sockets=False, env=None):
+        return self.container.run_command(container, args, interactive,
+                                          web_sockets, env)
 
     # certificates
     def certificate_list(self):
