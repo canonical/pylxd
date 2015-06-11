@@ -13,6 +13,7 @@
 #    under the License.
 
 import datetime
+from dateutil.parser import parse as parse_date
 
 from . import connection
 
@@ -37,23 +38,21 @@ class LXDOperation(object):
 
     def operation_create_time(self, operation, data):
         if data is None:
-            (state, data) = self.connection.get_object('GET', '/1.0/Ooperations/%s'
+            (state, data) = self.connection.get_object('GET', '/1.0/operations/%s'
                                                        % operation)
             data = data.get('metadata')
-        return datetime.datetime.fromtimestamp(data['created_at']) \
-            .strftime('%Y-%m-%d %H:%M:%S')
+        return parse_date(data['created_at']).strftime('%Y-%m-%d %H:%M:%S')
 
     def operation_update_time(self, operation, data):
         if data is None:
-            (state, data) = self.connection.get_object('GET', '/1.0/Ooperations/%s'
+            (state, data) = self.connection.get_object('GET', '/1.0/operations/%s'
                                                        % operation)
             data = data.get('metadata')
-        return datetime.datetime.fromtimestamp(data['updated_at']) \
-            .strftime('%Y-%m-%d %H:%M:%S')
+        return parse_date(data['updated_at']).strftime('%Y-%m-%d %H:%M:%S')
 
     def operation_status_code(self, operation, data):
         if data is None:
-            (state, data) = self.connection.get_object('GET', '/1.0/Ooperations/%s'
+            (state, data) = self.connection.get_object('GET', '/1.0/operations/%s'
                                                        % operation)
             data = data.get('metadata')
         return data['status']
