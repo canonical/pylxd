@@ -103,6 +103,16 @@ class LXDContainer(object):
         return self.connection.get_raw('GET', '/1.0/containers/%s/files?path=%s'
                                           % (container, filename))
 
+    # misc operations
+    def run_command(self, container, args, interactive, web_sockets, env):
+        env = env or {}
+        data = {'command': args,
+                'interactive': interactive,
+                'wait-for-websocket': web_sockets,
+                'environment': env}
+        return self.connection.get_object('POST', '/1.0/containers/%s/exec'
+                                          % container, json.dumps(data))
+
     # snapshots
     def snapshot_list(self, container):
         (state, data) = self.connection.get_object('GET',
