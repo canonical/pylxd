@@ -15,13 +15,11 @@
 import datetime
 from dateutil.parser import parse as parse_date
 
+from . import base
 from . import connection
 
 
-class LXDOperation(object):
-    def __init__(self):
-        self.connection = connection.LXDConnection()
-
+class LXDOperation(base.LXDBase):
     def operation_list(self):
         (state, data) = self.connection.get_object('GET', '/1.0/operations')
         return [operation.split('/1.0/operations/')[-1]

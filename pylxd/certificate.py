@@ -14,12 +14,10 @@
 
 import json
 
+from . import base
 from . import connection
 
-class LXDCertificate(object):
-    def __init__(self):
-        self.connection = connection.LXDConnection()
-
+class LXDCertificate(base.LXDBase):
     def certificate_list(self):
         (state, data) = self.connection.get_object('GET', '/1.0/certificates')
         return [certificate.split('/1.0/certitifcates/')[-1] for certificate in data['metadata']]

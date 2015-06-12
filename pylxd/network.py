@@ -12,13 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from . import base
 from . import connection
 
 
-class LXDNetwork(object):
-    def __init__(self):
-        self.connection = connection.LXDConnection()
-
+class LXDNetwork(base.LXDBase):
     def network_list(self):
         (state, data) = self.connection.get_object('GET', '/1.0/networks')
         return [network.split('/1.0/networks')[-1]
