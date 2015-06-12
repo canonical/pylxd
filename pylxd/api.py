@@ -14,6 +14,7 @@
 #    under the License.
 
 
+from . import connection
 from . import container
 from . import certificate
 from . import hosts
@@ -22,16 +23,18 @@ from . import network
 from . import operation
 from . import profiles
 
+
 class API(object):
-    def __init__(self):
-        self.hosts = hosts.LXDHost()
-        self.image = image.LXDImage()
-        self.alias = image.LXDAlias()
-        self.network = network.LXDNetwork()
-        self.operation = operation.LXDOperation()
-        self.profiles = profiles.LXDProfile()
-        self.certificate = certificate.LXDCertificate()
-        self.container = container.LXDContainer()
+    def __init__(self, host=None, port=8443):
+        conn = self.connection = connection.LXDConnection(host=host, port=port)
+        self.hosts = hosts.LXDHost(conn)
+        self.image = image.LXDImage(conn)
+        self.alias = image.LXDAlias(conn)
+        self.network = network.LXDNetwork(conn)
+        self.operation = operation.LXDOperation(conn)
+        self.profiles = profiles.LXDProfile(conn)
+        self.certificate = certificate.LXDCertificate(conn)
+        self.container = container.LXDContainer(conn)
 
     # host
     def host_ping(self):

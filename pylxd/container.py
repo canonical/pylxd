@@ -16,12 +16,10 @@
 import json
 import os
 
+from . import base
 from . import connection
 
-class LXDContainer(object):
-    def __init__(self):
-        self.connection = connection.LXDConnection()
-
+class LXDContainer(base.LXDBase):
     # containers:
     def container_list(self):
         (state, data) = self.connection.get_object('GET', '/1.0/containers')
