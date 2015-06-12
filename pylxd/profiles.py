@@ -14,13 +14,11 @@
 
 import json
 
+from . import base
 from . import connection
 
 
-class LXDProfile(object):
-    def __init__(self):
-        self.connection = connection.LXDConnection()
-
+class LXDProfile(base.LXDBase):
     def profile_list(self):
         (state, data) = self.connection.get_object('GET', '/1.0/profiles')
         return [profiles.split('/1.0/profiles/')[-1] for profiles in data['metadata']]

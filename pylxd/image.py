@@ -16,6 +16,7 @@ import datetime
 import json
 import urllib
 
+from . import base
 from . import connection
 from . import exceptions
 
@@ -31,9 +32,9 @@ image_architecture = {
 }
 
 
-class LXDImage(object):
-    def __init__(self):
-        self.connection = connection.LXDConnection()
+class LXDImage(base.LXDBase):
+    def __init__(self, conn=None):
+        self.connection = conn or connection.LXDConnection()
 
     # list images
     def image_list(self):
@@ -179,17 +180,14 @@ class LXDImage(object):
             raise
 
 
-class LXDAlias(object):
-    def __init__(self):
-        self.connection = connection.LXDConnection()
-
+class LXDAlias(base.LXDBase):
     def alias_list(self):
         (state, data) = self.connection.get_object('GET', '/1.0/images/aliases')
         return [alias.split('/1.0/images/aliases/')[-1]
                 for alias in data('metadata')]
 
     def alias_show(self, alias):
-        return self.connection.get_object('GET', '/1.0/iamges/aliases/%s'
+        return self.connection.get_object('GET', '/1.0/images/aliases/%s'
                                           % alias)
 
     def alias_update(self, alias):

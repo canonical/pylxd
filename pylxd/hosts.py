@@ -15,15 +15,12 @@ from __future__ import print_function
 
 import json
 
-from . import connection
+from . import base
 
 from . import utils
 
 
-class LXDHost(object):
-    def __init__(self):
-        self.connection = connection.LXDConnection()
-
+class LXDHost(base.LXDBase):
     def host_ping(self):
         try:
             return self.connection.get_status('GET', '/1.0')

@@ -60,11 +60,22 @@ class HTTPSConnection(httplib.HTTPConnection):
 
 
 class LXDConnection(object):
-    def __init__(self):
-        self.unix_socket = '/var/lib/lxd/unix.socket'
+    def __init__(self, host=None, port=8443):
+        if host:
+            self.host = host
+            self.port = port
+            self.unix_socket = None
+        else:
+            if 'LXD_DIR' in os.environ:
+                self.unix_socket = os.path.join(os.enviorn['LXD_DIR'], 'unix.socket')
+            else:
+                self.unix_socket = '/var/lib/lxd/unix.socket'
+            self.host, self.port = None, None
         self.connection = None
 
     def get_connection(self):
+        if self.host:
+            return HTTPSConnection(self.host, self.port)
         return UnixHTTPConnection(self.unix_socket)
 
     def get_object(self, *args, **kwargs):
