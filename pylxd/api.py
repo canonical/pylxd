@@ -56,10 +56,13 @@ class API(object):
         return self.hosts.get_lxd_driver(data)
 
     def get_lxc_version(self, data=None):
-        return self.get_lxc_version(data)
+        return self.hosts.get_lxc_version(data)
+
+    def get_lxd_version(self, data=None):
+        return self.hosts.get_lxd_version(data)
 
     def get_kernel_version(self, data=None):
-        return self.get_kernel_version(data)
+        return self.hosts.get_kernel_version(data)
 
     # images
     def image_list(self):
