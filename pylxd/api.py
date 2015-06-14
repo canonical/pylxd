@@ -75,7 +75,11 @@ class API(object):
         return self.image.image_info(image)
 
     def image_defined(self, image):
-        return self.image.get_image_defined(image)
+        try:
+            self.image.get_image_defined(image)
+            return True
+        except Exception:
+            return False
 
     def image_upload_date(self, image, data=None):
         return self.image.get_image_date(image, data, 'uploaded_at')
