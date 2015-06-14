@@ -45,6 +45,10 @@ class LXDImage(base.LXDBase):
             print("Unable to fetch image info - {}".format(e))
             raise
 
+    def image_defined(self, image):
+        return self.connection.get_status('GET', '/1.0/images/%s'
+                                            % image)
+
     def image_list_by_key(self, params):
         try:
             (state, data) = self.connection.get_object('GET', '/1.0/images',

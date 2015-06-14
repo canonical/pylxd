@@ -68,18 +68,14 @@ class API(object):
     def image_list(self):
         return self.image.image_list()
 
+    def image_defined(self, image):
+        return self.image.image_defined(image)
+
     def image_search(self, params):
         return self.image.image_list_by_key(params)
 
     def image_info(self, image):
         return self.image.image_info(image)
-
-    def image_defined(self, image):
-        try:
-            self.image.get_image_defined(image)
-            return True
-        except Exception:
-            return False
 
     def image_upload_date(self, image, data=None):
         return self.image.get_image_date(image, data, 'uploaded_at')
@@ -129,11 +125,7 @@ class API(object):
         return self.container.container_list()
 
     def container_defined(self, container):
-        try:
-            self.container.container_defined(container)
-            return True
-        except:
-            return False
+        return self.container.container_defined(container)
 
     def container_running(self, container):
         return self.container.container_running(container)
@@ -215,6 +207,10 @@ class API(object):
     def profile_show(self, profile):
         ''' Show LXD profile '''
         return self.profiles.profile_show(profile)
+
+    def profile_defined(self, profile):
+        ''' Check to see if profile is defined. '''
+        return self.profiles.
 
     def profile_list(self):
         ''' List LXD profiles '''

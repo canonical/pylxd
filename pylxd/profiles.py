@@ -32,6 +32,10 @@ class LXDProfile(base.LXDBase):
         ''' Display the LXD profile '''
         return self.connection.get_object('GET', '/1.0/profiles/%s'
                                           % profile)
+    def profile_defined(self, profile):
+        ''' Check for an LXD profile. '''
+        return self.connection.get_status('GET', '/1.0/profiles/%s'
+                                            % profile)
 
     def profile_update(self, profile, config):
         ''' Update the LXD profile (not implemented). '''

@@ -7,5 +7,10 @@ def block_container():
 def get_lxd_error(state, data):
     status_code = data.get('error_code')
     error = data.get('error')
-    msg = ("Error %s - %s." % (status_code, error))
-    raise Exception(msg)
+    error_code = int(data.get('error_code'))
+    if state == 404:
+        return False
+    else:
+        ''' If it is much worse than that.'''
+        msg = ("Error %s - %s." % (status_code, error))
+        raise Exception(msg)
