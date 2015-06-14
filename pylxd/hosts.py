@@ -13,11 +13,7 @@
 #    under the License.
 from __future__ import print_function
 
-import json
-
 from . import base
-
-from . import utils
 
 
 class LXDHost(base.LXDBase):
@@ -91,7 +87,7 @@ class LXDHost(base.LXDBase):
             if data is None:
                 (state, data) = self.connection.get_object('GET', '/1.0')
                 data = data.get('metadata')
-            return data['environment']['lxd_version']
+            return float(data['environment']['lxd_version'])
         except Exception as e:
             print('Handling run-time error:'.format(e))
 
@@ -103,5 +99,3 @@ class LXDHost(base.LXDBase):
             return data['environment']['kernel_version']
         except Exception as e:
             print('Handling run-time error:'.format(e))
-
-
