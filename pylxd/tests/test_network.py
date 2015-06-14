@@ -16,9 +16,15 @@ import unittest
 
 from pylxd import api
 
+import pylxd.tests.utils as utils
+
 class LXDTestNetwork(unittest.TestCase):
     def setUp(self):
         self.api = api.API()
+
+        self.config = {'name': 'test-container',
+                       'source': {'type': 'none'}}
+        self.container = 'test-container'
 
     def test_show_network_info(self):
         network = self.api.network_show('lxcbr0')
@@ -26,3 +32,6 @@ class LXDTestNetwork(unittest.TestCase):
         self.assertIn('network_name', network)
         self.assertIn('network_type', network)
         self.assertIn('network_members', network)
+
+    def test_show_network_member(self):
+        utils.create_lxd_container(self.container, self.config)

@@ -74,6 +74,9 @@ class API(object):
     def image_info(self, image):
         return self.image.image_info(image)
 
+    def image_defined(self, image):
+        return self.image.get_image_defined(image)
+
     def image_upload_date(self, image, data=None):
         return self.image.get_image_date(image, data, 'uploaded_at')
 
@@ -202,21 +205,27 @@ class API(object):
 
     # profiles
     def profile_create(self, profile):
+        ''' Create LXD profile '''
         return self.profiles.profile_create(profile)
 
     def profile_show(self, profile):
+        ''' Show LXD profile '''
         return self.profiles.profile_show(profile)
 
     def profile_list(self):
+        ''' List LXD profiles '''
         return self.profiles.profile_list()
 
     def profile_update(self, profile, config):
+        ''' Update LXD profile '''
         return self.profiles.profile_update(profile, config)
 
     def profile_rename(self, profile, config):
-        return self.profiles.profile_rename(profile, config)
+        ''' Rename LXD profile '''
+        raise NotImplemented()
 
     def profile_delete(self, profile):
+        ''' Delete LXD profile '''
         return self.profiles.profile_delete(profile)
 
     # lxd operations
