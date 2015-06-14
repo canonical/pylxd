@@ -15,7 +15,6 @@
 import json
 
 from . import base
-from . import connection
 
 
 class LXDProfile(base.LXDBase):
@@ -28,16 +27,18 @@ class LXDProfile(base.LXDBase):
                                           json.dumps(profile))
 
     def profile_show(self, profile):
-        return self.connection.get_object('GET', '/1.0/profile/%s'
+        return self.connection.get_object('GET', '/1.0/profiles/%s'
                                           % profile)
 
-    def profile_update(self, profile):
-        return self.connection.get_status('PUT', '/1.0/profiles',
-                                          json.dumps(profile))
+    def profile_update(self, profile, config):
+        return self.connection.get_status('PUT', '/1.0/profiles/%s'
+                                          % profile,
+                                          json.dumps(config))
 
-    def profile_rename(self, profile):
-        return self.connection.get_status('POST', '/1.0/profiles',
-                                          json.dumps(profile))
+    def profile_rename(self, profile, config):
+        return self.connection.get_status('POST', '/1.0/profiles/%s'
+                                          % profile,
+                                          json.dumps(config))
 
     def profile_delete(self, profile):
         return self.connection.get_status('DELETE', '/1.0/profiles/%s'

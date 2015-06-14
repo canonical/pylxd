@@ -210,11 +210,11 @@ class API(object):
     def profile_list(self):
         return self.profiles.profile_list()
 
-    def profile_update(self, profile):
-        return self.profiles.profile_update(profile)
+    def profile_update(self, profile, config):
+        return self.profiles.profile_update(profile, config)
 
-    def profile_rename(self, profile):
-        return self.profiles.profile_rename(profile)
+    def profile_rename(self, profile, config):
+        return self.profiles.profile_rename(profile, config)
 
     def profile_delete(self, profile):
         return self.profiles.profile_delete(profile)
