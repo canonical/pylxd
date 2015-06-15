@@ -16,8 +16,6 @@ import unittest
 
 from pylxd import api
 
-import pylxd.tests.utils as utils
-
 class LXDTestNetwork(unittest.TestCase):
     def setUp(self):
         self.api = api.API()
