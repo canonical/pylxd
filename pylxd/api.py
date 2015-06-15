@@ -56,14 +56,20 @@ class API(object):
         return self.hosts.get_lxd_driver(data)
 
     def get_lxc_version(self, data=None):
-        return self.get_lxc_version(data)
+        return self.hosts.get_lxc_version(data)
+
+    def get_lxd_version(self, data=None):
+        return self.hosts.get_lxd_version(data)
 
     def get_kernel_version(self, data=None):
-        return self.get_kernel_version(data)
+        return self.hosts.get_kernel_version(data)
 
     # images
     def image_list(self):
         return self.image.image_list()
+
+    def image_defined(self, image):
+        return self.image.image_defined(image)
 
     def image_search(self, params):
         return self.image.image_list_by_key(params)
@@ -119,11 +125,7 @@ class API(object):
         return self.container.container_list()
 
     def container_defined(self, container):
-        try:
-            self.container.container_defined(container)
-            return True
-        except:
-            return False
+        return self.container.container_defined(container)
 
     def container_running(self, container):
         return self.container.container_running(container)
@@ -199,21 +201,31 @@ class API(object):
 
     # profiles
     def profile_create(self, profile):
+        ''' Create LXD profile '''
         return self.profiles.profile_create(profile)
 
     def profile_show(self, profile):
+        ''' Show LXD profile '''
         return self.profiles.profile_show(profile)
 
+    def profile_defined(self, profile):
+        ''' Check to see if profile is defined. '''
+        return self.profiles.profile_defined(profile)
+
     def profile_list(self):
+        ''' List LXD profiles '''
         return self.profiles.profile_list()
 
-    def profile_update(self, profile):
-        return self.profiles.profile_update(profile)
+    def profile_update(self, profile, config):
+        ''' Update LXD profile '''
+        return self.profiles.profile_update(profile, config)
 
-    def profile_rename(self, profile):
-        return self.profiles.profile_rename(profile)
+    def profile_rename(self, profile, config):
+        ''' Rename LXD profile '''
+        raise NotImplemented()
 
     def profile_delete(self, profile):
+        ''' Delete LXD profile '''
         return self.profiles.profile_delete(profile)
 
     # lxd operations

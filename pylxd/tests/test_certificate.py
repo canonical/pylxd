@@ -13,23 +13,14 @@
 #    under the License.
 
 import unittest
-
 from pylxd import api
 
-class LXDTestNetwork(unittest.TestCase):
+class PyLXDTestCertificate(unittest.TestCase):
     def setUp(self):
-        self.api = api.API()
+        self.certificate_config = { 'type': 'client',
+                                    'name': 'test-certificate',
+                                  }
+        self.client = api.API()
 
-        self.config = {'name': 'test-container',
-                       'source': {'type': 'none'}}
-        self.container = 'test-container'
-
-    def test_show_network_info(self):
-        network = self.api.network_show('lxcbr0')
-
-        self.assertIn('network_name', network)
-        self.assertIn('network_type', network)
-        self.assertIn('network_members', network)
-
-    def test_show_network_member(self):
-        utils.create_lxd_container(self.container, self.config)
+    def test_list_certificates(self):
+        self.assertEqual(len(self.client.certificate_list()), 0)

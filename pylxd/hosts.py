@@ -13,11 +13,7 @@
 #    under the License.
 from __future__ import print_function
 
-import json
-
 from . import base
-
-from . import utils
 
 
 class LXDHost(base.LXDBase):
@@ -36,6 +32,7 @@ class LXDHost(base.LXDBase):
             'lxd_trusted_host': self.get_lxd_host_trust(data.get('metadata')),
             'lxd_backing_fs': self.get_lxd_backing_fs(data.get('metadata')),
             'lxd_driver': self.get_lxd_driver(data.get('metadata')),
+            'lxd_version': self.get_lxd_version(data.get('metadata')),
             'lxc_version': self.get_lxc_version(data.get('metadata')),
             'kernel_version': self.get_kernel_version(data.get('metadata'))
         }
@@ -85,6 +82,15 @@ class LXDHost(base.LXDBase):
         except Exception as e:
             print('Handling run-time error:'.format(e))
 
+    def get_lxd_version(self, data):
+        try:
+            if data is None:
+                (state, data) = self.connection.get_object('GET', '/1.0')
+                data = data.get('metadata')
+            return float(data['environment']['lxd_version'])
+        except Exception as e:
+            print('Handling run-time error:'.format(e))
+
     def get_kernel_version(self, data):
         try:
             if data is None:
@@ -93,5 +99,3 @@ class LXDHost(base.LXDBase):
             return data['environment']['kernel_version']
         except Exception as e:
             print('Handling run-time error:'.format(e))
-
-
