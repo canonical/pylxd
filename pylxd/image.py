@@ -152,10 +152,11 @@ class LXDImage(base.LXDBase):
             raise
 
     # image operations
-    def image_upload(self, path, filename):
+    def image_upload(self, path=None, data=None):
+        data = data or open(path, 'rb').read()
         try:
             return self.connection.get_status('POST', '/1.0/images',
-                                              open(path, 'rb'))
+                                              data)
         except Exception as e:
             print("Unable to upload image - {}".format(e))
             raise
@@ -170,7 +171,7 @@ class LXDImage(base.LXDBase):
 
     def image_export(self, image):
         try:
-            return self.connection.get_object('GET', '/1.0/images/%s/export' % image)
+            return self.connection.get_raw('GET', '/1.0/images/%s/export' % image)
         except Exception as e:
             print("Unable to export image - {}".format(e))
             raise
