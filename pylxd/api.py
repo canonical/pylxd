@@ -210,7 +210,7 @@ class API(object):
 
     def profile_defined(self, profile):
         ''' Check to see if profile is defined. '''
-        return self.profiles.
+        return self.profiles.profile_defined(profile)
 
     def profile_list(self):
         ''' List LXD profiles '''
