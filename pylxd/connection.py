@@ -102,10 +102,8 @@ class LXDConnection(object):
         if not data:
             msg = "Null Data"
             raise Exception(msg)
-        elif state == 404:
-            status = False
         elif data.get('error'):
-            status = utils.get_lxd_error(state, data)
+            utils.get_lxd_error(state, data)
         elif state == 200 or (state == 202 and data.get('status_code') == 100):
             status = True
         return status
