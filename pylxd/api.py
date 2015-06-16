@@ -105,6 +105,9 @@ class API(object):
     def alias_list(self):
         return self.alias.alias_list()
 
+    def alias_defined(self, alias):
+        return self.alias.alias_defined(alias)
+
     def alias_create(self, alias):
         return self.alias.alias_create(alias)
 

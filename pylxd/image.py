@@ -199,6 +199,10 @@ class LXDAlias(base.LXDBase):
         return [alias.split('/1.0/images/aliases/')[-1]
                 for alias in data('metadata')]
 
+    def alias_defined(self, alias):
+        return self.connection.get_status('GET', '/1.0/iamges/aliases/%s'
+                                          % alias)
+
     def alias_show(self, alias):
         return self.connection.get_object('GET', '/1.0/images/aliases/%s'
                                           % alias)
