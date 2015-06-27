@@ -46,6 +46,10 @@ class LXDContainer(base.LXDBase):
         return self.connection.get_object('POST', '/1.0/containers',
                                           json.dumps(container))
 
+    def container_update(self, container, config):
+        return self.connection.get_object('PUT', '/1.0/containers/%s'
+                                          % container, json.dumps(config))
+
     def container_defined(self, container):
         return self.connection.get_status('GET', '/1.0/containers/%s/state'
                                           % container)

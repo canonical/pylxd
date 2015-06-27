@@ -136,6 +136,9 @@ class API(object):
     def container_init(self, container):
         return self.container.container_init(container)
 
+    def container_update(self, container, config):
+        return self.container.container_update(container, config)
+
     def container_state(self, container):
         return self.container.container_state(container)
 
