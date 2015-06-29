@@ -13,6 +13,7 @@
 #    under the License.
 
 import os
+import subprocess
 
 import unittest
 
@@ -40,3 +41,21 @@ class LXDFunctionalTestHost(unittest.TestCase):
 
     def test_get_lxd_host_trust(self):
         self.assertTrue(self.lxd.get_lxd_host_trust())
+
+    def test_get_lxd_backing_fs(self):
+        df_output = [
+            s.split() for s in os.popen("df -TP /var/lib/lxd").\
+                    read().splitlines()]
+        self.assertEquals(df_output[1][1],
+                         self.lxd.get_lxd_backing_fs(data=None))
+
+    def test_get_lxd_driver(self):
+        self.assertEqual('lxc', self.lxd.get_lxd_driver(data=None))
+
+    def test_get_lxc_version(self):
+        process = subprocess.Popen(['lxc-info', '--version'], stdout=subprocess.PIPE)
+        version = process.communicate()[0]
+        self.assertEqual(version.rstrip(), self.lxd.get_lxc_version(data=None))
+
+    def test_get_kernel_version(self):
+        self.assertEqual(os.uname()[2], self.lxd.get_kernel_version(data=None))
