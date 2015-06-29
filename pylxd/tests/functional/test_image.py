@@ -24,23 +24,28 @@ class LXDFunctionalTestImage(unittest.TestCase):
     def setUp(self):
         super(LXDFunctionalTestImage, self).setUp()
         self.lxd = api.API()
+        self.lxd_remote = api.API(host='images.linuxcontainers.org')
 
         self.image = {'os': 'ubuntu',
                       'release': 'precise',
                       'arch': 'amd64',
                       'variant': 'default'}
-        self.target = None
+
+        self.target = utils.upload_image(self.image)
 
     def test_list_instances(self):
-        self.assertEqual(0, len(self.lxd.image_list()))
+        self.assertEqual(1, len(self.lxd.image_list()))
 
-    def test_image_defined_fail(self):
-        image = 'test-dummy'
-        self.assertRaises(lxd_exceptions.APIError,
-            self.lxd.image.image_defined, image)
+    #def test_image_defined_fail(self):
+    #    image = 'test-dummy'
+    #    self.assertFalse(self.lxd.image.image_defined(image))
 
-    def test_image_defined(self):
-        target = utils.upload_image(self.image)
-        time.sleep(5)
-        self.assertTrue(self.lxd.image_defined(self.target))
+    #def test_image_defined(self):
+    #    self.assertTrue(self.lxd.image_defined(self.target))
+
+    def test_image_search(self):
+        data = self.lxd_remote.image_search({'arch': 'amd64'})
+        self.assertEqual(64, len(data[0]))
+
+    def TearDown(self):
         utils.delete_image(self.target)

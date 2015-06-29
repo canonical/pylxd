@@ -13,6 +13,7 @@
 #    under the License.
 
 import uuid
+import tempfile
 
 from pylxd import api
 
@@ -27,10 +28,11 @@ def upload_image(image):
     tgt = meta['target']
 
     i = imgs.image_export(tgt)
-    c = lxd.image_upload(data=i)
-    image_name = str(uuid.uuid4())
-    image = {'name': image_name, 'target': tgt}
-    lxd.alias_create(image)
+ 
+ c = lxd.image_upload(data=i)
+ #   image_name = str(uuid.uuid4())
+ #   image = {'name': image_name, 'target': tgt}
+ #   lxd.alias_update(image)
 
     return image_name
 
