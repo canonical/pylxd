@@ -34,3 +34,9 @@ class LXDFunctionalTestHost(unittest.TestCase):
         self.assertEqual(host['lxd_api_compat_level'], 1)
         kernel_version = os.uname()[2]
         self.assertEqual(host['kernel_version'], kernel_version)
+
+    def test_get_lxd_compat(self):
+        self.assertEqual(1, self.lxd.get_lxd_api_compat())
+
+    def test_get_lxd_host_trust(self):
+        self.assertTrue(self.lxd.get_lxd_host_trust())
