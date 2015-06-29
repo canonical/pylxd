@@ -46,8 +46,14 @@ class LXDImage(base.LXDBase):
             raise
 
     def image_defined(self, image):
-        return self.connection.get_status('GET', '/1.0/images/%s'
-                                            % image)
+        try:
+            return self.connection.get_status('GET', '/1.0/images/%s'
+                                                    % image)
+        except exceptions.APIError as ex:
+            if ex.status_code == 404:
+                return False
+            else:
+                return True
 
     def image_list_by_key(self, params):
         try:
