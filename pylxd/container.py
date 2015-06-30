@@ -138,7 +138,7 @@ class LXDContainer(base.LXDBase):
     def snapshot_rename(self, container, snapshot, config):
         return self.connection.get_object('POST',
                                           '/1.0/containers/%s/snapshots/%s'
-                                          % (contianer, snapshot),
+                                          % (container, snapshot),
                                           json.dumps(config))
 
     def snapshot_delete(self, container, snapshot):
