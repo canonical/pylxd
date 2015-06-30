@@ -67,7 +67,7 @@ class LXDConnection(object):
             self.unix_socket = None
         else:
             if 'LXD_DIR' in os.environ:
-                self.unix_socket = os.path.join(os.enviorn['LXD_DIR'], 'unix.socket')
+                self.unix_socket = os.path.join(os.environ['LXD_DIR'], 'unix.socket')
             else:
                 self.unix_socket = '/var/lib/lxd/unix.socket'
             self.host, self.port = None, None
