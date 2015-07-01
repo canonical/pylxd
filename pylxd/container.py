@@ -105,6 +105,10 @@ class LXDContainer(base.LXDBase):
         return self.connection.get_raw('GET', '/1.0/containers/%s/files?path=%s'
                                           % (container, filename))
 
+    def container_publish(self, container):
+        return self.connection.get_object('POST', '/1.0/images',
+                                          json.dumps(container))
+
     # misc operations
     def run_command(self, container, args, interactive, web_sockets, env):
         env = env or {}

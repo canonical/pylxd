@@ -167,6 +167,9 @@ class API(object):
     def get_container_file(self, container, filename):
         return self.container.get_container_file(container, filename)
 
+    def container_publish(self, container):
+        return self.container.container_publish(container)
+
     def put_container_file(self):
         raise NotImplemented()
 
