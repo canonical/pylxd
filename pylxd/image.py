@@ -200,7 +200,7 @@ class LXDImage(base.LXDBase):
 class LXDAlias(base.LXDBase):
     def alias_list(self):
         (state, data) = self.connection.get_object('GET', '/1.0/images/aliases')
-        return [alias.split('/1.0/images/aliases')[-1] for alias in data['metadata']]
+        return [alias.split('/1.0/images/aliases/')[-1] for alias in data['metadata']]
 
     def alias_defined(self, alias):
         return self.connection.get_status('GET', '/1.0/iamges/aliases/%s'
