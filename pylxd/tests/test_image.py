@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime
 import mock
 import unittest
 
@@ -48,7 +49,9 @@ class LXDUnitTestImage(unittest.TestCase):
     def test_image_upload_date(self):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
             ms.return_value = ('200', fake_api.fake_image_info())
-            self.assertEqual('2015-06-30 09:10:53', 
+            dt = (datetime.datetime.fromtimestamp(1435669853)
+                  .strftime('%Y-%m-%d %H:%M:%S'))
+            self.assertEqual(dt,
                             self.lxd.image_upload_date('04aac4257341', data=None))
 
     def test_image_create_date(self):
