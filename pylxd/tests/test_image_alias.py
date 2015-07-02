@@ -18,7 +18,7 @@ import unittest
 from pylxd import api
 from pylxd import connection
 
-import fake_api
+from pylxd.tests import fake_api
 
 
 class LXDUnitTestAlias(unittest.TestCase):
