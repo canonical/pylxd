@@ -1,4 +1,3 @@
-
 # Copyright (c) 2015 Canonical Ltd
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,33 +13,28 @@
 #    under the License.
 
 import json
-import os
 
-from . import base
-from . import connection
+from pylxd import base
+
 
 class LXDContainer(base.LXDBase):
     # containers:
+
     def container_list(self):
         (state, data) = self.connection.get_object('GET', '/1.0/containers')
-        return [container.split('/1.0/containers/')[-1] for container in data['metadata']]
-
-    def container_defined(self, container):
-        (state, data) = self.connection.get_object('GET', '/1.0/containers/%s/state'
-                                                % container)
-        return data.get('status')
+        return [container.split('/1.0/containers/')[-1]
+                for container in data['metadata']]
 
     def container_running(self, container):
-        (state, data) = self.connection.get_object('GET',
-                                                  '/1.0/containers/%s/state'
-                                                  % container)
+        (state, data) = self.connection.get_object(
+            'GET',
+            '/1.0/containers/%s/state' % container)
         data = data.get('metadata')
         container_running = False
         if data['status'] in ['RUNNING', 'STARTING', 'FREEZING,FROZEN',
-                                'THAWED']:
-           container_running = True
+                              'THAWED']:
+            container_running = True
         return container_running
-
 
     def container_init(self, container):
         return self.connection.get_object('POST', '/1.0/containers',
@@ -54,12 +48,10 @@ class LXDContainer(base.LXDBase):
         return self.connection.get_status('GET', '/1.0/containers/%s/state'
                                           % container)
 
-
     def container_state(self, container):
-        (state, data) = self.connection.get_object('GET', '/1.0/containers/%s/state'
-                                                   % container)
+        (state, data) = self.connection.get_object(
+            'GET', '/1.0/containers/%s/state' % container)
         return data['metadata']['status']
-
 
     def container_start(self, container, timeout):
         action = {'action': 'start', 'timeout': timeout}
@@ -96,14 +88,15 @@ class LXDContainer(base.LXDBase):
                                           % container)
 
     def get_container_log(self, container):
-        (state, data) = self.connection.get_object('GET', '/1.0/containers/%s?log=true'
-                                                            % container)
+        (state, data) = self.connection.get_object(
+            'GET', '/1.0/containers/%s?log=true' % container)
         return data['metadata']['log']
 
     # file operations
     def get_container_file(self, container, filename):
-        return self.connection.get_raw('GET', '/1.0/containers/%s/files?path=%s'
-                                          % (container, filename))
+        return self.connection.get_raw(
+            'GET',
+            '/1.0/containers/%s/files?path=%s' % (container, filename))
 
     def container_publish(self, container):
         return self.connection.get_object('POST', '/1.0/images',
@@ -121,18 +114,18 @@ class LXDContainer(base.LXDBase):
 
     # snapshots
     def snapshot_list(self, container):
-        (state, data) = self.connection.get_object('GET',
-                                            '/1.0/containers/%s/snapshots'
-                                            % container)
+        (state, data) = self.connection.get_object(
+            'GET',
+            '/1.0/containers/%s/snapshots' % container)
         return [snapshot.split('/1.0/containers/%s/snapshots/%s/'
-                                % (container, container))[-1] \
+                               % (container, container))[-1]
                 for snapshot in data['metadata']]
 
     def snapshot_create(self, container, config):
         return self.connection.get_object('POST',
-                                                '/1.0/containers/%s/snapshots'
-                                                % container,
-                                                json.dumps(config))
+                                          '/1.0/containers/%s/snapshots'
+                                          % container,
+                                          json.dumps(config))
 
     def snapshot_info(self, container, snapshot):
         return self.conncetion.get_object('GET',

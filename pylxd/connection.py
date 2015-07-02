@@ -18,10 +18,11 @@ import os
 import socket
 import ssl
 
-from . import utils
+from pylxd import utils
 
 
 class UnixHTTPConnection(httplib.HTTPConnection):
+
     def __init__(self, path, host='localhost', port=None, strict=None,
                  timeout=None):
         httplib.HTTPConnection.__init__(self, host, port=port,
@@ -60,6 +61,7 @@ class HTTPSConnection(httplib.HTTPConnection):
 
 
 class LXDConnection(object):
+
     def __init__(self, host=None, port=8443):
         if host:
             self.host = host
@@ -67,7 +69,8 @@ class LXDConnection(object):
             self.unix_socket = None
         else:
             if 'LXD_DIR' in os.environ:
-                self.unix_socket = os.path.join(os.environ['LXD_DIR'], 'unix.socket')
+                self.unix_socket = os.path.join(os.environ['LXD_DIR'],
+                                                'unix.socket')
             else:
                 self.unix_socket = '/var/lib/lxd/unix.socket'
             self.host, self.port = None, None

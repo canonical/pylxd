@@ -13,18 +13,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-from . import connection
-from . import container
-from . import certificate
-from . import hosts
-from . import image
-from . import network
-from . import operation
-from . import profiles
+from pylxd import certificate
+from pylxd import connection
+from pylxd import container
+from pylxd import hosts
+from pylxd import image
+from pylxd import network
+from pylxd import operation
+from pylxd import profiles
 
 
 class API(object):
+
     def __init__(self, host=None, port=8443):
         conn = self.connection = connection.LXDConnection(host=host, port=port)
         self.hosts = hosts.LXDHost(conn)
@@ -210,31 +210,31 @@ class API(object):
 
     # profiles
     def profile_create(self, profile):
-        ''' Create LXD profile '''
+        '''Create LXD profile'''
         return self.profiles.profile_create(profile)
 
     def profile_show(self, profile):
-        ''' Show LXD profile '''
+        '''Show LXD profile'''
         return self.profiles.profile_show(profile)
 
     def profile_defined(self, profile):
-        ''' Check to see if profile is defined. '''
+        '''Check to see if profile is defined'''
         return self.profiles.profile_defined(profile)
 
     def profile_list(self):
-        ''' List LXD profiles '''
+        '''List LXD profiles'''
         return self.profiles.profile_list()
 
     def profile_update(self, profile, config):
-        ''' Update LXD profile '''
+        '''Update LXD profile'''
         return self.profiles.profile_update(profile, config)
 
     def profile_rename(self, profile, config):
-        ''' Rename LXD profile '''
+        '''Rename LXD profile'''
         raise NotImplemented()
 
     def profile_delete(self, profile):
-        ''' Delete LXD profile '''
+        '''Delete LXD profile'''
         return self.profiles.profile_delete(profile)
 
     # lxd operations
