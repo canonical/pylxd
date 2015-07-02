@@ -12,22 +12,22 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import httplib
 import json
 import os
 import socket
 import ssl
 
 from pylxd import utils
+from six.moves import http_client
 
 
-class UnixHTTPConnection(httplib.HTTPConnection):
+class UnixHTTPConnection(http_client.HTTPConnection):
 
     def __init__(self, path, host='localhost', port=None, strict=None,
                  timeout=None):
-        httplib.HTTPConnection.__init__(self, host, port=port,
-                                        strict=strict,
-                                        timeout=timeout)
+        http_client.HTTPConnection.__init__(self, host, port=port,
+                                            strict=strict,
+                                            timeout=timeout)
 
         self.path = path
 
@@ -37,11 +37,11 @@ class UnixHTTPConnection(httplib.HTTPConnection):
         self.sock = sock
 
 
-class HTTPSConnection(httplib.HTTPConnection):
+class HTTPSConnection(http_client.HTTPConnection):
     default_port = 8443
 
     def __init__(self, *args, **kwargs):
-        httplib.HTTPConnection.__init__(self, *args, **kwargs)
+        http_client.HTTPConnection.__init__(self, *args, **kwargs)
 
     def connect(self):
         sock = socket.create_connection((self.host, self.port),
