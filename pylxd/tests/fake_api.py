@@ -59,5 +59,7 @@ def fake_alias_list():
 		"type": "sync",
 		"status": "Success",
 		"status_code": 200,
-		"metadata": []
+		"metadata": [
+			"/1.0/images/aliases/ubuntu"
+        ]
 	}

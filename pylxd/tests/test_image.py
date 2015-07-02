@@ -12,11 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime
 import mock
 import unittest
 
 from pylxd import api
 from pylxd import connection
+from pylxd import exceptions
 
 import fake_api
 
@@ -31,13 +33,13 @@ class LXDUnitTestImage(unittest.TestCase):
             self.assertEqual(1, len(self.lxd.image_list()))
 
     def test_get_image_defined_fail(self):
-        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
-            ms.return_value = False
+        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
+            ms.side_effect = exceptions.APIError("404", 404)
             self.assertFalse(self.lxd.image_defined('test-image'))
 
     def test_get_image_defined(self):
-        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
-            ms.return_value = True
+        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
+            ms.return_value = ('200', fake_api.fake_image_info())
             self.assertFalse(self.lxd.image_defined('test-image'))
 
     def test_get_image_info(self):
@@ -48,7 +50,9 @@ class LXDUnitTestImage(unittest.TestCase):
     def test_image_upload_date(self):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
             ms.return_value = ('200', fake_api.fake_image_info())
-            self.assertEqual('2015-06-30 09:10:53', 
+            dt = (datetime.datetime.fromtimestamp(1435669853)
+                  .strftime('%Y-%m-%d %H:%M:%S'))
+            self.assertEqual(dt,
                             self.lxd.image_upload_date('04aac4257341', data=None))
 
     def test_image_create_date(self):
