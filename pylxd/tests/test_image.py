@@ -20,10 +20,11 @@ from pylxd import api
 from pylxd import connection
 from pylxd import exceptions
 
-import fake_api
+from pylxd.tests import fake_api
 
 
 class LXDUnitTestImage(unittest.TestCase):
+
     def setUp(self):
         super(LXDUnitTestImage, self).setUp()
         self.lxd = api.API()
