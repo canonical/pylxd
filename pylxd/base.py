@@ -13,9 +13,10 @@
 #    under the License.
 from __future__ import print_function
 
-from . import connection
+from pylxd import connection
 
 
 class LXDBase(object):
+
     def __init__(self, conn=None):
         self.connection = conn or connection.LXDConnection()

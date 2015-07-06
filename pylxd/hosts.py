@@ -13,10 +13,11 @@
 #    under the License.
 from __future__ import print_function
 
-from . import base
+from pylxd import base
 
 
 class LXDHost(base.LXDBase):
+
     def host_ping(self):
         try:
             return self.connection.get_status('GET', '/1.0')
@@ -28,13 +29,20 @@ class LXDHost(base.LXDBase):
         (state, data) = self.connection.get_object('GET', '/1.0')
 
         return {
-            'lxd_api_compat_level': self.get_lxd_api_compat(data.get('metadata')),
-            'lxd_trusted_host': self.get_lxd_host_trust(data.get('metadata')),
-            'lxd_backing_fs': self.get_lxd_backing_fs(data.get('metadata')),
-            'lxd_driver': self.get_lxd_driver(data.get('metadata')),
-            'lxd_version': self.get_lxd_version(data.get('metadata')),
-            'lxc_version': self.get_lxc_version(data.get('metadata')),
-            'kernel_version': self.get_kernel_version(data.get('metadata'))
+            'lxd_api_compat_level':
+                self.get_lxd_api_compat(data.get('metadata')),
+            'lxd_trusted_host':
+                self.get_lxd_host_trust(data.get('metadata')),
+            'lxd_backing_fs':
+                self.get_lxd_backing_fs(data.get('metadata')),
+            'lxd_driver':
+                self.get_lxd_driver(data.get('metadata')),
+            'lxd_version':
+                self.get_lxd_version(data.get('metadata')),
+            'lxc_version':
+                self.get_lxc_version(data.get('metadata')),
+            'kernel_version':
+                self.get_kernel_version(data.get('metadata'))
         }
 
     def get_lxd_api_compat(self, data):

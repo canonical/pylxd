@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
 def fake_image_list_empty():
     return {
         "type": "sync",
@@ -42,24 +43,26 @@ def fake_image_info():
                     "description": "ubuntu"
                 }
             ],
-                "architecture": 2,
-                "fingerprint": "04aac4257341478b49c25d22cea8a6ce0489dc6c42d835367945e7596368a37f",
-                "filename": "",
-                "properties": {},
-                "public": 0,
-                "size": 67043148,
-                "created_at": 0,
-                "expires_at": 0,
-                "uploaded_at": 1435669853
+            "architecture": 2,
+            "fingerprint": "04aac4257341478b49c25d22cea8a6ce"
+                           "0489dc6c42d835367945e7596368a37f",
+            "filename": "",
+            "properties": {},
+            "public": 0,
+            "size": 67043148,
+            "created_at": 0,
+            "expires_at": 0,
+            "uploaded_at": 1435669853
         }
     }
 
+
 def fake_alias_list():
-    return 	{
-		"type": "sync",
-		"status": "Success",
-		"status_code": 200,
-		"metadata": [
-			"/1.0/images/aliases/ubuntu"
-        ]
-	}
+    return {
+        "type": "sync",
+                "status": "Success",
+                "status_code": 200,
+                "metadata": [
+                    "/1.0/images/aliases/ubuntu"
+                ]
+    }

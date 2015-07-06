@@ -22,6 +22,7 @@ from pylxd import exceptions
 
 import fake_api
 
+
 class LXDUnitTestImage(unittest.TestCase):
     def setUp(self):
         super(LXDUnitTestImage, self).setUp()
@@ -53,19 +54,22 @@ class LXDUnitTestImage(unittest.TestCase):
             dt = (datetime.datetime.fromtimestamp(1435669853)
                   .strftime('%Y-%m-%d %H:%M:%S'))
             self.assertEqual(dt,
-                            self.lxd.image_upload_date('04aac4257341', data=None))
+                             self.lxd.image_upload_date('04aac4257341',
+                                                        data=None))
 
     def test_image_create_date(self):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
             ms.return_value = ('200', fake_api.fake_image_info())
             self.assertEqual('Unknown',
-                            self.lxd.image_create_date('04aac4257341', data=None))
+                             self.lxd.image_create_date('04aac4257341',
+                                                        data=None))
 
     def test_image_expire_date(self):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
             ms.return_value = ('200', fake_api.fake_image_info())
             self.assertEqual('Unknown',
-                            self.lxd.image_expire_date('04aac4257341', data=None))
+                             self.lxd.image_expire_date('04aac4257341',
+                                                        data=None))
 
     def test_image_delete(self):
         with mock.patch.object(connection.LXDConnection, 'get_status') as ms:

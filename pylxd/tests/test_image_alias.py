@@ -20,7 +20,9 @@ from pylxd import connection
 
 import fake_api
 
+
 class LXDUnitTestAlias(unittest.TestCase):
+
     def setUp(self):
         super(LXDUnitTestAlias, self).setUp()
         self.lxd = api.API()

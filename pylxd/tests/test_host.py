@@ -18,28 +18,29 @@ import unittest
 from pylxd import api
 from pylxd import connection
 
+
 class LXDUnitTestHost(unittest.TestCase):
     def setUp(self):
         super(LXDUnitTestHost, self).setUp()
         self.lxd = api.API()
 
         self.fake_host = {
-		        "type": "sync",
-		        "status": "Success",
-		        "status_code": 200,
-		        "metadata": {
-			        "api_compat": 1,
-			        "auth": "trusted",
-			        "config": {},
-			        "environment": {
-				        "backing_fs": "ext4",
-				        "driver": "lxc",
-				        "kernel_version": "3.19.0-22-generic",
-				        "lxc_version": "1.1.2",
-				        "lxd_version": "0.12"
-			        }
-		        }
-	    }
+            "type": "sync",
+            "status": "Success",
+            "status_code": 200,
+            "metadata": {
+                "api_compat": 1,
+                "auth": "trusted",
+                "config": {},
+                "environment": {
+                    "backing_fs": "ext4",
+                    "driver": "lxc",
+                    "kernel_version": "3.19.0-22-generic",
+                    "lxc_version": "1.1.2",
+                    "lxd_version": "0.12"
+                }
+            }
+        }
 
     @mock.patch.object(api.API, 'host_ping')
     def test_get_host_ping(self, mock_api):
@@ -64,12 +65,12 @@ class LXDUnitTestHost(unittest.TestCase):
             self.assertEqual(data, 1)
 
     def test_get_lxd_host_trusted(self):
-         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
+        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
             ms.return_value = ('200', self.fake_host)
             self.assertTrue(self.lxd.get_lxd_host_trust(data=None))
 
     def test_get_lxd_host_backing_fs(self):
-         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
+        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
             ms.return_value = ('200', self.fake_host)
             self.assertEqual('ext4', self.lxd.get_lxd_backing_fs(data=None))
 
@@ -91,4 +92,5 @@ class LXDUnitTestHost(unittest.TestCase):
     def test_get_kernel_version(self):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
             ms.return_value = ('200', self.fake_host)
-            self.assertEqual('3.19.0-22-generic', self.lxd.get_kernel_version(data=None))
+            self.assertEqual('3.19.0-22-generic',
+                             self.lxd.get_kernel_version(data=None))

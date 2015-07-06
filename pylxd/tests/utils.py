@@ -15,8 +15,8 @@
 from pylxd import api
 from pylxd import exceptions as lxd_exceptions
 
-def upload_image(image):
 
+def upload_image(image):
     alias = '{}/{}/{}/{}'.format(image['os'],
                                  image['release'],
                                  image['arch'],
@@ -25,10 +25,9 @@ def upload_image(image):
     imgs = api.API(host='images.linuxcontainers.org')
     d = imgs.alias_show(alias)
 
-    meta =  d[1]['metadata']
+    meta = d[1]['metadata']
     tgt = meta['target']
 
-    i = imgs.image_export(tgt)
     try:
         lxd.alias_update(meta)
     except lxd_exceptions.APIError as ex:
@@ -36,6 +35,7 @@ def upload_image(image):
             lxd.alias_create(meta)
 
     return tgt
+
 
 def delete_image(image):
     lxd = api.API()

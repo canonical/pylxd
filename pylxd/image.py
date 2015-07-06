@@ -16,9 +16,9 @@ import datetime
 import json
 import urllib
 
-from . import base
-from . import connection
-from . import exceptions
+from pylxd import base
+from pylxd import connection
+from pylxd import exceptions
 
 image_architecture = {
     0: 'Unknown',
@@ -33,6 +33,7 @@ image_architecture = {
 
 
 class LXDImage(base.LXDBase):
+
     def __init__(self, conn=None):
         self.connection = conn or connection.LXDConnection()
 
@@ -40,7 +41,8 @@ class LXDImage(base.LXDBase):
     def image_list(self):
         try:
             (state, data) = self.connection.get_object('GET', '/1.0/images')
-            return [image.split('/1.0/images/')[-1] for image in data['metadata']]
+            return [image.split('/1.0/images/')[-1]
+                    for image in data['metadata']]
         except Exception as e:
             print("Unable to fetch image info - {}".format(e))
             raise
@@ -48,16 +50,17 @@ class LXDImage(base.LXDBase):
     def image_defined(self, image):
         try:
             (state, data) = self.connection.get_object('GET', '/1.0/images/%s'
-                                                    % image)
+                                                       % image)
         except exceptions.APIError as ex:
             if ex.status_code == 404:
                 return False
 
     def image_list_by_key(self, params):
         try:
-            (state, data) = self.connection.get_object('GET', '/1.0/images',
-                                                       urllib.urlencode(params))
-            return [image.split('/1.0/images/')[-1] for image in data['metadata']]
+            (state, data) = self.connection.get_object(
+                'GET', '/1.0/images', urllib.urlencode(params))
+            return [image.split('/1.0/images/')[-1]
+                    for image in data['metadata']]
         except Exception as e:
             print("Unable to fetch image info - {}".format(e))
             raise
@@ -68,16 +71,27 @@ class LXDImage(base.LXDBase):
             (state, data) = self.connection.get_object('GET', '/1.0/images/%s'
                                                        % image)
             image = {
-                'image_upload_date': self.get_image_date(image, data.get('metadata'),
+                'image_upload_date': self.get_image_date(image,
+                                                         data.get('metadata'),
                                                          'uploaded_at'),
-                'image_created_date': self.get_image_date(image, data.get('metadata'),
+                'image_created_date': self.get_image_date(image,
+                                                          data.get('metadata'),
                                                           'created_at'),
-                'image_expires_date': self.get_image_date(image, data.get('metadata'),
+                'image_expires_date': self.get_image_date(image,
+                                                          data.get('metadata'),
                                                           'expires_at'),
-                'image_public': self.get_image_permission(image, data.get('metadata')),
-                'image_size': '%sMB' % self.get_image_size(image, data.get('metadata')),
-                'image_fingerprint': self.get_image_fingerprint(image, data.get('metadata')),
-                'image_architecture': self.get_image_architecture(image, data.get('metadata')),
+                'image_public': self.get_image_permission(
+                    image,
+                    data.get('metadata')),
+                'image_size': '%sMB' % self.get_image_size(
+                    image,
+                    data.get('metadata')),
+                'image_fingerprint': self.get_image_fingerprint(
+                    image,
+                    data.get('metadata')),
+                'image_architecture': self.get_image_architecture(
+                    image,
+                    data.get('metadata')),
             }
 
             return image
@@ -88,8 +102,8 @@ class LXDImage(base.LXDBase):
     def get_image_date(self, image, data, key):
         try:
             if data is None:
-                (state, data) = self.connection.get_object('GET', '/1.0/images/%s'
-                                                           % image)
+                (state, data) = self.connection.get_object(
+                    'GET', '/1.0/images/%s' % image)
                 data = data.get('metadata')
             if data[key] != 0:
                 return datetime.datetime.fromtimestamp(
@@ -103,8 +117,8 @@ class LXDImage(base.LXDBase):
     def get_image_permission(self, image, data):
         try:
             if data is None:
-                (state, data) = self.connection.get_object('GET', '/1.0/images/%s'
-                                                           % image)
+                (state, data) = self.connection.get_object(
+                    'GET', '/1.0/images/%s' % image)
                 data = data.get('metadata')
             return True if data['public'] == 1 else False
         except Exception as e:
@@ -114,8 +128,8 @@ class LXDImage(base.LXDBase):
     def get_image_size(self, image, data):
         try:
             if data is None:
-                (state, data) = self.connection.get_object('GET', '/1.0/images/%s'
-                                                           % image)
+                (state, data) = self.connection.get_object(
+                    'GET', '/1.0/images/%s' % image)
                 data = data.get('metadata')
             image_size = data['size']
             if image_size == 0:
@@ -128,8 +142,8 @@ class LXDImage(base.LXDBase):
     def get_image_fingerprint(self, image, data):
         try:
             if data is None:
-                (state, data) = self.connection.get_object('GET', '/1.0/images/%s'
-                                                           % image)
+                (state, data) = self.connection.get_object(
+                    'GET', '/1.0/images/%s' % image)
                 data = data.get('metadata')
             return data['fingerprint']
         except Exception as e:
@@ -139,8 +153,8 @@ class LXDImage(base.LXDBase):
     def get_image_architecture(self, image, data):
         try:
             if data is None:
-                (state, data) = self.connection.get_object('GET', '/1.0/images/%s'
-                                                           % image)
+                (state, data) = self.connection.get_object(
+                    'GET', '/1.0/images/%s' % image)
                 data = data.get('metadata')
             return image_architecture[data['architecture']]
         except Exception as e:
@@ -175,7 +189,8 @@ class LXDImage(base.LXDBase):
 
     def image_export(self, image):
         try:
-            return self.connection.get_raw('GET', '/1.0/images/%s/export' % image)
+            return self.connection.get_raw('GET', '/1.0/images/%s/export'
+                                           % image)
         except Exception as e:
             print("Unable to export image - {}".format(e))
             raise
@@ -198,9 +213,12 @@ class LXDImage(base.LXDBase):
 
 
 class LXDAlias(base.LXDBase):
+
     def alias_list(self):
-        (state, data) = self.connection.get_object('GET', '/1.0/images/aliases')
-        return [alias.split('/1.0/images/aliases/')[-1] for alias in data['metadata']]
+        (state, data) = self.connection.get_object(
+            'GET', '/1.0/images/aliases')
+        return [alias.split('/1.0/images/aliases/')[-1]
+                for alias in data['metadata']]
 
     def alias_defined(self, alias):
         return self.connection.get_status('GET', '/1.0/iamges/aliases/%s'

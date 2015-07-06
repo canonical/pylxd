@@ -14,13 +14,15 @@
 
 import json
 
-from . import base
-from . import connection
+from pylxd import base
+
 
 class LXDCertificate(base.LXDBase):
+
     def certificate_list(self):
         (state, data) = self.connection.get_object('GET', '/1.0/certificates')
-        return [certificate.split('/1.0/certitifcates/')[-1] for certificate in data['metadata']]
+        return [certificate.split('/1.0/certitifcates/')[-1]
+                for certificate in data['metadata']]
 
     def certificate_show(self, fingerprint):
         return self.connection.get_object('GET', '/1.0/certificates/%s'
