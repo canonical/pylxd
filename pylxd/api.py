@@ -183,10 +183,10 @@ class API(object):
     def container_snapshot_info(self, container, snapshot):
         return self.container.snapshot_info(container, snapshot)
 
-    def container_snapshot_reanme(self, container, snapshot, config):
+    def container_snapshot_rename(self, container, snapshot, config):
         return self.container.snapshot_rename(container, snapshot, config)
 
-    def container_snaphsot_delete(self, container, snapshot):
+    def container_snapshot_delete(self, container, snapshot):
         return self.container.snapshot_delete(container, snapshot)
 
     # misc container
