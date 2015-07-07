@@ -5,6 +5,7 @@
 hacking<0.11,>=0.10.0
 
 coverage>=3.6
+ddt
 discover
 python-subunit>=0.0.18
 sphinx>=1.1.2,!=1.2.0,!=1.3b1,<1.3
