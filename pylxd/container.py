@@ -31,7 +31,7 @@ class LXDContainer(base.LXDBase):
             '/1.0/containers/%s/state' % container)
         data = data.get('metadata')
         container_running = False
-        if data['status'] in ['RUNNING', 'STARTING', 'FREEZING,FROZEN',
+        if data['status'] in ['RUNNING', 'STARTING', 'FREEZING', 'FROZEN',
                               'THAWED']:
             container_running = True
         return container_running
@@ -128,8 +128,8 @@ class LXDContainer(base.LXDBase):
                                           json.dumps(config))
 
     def snapshot_info(self, container, snapshot):
-        return self.conncetion.get_object('GET',
-                                          '/1.0/containers/%s/snapshsots/%s'
+        return self.connection.get_object('GET',
+                                          '/1.0/containers/%s/snapshots/%s'
                                           % (container, snapshot))
 
     def snapshot_rename(self, container, snapshot, config):

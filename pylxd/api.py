@@ -171,7 +171,7 @@ class API(object):
         return self.container.container_publish(container)
 
     def put_container_file(self):
-        raise NotImplemented()
+        raise NotImplementedError()
 
     # snapshots
     def container_snapshot_list(self, container):
@@ -183,10 +183,10 @@ class API(object):
     def container_snapshot_info(self, container, snapshot):
         return self.container.snapshot_info(container, snapshot)
 
-    def container_snapshot_reanme(self, container, snapshot, config):
+    def container_snapshot_rename(self, container, snapshot, config):
         return self.container.snapshot_rename(container, snapshot, config)
 
-    def container_snaphsot_delete(self, container, snapshot):
+    def container_snapshot_delete(self, container, snapshot):
         return self.container.snapshot_delete(container, snapshot)
 
     # misc container
@@ -231,7 +231,7 @@ class API(object):
 
     def profile_rename(self, profile, config):
         '''Rename LXD profile'''
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def profile_delete(self, profile):
         '''Delete LXD profile'''

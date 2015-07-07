@@ -57,12 +57,173 @@ def fake_image_info():
     }
 
 
+def fake_alias():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": {
+                "target": "ubuntu",
+                "description": "ubuntu"
+        }
+    }
+
+
 def fake_alias_list():
     return {
         "type": "sync",
-                "status": "Success",
-                "status_code": 200,
-                "metadata": [
-                    "/1.0/images/aliases/ubuntu"
-                ]
+        "status": "Success",
+        "status_code": 200,
+        "metadata": [
+            "/1.0/images/aliases/ubuntu"
+        ]
+    }
+
+
+def fake_container_list():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": [
+            "/1.0/containers/trusty-1"
+        ]
+    }
+
+
+def fake_container_state(status):
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": {
+            "status": status
+        }
+    }
+
+
+def fake_container_log():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": {
+            "log": "fake log"
+        }
+    }
+
+
+def fake_snapshots_list():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": [
+            "/1.0/containers/trusty-1/snapshots/first"
+        ]
+    }
+
+
+def fake_certificate_list():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": [
+            "/1.0/certificates/ABCDEF01"
+        ]
+    }
+
+
+def fake_certificate():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": {
+            "type": "client",
+            "certificate": "ABCDEF01"
+        }
+    }
+
+
+def fake_profile_list():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": [
+            "/1.0/profiles/fake-profile"
+        ]
+    }
+
+
+def fake_profile():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": {
+            "name": "fake-profile",
+            "config": {
+                "resources.memory": "2GB",
+                "network.0.bridge": "lxcbr0"
+            }
+        }
+    }
+
+
+def fake_operation_list():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": [
+            "/1.0/operations/1234"
+        ]
+    }
+
+
+def fake_operation():
+    return {
+        "type": "async",
+        "status": "OK",
+        "status_code": 100,
+        "operation": "/1.0/operation/1234",
+        "metadata": {
+            "created_at": "2015-06-09T19:07:24.379615253-06:00",
+            "updated_at": "2015-06-09T19:07:23.379615253-06:00",
+            "status": "Running",
+            "status_code": 103,
+            "resources": {
+                "containers": ["/1.0/containers/1"]
+            },
+            "metadata": {},
+            "may_cancel": True
+        }
+    }
+
+
+def fake_network_list():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": [
+            "/1.0/networks/lxcbr0"
+        ]
+    }
+
+
+def fake_network():
+    return {
+        "type": "async",
+        "status": "OK",
+        "status_code": 100,
+        "operation": "/1.0/operation/1234",
+        "metadata": {
+            "name": "lxcbr0",
+            "type": "bridge",
+            "members": ["/1.0/containers/trusty-1"]
+        }
     }

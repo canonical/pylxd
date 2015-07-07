@@ -14,7 +14,7 @@
 from __future__ import print_function
 import datetime
 import json
-import urllib
+from six.moves import urllib
 
 from pylxd import base
 from pylxd import connection
@@ -58,7 +58,7 @@ class LXDImage(base.LXDBase):
     def image_list_by_key(self, params):
         try:
             (state, data) = self.connection.get_object(
-                'GET', '/1.0/images', urllib.urlencode(params))
+                'GET', '/1.0/images', urllib.parse.urlencode(params))
             return [image.split('/1.0/images/')[-1]
                     for image in data['metadata']]
         except Exception as e:

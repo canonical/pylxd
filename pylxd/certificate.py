@@ -29,7 +29,7 @@ class LXDCertificate(base.LXDBase):
                                           % fingerprint)
 
     def certificate_create(self, certificate):
-        return self.connection.get_status('POST', '/1.0/certificates/',
+        return self.connection.get_status('POST', '/1.0/certificates',
                                           json.dumps(certificate))
 
     def certificate_delete(self, fingerprint):

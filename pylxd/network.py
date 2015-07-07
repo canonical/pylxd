@@ -19,7 +19,7 @@ class LXDNetwork(base.LXDBase):
 
     def network_list(self):
         (state, data) = self.connection.get_object('GET', '/1.0/networks')
-        return [network.split('/1.0/networks')[-1]
+        return [network.split('/1.0/networks/')[-1]
                 for network in data['metadata']]
 
     def network_show(self, network):
