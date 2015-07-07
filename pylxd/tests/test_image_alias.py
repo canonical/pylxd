@@ -31,3 +31,39 @@ class LXDUnitTestAlias(unittest.TestCase):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
             ms.return_value = ('200', fake_api.fake_alias_list())
             self.assertEqual(1, len(self.lxd.alias_list()))
+
+    def test_alias_defined(self):
+        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
+            ms.return_value = True
+            self.assertTrue(self.lxd.alias_defined('fake'))
+
+    def test_alias_defined_fail(self):
+        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
+            ms.return_value = False
+            self.assertFalse(self.lxd.alias_defined('fake'))
+
+    def test_alias_create(self):
+        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
+            ms.return_value = False
+            self.assertFalse(self.lxd.alias_create('fake'))
+
+    def test_alias_update(self):
+        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
+            ms.return_value = False
+            self.assertFalse(self.lxd.alias_update('fake'))
+
+    def test_alias_show(self):
+        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
+            ms.return_value = ('200', fake_api.fake_alias())
+            self.assertEqual(
+                fake_api.fake_alias(), self.lxd.alias_show('fake')[1])
+
+    def test_alias_rename(self):
+        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
+            ms.return_value = False
+            self.assertFalse(self.lxd.alias_rename('fake'))
+
+    def test_alias_delete(self):
+        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
+            ms.return_value = False
+            self.assertFalse(self.lxd.alias_delete('fake'))

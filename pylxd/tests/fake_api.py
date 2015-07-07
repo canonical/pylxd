@@ -57,12 +57,24 @@ def fake_image_info():
     }
 
 
+def fake_alias():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": {
+                "target": "ubuntu",
+                "description": "ubuntu"
+        }
+    }
+
+
 def fake_alias_list():
     return {
         "type": "sync",
-                "status": "Success",
-                "status_code": 200,
-                "metadata": [
-                    "/1.0/images/aliases/ubuntu"
-                ]
+        "status": "Success",
+        "status_code": 200,
+        "metadata": [
+            "/1.0/images/aliases/ubuntu"
+        ]
     }
