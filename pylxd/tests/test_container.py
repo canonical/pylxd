@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from collections import OrderedDict
 from ddt import data
 from ddt import ddt
 import json
@@ -170,3 +171,20 @@ class LXDUnitTestContainer(unittest.TestCase):
             ms.assert_called_with(http,
                                   '/1.0/containers/trusty-1/snapshots' + path,
                                   *call_args)
+
+    def test_container_run_command(self):
+        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
+            ms.return_value = ('200', fake_api.fake_background_operation())
+            data = OrderedDict((
+                ('command', ['/fake/command']),
+                ('interactive', False),
+                ('wait-for-websocket', False),
+                ('environment', {'FAKE_ENV': 'fake'})
+            ))
+
+            self.assertEqual(
+                ms.return_value,
+                self.lxd.container_run_command('trusty-1', *data.values()))
+            ms.assert_called_with('POST',
+                                  '/1.0/containers/trusty-1/exec',
+                                  json.dumps(dict(data)))
