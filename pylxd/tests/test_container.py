@@ -145,3 +145,28 @@ class LXDUnitTestContainer(unittest.TestCase):
 
     def test_container_put_file(self):
         self.assertRaises(NotImplementedError, self.lxd.put_container_file)
+
+    def test_list_snapshots(self):
+        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
+            ms.return_value = ('200', fake_api.fake_snapshots_list())
+            self.assertEqual(
+                ['/1.0/containers/trusty-1/snapshots/first'],
+                self.lxd.container_snapshot_list('trusty-1'))
+
+    @annotated_data(
+        ('create', 'POST', '', ('fake config',), ('"fake config"',)),
+        ('info', 'GET', '/first', ('first',)),
+        ('rename', 'POST', '/first',
+         ('first', 'fake config'), ('"fake config"',)),
+        ('delete', 'DELETE', '/first', ('first',)),
+    )
+    def test_snapshot_operations(self, method, http, path, args, call_args=()):
+        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
+            ms.return_value = ('200', fake_api.fake_background_operation())
+            self.assertEqual(
+                ms.return_value,
+                getattr(self.lxd,
+                        'container_snapshot_' + method)('trusty-1', *args))
+            ms.assert_called_with(http,
+                                  '/1.0/containers/trusty-1/snapshots' + path,
+                                  *call_args)

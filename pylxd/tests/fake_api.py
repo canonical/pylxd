@@ -113,6 +113,17 @@ def fake_container_log():
     }
 
 
+def fake_snapshots_list():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": [
+            "/1.0/containers/trusty-1/snapshots/first"
+        ]
+    }
+
+
 def fake_background_operation():
     return {
         "type": "async",
