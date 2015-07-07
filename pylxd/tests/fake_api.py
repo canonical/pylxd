@@ -78,3 +78,46 @@ def fake_alias_list():
             "/1.0/images/aliases/ubuntu"
         ]
     }
+
+
+def fake_container_list():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": [
+            "/1.0/containers/trusty-1"
+        ]
+    }
+
+
+def fake_container_state(status):
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": {
+            "status": status
+        }
+    }
+
+
+def fake_container_log():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": {
+            "log": "fake log"
+        }
+    }
+
+
+def fake_background_operation():
+    return {
+        "type": "async",
+        "status": "OK",
+        "status_code": 100,
+        "operation": "/1.0/operation/1234",
+        "metadata": {}
+    }
