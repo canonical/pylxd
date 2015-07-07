@@ -173,11 +173,32 @@ def fake_profile():
     }
 
 
-def fake_background_operation():
+def fake_operation_list():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": [
+            "/1.0/operations/1234"
+        ]
+    }
+
+
+def fake_operation():
     return {
         "type": "async",
         "status": "OK",
         "status_code": 100,
         "operation": "/1.0/operation/1234",
-        "metadata": {}
+        "metadata": {
+            "created_at": "2015-06-09T19:07:24.379615253-06:00",
+            "updated_at": "2015-06-09T19:07:23.379615253-06:00",
+            "status": "Running",
+            "status_code": 103,
+            "resources": {
+                "containers": ["/1.0/containers/1"]
+            },
+            "metadata": {},
+            "may_cancel": True
+        }
     }
