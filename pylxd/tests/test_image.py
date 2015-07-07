@@ -49,6 +49,11 @@ class LXDUnitTestImage(unittest.TestCase):
             ms.return_value = ('200', fake_api.fake_image_info())
             self.assertIsInstance(self.lxd.image_info('04aac4257341'), dict)
 
+    def test_get_image_search(self):
+        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
+            ms.return_value = ('200', fake_api.fake_image_list())
+            self.assertEqual(1, len(self.lxd.image_search({})))
+
     def test_image_upload_date(self):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
             ms.return_value = ('200', fake_api.fake_image_info())
@@ -71,6 +76,16 @@ class LXDUnitTestImage(unittest.TestCase):
             self.assertEqual('Unknown',
                              self.lxd.image_expire_date('04aac4257341',
                                                         data=None))
+
+    def test_image_upload(self):
+        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
+            ms.return_value = True
+            self.assertTrue(self.lxd.image_upload(data='fake'))
+
+    def test_image_export(self):
+        with mock.patch.object(connection.LXDConnection, 'get_raw') as ms:
+            ms.return_value = 'fake contents'
+            self.assertEqual('fake contents', self.lxd.image_export('fake'))
 
     def test_image_delete(self):
         with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
