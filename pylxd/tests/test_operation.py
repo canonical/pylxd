@@ -45,10 +45,10 @@ class LXDUnitTestOperation(unittest.TestCase):
             ms.return_value = ('200', fake_api.fake_operation())
             self.assertEqual({
                 'operation_create_time':
-                    datetime.datetime.fromtimestamp(1433869644)
+                    datetime.datetime.utcfromtimestamp(1433876844)
                     .strftime('%Y-%m-%d %H:%M:%S'),
                 'operation_update_time':
-                    datetime.datetime.fromtimestamp(1433869643)
+                    datetime.datetime.utcfromtimestamp(1433876843)
                     .strftime('%Y-%m-%d %H:%M:%S'),
                 'operation_status_code':
                     'Running'
@@ -58,10 +58,10 @@ class LXDUnitTestOperation(unittest.TestCase):
 
     @annotated_data(
         ('create_time',
-         datetime.datetime.fromtimestamp(1433869644)
+         datetime.datetime.utcfromtimestamp(1433876844)
          .strftime('%Y-%m-%d %H:%M:%S')),
         ('update_time',
-         datetime.datetime.fromtimestamp(1433869643)
+         datetime.datetime.utcfromtimestamp(1433876843)
          .strftime('%Y-%m-%d %H:%M:%S')),
         ('status', 'Running'),
     )
