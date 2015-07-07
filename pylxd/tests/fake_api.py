@@ -147,6 +147,32 @@ def fake_certificate():
     }
 
 
+def fake_profile_list():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": [
+            "/1.0/profiles/fake-profile"
+        ]
+    }
+
+
+def fake_profile():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": {
+            "name": "fake-profile",
+            "config": {
+                "resources.memory": "2GB",
+                "network.0.bridge": "lxcbr0"
+            }
+        }
+    }
+
+
 def fake_background_operation():
     return {
         "type": "async",
