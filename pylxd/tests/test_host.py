@@ -20,6 +20,7 @@ from pylxd import connection
 
 
 class LXDUnitTestHost(unittest.TestCase):
+
     def setUp(self):
         super(LXDUnitTestHost, self).setUp()
         self.lxd = api.API()
@@ -42,21 +43,21 @@ class LXDUnitTestHost(unittest.TestCase):
             }
         }
 
-    @mock.patch.object(api.API, 'host_ping')
-    def test_get_host_ping(self, mock_api):
-        mock_api.return_value = True
-        self.assertTrue(self.lxd.host_ping())
+    def test_get_host_ping(self):
+        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
+            ms.return_value = ('200', self.fake_host)
+            self.assertTrue(self.lxd.host_ping())
 
-    @mock.patch.object(api.API, 'host_ping')
-    def test_get_host_ping_fail(self, mock_api):
-        mock_api.return_value = False
-        self.assertFalse(self.lxd.host_ping())
+    def test_get_host_ping_fail(self):
+        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
+            ms.return_value = ('500', {})
+            self.assertRaises(Exception, self.lxd.host_ping())
 
-    @mock.patch.object(api.API, 'host_info')
-    def test_get_host_info(self, mock_api):
-        mock_api.return_value = self.fake_host
-        data = self.lxd.host_info()
-        self.assertIsInstance(data, dict)
+    def test_get_host_info(self):
+        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
+            ms.return_value = ('200', self.fake_host)
+            data = self.lxd.host_info()
+            self.assertIsInstance(data, dict)
 
     def test_get_lxd_api_compat(self):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
