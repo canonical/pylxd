@@ -124,6 +124,29 @@ def fake_snapshots_list():
     }
 
 
+def fake_certificate_list():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": [
+            "/1.0/certificates/ABCDEF01"
+        ]
+    }
+
+
+def fake_certificate():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": {
+            "type": "client",
+            "certificate": "ABCDEF01"
+        }
+    }
+
+
 def fake_background_operation():
     return {
         "type": "async",
