@@ -124,3 +124,24 @@ class LXDUnitTestContainer(unittest.TestCase):
                 'fake log', self.lxd.get_container_log('trusty-1'))
             ms.assert_called_with('GET',
                                   '/1.0/containers/trusty-1?log=true')
+
+    def test_container_file(self):
+        with mock.patch.object(connection.LXDConnection, 'get_raw') as ms:
+            ms.return_value = 'fake contents'
+            self.assertEqual(
+                'fake contents', self.lxd.get_container_file('trusty-1',
+                                                             '/file/name'))
+            ms.assert_called_with(
+                'GET', '/1.0/containers/trusty-1/files?path=/file/name')
+
+    def test_container_publish(self):
+        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
+            ms.return_value = ('200', fake_api.fake_background_operation())
+            self.assertEqual(
+                ms.return_value, self.lxd.container_publish('trusty-1'))
+            ms.assert_called_with('POST',
+                                  '/1.0/images',
+                                  '"trusty-1"')
+
+    def test_container_put_file(self):
+        self.assertRaises(NotImplementedError, self.lxd.put_container_file)
