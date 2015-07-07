@@ -202,3 +202,28 @@ def fake_operation():
             "may_cancel": True
         }
     }
+
+
+def fake_network_list():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": [
+            "/1.0/networks/lxcbr0"
+        ]
+    }
+
+
+def fake_network():
+    return {
+        "type": "async",
+        "status": "OK",
+        "status_code": 100,
+        "operation": "/1.0/operation/1234",
+        "metadata": {
+            "name": "lxcbr0",
+            "type": "bridge",
+            "members": ["/1.0/containers/trusty-1"]
+        }
+    }

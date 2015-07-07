@@ -1,0 +1,65 @@
+# Copyright (c) 2015 Canonical Ltd
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+from ddt import ddt
+import mock
+import unittest
+
+from pylxd import api
+from pylxd import connection
+
+from pylxd.tests import annotated_data
+from pylxd.tests import fake_api
+
+
+@ddt
+class LXDUnitTestNetwork(unittest.TestCase):
+
+    def setUp(self):
+        super(LXDUnitTestNetwork, self).setUp()
+        self.lxd = api.API()
+
+    def test_list_networks(self):
+        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
+            ms.return_value = ('200', fake_api.fake_network_list())
+            self.assertEqual(
+                ['lxcbr0'],
+                self.lxd.network_list())
+            ms.assert_called_with('GET',
+                                  '/1.0/networks')
+
+    def test_network_show(self):
+        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
+            ms.return_value = ('200', fake_api.fake_network())
+            self.assertEqual({
+                'network_name': 'lxcbr0',
+                'network_type': 'bridge',
+                'network_members': ['/1.0/containers/trusty-1'],
+            }, self.lxd.network_show('lxcbr0'))
+            ms.assert_called_with('GET',
+                                  '/1.0/networks/lxcbr0')
+
+    @annotated_data(
+        ('name', 'lxcbr0'),
+        ('type', 'bridge'),
+        ('members', ['/1.0/containers/trusty-1']),
+    )
+    def test_network_data(self, method, expected):
+        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
+            ms.return_value = ('200', fake_api.fake_network())
+            self.assertEqual(
+                expected, getattr(self.lxd,
+                                  'network_show_' + method)('lxcbr0'))
+            ms.assert_called_with('GET',
+                                  '/1.0/networks/lxcbr0')
