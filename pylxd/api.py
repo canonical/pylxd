@@ -171,7 +171,7 @@ class API(object):
         return self.container.container_publish(container)
 
     def put_container_file(self):
-        raise NotImplemented()
+        raise NotImplementedError()
 
     # snapshots
     def container_snapshot_list(self, container):
