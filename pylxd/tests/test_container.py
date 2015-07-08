@@ -185,6 +185,10 @@ class LXDUnitTestContainer(unittest.TestCase):
             self.assertEqual(
                 ms.return_value,
                 self.lxd.container_run_command('trusty-1', *data.values()))
-            ms.assert_called_with('POST',
-                                  '/1.0/containers/trusty-1/exec',
-                                  json.dumps(dict(data)))
+            self.assertEqual(
+                ms.call_args[0][:2],
+                ('POST', '/1.0/containers/trusty-1/exec'))
+            self.assertEqual(
+                json.loads(ms.call_args[0][2]),
+                dict(data)
+            )
