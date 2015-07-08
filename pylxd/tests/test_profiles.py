@@ -73,4 +73,5 @@ class LXDUnitTestProfiles(unittest.TestCase):
 
     def test_profile_rename(self):
         self.assertRaises(
-            Exception, self.lxd.profile_rename, 'fake-profile', 'fake config')
+            NotImplementedError, self.lxd.profile_rename,
+            'fake-profile', 'fake config')

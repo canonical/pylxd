@@ -17,6 +17,7 @@ import os
 import socket
 import ssl
 
+from pylxd import exceptions
 from pylxd import utils
 from six.moves import http_client
 
@@ -89,7 +90,7 @@ class LXDConnection(object):
         data = json.loads(response.read())
         if not data:
             msg = "Null Data"
-            raise Exception(msg)
+            raise exceptions.PyLXDException(msg)
         elif state == 200 or (state == 202 and data.get('status_code') == 100):
             return state, data
         else:
@@ -104,7 +105,7 @@ class LXDConnection(object):
         data = json.loads(response.read())
         if not data:
             msg = "Null Data"
-            raise Exception(msg)
+            raise exceptions.PyLXDException(msg)
         elif data.get('error'):
             utils.get_lxd_error(state, data)
         elif state == 200 or (state == 202 and data.get('status_code') == 100):
@@ -118,9 +119,9 @@ class LXDConnection(object):
         body = response.read()
         if not body:
             msg = "Null Body"
-            raise Exception(msg)
+            raise exceptions.PyLXDException(msg)
         elif response.status == 200:
             return body
         else:
             msg = "Failed to get raw response"
-            raise Exception(msg)
+            raise exceptions.PyLXDException(msg)

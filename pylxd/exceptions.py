@@ -13,30 +13,34 @@
 #    under the License.
 
 
-class ContainerUnDefined(Exception):
+class PyLXDException(Exception):
     pass
 
 
-class UntrustedHost(Exception):
+class ContainerUnDefined(PyLXDException):
     pass
 
 
-class ContainerProfileCreateFail(Exception):
+class UntrustedHost(PyLXDException):
     pass
 
 
-class ContainerProfileDeleteFail(Exception):
+class ContainerProfileCreateFail(PyLXDException):
     pass
 
 
-class ImageInvalidSize(Exception):
+class ContainerProfileDeleteFail(PyLXDException):
     pass
 
 
-class APIError(Exception):
+class ImageInvalidSize(PyLXDException):
+    pass
+
+
+class APIError(PyLXDException):
 
     def __init__(self, error, status_code):
         msg = 'Error %s - %s.' % (status_code, error)
-        Exception.__init__(self, msg)
+        super(APIError, self).__init__(msg)
         self.status_code = status_code
         self.error = error

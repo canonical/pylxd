@@ -14,6 +14,7 @@
 from __future__ import print_function
 
 from pylxd import base
+from pylxd import exceptions
 
 
 class LXDHost(base.LXDBase):
@@ -23,7 +24,7 @@ class LXDHost(base.LXDBase):
             return self.connection.get_status('GET', '/1.0')
         except Exception as e:
             msg = 'LXD service is unavailable. %s' % e
-            raise Exception(msg)
+            raise exceptions.PyLXDException(msg)
 
     def host_info(self):
         (state, data) = self.connection.get_object('GET', '/1.0')
@@ -51,8 +52,8 @@ class LXDHost(base.LXDBase):
                 (state, data) = self.connection.get_object('GET', '/1.0')
                 data = data.get('metadata')
             return data['api_compat']
-        except Exception as e:
-            print('Handling run-time error:'.format(e))
+        except exceptions.PyLXDException as e:
+            print('Handling run-time error: {}'.format(e))
 
     def get_lxd_host_trust(self, data):
         try:
@@ -60,8 +61,8 @@ class LXDHost(base.LXDBase):
                 (state, data) = self.connection.get_object('GET', '/1.0')
                 data = data.get('metadata')
             return True if data['auth'] == 'trusted' else False
-        except Exception as e:
-            print('Handling run-time error:'.format(e))
+        except exceptions.PyLXDException as e:
+            print('Handling run-time error: {}'.format(e))
 
     def get_lxd_backing_fs(self, data):
         try:
@@ -69,8 +70,8 @@ class LXDHost(base.LXDBase):
                 (state, data) = self.connection.get_object('GET', '/1.0')
                 data = data.get('metadata')
             return data['environment']['backing_fs']
-        except Exception as e:
-            print('Handling run-time error:'.format(e))
+        except exceptions.PyLXDException as e:
+            print('Handling run-time error: {}'.format(e))
 
     def get_lxd_driver(self, data):
         try:
@@ -78,8 +79,8 @@ class LXDHost(base.LXDBase):
                 (state, data) = self.connection.get_object('GET', '/1.0')
                 data = data.get('metadata')
             return data['environment']['driver']
-        except Exception as e:
-            print('Handling run-time error:'.format(e))
+        except exceptions.PyLXDException as e:
+            print('Handling run-time error: {}'.format(e))
 
     def get_lxc_version(self, data):
         try:
@@ -87,8 +88,8 @@ class LXDHost(base.LXDBase):
                 (state, data) = self.connection.get_object('GET', '/1.0')
                 data = data.get('metadata')
             return data['environment']['lxc_version']
-        except Exception as e:
-            print('Handling run-time error:'.format(e))
+        except exceptions.PyLXDException as e:
+            print('Handling run-time error: {}'.format(e))
 
     def get_lxd_version(self, data):
         try:
@@ -96,8 +97,8 @@ class LXDHost(base.LXDBase):
                 (state, data) = self.connection.get_object('GET', '/1.0')
                 data = data.get('metadata')
             return float(data['environment']['lxd_version'])
-        except Exception as e:
-            print('Handling run-time error:'.format(e))
+        except exceptions.PyLXDException as e:
+            print('Handling run-time error: {}'.format(e))
 
     def get_kernel_version(self, data):
         try:
@@ -105,5 +106,5 @@ class LXDHost(base.LXDBase):
                 (state, data) = self.connection.get_object('GET', '/1.0')
                 data = data.get('metadata')
             return data['environment']['kernel_version']
-        except Exception as e:
-            print('Handling run-time error:'.format(e))
+        except exceptions.PyLXDException as e:
+            print('Handling run-time error: {}'.format(e))
