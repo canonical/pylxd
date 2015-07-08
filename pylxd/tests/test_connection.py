@@ -1,0 +1,89 @@
+# Copyright (c) 2015 Canonical Ltd
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+from ddt import ddt
+import mock
+from six.moves import http_client
+import socket
+import unittest
+
+from pylxd import connection
+from pylxd.tests import annotated_data
+
+
+@ddt
+class LXDInitConnectionTest(unittest.TestCase):
+
+    @mock.patch('socket.socket')
+    @mock.patch.object(http_client.HTTPConnection, '__init__')
+    def test_http_connection(self, mc, ms):
+        conn = connection.UnixHTTPConnection('/', 'host', 1234)
+        mc.assert_called_once_with(
+            conn, 'host', port=1234, strict=None, timeout=None)
+        conn.connect()
+        ms.assert_called_once_with(socket.AF_UNIX, socket.SOCK_STREAM)
+        ms.return_value.connect.assert_called_once_with('/')
+
+    @mock.patch('os.environ', {'HOME': '/home/foo'})
+    @mock.patch('ssl.wrap_socket')
+    @mock.patch('socket.create_connection')
+    def test_https_connection(self, ms, ml):
+        conn = connection.HTTPSConnection('host', 1234)
+        with mock.patch.object(conn, '_tunnel') as mc:
+            conn.connect()
+            self.assertFalse(mc.called)
+            ms.assert_called_once_with(
+                ('host', 1234), socket._GLOBAL_DEFAULT_TIMEOUT, None)
+            ml.assert_called_once_with(
+                ms.return_value,
+                certfile='/home/foo/.config/lxc/client.crt',
+                keyfile='/home/foo/.config/lxc/client.key'
+            )
+
+    @mock.patch('os.environ', {'HOME': '/home/foo'})
+    @mock.patch('ssl.wrap_socket')
+    @mock.patch('socket.create_connection')
+    def test_https_proxy_connection(self, ms, ml):
+        conn = connection.HTTPSConnection('host', 1234)
+        conn._tunnel_host = 'host'
+        with mock.patch.object(conn, '_tunnel') as mc:
+            conn.connect()
+            mc.assert_called()
+            ms.assert_called_once_with(
+                ('host', 1234), socket._GLOBAL_DEFAULT_TIMEOUT, None)
+            ml.assert_called_once_with(
+                ms.return_value,
+                certfile='/home/foo/.config/lxc/client.crt',
+                keyfile='/home/foo/.config/lxc/client.key'
+            )
+
+    @mock.patch('pylxd.connection.HTTPSConnection')
+    @mock.patch('pylxd.connection.UnixHTTPConnection')
+    @annotated_data(
+        ('unix', (None,), {}, '/var/lib/lxd/unix.socket'),
+        ('unix_path', (None,),
+         {'LXD_DIR': '/fake/'}, '/fake/unix.socket'),
+        ('https', ('host',), {}, ''),
+        ('https_port', ('host', 1234), {}, ''),
+    )
+    def test_get_connection(self, mode, args, env, path, mc, ms):
+        with mock.patch('os.environ', env):
+            conn = connection.LXDConnection(*args).get_connection()
+            if mode.startswith('unix'):
+                self.assertEqual(mc.return_value, conn)
+                mc.assert_called_once_with(path)
+            elif mode.startswith('https'):
+                self.assertEqual(ms.return_value, conn)
+                ms.assert_called_once_with(
+                    args[0], len(args) == 2 and args[1] or 8443)
