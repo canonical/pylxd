@@ -17,7 +17,6 @@ import unittest
 
 from pylxd import api
 from pylxd import connection
-from pylxd import exceptions
 
 
 class LXDUnitTestHost(unittest.TestCase):
@@ -46,13 +45,13 @@ class LXDUnitTestHost(unittest.TestCase):
 
     def test_get_host_ping(self):
         with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
-            ms.return_value = ('200', self.fake_host)
+            ms.return_value = True
             self.assertTrue(self.lxd.host_ping())
 
     def test_get_host_ping_fail(self):
         with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
-            ms.return_value = ('500', {})
-            self.assertRaises(exceptions.PyLXDException, self.lxd.host_ping())
+            ms.return_value = False
+            self.assertFalse(self.lxd.host_ping())
 
     def test_get_host_info(self):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
