@@ -13,12 +13,15 @@
 #    under the License.
 
 from ddt import ddt
+import inspect
 import mock
+from six.moves import cStringIO
 from six.moves import http_client
 import socket
 import unittest
 
 from pylxd import connection
+from pylxd import exceptions
 from pylxd.tests import annotated_data
 
 
@@ -87,3 +90,59 @@ class LXDInitConnectionTest(unittest.TestCase):
                 self.assertEqual(ms.return_value, conn)
                 ms.assert_called_once_with(
                     args[0], len(args) == 2 and args[1] or 8443)
+
+
+class FakeResponse(object):
+
+    def __init__(self, status, data):
+        self.status = status
+        self.read = cStringIO(data).read
+
+
+@ddt
+@mock.patch('pylxd.connection.LXDConnection.get_connection')
+class LXDConnectionTest(unittest.TestCase):
+
+    def setUp(self):
+        super(LXDConnectionTest, self).setUp()
+        self.conn = connection.LXDConnection()
+
+    @annotated_data(
+        ('null', (200, '{}'), exceptions.PyLXDException),
+        ('200', (200, '{"foo": "bar"}'), (200, {'foo': 'bar'})),
+        ('202', (202, '{"status_code": 100}'), (202, {'status_code': 100})),
+        ('500', (500, '{"foo": "bar"}'), exceptions.APIError),
+    )
+    def test_get_object(self, tag, effect, result, mg):
+        mg.return_value.getresponse.return_value = FakeResponse(*effect)
+        if inspect.isclass(result):
+            self.assertRaises(result, self.conn.get_object)
+        else:
+            self.assertEqual(result, self.conn.get_object())
+
+    @annotated_data(
+        ('null', (200, '{}'), exceptions.PyLXDException),
+        ('200', (200, '{"foo": "bar"}'), True),
+        ('202', (202, '{"status_code": 100}'), True),
+        ('200', (200, '{"error": "bar"}'), exceptions.APIError),
+        ('500', (500, '{"foo": "bar"}'), False),
+    )
+    def test_get_status(self, tag, effect, result, mg):
+        mg.return_value.getresponse.return_value = FakeResponse(*effect)
+        if inspect.isclass(result):
+            self.assertRaises(result, self.conn.get_status)
+        else:
+            self.assertEqual(result, self.conn.get_status())
+
+    @annotated_data(
+        ('null', (200, ''), exceptions.PyLXDException),
+        ('200', (200, '{"foo": "bar"}'), '{"foo": "bar"}'),
+        ('500', (500, '{"foo": "bar"}'),
+         exceptions.PyLXDException),
+    )
+    def test_get_raw(self, tag, effect, result, mg):
+        mg.return_value.getresponse.return_value = FakeResponse(*effect)
+        if inspect.isclass(result):
+            self.assertRaises(result, self.conn.get_raw)
+        else:
+            self.assertEqual(result, self.conn.get_raw())
