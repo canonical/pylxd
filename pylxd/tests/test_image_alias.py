@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from ddt import data
+from ddt import ddt
 import mock
 import unittest
 
@@ -21,6 +23,7 @@ from pylxd import connection
 from pylxd.tests import fake_api
 
 
+@ddt
 class LXDUnitTestAlias(unittest.TestCase):
 
     def setUp(self):
@@ -32,15 +35,12 @@ class LXDUnitTestAlias(unittest.TestCase):
             ms.return_value = ('200', fake_api.fake_alias_list())
             self.assertEqual(1, len(self.lxd.alias_list()))
 
-    def test_alias_defined(self):
+    @data(True, False)
+    def test_alias_defined(self, expected):
         with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
-            ms.return_value = True
-            self.assertTrue(self.lxd.alias_defined('fake'))
-
-    def test_alias_defined_fail(self):
-        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
-            ms.return_value = False
-            self.assertFalse(self.lxd.alias_defined('fake'))
+            ms.return_value = expected
+            self.assertEqual(expected, self.lxd.alias_defined('fake'))
+            ms.assert_called_once_with('GET', '/1.0/images/aliases/fake')
 
     def test_alias_create(self):
         with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
