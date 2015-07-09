@@ -30,7 +30,7 @@ class LXDAPICertificateTest(LXDAPITestBase):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
             ms.return_value = ('200', fake_api.fake_certificate_list())
             self.assertEqual(
-                ['/1.0/certificates/ABCDEF01'],
+                ['ABCDEF01'],
                 self.lxd.certificate_list())
             ms.assert_called_with('GET',
                                   '/1.0/certificates')
