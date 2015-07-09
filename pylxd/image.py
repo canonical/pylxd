@@ -224,17 +224,19 @@ class LXDAlias(base.LXDBase):
         return self.connection.get_object('GET', '/1.0/images/aliases/%s'
                                           % alias)
 
-    def alias_update(self, alias):
-        return self.connection.get_status('PUT', '/1.0/images/aliases',
-                                          json.dumps(alias))
+    def alias_update(self, alias, data):
+        return self.connection.get_status('PUT',
+                                          '/1.0/images/aliases/%s' % alias,
+                                          json.dumps(data))
 
-    def alias_rename(self, alias):
-        return self.connection.get_status('POST', '/1.0/images/aliases',
-                                          json.dumps(alias))
+    def alias_rename(self, alias, data):
+        return self.connection.get_status('POST',
+                                          '/1.0/images/aliases/%s' % alias,
+                                          json.dumps(data))
 
-    def alias_create(self, alias):
+    def alias_create(self, data):
         return self.connection.get_status('POST', '/1.0/images/aliases',
-                                          json.dumps(alias))
+                                          json.dumps(data))
 
     def alias_delete(self, alias):
         return self.connection.get_status('DELETE', '/1.0/images/aliases/%s'

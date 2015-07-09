@@ -108,17 +108,17 @@ class API(object):
     def alias_defined(self, alias):
         return self.alias.alias_defined(alias)
 
-    def alias_create(self, alias):
-        return self.alias.alias_create(alias)
+    def alias_create(self, data):
+        return self.alias.alias_create(data)
 
-    def alias_update(self, alias):
-        return self.alias.alias_update(alias)
+    def alias_update(self, alias, data):
+        return self.alias.alias_update(alias, data)
 
     def alias_show(self, alias):
         return self.alias.alias_show(alias)
 
-    def alias_rename(self, alias):
-        return self.alias.alias_rename(alias)
+    def alias_rename(self, alias, data):
+        return self.alias.alias_rename(alias, data)
 
     def alias_delete(self, alias):
         return self.alias.alias_delete(alias)
