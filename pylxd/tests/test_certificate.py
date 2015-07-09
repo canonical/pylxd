@@ -15,21 +15,16 @@
 from ddt import ddt
 import json
 import mock
-import unittest
 
-from pylxd import api
 from pylxd import connection
 
 from pylxd.tests import annotated_data
 from pylxd.tests import fake_api
+from pylxd.tests import LXDAPITestBase
 
 
 @ddt
-class LXDUnitTestCertificate(unittest.TestCase):
-
-    def setUp(self):
-        super(LXDUnitTestCertificate, self).setUp()
-        self.lxd = api.API()
+class LXDAPICertificateTest(LXDAPITestBase):
 
     def test_list_certificates(self):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
