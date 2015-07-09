@@ -191,18 +191,18 @@ class LXDImage(base.LXDBase):
             print("Unable to export image - {}".format(e))
             raise
 
-    def image_update(self, image):
+    def image_update(self, image, data):
         try:
-            return self.connection.get_status('PUT', '/1.0/images',
-                                              json.dumps(image))
+            return self.connection.get_status('PUT', '/1.0/images/%s' % image,
+                                              json.dumps(data))
         except Exception as e:
             print("Unable to update image - {}".format(e))
             raise
 
-    def image_rename(self, image):
+    def image_rename(self, image, data):
         try:
-            return self.connection.get_status('POST', '/1.0/images',
-                                              json.dumps(image))
+            return self.connection.get_status('POST', '/1.0/images/%s' % image,
+                                              json.dumps(data))
         except Exception as e:
             print("Unable to rename image - {}".format(e))
             raise

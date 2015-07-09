@@ -95,11 +95,11 @@ class API(object):
     def image_export(self, image):
         return self.image.image_export(image)
 
-    def image_update(self, image):
-        return self.image.image_update(image)
+    def image_update(self, image, data):
+        return self.image.image_update(image, data)
 
-    def image_rename(self, image):
-        return self.image.image_rename(image)
+    def image_rename(self, image, data):
+        return self.image.image_rename(image, data)
 
     # alias
     def alias_list(self):
