@@ -128,30 +128,30 @@ class LXDUnitTestImage(unittest.TestCase):
                 data=None)
             ms.assert_called_once_with('GET', '/1.0/images/test-image')
 
-    def test_image_upload(self):
+    operations_data = (
+        ('upload', 'POST', '', (None, 'fake'), ('fake',)),
+        ('delete', 'DELETE', '/test-image', ('test-image',)),
+        ('update', 'PUT', '/test-image', ('test-image', 'fake',), ('"fake"',)),
+        ('rename', 'POST', '/test-image',
+         ('test-image', 'fake',), ('"fake"',)),
+    )
+
+    @annotated_data(*operations_data)
+    def test_image_operations(self, method, http, path, args, call_args=()):
         with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
             ms.return_value = True
-            self.assertTrue(self.lxd.image_upload(data='fake'))
+            self.assertTrue(
+                getattr(self.lxd, 'image_' + method)(*args))
+            ms.assert_called_once_with(
+                http,
+                '/1.0/images' + path,
+                *call_args
+            )
 
     def test_image_export(self):
         with mock.patch.object(connection.LXDConnection, 'get_raw') as ms:
             ms.return_value = 'fake contents'
             self.assertEqual('fake contents', self.lxd.image_export('fake'))
-
-    def test_image_delete(self):
-        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
-            ms.return_value = True
-            self.assertTrue(self.lxd.image_delete('fake'))
-
-    def test_image_update(self):
-        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
-            ms.return_value = True
-            self.assertTrue(self.lxd.image_update('fake'))
-
-    def test_image_rename(self):
-        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
-            ms.return_value = True
-            self.assertTrue(self.lxd.image_rename('fake'))
 
 
 @ddt
