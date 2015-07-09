@@ -13,6 +13,7 @@
 #    under the License.
 
 import datetime
+from ddt import ddt
 import mock
 import unittest
 
@@ -20,39 +21,60 @@ from pylxd import api
 from pylxd import connection
 from pylxd import exceptions
 
+from pylxd.tests import annotated_data
 from pylxd.tests import fake_api
 
 
+@ddt
 class LXDUnitTestImage(unittest.TestCase):
 
     def setUp(self):
         super(LXDUnitTestImage, self).setUp()
         self.lxd = api.API()
 
-    def test_list_images(self):
+    list_data = (
+        ('list',),
+        ('search', ({'foo': 'bar'},), ('foo=bar',)),
+    )
+
+    @annotated_data(*list_data)
+    def test_list_images(self, method, args=(), call_args=()):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
             ms.return_value = ('200', fake_api.fake_image_list())
-            self.assertEqual(1, len(self.lxd.image_list()))
+            self.assertEqual(
+                ['trusty'], getattr(self.lxd, 'image_' + method)(*args))
+            ms.assert_called_once_with('GET', '/1.0/images', *call_args)
 
-    def test_get_image_defined_fail(self):
+    @annotated_data(*list_data)
+    def test_list_images_fail(self, method, args=(), call_args=()):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
-            ms.side_effect = exceptions.APIError("404", 404)
-            self.assertFalse(self.lxd.image_defined('test-image'))
+            ms.side_effect = Exception
+            self.assertRaises(exceptions.PyLXDException,
+                              getattr(self.lxd, 'image_' + method),
+                              *args)
+            ms.assert_called_once_with('GET', '/1.0/images', *call_args)
 
-    def test_get_image_defined(self):
+    @annotated_data(
+        (True, (('200', fake_api.fake_image_info()),)),
+        (False, exceptions.APIError("404", 404)),
+    )
+    def test_image_defined(self, expected, side_effect):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
-            ms.return_value = ('200', fake_api.fake_image_info())
-            self.assertFalse(self.lxd.image_defined('test-image'))
+            ms.side_effect = side_effect
+            self.assertEqual(expected, self.lxd.image_defined('test-image'))
+            ms.assert_called_once_with('GET', '/1.0/images/test-image')
 
-    def test_get_image_info(self):
+    def test_image_defined_fail(self):
+        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
+            ms.side_effect = exceptions.APIError("500", 500)
+            self.assertRaises(exceptions.APIError,
+                              self.lxd.image_defined, ('test-image',))
+            ms.assert_called_once_with('GET', '/1.0/images/test-image')
+
+    def test_image_info(self):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
             ms.return_value = ('200', fake_api.fake_image_info())
             self.assertIsInstance(self.lxd.image_info('04aac4257341'), dict)
-
-    def test_get_image_search(self):
-        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
-            ms.return_value = ('200', fake_api.fake_image_list())
-            self.assertEqual(1, len(self.lxd.image_search({})))
 
     def test_image_upload_date(self):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:

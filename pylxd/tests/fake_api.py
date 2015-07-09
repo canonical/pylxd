@@ -47,7 +47,7 @@ def fake_image_list():
         "type": "sync",
         "status": "Success",
         "status_code": 200,
-        "metadata": ['chuck']
+        "metadata": ['/1.0/images/trusty']
     }
 
 
