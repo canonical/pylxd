@@ -181,7 +181,7 @@ class LXDAPIImageTestRaw(LXDAPITestBase):
 class LXDAPIImageInfoTest(unittest.TestCase):
 
     def setUp(self):
-        super(LXDAPITestImageInfo, self).setUp()
+        super(LXDAPIImageInfoTest, self).setUp()
         self.image = image.LXDImage()
 
     info_list = (
