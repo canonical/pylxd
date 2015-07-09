@@ -148,6 +148,20 @@ class LXDUnitTestImage(unittest.TestCase):
                 *call_args
             )
 
+    @annotated_data(*operations_data)
+    def test_image_operations_fail(self, method, http,
+                                   path, args, call_args=()):
+        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
+            ms.side_effect = exceptions.PyLXDException
+            self.assertRaises(exceptions.PyLXDException,
+                              getattr(self.lxd, 'image_' + method),
+                              *args)
+            ms.assert_called_once_with(
+                http,
+                '/1.0/images' + path,
+                *call_args
+            )
+
     def test_image_export(self):
         with mock.patch.object(connection.LXDConnection, 'get_raw') as ms:
             ms.return_value = 'fake contents'
