@@ -15,6 +15,8 @@
 import datetime
 from ddt import ddt
 import mock
+from six.moves import builtins
+from six.moves import cStringIO
 import unittest
 
 from pylxd import api
@@ -161,6 +163,14 @@ class LXDUnitTestImage(unittest.TestCase):
                 '/1.0/images' + path,
                 *call_args
             )
+
+    @mock.patch.object(builtins, 'open', return_value=cStringIO('fake'))
+    def test_image_upload_file(self, mo):
+        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
+            ms.return_value = True
+            self.assertTrue(self.lxd.image_upload(path='/fake/path'))
+            mo.assert_called_once_with('/fake/path', 'rb')
+            ms.assert_called_once_with('POST', '/1.0/images', 'fake')
 
     def test_image_export(self):
         with mock.patch.object(connection.LXDConnection, 'get_raw') as ms:
