@@ -39,16 +39,16 @@ class LXDUnitTestContainer(unittest.TestCase):
             self.assertEqual(
                 ['trusty-1'],
                 self.lxd.container_list())
-            ms.assert_called_with('GET',
-                                  '/1.0/containers')
+            ms.assert_called_once_with('GET',
+                                       '/1.0/containers')
 
     @data(True, False)
     def test_container_defined(self, defined):
         with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
             ms.return_value = defined
             self.assertEqual(defined, self.lxd.container_defined('trusty-1'))
-            ms.assert_called_with('GET',
-                                  '/1.0/containers/trusty-1/state')
+            ms.assert_called_once_with('GET',
+                                       '/1.0/containers/trusty-1/state')
 
     @annotated_data(
         ('STOPPED', False),
@@ -64,16 +64,16 @@ class LXDUnitTestContainer(unittest.TestCase):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
             ms.return_value = ('200', fake_api.fake_container_state(status))
             self.assertEqual(running, self.lxd.container_running('trusty-1'))
-            ms.assert_called_with('GET',
-                                  '/1.0/containers/trusty-1/state')
+            ms.assert_called_once_with('GET',
+                                       '/1.0/containers/trusty-1/state')
 
     def test_container_init(self):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
             ms.return_value = ('200', fake_api.fake_operation())
             self.assertEqual(ms.return_value, self.lxd.container_init('fake'))
-            ms.assert_called_with('POST',
-                                  '/1.0/containers',
-                                  '"fake"')
+            ms.assert_called_once_with('POST',
+                                       '/1.0/containers',
+                                       '"fake"')
 
     def test_container_update(self):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
@@ -81,9 +81,9 @@ class LXDUnitTestContainer(unittest.TestCase):
             self.assertEqual(ms.return_value,
                              self.lxd.container_update('trusty-1',
                                                        'fake'))
-            ms.assert_called_with('PUT',
-                                  '/1.0/containers/trusty-1',
-                                  '"fake"')
+            ms.assert_called_once_with('PUT',
+                                       '/1.0/containers/trusty-1',
+                                       '"fake"')
 
     def test_container_state(self):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
@@ -105,26 +105,26 @@ class LXDUnitTestContainer(unittest.TestCase):
             self.assertEqual(
                 ms.return_value,
                 getattr(self.lxd, 'container_' + method)('trusty-1', 30))
-            ms.assert_called_with('PUT',
-                                  '/1.0/containers/trusty-1/state',
-                                  json.dumps({'action': action,
-                                              'timeout': 30}))
+            ms.assert_called_once_with('PUT',
+                                       '/1.0/containers/trusty-1/state',
+                                       json.dumps({'action': action,
+                                                   'timeout': 30}))
 
     def test_container_destroy(self):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
             ms.return_value = ('200', fake_api.fake_operation())
             self.assertEqual(
                 ms.return_value, self.lxd.container_destroy('trusty-1'))
-            ms.assert_called_with('DELETE',
-                                  '/1.0/containers/trusty-1')
+            ms.assert_called_once_with('DELETE',
+                                       '/1.0/containers/trusty-1')
 
     def test_container_log(self):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
             ms.return_value = ('200', fake_api.fake_container_log())
             self.assertEqual(
                 'fake log', self.lxd.get_container_log('trusty-1'))
-            ms.assert_called_with('GET',
-                                  '/1.0/containers/trusty-1?log=true')
+            ms.assert_called_once_with('GET',
+                                       '/1.0/containers/trusty-1?log=true')
 
     def test_container_file(self):
         with mock.patch.object(connection.LXDConnection, 'get_raw') as ms:
@@ -132,7 +132,7 @@ class LXDUnitTestContainer(unittest.TestCase):
             self.assertEqual(
                 'fake contents', self.lxd.get_container_file('trusty-1',
                                                              '/file/name'))
-            ms.assert_called_with(
+            ms.assert_called_once_with(
                 'GET', '/1.0/containers/trusty-1/files?path=/file/name')
 
     def test_container_publish(self):
@@ -140,9 +140,9 @@ class LXDUnitTestContainer(unittest.TestCase):
             ms.return_value = ('200', fake_api.fake_operation())
             self.assertEqual(
                 ms.return_value, self.lxd.container_publish('trusty-1'))
-            ms.assert_called_with('POST',
-                                  '/1.0/images',
-                                  '"trusty-1"')
+            ms.assert_called_once_with('POST',
+                                       '/1.0/images',
+                                       '"trusty-1"')
 
     def test_container_put_file(self):
         self.assertRaises(NotImplementedError, self.lxd.put_container_file)
@@ -153,6 +153,8 @@ class LXDUnitTestContainer(unittest.TestCase):
             self.assertEqual(
                 ['/1.0/containers/trusty-1/snapshots/first'],
                 self.lxd.container_snapshot_list('trusty-1'))
+            ms.assert_called_once_with('GET',
+                                       '/1.0/containers/trusty-1/snapshots')
 
     @annotated_data(
         ('create', 'POST', '', ('fake config',), ('"fake config"',)),
@@ -168,9 +170,10 @@ class LXDUnitTestContainer(unittest.TestCase):
                 ms.return_value,
                 getattr(self.lxd,
                         'container_snapshot_' + method)('trusty-1', *args))
-            ms.assert_called_with(http,
-                                  '/1.0/containers/trusty-1/snapshots' + path,
-                                  *call_args)
+            ms.assert_called_once_with(http,
+                                       '/1.0/containers/trusty-1/snapshots' +
+                                       path,
+                                       *call_args)
 
     def test_container_run_command(self):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
@@ -185,6 +188,7 @@ class LXDUnitTestContainer(unittest.TestCase):
             self.assertEqual(
                 ms.return_value,
                 self.lxd.container_run_command('trusty-1', *data.values()))
+            self.assertEqual(1, ms.call_count)
             self.assertEqual(
                 ms.call_args[0][:2],
                 ('POST', '/1.0/containers/trusty-1/exec'))
