@@ -60,6 +60,8 @@ class LXDUnitTestProfiles(unittest.TestCase):
         ('create', 'POST', '', ('fake config',), ('"fake config"',)),
         ('update', 'PUT', '/fake-profile',
          ('fake-profile', 'fake config',), ('"fake config"',)),
+        ('rename', 'POST', '/fake-profile',
+         ('fake-profile', 'fake config',), ('"fake config"',)),
         ('delete', 'DELETE', '/fake-profile', ('fake-profile',)),
     )
     def test_profile_operations(self, method, http, path, args, call_args=()):
@@ -70,8 +72,3 @@ class LXDUnitTestProfiles(unittest.TestCase):
             ms.assert_called_with(http,
                                   '/1.0/profiles' + path,
                                   *call_args)
-
-    def test_profile_rename(self):
-        self.assertRaises(
-            NotImplementedError, self.lxd.profile_rename,
-            'fake-profile', 'fake config')

@@ -231,7 +231,7 @@ class API(object):
 
     def profile_rename(self, profile, config):
         '''Rename LXD profile'''
-        raise NotImplementedError()
+        return self.profiles.profile_rename(profile, config)
 
     def profile_delete(self, profile):
         '''Delete LXD profile'''
