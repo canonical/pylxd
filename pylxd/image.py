@@ -54,6 +54,10 @@ class LXDImage(base.LXDBase):
         except exceptions.APIError as ex:
             if ex.status_code == 404:
                 return False
+            else:
+                raise
+        else:
+            return True
 
     def image_list_by_key(self, params):
         try:
