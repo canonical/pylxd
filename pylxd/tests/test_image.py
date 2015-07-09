@@ -176,6 +176,14 @@ class LXDUnitTestImage(unittest.TestCase):
         with mock.patch.object(connection.LXDConnection, 'get_raw') as ms:
             ms.return_value = 'fake contents'
             self.assertEqual('fake contents', self.lxd.image_export('fake'))
+            ms.assert_called_once_with('GET', '/1.0/images/fake/export')
+
+    def test_image_export_fail(self):
+        with mock.patch.object(connection.LXDConnection, 'get_raw') as ms:
+            ms.side_effect = exceptions.PyLXDException
+            self.assertRaises(exceptions.PyLXDException,
+                              self.lxd.image_export, 'fake')
+            ms.assert_called_once_with('GET', '/1.0/images/fake/export')
 
 
 @ddt
