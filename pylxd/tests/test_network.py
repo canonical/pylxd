@@ -14,52 +14,44 @@
 
 from ddt import ddt
 import mock
-import unittest
 
-from pylxd import api
 from pylxd import connection
 
 from pylxd.tests import annotated_data
 from pylxd.tests import fake_api
+from pylxd.tests import LXDAPITestBase
 
 
 @ddt
-class LXDUnitTestNetwork(unittest.TestCase):
+@mock.patch.object(connection.LXDConnection, 'get_object',
+                   return_value=(200, fake_api.fake_network()))
+class LXDAPINetworkTest(LXDAPITestBase):
 
-    def setUp(self):
-        super(LXDUnitTestNetwork, self).setUp()
-        self.lxd = api.API()
+    def test_list_networks(self, ms):
+        ms.return_value = ('200', fake_api.fake_network_list())
+        self.assertEqual(
+            ['lxcbr0'],
+            self.lxd.network_list())
+        ms.assert_called_with('GET',
+                              '/1.0/networks')
 
-    def test_list_networks(self):
-        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
-            ms.return_value = ('200', fake_api.fake_network_list())
-            self.assertEqual(
-                ['lxcbr0'],
-                self.lxd.network_list())
-            ms.assert_called_with('GET',
-                                  '/1.0/networks')
-
-    def test_network_show(self):
-        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
-            ms.return_value = ('200', fake_api.fake_network())
-            self.assertEqual({
-                'network_name': 'lxcbr0',
-                'network_type': 'bridge',
-                'network_members': ['/1.0/containers/trusty-1'],
-            }, self.lxd.network_show('lxcbr0'))
-            ms.assert_called_with('GET',
-                                  '/1.0/networks/lxcbr0')
+    def test_network_show(self, ms):
+        self.assertEqual({
+            'network_name': 'lxcbr0',
+            'network_type': 'bridge',
+            'network_members': ['/1.0/containers/trusty-1'],
+        }, self.lxd.network_show('lxcbr0'))
+        ms.assert_called_with('GET',
+                              '/1.0/networks/lxcbr0')
 
     @annotated_data(
         ('name', 'lxcbr0'),
         ('type', 'bridge'),
         ('members', ['/1.0/containers/trusty-1']),
     )
-    def test_network_data(self, method, expected):
-        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
-            ms.return_value = ('200', fake_api.fake_network())
-            self.assertEqual(
-                expected, getattr(self.lxd,
-                                  'network_show_' + method)('lxcbr0'))
-            ms.assert_called_with('GET',
-                                  '/1.0/networks/lxcbr0')
+    def test_network_data(self, method, expected, ms):
+        self.assertEqual(
+            expected, getattr(self.lxd,
+                              'network_show_' + method)('lxcbr0'))
+        ms.assert_called_with('GET',
+                              '/1.0/networks/lxcbr0')
