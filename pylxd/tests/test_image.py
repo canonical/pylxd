@@ -100,28 +100,32 @@ class LXDUnitTestImage(unittest.TestCase):
                               self.lxd.image_info, ('test-image',))
             ms.assert_called_once_with('GET', '/1.0/images/test-image')
 
-    def test_image_upload_date(self):
-        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
-            ms.return_value = ('200', fake_api.fake_image_info())
-            dt = (datetime.datetime.fromtimestamp(1435669853)
-                  .strftime('%Y-%m-%d %H:%M:%S'))
-            self.assertEqual(dt,
-                             self.lxd.image_upload_date('04aac4257341',
-                                                        data=None))
+    dates_data = (
+        ('upload', (datetime.datetime.fromtimestamp(1435669853)
+                    .strftime('%Y-%m-%d %H:%M:%S'))),
+        ('create', 'Unknown'),
+        ('expire', 'Unknown'),
+    )
 
-    def test_image_create_date(self):
+    @annotated_data(*dates_data)
+    def test_image_date(self, method, expected):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
             ms.return_value = ('200', fake_api.fake_image_info())
-            self.assertEqual('Unknown',
-                             self.lxd.image_create_date('04aac4257341',
-                                                        data=None))
+            self.assertEqual(expected, getattr(
+                self.lxd, 'image_{}_date'.format(method))('test-image',
+                                                          data=None))
+            ms.assert_called_once_with('GET', '/1.0/images/test-image')
 
-    def test_image_expire_date(self):
+    @annotated_data(*dates_data)
+    def test_image_date_fail(self, method, expected):
         with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
-            ms.return_value = ('200', fake_api.fake_image_info())
-            self.assertEqual('Unknown',
-                             self.lxd.image_expire_date('04aac4257341',
-                                                        data=None))
+            ms.side_effect = exceptions.PyLXDException
+            self.assertRaises(exceptions.PyLXDException, getattr(
+                self.lxd,
+                'image_{}_date'.format(method)),
+                'test-image',
+                data=None)
+            ms.assert_called_once_with('GET', '/1.0/images/test-image')
 
     def test_image_upload(self):
         with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
