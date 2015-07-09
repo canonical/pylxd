@@ -15,41 +15,39 @@
 from ddt import data
 from ddt import ddt
 import mock
-import unittest
 
-from pylxd import api
 from pylxd import connection
 
 from pylxd.tests import annotated_data
 from pylxd.tests import fake_api
+from pylxd.tests import LXDAPITestBase
 
 
 @ddt
-class LXDUnitTestAlias(unittest.TestCase):
+@mock.patch.object(connection.LXDConnection, 'get_object')
+class LXDAPIImageAliasTestObject(LXDAPITestBase):
 
-    def setUp(self):
-        super(LXDUnitTestAlias, self).setUp()
-        self.lxd = api.API()
+    def test_alias_list(self, ms):
+        ms.return_value = ('200', fake_api.fake_alias_list())
+        self.assertEqual(['ubuntu'], self.lxd.alias_list())
+        ms.assert_called_once_with('GET', '/1.0/images/aliases')
 
-    def test_alias_list(self):
-        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
-            ms.return_value = ('200', fake_api.fake_alias_list())
-            self.assertEqual(['ubuntu'], self.lxd.alias_list())
-            ms.assert_called_once_with('GET', '/1.0/images/aliases')
+    def test_alias_show(self, ms):
+        ms.return_value = ('200', fake_api.fake_alias())
+        self.assertEqual(
+            fake_api.fake_alias(), self.lxd.alias_show('fake')[1])
+        ms.assert_called_once_with('GET', '/1.0/images/aliases/fake')
+
+
+@ddt
+@mock.patch.object(connection.LXDConnection, 'get_status')
+class LXDAPIImageAliasTestStatus(LXDAPITestBase):
 
     @data(True, False)
-    def test_alias_defined(self, expected):
-        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
-            ms.return_value = expected
-            self.assertEqual(expected, self.lxd.alias_defined('fake'))
-            ms.assert_called_once_with('GET', '/1.0/images/aliases/fake')
-
-    def test_alias_show(self):
-        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
-            ms.return_value = ('200', fake_api.fake_alias())
-            self.assertEqual(
-                fake_api.fake_alias(), self.lxd.alias_show('fake')[1])
-            ms.assert_called_once_with('GET', '/1.0/images/aliases/fake')
+    def test_alias_defined(self, expected, ms):
+        ms.return_value = expected
+        self.assertEqual(expected, self.lxd.alias_defined('fake'))
+        ms.assert_called_once_with('GET', '/1.0/images/aliases/fake')
 
     @annotated_data(
         ('create', 'POST', '', ('fake',), ('"fake"',)),
@@ -57,14 +55,12 @@ class LXDUnitTestAlias(unittest.TestCase):
          ('test-alias', 'fake',), ('"fake"',)),
         ('rename', 'POST', '/test-alias',
          ('test-alias', 'fake',), ('"fake"',)),
-        ('delete', 'DELETE', '/test-alias', ('test-alias',)),
+        ('delete', 'DELETE', '/test-alias', ('test-alias',), ()),
     )
-    def test_alias_operations(self, method, http, path, args, call_args=()):
-        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
-            ms.return_value = True
-            self.assertTrue(getattr(self.lxd, 'alias_' + method)(*args))
-            ms.assert_called_once_with(
-                http,
-                '/1.0/images/aliases' + path,
-                *call_args
-            )
+    def test_alias_operations(self, method, http, path, args, call_args, ms):
+        self.assertTrue(getattr(self.lxd, 'alias_' + method)(*args))
+        ms.assert_called_once_with(
+            http,
+            '/1.0/images/aliases' + path,
+            *call_args
+        )
