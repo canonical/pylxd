@@ -20,6 +20,7 @@ import unittest
 from pylxd import api
 from pylxd import connection
 from pylxd import exceptions
+from pylxd import image
 
 from pylxd.tests import annotated_data
 from pylxd.tests import fake_api
@@ -151,3 +152,66 @@ class LXDUnitTestImage(unittest.TestCase):
         with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
             ms.return_value = True
             self.assertTrue(self.lxd.image_rename('fake'))
+
+
+@ddt
+@mock.patch.object(connection.LXDConnection, 'get_object',
+                   return_value=(200, fake_api.fake_image_info()))
+class LXDUnitTestImageInfo(unittest.TestCase):
+
+    def setUp(self):
+        super(LXDUnitTestImageInfo, self).setUp()
+        self.image = image.LXDImage()
+
+    info_list = (
+        ('permission', False),
+        ('size', 63),
+        ('fingerprint', '04aac4257341478b49c25d22cea8a6ce'
+                        '0489dc6c42d835367945e7596368a37f'),
+        ('architecture', 'x86_64'),
+    )
+
+    @annotated_data(*info_list)
+    def test_info_no_data(self, method, expected, mc):
+        self.assertEqual(expected,
+                         (getattr(self.image, 'get_image_' + method)
+                          ('test-image', data=None)))
+        mc.assert_called_once_with('GET', '/1.0/images/test-image')
+
+    @annotated_data(*info_list)
+    def test_info_no_data_fail(self, method, expected, mc):
+        mc.side_effect = exceptions.PyLXDException
+        self.assertRaises(exceptions.PyLXDException,
+                          getattr(self.image, 'get_image_' + method),
+                          'test-image',
+                          data=None)
+
+    @annotated_data(
+        ('permission_true', 'permission', {'public': 0}, False),
+        ('permission_false', 'permission', {'public': 1}, True),
+        ('size', 'size', {'size': 52428800}, 50),
+        ('fingerprint', 'fingerprint', {'fingerprint': 'AAAA'}, 'AAAA'),
+        *[('architecture_' + v, 'architecture', {'architecture': k}, v)
+          for k, v in image.image_architecture.items()]
+    )
+    def test_info_data(self, tag, method, metadata, expected, mc):
+        self.assertEqual(
+            expected, getattr(self.image, 'get_image_' + method)
+            ('test-image', data=metadata))
+        self.assertFalse(mc.called)
+
+    @annotated_data(
+        ('permission', 'permission', {}, KeyError),
+        ('size', 'size', {'size': 0}, exceptions.ImageInvalidSize),
+        ('size', 'size', {'size': -1}, exceptions.ImageInvalidSize),
+        ('fingerprint', 'fingerprint', {}, KeyError),
+        ('architecture', 'architecture', {}, KeyError),
+        ('architecture_invalid', 'architecture',
+         {'architecture': -1}, KeyError)
+    )
+    def test_info_data_fail(self, tag, method, metadata, expected, mc):
+        self.assertRaises(expected,
+                          getattr(self.image, 'get_image_' + method),
+                          'test-image',
+                          data=metadata)
+        self.assertFalse(mc.called)
