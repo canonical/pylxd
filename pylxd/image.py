@@ -136,7 +136,7 @@ class LXDImage(base.LXDBase):
                     'GET', '/1.0/images/%s' % image)
                 data = data.get('metadata')
             image_size = data['size']
-            if image_size == 0:
+            if image_size <= 0:
                 raise exceptions.ImageInvalidSize()
             return image_size / 1024 ** 2
         except Exception as e:
