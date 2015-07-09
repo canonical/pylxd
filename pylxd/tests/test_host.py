@@ -15,50 +15,32 @@
 from ddt import data
 from ddt import ddt
 import mock
-import unittest
 
-from pylxd import api
 from pylxd import connection
 from pylxd import exceptions
 
 from pylxd.tests import annotated_data
 from pylxd.tests import fake_api
+from pylxd.tests import LXDAPITestBase
 
 
 @ddt
-class LXDUnitTestHost(unittest.TestCase):
+@mock.patch.object(connection.LXDConnection, 'get_object',
+                   return_value=('200', fake_api.fake_host()))
+class LXDAPIHostTestObject(LXDAPITestBase):
 
-    def setUp(self):
-        super(LXDUnitTestHost, self).setUp()
-        self.lxd = api.API()
-
-    @data(True, False)
-    def test_get_host_ping(self, value):
-        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
-            ms.return_value = value
-            self.assertEqual(value, self.lxd.host_ping())
-            ms.assert_called_once_with('GET', '/1.0')
-
-    def test_get_host_ping_fail(self):
-        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
-            ms.side_effect = Exception
-            self.assertRaises(exceptions.PyLXDException, self.lxd.host_ping)
-            ms.assert_called_once_with('GET', '/1.0')
-
-    def test_get_host_info(self):
-        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
-            ms.return_value = ('200', fake_api.fake_host())
-            result = self.lxd.host_info()
-            self.assertEqual(result, {
-                'lxd_api_compat_level': 1,
-                'lxd_trusted_host': True,
-                'lxd_backing_fs': 'ext4',
-                'lxd_driver': 'lxc',
-                'lxd_version': 0.12,
-                'lxc_version': '1.1.2',
-                'kernel_version': '3.19.0-22-generic',
-            })
-            ms.assert_called_once_with('GET', '/1.0')
+    def test_get_host_info(self, ms):
+        result = self.lxd.host_info()
+        self.assertEqual(result, {
+            'lxd_api_compat_level': 1,
+            'lxd_trusted_host': True,
+            'lxd_backing_fs': 'ext4',
+            'lxd_driver': 'lxc',
+            'lxd_version': 0.12,
+            'lxc_version': '1.1.2',
+            'kernel_version': '3.19.0-22-generic',
+        })
+        ms.assert_called_once_with('GET', '/1.0')
 
     host_data = (
         ('lxd_api_compat', 1),
@@ -71,17 +53,30 @@ class LXDUnitTestHost(unittest.TestCase):
     )
 
     @annotated_data(*host_data)
-    def test_get_host_data(self, method, expected):
-        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
-            ms.return_value = ('200', fake_api.fake_host())
-            result = getattr(self.lxd, 'get_' + method)(data=None)
-            self.assertEqual(expected, result)
-            ms.assert_called_once_with('GET', '/1.0')
+    def test_get_host_data(self, method, expected, ms):
+        result = getattr(self.lxd, 'get_' + method)(data=None)
+        self.assertEqual(expected, result)
+        ms.assert_called_once_with('GET', '/1.0')
 
     @annotated_data(*host_data)
-    def test_get_host_data_fail(self, method, expected):
-        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
-            ms.side_effect = exceptions.PyLXDException
-            result = getattr(self.lxd, 'get_' + method)(data=None)
-            self.assertEqual(None, result)
-            ms.assert_called_once_with('GET', '/1.0')
+    def test_get_host_data_fail(self, method, expected, ms):
+        ms.side_effect = exceptions.PyLXDException
+        result = getattr(self.lxd, 'get_' + method)(data=None)
+        self.assertEqual(None, result)
+        ms.assert_called_once_with('GET', '/1.0')
+
+
+@ddt
+@mock.patch.object(connection.LXDConnection, 'get_status')
+class LXDAPIHostTestStatus(LXDAPITestBase):
+
+    @data(True, False)
+    def test_get_host_ping(self, value, ms):
+        ms.return_value = value
+        self.assertEqual(value, self.lxd.host_ping())
+        ms.assert_called_once_with('GET', '/1.0')
+
+    def test_get_host_ping_fail(self, ms):
+        ms.side_effect = Exception
+        self.assertRaises(exceptions.PyLXDException, self.lxd.host_ping)
+        ms.assert_called_once_with('GET', '/1.0')
