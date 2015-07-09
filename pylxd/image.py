@@ -165,14 +165,6 @@ class LXDImage(base.LXDBase):
             print("Unable to fetch image info - {}".format(e))
             raise
 
-    def get_image_defined(self, image):
-        try:
-            return self.connection.get_status('GET', '/1.0/images/%s'
-                                              % image)
-        except Exception as e:
-            print("Unable to get container - {}".format(e))
-            raise
-
     # image operations
     def image_upload(self, path=None, data=None):
         data = data or open(path, 'rb').read()
