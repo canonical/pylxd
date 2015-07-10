@@ -13,6 +13,26 @@
 #    under the License.
 
 
+def fake_host():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": {
+                "api_compat": 1,
+                "auth": "trusted",
+                "config": {},
+                "environment": {
+                    "backing_fs": "ext4",
+                    "driver": "lxc",
+                    "kernel_version": "3.19.0-22-generic",
+                    "lxc_version": "1.1.2",
+                    "lxd_version": "0.12"
+                }
+        }
+    }
+
+
 def fake_image_list_empty():
     return {
         "type": "sync",
@@ -27,7 +47,7 @@ def fake_image_list():
         "type": "sync",
         "status": "Success",
         "status_code": 200,
-        "metadata": ['chuck']
+        "metadata": ['/1.0/images/trusty']
     }
 
 

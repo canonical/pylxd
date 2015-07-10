@@ -95,11 +95,11 @@ class API(object):
     def image_export(self, image):
         return self.image.image_export(image)
 
-    def image_update(self, image):
-        return self.image.image_update(image)
+    def image_update(self, image, data):
+        return self.image.image_update(image, data)
 
-    def image_rename(self, image):
-        return self.image.image_rename(image)
+    def image_rename(self, image, data):
+        return self.image.image_rename(image, data)
 
     # alias
     def alias_list(self):
@@ -108,17 +108,17 @@ class API(object):
     def alias_defined(self, alias):
         return self.alias.alias_defined(alias)
 
-    def alias_create(self, alias):
-        return self.alias.alias_create(alias)
+    def alias_create(self, data):
+        return self.alias.alias_create(data)
 
-    def alias_update(self, alias):
-        return self.alias.alias_update(alias)
+    def alias_update(self, alias, data):
+        return self.alias.alias_update(alias, data)
 
     def alias_show(self, alias):
         return self.alias.alias_show(alias)
 
-    def alias_rename(self, alias):
-        return self.alias.alias_rename(alias)
+    def alias_rename(self, alias, data):
+        return self.alias.alias_rename(alias, data)
 
     def alias_delete(self, alias):
         return self.alias.alias_delete(alias)
@@ -231,7 +231,7 @@ class API(object):
 
     def profile_rename(self, profile, config):
         '''Rename LXD profile'''
-        raise NotImplementedError()
+        return self.profiles.profile_rename(profile, config)
 
     def profile_delete(self, profile):
         '''Delete LXD profile'''

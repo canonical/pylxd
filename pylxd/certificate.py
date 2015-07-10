@@ -21,7 +21,7 @@ class LXDCertificate(base.LXDBase):
 
     def certificate_list(self):
         (state, data) = self.connection.get_object('GET', '/1.0/certificates')
-        return [certificate.split('/1.0/certitifcates/')[-1]
+        return [certificate.split('/1.0/certificates/')[-1]
                 for certificate in data['metadata']]
 
     def certificate_show(self, fingerprint):

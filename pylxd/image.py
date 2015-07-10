@@ -54,6 +54,10 @@ class LXDImage(base.LXDBase):
         except exceptions.APIError as ex:
             if ex.status_code == 404:
                 return False
+            else:
+                raise
+        else:
+            return True
 
     def image_list_by_key(self, params):
         try:
@@ -132,9 +136,9 @@ class LXDImage(base.LXDBase):
                     'GET', '/1.0/images/%s' % image)
                 data = data.get('metadata')
             image_size = data['size']
-            if image_size == 0:
+            if image_size <= 0:
                 raise exceptions.ImageInvalidSize()
-            return image_size / 1024 ** 2
+            return image_size // 1024 ** 2
         except Exception as e:
             print("Unable to fetch image info - {}".format(e))
             raise
@@ -159,14 +163,6 @@ class LXDImage(base.LXDBase):
             return image_architecture[data['architecture']]
         except Exception as e:
             print("Unable to fetch image info - {}".format(e))
-            raise
-
-    def get_image_defined(self, image):
-        try:
-            return self.connection.get_status('GET', '/1.0/images/%s'
-                                              % image)
-        except Exception as e:
-            print("Unable to get container - {}".format(e))
             raise
 
     # image operations
@@ -195,18 +191,18 @@ class LXDImage(base.LXDBase):
             print("Unable to export image - {}".format(e))
             raise
 
-    def image_update(self, image):
+    def image_update(self, image, data):
         try:
-            return self.connection.get_status('PUT', '/1.0/images',
-                                              json.dumps(image))
+            return self.connection.get_status('PUT', '/1.0/images/%s' % image,
+                                              json.dumps(data))
         except Exception as e:
             print("Unable to update image - {}".format(e))
             raise
 
-    def image_rename(self, image):
+    def image_rename(self, image, data):
         try:
-            return self.connection.get_status('POST', '/1.0/images',
-                                              json.dumps(image))
+            return self.connection.get_status('POST', '/1.0/images/%s' % image,
+                                              json.dumps(data))
         except Exception as e:
             print("Unable to rename image - {}".format(e))
             raise
@@ -221,24 +217,26 @@ class LXDAlias(base.LXDBase):
                 for alias in data['metadata']]
 
     def alias_defined(self, alias):
-        return self.connection.get_status('GET', '/1.0/iamges/aliases/%s'
+        return self.connection.get_status('GET', '/1.0/images/aliases/%s'
                                           % alias)
 
     def alias_show(self, alias):
         return self.connection.get_object('GET', '/1.0/images/aliases/%s'
                                           % alias)
 
-    def alias_update(self, alias):
-        return self.connection.get_status('PUT', '/1.0/images/aliases',
-                                          json.dumps(alias))
+    def alias_update(self, alias, data):
+        return self.connection.get_status('PUT',
+                                          '/1.0/images/aliases/%s' % alias,
+                                          json.dumps(data))
 
-    def alias_rename(self, alias):
-        return self.connection.get_status('POST', '/1.0/images/aliases',
-                                          json.dumps(alias))
+    def alias_rename(self, alias, data):
+        return self.connection.get_status('POST',
+                                          '/1.0/images/aliases/%s' % alias,
+                                          json.dumps(data))
 
-    def alias_create(self, alias):
+    def alias_create(self, data):
         return self.connection.get_status('POST', '/1.0/images/aliases',
-                                          json.dumps(alias))
+                                          json.dumps(data))
 
     def alias_delete(self, alias):
         return self.connection.get_status('DELETE', '/1.0/images/aliases/%s'

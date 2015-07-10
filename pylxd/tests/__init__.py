@@ -14,6 +14,16 @@
 
 from ddt import data
 from ddt import unpack
+import unittest
+
+from pylxd import api
+
+
+class LXDAPITestBase(unittest.TestCase):
+
+    def setUp(self):
+        super(LXDAPITestBase, self).setUp()
+        self.lxd = api.API()
 
 
 def annotated_data(*args):
