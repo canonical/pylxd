@@ -62,7 +62,7 @@ class LXDInitConnectionTest(unittest.TestCase):
         conn._tunnel_host = 'host'
         with mock.patch.object(conn, '_tunnel') as mc:
             conn.connect()
-            mc.assert_called()
+            self.assertTrue(mc.called)
             ms.assert_called_once_with(
                 ('host', 1234), socket._GLOBAL_DEFAULT_TIMEOUT, None)
             ml.assert_called_once_with(
