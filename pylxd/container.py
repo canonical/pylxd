@@ -92,7 +92,7 @@ class LXDContainer(base.LXDBase):
             'GET', '/1.0/containers/%s?log=true' % container)
         return data['metadata']['log']
 
-    def get_conainer_config(self, container):
+    def get_container_config(self, container):
         (state, data) = self.connection.get_object(
             'GET', '/1.0/containers/%s?log=false' % container)
         return data['metadata']
