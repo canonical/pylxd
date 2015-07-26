@@ -166,6 +166,9 @@ class API(object):
     def get_container_config(self, container):
         return self.container.get_container_config(container)
 
+    def container_info(self, container):
+        return self.container.container_info(container)
+
     # file operations
     def get_container_file(self, container, filename):
         return self.container.get_container_file(container, filename)

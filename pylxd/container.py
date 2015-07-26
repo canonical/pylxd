@@ -97,6 +97,11 @@ class LXDContainer(base.LXDBase):
             'GET', '/1.0/containers/%s?log=false' % container)
         return data['metadata']
 
+    def container_info(self, container):
+        (state, data) = self.connection.get_object(
+            'GET', '/1.0/containers/%s/state' % container)
+        return data['metadata']
+
     # file operations
     def get_container_file(self, container, filename):
         return self.connection.get_raw(
