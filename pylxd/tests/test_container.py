@@ -104,6 +104,31 @@ class LXDAPIContainerTestObject(LXDAPITestBase):
         ms.assert_called_once_with('GET',
                                    '/1.0/containers/trusty-1?log=true')
 
+    def test_container_config(self, ms):
+        ms.return_value = ('200', fake_api.fake_container_state('fake'))
+        self.assertEqual(
+            {'status': 'fake'}, self.lxd.get_container_config('trusty-1'))
+        ms.assert_called_once_with('GET',
+                                   '/1.0/containers/trusty-1?log=false')
+
+    def test_container_info(self, ms):
+        ms.return_value = ('200', fake_api.fake_container_state('fake'))
+        self.assertEqual(
+            {'status': 'fake'}, self.lxd.container_info('trusty-1'))
+        ms.assert_called_once_with('GET',
+                                   '/1.0/containers/trusty-1/state')
+
+    def test_container_migrate(self, ms):
+        ms.return_value = ('200', fake_api.fake_container_migrate())
+        self.assertEqual(
+            {'control': 'fake_control',
+             'criu': 'fake_criu',
+             'fs': 'fake_fs'},
+            self.lxd.container_migrate('trusty-1'))
+        ms.assert_called_once_with('POST',
+                                   '/1.0/containers/trusty-1',
+                                   '{"migration": true}')
+
     def test_container_publish(self, ms):
         ms.return_value = ('200', fake_api.fake_operation())
         self.assertEqual(
