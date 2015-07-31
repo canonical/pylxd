@@ -106,7 +106,7 @@ class LXDContainer(base.LXDBase):
         action = {'migration': true}
         (state, data) = self.connection.get_object(
             'POST', '/1.0/containers/%s' % container,
-            json.dumps(action)
+            json.dumps(action))
         return {
             'control': data['metadata']['control'],
             'criu': data['metadata']['criu'],
