@@ -102,6 +102,17 @@ class LXDContainer(base.LXDBase):
             'GET', '/1.0/containers/%s/state' % container)
         return data['metadata']
 
+    def container_migrate(self, container):
+        action = {'migration': true}
+        (state, data) = self.connection.get_object(
+            'POST', '/1.0/containers/%s' % container,
+            json.dumps(action)
+        return {
+            'control': data['metadata']['control'],
+            'criu': data['metadata']['criu'],
+            'fs': data['metadata']['fs']
+        }
+
     # file operations
     def get_container_file(self, container, filename):
         return self.connection.get_raw(

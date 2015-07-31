@@ -195,6 +195,9 @@ class API(object):
     def container_snapshot_delete(self, container, snapshot):
         return self.container.snapshot_delete(container, snapshot)
 
+    def container_migrate(self, container):
+        return self.container.container_migrate(container)
+
     # misc container
     def container_run_command(self, container, args, interactive=False,
                               web_sockets=False, env=None):
