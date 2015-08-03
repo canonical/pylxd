@@ -133,6 +133,19 @@ def fake_container_log():
     }
 
 
+def fake_container_migrate():
+    return {
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": {
+            "control": "fake_control",
+            "criu": "fake_criu",
+            "fs": "fake_fs",
+        }
+    }
+
+
 def fake_snapshots_list():
     return {
         "type": "sync",
