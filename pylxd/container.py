@@ -108,9 +108,10 @@ class LXDContainer(base.LXDBase):
             'POST', '/1.0/containers/%s' % container,
             json.dumps(action))
         return {
-            'control': data['metadata']['control'],
-            'criu': data['metadata']['criu'],
-            'fs': data['metadata']['fs']
+            'operation': str(data['operation'].split('/1.0/operations/')[-1]),
+            'control': str(data['metadata']['control']),
+            'criu': str(data['metadata']['criu']),
+            'fs': str(data['metadata']['fs'])
         }
 
     # file operations
