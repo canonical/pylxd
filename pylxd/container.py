@@ -54,31 +54,31 @@ class LXDContainer(base.LXDBase):
         return data['metadata']['status']
 
     def container_start(self, container, timeout):
-        action = {'action': 'start', 'timeout': timeout}
+        action = {'action': 'start', 'force': True, 'timeout': timeout}
         return self.connection.get_object('PUT', '/1.0/containers/%s/state'
                                           % container,
                                           json.dumps(action))
 
     def container_stop(self, container, timeout):
-        action = {'action': 'stop', 'timeout': timeout}
+        action = {'action': 'stop', 'force': True, 'timeout': timeout}
         return self.connection.get_object('PUT', '/1.0/containers/%s/state'
                                           % container,
                                           json.dumps(action))
 
     def container_suspend(self, container, timeout):
-        action = {'action': 'freeze', 'timeout': timeout}
+        action = {'action': 'freeze', 'force': True, 'timeout': timeout}
         return self.connection.get_object('PUT', '/1.0/containers/%s/state'
                                           % container,
                                           json.dumps(action))
 
     def container_resume(self, container, timeout):
-        action = {'action': 'unfreeze', 'timeout': timeout}
+        action = {'action': 'unfreeze', 'force': True, 'timeout': timeout}
         return self.connection.get_object('PUT', '/1.0/containers/%s/state'
                                           % container,
                                           json.dumps(action))
 
     def container_reboot(self, container, timeout):
-        action = {'action': 'restart', 'timeout': timeout}
+        action = {'action': 'restart', 'force': True, 'timeout': timeout}
         return self.connection.get_object('PUT', '/1.0/containers/%s/state'
                                           % container,
                                           json.dumps(action))
