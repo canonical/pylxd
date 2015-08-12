@@ -110,7 +110,6 @@ class LXDContainer(base.LXDBase):
         return {
             'operation': str(data['operation'].split('/1.0/operations/')[-1]),
             'control': str(data['metadata']['control']),
-            'criu': str(data['metadata']['criu']),
             'fs': str(data['metadata']['fs'])
         }
 
