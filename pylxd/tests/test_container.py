@@ -122,8 +122,8 @@ class LXDAPIContainerTestObject(LXDAPITestBase):
     def test_container_migrate(self, ms):
         ms.return_value = ('200', fake_api.fake_container_migrate())
         self.assertEqual(
-            {'control': 'fake_control',
-             'criu': 'fake_criu',
+            {'operation': '1234',
+             'control': 'fake_control',
              'fs': 'fake_fs'},
             self.lxd.container_migrate('trusty-1'))
         ms.assert_called_once_with('POST',

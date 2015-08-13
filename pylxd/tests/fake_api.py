@@ -138,9 +138,9 @@ def fake_container_migrate():
         "type": "sync",
         "status": "Success",
         "status_code": 200,
+        "operation": "/1.0/operations/1234",
         "metadata": {
             "control": "fake_control",
-            "criu": "fake_criu",
             "fs": "fake_fs",
         }
     }
