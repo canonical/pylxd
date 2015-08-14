@@ -86,8 +86,8 @@ class API(object):
     def image_expire_date(self, image, data=None):
         return self.image.get_image_date(image, data, 'expires_at')
 
-    def image_upload(self, path=None, data=None):
-        return self.image.image_upload(path=path, data=data)
+    def image_upload(self, path=None, data=None, headers=headers):
+        return self.image.image_upload(path=path, data=data, headers=headers)
 
     def image_delete(self, image):
         return self.image.image_delete(image)
