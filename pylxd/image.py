@@ -166,7 +166,7 @@ class LXDImage(base.LXDBase):
             raise
 
     # image operations
-    def image_upload(self, path=None, data=None, headers=headers):
+    def image_upload(self, path=None, data=None, headers=None):
         data = data or open(path, 'rb').read()
         try:
             return self.connection.get_status('POST', '/1.0/images',
