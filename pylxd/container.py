@@ -122,7 +122,6 @@ class LXDContainer(base.LXDBase):
     def put_container_file(self, container, src_file, dst_file, uid, gid, mode):
         with open(src_file, 'rb') as f:
           data = f.read()
-        f.close()
         return self.connection.get_object(
             'POST',
             '/1.0/containers/%s/files?path=%s' % (container, dst_file),
