@@ -97,6 +97,12 @@ class LXDContainer(base.LXDBase):
             'GET', '/1.0/containers/%s?log=false' % container)
         return data['metadata']
 
+    def get_container_websocket(self, container):
+        return self.connection.get_status('GET', 
+                    '/1.0/operations/%s/websocket?secret=%s'
+                    % (container['operation'], container['fs']))
+
+
     def container_info(self, container):
         (state, data) = self.connection.get_object(
             'GET', '/1.0/containers/%s/state' % container)

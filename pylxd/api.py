@@ -166,6 +166,9 @@ class API(object):
     def get_container_config(self, container):
         return self.container.get_container_config(container)
 
+    def get_container_websocket(self, container):
+        return self.container.get_container_websocket(container)
+
     def container_info(self, container):
         return self.container.container_info(container)
 
