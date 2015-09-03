@@ -125,6 +125,15 @@ class LXDContainer(base.LXDBase):
             'GET',
             '/1.0/containers/%s/files?path=%s' % (container, filename))
 
+    def put_container_file(self, container, src_file, dst_file, uid, gid, mode):
+        with open(src_file, 'rb') as f:
+          data = f.read()
+        return self.connection.get_object(
+            'POST',
+            '/1.0/containers/%s/files?path=%s' % (container, dst_file),
+            body=data,
+            headers={'X-LXD-uid':uid,'X-LXD-gid':gid,'X-LXD-mode':mode})
+
     def container_publish(self, container):
         return self.connection.get_object('POST', '/1.0/images',
                                           json.dumps(container))
