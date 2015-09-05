@@ -260,7 +260,7 @@ class API(object):
         return self.operation.operation_delete(operation)
 
     def operation_info(self, operation):
-        return self.operation.operation_show(operation)
+        return self.operation.operation_info(operation)
 
     def operation_show_create_time(self, operation, data=None):
         return self.operation.operation_create_time(operation, data)

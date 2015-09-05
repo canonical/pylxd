@@ -36,6 +36,10 @@ class LXDOperation(base.LXDBase):
                 self.operation_status_code(operation, data.get('metadata'))
         }
 
+    def operation_info(self, operation):
+        return self.connection.get_object('GET', '/1.0/operations/%s'
+                                           % operation)
+
     def operation_create_time(self, operation, data):
         if data is None:
             (state, data) = self.connection.get_object(
