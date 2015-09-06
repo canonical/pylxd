@@ -17,6 +17,8 @@ import os
 import socket
 import ssl
 
+from websocket import create_connection
+
 from pylxd import exceptions
 from pylxd import utils
 from six.moves import http_client
@@ -125,3 +127,9 @@ class LXDConnection(object):
         else:
             msg = "Failed to get raw response"
             raise exceptions.PyLXDException(msg)
+
+    def get_ws(self, *args, **kwargs):
+        self.connection = self.get_connection()
+        self.connection.request(*args, **kwargs)
+        response = self.connection.getresponse()
+        return response.status

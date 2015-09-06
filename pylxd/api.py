@@ -271,6 +271,9 @@ class API(object):
     def operation_show_status(self, operation, data=None):
         return self.operation.operation_status_code(operation, data)
 
+    def operation_stream(self, operation, operation_secret):
+        return self.operation.operation_stream(operation, operation_secret)
+
     # networks
     def network_list(self):
         return self.network.network_list()
