@@ -17,18 +17,6 @@ import os
 from eventlet.green import socket
 import ssl
 
-try:
-    from eventlet import patcher
-    # Handle case where we are running in a monkey patched environment
-    if patcher.is_monkey_patched('socket'):
-        from eventlet.green.httplib import HTTPSConnection
-        from eventlet.green.httplib import HTTPConnection
-    else:
-        raise ImportError
-except ImportError:
-    HTTPSConnection = http_client.HTTPSConnection
-    HTTPConnection = http_client.HTTPConnection
-
 from pylxd import exceptions
 from pylxd import utils
 from six.moves import http_client
@@ -41,9 +29,9 @@ try:
         from eventlet.green.httplib import HTTPConnection
     else:
         raise ImportError
-    except ImportError:
-        HTTPSConnection = http_client.HTTPSConnection
-        HTTPConnection = http_client.HTTPConnection
+except ImportError:
+     HTTPSConnection = http_client.HTTPSConnection
+     HTTPConnection = http_client.HTTPConnection
 
 
 class UnixHTTPConnection(http_client.HTTPConnection):
