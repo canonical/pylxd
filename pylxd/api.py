@@ -172,6 +172,9 @@ class API(object):
     def container_info(self, container):
         return self.container.container_info(container)
 
+    def container_local_copy(self, container):
+        return self.container.container_local_copy(container)
+
     # file operations
     def get_container_file(self, container, filename):
         return self.container.get_container_file(container, filename)

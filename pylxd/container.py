@@ -118,6 +118,11 @@ class LXDContainer(base.LXDBase):
             'fs': str(data['metadata']['fs'])
         }
 
+    def container_local_copy(self, container):
+        return self.connection.get_object('POST',
+            '/1.0/containers', json.dumps(container))
+            
+
     # file operations
     def get_container_file(self, container, filename):
         return self.connection.get_raw(
