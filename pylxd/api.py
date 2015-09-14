@@ -207,6 +207,9 @@ class API(object):
     def container_migrate(self, container):
         return self.container.container_migrate(container)
 
+    def container_migrate_sync(self, operation_id, container_secret):
+        return self.container.container_migrate_sync(operation_id, container_secret)
+
     # misc container
     def container_run_command(self, container, args, interactive=False,
                               web_sockets=False, env=None):
