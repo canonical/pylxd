@@ -122,9 +122,9 @@ class LXDContainer(base.LXDBase):
         return self.connection.get_object('POST',
             '/1.0/containers', json.dumps(container))
 
-    def container_local_move(self, instance, container):
+    def container_local_move(self, instance, config):
         return self.connection.get_object('POST',
-            '/1.0/containers/%s' % instance, json.dumps(container))
+            '/1.0/containers/%s' % instance, json.dumps(config))
 
     # file operations
     def get_container_file(self, container, filename):
