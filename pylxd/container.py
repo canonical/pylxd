@@ -98,10 +98,10 @@ class LXDContainer(base.LXDBase):
         return data['metadata']
 
     def get_container_websocket(self, container):
-        return self.connection.get_status('GET', 
-                    '/1.0/operations/%s/websocket?secret=%s'
-                    % (container['operation'], container['fs']))
-
+        return self.connection.get_status(
+            'GET',
+            '/1.0/operations/%s/websocket?secret=%s'
+            % (container['operation'], container['fs']))
 
     def container_info(self, container):
         (state, data) = self.connection.get_object(
@@ -119,17 +119,20 @@ class LXDContainer(base.LXDBase):
             'fs': str(data['metadata']['fs'])
         }
 
-    def container_migrate_sync(self, operation_id, conainer_secret):
-        return self.connection.get_ws('GET',
+    def container_migrate_sync(self, operation_id, container_secret):
+        return self.connection.get_ws(
+            'GET',
             '/1.0/operations/%s/websocket?secret=%s'
-             % (operation_id, container_secret))
+            % (operation_id, container_secret))
 
     def container_local_copy(self, container):
-        return self.connection.get_object('POST',
+        return self.connection.get_object(
+            'POST',
             '/1.0/containers', json.dumps(container))
 
     def container_local_move(self, instance, config):
-        return self.connection.get_object('POST',
+        return self.connection.get_object(
+            'POST',
             '/1.0/containers/%s' % instance, json.dumps(config))
 
     # file operations
@@ -138,14 +141,15 @@ class LXDContainer(base.LXDBase):
             'GET',
             '/1.0/containers/%s/files?path=%s' % (container, filename))
 
-    def put_container_file(self, container, src_file, dst_file, uid, gid, mode):
+    def put_container_file(self, container, src_file,
+                           dst_file, uid, gid, mode):
         with open(src_file, 'rb') as f:
-          data = f.read()
+            data = f.read()
         return self.connection.get_object(
             'POST',
             '/1.0/containers/%s/files?path=%s' % (container, dst_file),
             body=data,
-            headers={'X-LXD-uid':uid,'X-LXD-gid':gid,'X-LXD-mode':mode})
+            headers={'X-LXD-uid': uid, 'X-LXD-gid': gid, 'X-LXD-mode': mode})
 
     def container_publish(self, container):
         return self.connection.get_object('POST', '/1.0/images',

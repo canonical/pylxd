@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
 def fake_standard_return():
     return {
         "type": "sync",

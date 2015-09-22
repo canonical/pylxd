@@ -91,7 +91,7 @@ class LXDAPIContainerTestObject(LXDAPITestBase):
                                    '/1.0/containers/trusty-1/state',
                                    json.dumps({'action': action,
                                                'force': True,
-                                               'timeout': 30,}))
+                                               'timeout': 30, }))
 
     def test_container_destroy(self, ms):
         self.assertEqual(
@@ -143,11 +143,14 @@ class LXDAPIContainerTestObject(LXDAPITestBase):
         temp_file = tempfile.NamedTemporaryFile()
         ms.return_value = ('200', fake_api.fake_standard_return())
         self.assertEqual(
-            ms.return_value, self.lxd.put_container_file('trusty-1',temp_file.name,'dst_file'))
-        ms.assert_called_once_with('POST',
-                                   '/1.0/containers/trusty-1/files?path=dst_file',
-                                   body='',
-                                   headers={'X-LXD-gid': 0, 'X-LXD-mode': 0644, 'X-LXD-uid': 0})
+            ms.return_value, self.lxd.put_container_file('trusty-1',
+                                                         temp_file.name,
+                                                         'dst_file'))
+        ms.assert_called_once_with(
+            'POST',
+            '/1.0/containers/trusty-1/files?path=dst_file',
+            body='',
+            headers={'X-LXD-gid': 0, 'X-LXD-mode': 0o644, 'X-LXD-uid': 0})
 
     def test_list_snapshots(self, ms):
         ms.return_value = ('200', fake_api.fake_snapshots_list())
