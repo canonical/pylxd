@@ -90,7 +90,8 @@ class LXDAPIContainerTestObject(LXDAPITestBase):
         ms.assert_called_once_with('PUT',
                                    '/1.0/containers/trusty-1/state',
                                    json.dumps({'action': action,
-                                               'timeout': 30}))
+                                               'timeout': 30,
+                                               'force': True}))
 
     def test_container_destroy(self, ms):
         self.assertEqual(
