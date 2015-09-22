@@ -37,16 +37,9 @@ class LXDAPIOperationTestObject(LXDAPITestBase):
                               '/1.0/operations')
 
     def test_operation_info(self, ms):
-        self.assertEqual({
-            'operation_create_time':
-                datetime.datetime.utcfromtimestamp(1433876844)
-                .strftime('%Y-%m-%d %H:%M:%S'),
-            'operation_update_time':
-                datetime.datetime.utcfromtimestamp(1433876843)
-                .strftime('%Y-%m-%d %H:%M:%S'),
-            'operation_status_code':
-                'Running'
-        }, self.lxd.operation_info('1234'))
+        ms.return_value = ('200', fake_api.fake_operation())
+        self.assertEqual(
+            ms.return_value,  self.lxd.operation_info('1234'))
         ms.assert_called_with('GET',
                               '/1.0/operations/1234')
 
