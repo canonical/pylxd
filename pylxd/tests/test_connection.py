@@ -71,7 +71,7 @@ class LXDInitConnectionTest(unittest.TestCase):
                 ms.return_value,
                 certfile='/home/foo/.config/lxc/client.crt',
                 keyfile='/home/foo/.config/lxc/client.key',
-                ssl_version = ssl.PROTOCOL_TLSv1_2)
+                ssl_version=ssl.PROTOCOL_TLSv1_2)
 
     @mock.patch('pylxd.connection.HTTPSConnection')
     @mock.patch('pylxd.connection.UnixHTTPConnection')

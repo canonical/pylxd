@@ -39,7 +39,7 @@ class LXDAPIOperationTestObject(LXDAPITestBase):
     def test_operation_info(self, ms):
         ms.return_value = ('200', fake_api.fake_operation())
         self.assertEqual(
-            ms.return_value,  self.lxd.operation_info('1234'))
+            ms.return_value, self.lxd.operation_info('1234'))
         ms.assert_called_with('GET',
                               '/1.0/operations/1234')
 
