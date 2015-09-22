@@ -38,7 +38,7 @@ class LXDOperation(base.LXDBase):
 
     def operation_info(self, operation):
         return self.connection.get_object('GET', '/1.0/operations/%s'
-                                           % operation)
+                                          % operation)
 
     def operation_create_time(self, operation, data):
         if data is None:
@@ -67,8 +67,9 @@ class LXDOperation(base.LXDBase):
             % (operation, status_code, timeout))
 
     def operation_stream(self, operation, operation_secret):
-        return self.connection.get_ws('GET', '/1.0/operations/%s/websocket?secret=%s'
-                                      % (operation, operation_secret))
+        return self.connection.get_ws(
+            'GET', '/1.0/operations/%s/websocket?secret=%s'
+            % (operation, operation_secret))
 
     def operation_delete(self, operation):
         return self.connection.get_status('DELETE', '/1.0/operations/%s'

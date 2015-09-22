@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
 def fake_standard_return():
     return {
         "type": "sync",
@@ -146,6 +147,7 @@ def fake_container_migrate():
         "type": "sync",
         "status": "Success",
         "status_code": 200,
+        "operation": "/1.0/operations/1234",
         "metadata": {
             "control": "fake_control",
             "criu": "fake_criu",
