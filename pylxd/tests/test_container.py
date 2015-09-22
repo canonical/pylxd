@@ -150,7 +150,7 @@ class LXDAPIContainerTestObject(LXDAPITestBase):
         ms.assert_called_once_with(
             'POST',
             '/1.0/containers/trusty-1/files?path=dst_file',
-            body='',
+            body=b'',
             headers={'X-LXD-gid': 0, 'X-LXD-mode': 0o644, 'X-LXD-uid': 0})
 
     def test_list_snapshots(self, ms):
