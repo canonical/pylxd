@@ -49,8 +49,9 @@ class LXDContainer(base.LXDBase):
                                           % container)
 
     def container_state(self, container):
-        return self.connection.get_object(
+        (state, data) = self.connection.get_object(
             'GET', '/1.0/containers/%s/state' % container)
+        return data['metadata']['status']
 
     def container_start(self, container, timeout):
         action = {'action': 'start', 'force': True, 'timeout': timeout}
