@@ -185,7 +185,7 @@ class API(object):
     def container_publish(self, container):
         return self.container.container_publish(container)
 
-    def put_container_file(self, container, src_file, dst_file, uid=0, gid=0, mode=0644):
+    def put_container_file(self, container, src_file, dst_file, uid=0, gid=0, mode=0x644):
         return self.container.put_container_file(container, src_file, dst_file, uid, gid, mode)
 
     # snapshots
