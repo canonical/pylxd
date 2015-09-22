@@ -123,7 +123,7 @@ class LXDAPIImageTestObject(LXDAPITestBase):
 @mock.patch.object(connection.LXDConnection, 'get_status', return_value=True)
 class LXDAPIImageTestStatus(LXDAPITestBase):
     operations_data = (
-        ('upload', 'POST', '', (None, 'fake'), ('fake',)),
+        ('upload', 'POST', '', (None, 'fake'), ('fake', {}, )),
         ('delete', 'DELETE', '/test-image', ('test-image',), ()),
         ('update', 'PUT', '/test-image', ('test-image', 'fake',), ('"fake"',)),
         ('rename', 'POST', '/test-image',
@@ -157,7 +157,7 @@ class LXDAPIImageTestStatus(LXDAPITestBase):
     def test_image_upload_file(self, mo, ms):
         self.assertTrue(self.lxd.image_upload(path='/fake/path'))
         mo.assert_called_once_with('/fake/path', 'rb')
-        ms.assert_called_once_with('POST', '/1.0/images', 'fake')
+        ms.assert_called_once_with('POST', '/1.0/images', 'fake', {})
 
 
 @mock.patch.object(connection.LXDConnection, 'get_raw')
