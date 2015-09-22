@@ -72,7 +72,7 @@ class LXDAPIContainerTestObject(LXDAPITestBase):
 
     def test_container_state(self, ms):
         ms.return_value = ('200', fake_api.fake_container_state('RUNNING'))
-        self.assertEqual('RUNNING', self.lxd.container_state('trusty-1'))
+        self.assertEqual(ms.return_value, self.lxd.container_state('trusty-1'))
         ms.assert_called_with('GET',
                               '/1.0/containers/trusty-1/state')
 
