@@ -65,7 +65,8 @@ class HTTPSConnection(http_client.HTTPConnection):
 
         (cert_file, key_file) = self._get_ssl_certs()
         self.sock = ssl.wrap_socket(sock, certfile=cert_file,
-                                    keyfile=key_file)
+                                    keyfile=key_file,
+                                    ssl_version=ssl.PROTOCOL_TLSv1_2)
 
     @staticmethod
     def _get_ssl_certs():
