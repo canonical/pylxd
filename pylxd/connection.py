@@ -14,24 +14,12 @@
 
 import json
 import os
-from eventlet.green import socket
+import socket
 import ssl
 
 from pylxd import exceptions
 from pylxd import utils
 from six.moves import http_client
-
-try:
-    from eventlet import patcher
-    # Handle case where we are running in a monkey patched environment
-    if patcher.is_monkey_patched('socket'):
-        from eventlet.green.httplib import HTTPSConnection
-        from eventlet.green.httplib import HTTPConnection
-    else:
-        raise ImportError
-except ImportError:
-     HTTPSConnection = http_client.HTTPSConnection
-     HTTPConnection = http_client.HTTPConnection
 
 
 class UnixHTTPConnection(http_client.HTTPConnection):
@@ -65,7 +53,8 @@ class HTTPSConnection(http_client.HTTPConnection):
 
         (cert_file, key_file) = self._get_ssl_certs()
         self.sock = ssl.wrap_socket(sock, certfile=cert_file,
-                                    keyfile=key_file)
+                                    keyfile=key_file,
+                                    ssl_version=ssl.PROTOCOL_TLSv1_2)
 
     @staticmethod
     def _get_ssl_certs():

@@ -86,7 +86,7 @@ class API(object):
     def image_expire_date(self, image, data=None):
         return self.image.get_image_date(image, data, 'expires_at')
 
-    def image_upload(self, path=None, data=None, headers=None):
+    def image_upload(self, path=None, data=None, headers={}):
         return self.image.image_upload(path=path, data=data, headers=headers)
 
     def image_delete(self, image):
@@ -185,8 +185,10 @@ class API(object):
     def container_publish(self, container):
         return self.container.container_publish(container)
 
-    def put_container_file(self, container, src_file, dst_file, uid=0, gid=0, mode=0644):
-        return self.container.put_container_file(container, src_file, dst_file, uid, gid, mode)
+    def put_container_file(self, container, src_file,
+                           dst_file, uid=0, gid=0, mode=0o644):
+        return self.container.put_container_file(
+            container, src_file, dst_file, uid, gid, mode)
 
     # snapshots
     def container_snapshot_list(self, container):
@@ -208,7 +210,8 @@ class API(object):
         return self.container.container_migrate(container)
 
     def container_migrate_sync(self, operation_id, container_secret):
-        return self.container.container_migrate_sync(operation_id, container_secret)
+        return self.container.container_migrate_sync(
+            operation_id, container_secret)
 
     # misc container
     def container_run_command(self, container, args, interactive=False,

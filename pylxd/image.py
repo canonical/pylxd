@@ -166,10 +166,10 @@ class LXDImage(base.LXDBase):
             raise
 
     # image operations
-    def image_upload(self, path=None, data=None, headers=None):
+    def image_upload(self, path=None, data=None, headers={}):
         data = data or open(path, 'rb').read()
         try:
-            return self.connection.get_object('POST', '/1.0/images',
+            return self.connection.get_status('POST', '/1.0/images',
                                               data, headers)
         except Exception as e:
             print("Unable to upload image - {}".format(e))
