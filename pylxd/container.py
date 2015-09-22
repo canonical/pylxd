@@ -116,7 +116,8 @@ class LXDContainer(base.LXDBase):
         return {
             'operation': str(data['operation'].split('/1.0/operations/')[-1]),
             'control': str(data['metadata']['control']),
-            'fs': str(data['metadata']['fs'])
+            'fs': str(data['metadata']['fs']),
+            'criu': str(data['metadata']['criu']),
         }
 
     def container_migrate_sync(self, operation_id, container_secret):
