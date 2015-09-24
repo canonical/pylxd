@@ -4,4 +4,4 @@ python:
   - "3.4"
 install: pip install -U -r requirements.txt -r test-requirements.txt
 before_script: flake8 --ignore=E123,E125
-script: nosetests -v
+script: ostestr
