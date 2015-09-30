@@ -150,8 +150,8 @@ def fake_container_migrate():
         "operation": "/1.0/operations/1234",
         "metadata": {
             "control": "fake_control",
-            "criu": "fake_criu",
             "fs": "fake_fs",
+            "criu": "fake_criu",
         }
     }
 

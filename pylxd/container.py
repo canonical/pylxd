@@ -112,12 +112,12 @@ class LXDContainer(base.LXDBase):
         (state, data) = self.connection.get_object(
             'POST', '/1.0/containers/%s' % container,
             json.dumps(action))
-        return {
+
+        return_data = {
             'operation': str(data['operation'].split('/1.0/operations/')[-1]),
-            'control': str(data['metadata']['control']),
-            'fs': str(data['metadata']['fs']),
-            'criu': str(data['metadata']['criu']),
         }
+        return_data.update(data['metadata'])
+        return return_data
 
     def container_migrate_sync(self, operation_id, container_secret):
         return self.connection.get_ws(
