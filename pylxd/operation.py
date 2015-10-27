@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import time
 from dateutil.parser import parse as parse_date
 
 from pylxd import base
@@ -62,9 +63,13 @@ class LXDOperation(base.LXDBase):
         return data['status']
 
     def operation_wait(self, operation, status_code, timeout):
-        return self.connection.get_status(
-            'GET', '/1.0/operations/%s/wait?status_code=%s&timeout=%s'
-            % (operation, status_code, timeout))
+        while True:
+            _, data = self.connection.get_object(
+                'GET', '/1.0/operations/%s' % operation)
+            op_result = data["metadata"]["status_code"]
+            if op_result >= 200:
+                return op_result == 200
+            time.Sleep(0.5)
 
     def operation_stream(self, operation, operation_secret):
         return self.connection.get_ws(
