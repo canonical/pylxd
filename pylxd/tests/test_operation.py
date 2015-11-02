@@ -31,7 +31,7 @@ class LXDAPIOperationTestObject(LXDAPITestBase):
     def test_list_operations(self, ms):
         ms.return_value = ('200', fake_api.fake_operation_list())
         self.assertEqual(
-            ['1234'],
+            ['/1.0/operations/1234'],
             self.lxd.list_operations())
         ms.assert_called_with('GET',
                               '/1.0/operations')
@@ -39,7 +39,7 @@ class LXDAPIOperationTestObject(LXDAPITestBase):
     def test_operation_info(self, ms):
         ms.return_value = ('200', fake_api.fake_operation())
         self.assertEqual(
-            ms.return_value, self.lxd.operation_info('1234'))
+            ms.return_value, self.lxd.operation_info('/1.0/operations/1234'))
         ms.assert_called_with('GET',
                               '/1.0/operations/1234')
 
@@ -53,9 +53,8 @@ class LXDAPIOperationTestObject(LXDAPITestBase):
         ('status', 'Running'),
     )
     def test_operation_show(self, method, expected, ms):
-        self.assertEqual(
-            expected, getattr(self.lxd,
-                              'operation_show_' + method)('1234'))
+        call = getattr(self.lxd, 'operation_show_' + method)
+        self.assertEqual(expected, call('/1.0/operations/1234'))
         ms.assert_called_with('GET',
                               '/1.0/operations/1234')
 
@@ -71,6 +70,6 @@ class LXDAPIOperationTestStatus(LXDAPITestBase):
     )
     def test_operation_actions(self, method, http, path, args, ms):
         self.assertTrue(
-            getattr(self.lxd, method)('1234', *args))
+            getattr(self.lxd, method)('/1.0/operations/1234', *args))
         ms.assert_called_with(http,
                               '/1.0/operations/1234' + path)
