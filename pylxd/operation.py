@@ -21,12 +21,11 @@ class LXDOperation(base.LXDBase):
 
     def operation_list(self):
         (state, data) = self.connection.get_object('GET', '/1.0/operations')
-        return [operation.split('/1.0/operations/')[-1]
-                for operation in data['metadata']]
+        return data['metadata']
 
     def operation_show(self, operation):
-        (state, data) = self.connection.get_object('GET', '/1.0/operations/%s'
-                                                   % operation)
+        (state, data) = self.connection.get_object('GET', operation)
+
         return {
             'operation_create_time':
                 self.operation_create_time(operation, data.get('metadata')),
@@ -37,40 +36,34 @@ class LXDOperation(base.LXDBase):
         }
 
     def operation_info(self, operation):
-        return self.connection.get_object('GET', '/1.0/operations/%s'
-                                          % operation)
+        return self.connection.get_object('GET', operation)
 
     def operation_create_time(self, operation, data):
         if data is None:
-            (state, data) = self.connection.get_object(
-                'GET', '/1.0/operations/%s' % operation)
+            (state, data) = self.connection.get_object('GET', operation)
             data = data.get('metadata')
         return parse_date(data['created_at']).strftime('%Y-%m-%d %H:%M:%S')
 
     def operation_update_time(self, operation, data):
         if data is None:
-            (state, data) = self.connection.get_object(
-                'GET', '/1.0/operations/%s' % operation)
+            (state, data) = self.connection.get_object('GET', operation)
             data = data.get('metadata')
         return parse_date(data['updated_at']).strftime('%Y-%m-%d %H:%M:%S')
 
     def operation_status_code(self, operation, data):
         if data is None:
-            (state, data) = self.connection.get_object(
-                'GET', '/1.0/operations/%s' % operation)
+            (state, data) = self.connection.get_object('GET', operation)
             data = data.get('metadata')
         return data['status']
 
     def operation_wait(self, operation, status_code, timeout):
         return self.connection.get_status(
-            'GET', '/1.0/operations/%s/wait?status_code=%s&timeout=%s'
+            'GET', '%s/wait?status_code=%s&timeout=%s'
             % (operation, status_code, timeout))
 
     def operation_stream(self, operation, operation_secret):
         return self.connection.get_ws(
-            'GET', '/1.0/operations/%s/websocket?secret=%s'
-            % (operation, operation_secret))
+            'GET', '%s/websocket?secret=%s' % (operation, operation_secret))
 
     def operation_delete(self, operation):
-        return self.connection.get_status('DELETE', '/1.0/operations/%s'
-                                          % operation)
+        return self.connection.get_status('DELETE', operation)
