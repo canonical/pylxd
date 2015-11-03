@@ -13,7 +13,6 @@
 #    under the License.
 
 from collections import OrderedDict
-from ddt import data
 from ddt import ddt
 import json
 import mock
@@ -201,15 +200,13 @@ class LXDAPIContainerTestObject(LXDAPITestBase):
 
 
 @ddt
-@mock.patch.object(connection.LXDConnection, 'get_status')
+@mock.patch.object(connection.LXDConnection, 'get_object',
+                   return_value=('200', fake_api.fake_container_list()))
 class LXDAPIContainerTestStatus(LXDAPITestBase):
 
-    @data(True, False)
-    def test_container_defined(self, defined, ms):
-        ms.return_value = defined
-        self.assertEqual(defined, self.lxd.container_defined('trusty-1'))
-        ms.assert_called_once_with('GET',
-                                   '/1.0/containers/trusty-1/state')
+    def test_container_defined(self, ms):
+        self.assertTrue(self.lxd.container_defined('trusty-1'))
+        ms.assert_called_once_with('GET', '/1.0/containers')
 
 
 @ddt

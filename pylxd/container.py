@@ -15,6 +15,7 @@
 import json
 
 from pylxd import base
+from pylxd import exceptions
 
 
 class LXDContainer(base.LXDBase):
@@ -45,8 +46,17 @@ class LXDContainer(base.LXDBase):
                                           % container, json.dumps(config))
 
     def container_defined(self, container):
-        return self.connection.get_status('GET', '/1.0/containers/%s/state'
-                                          % container)
+        _, data = self.connection.get_object('GET', '/1.0/containers')
+        try:
+            containers = data["metadata"]
+        except KeyError:
+            raise exceptions.PyLXDException("no metadata in GET containers?")
+
+        container_url = "/1.0/containers/%s" % container
+        for ct in containers:
+            if ct == container_url:
+                return True
+        return False
 
     def container_state(self, container):
         return self.connection.get_object(
