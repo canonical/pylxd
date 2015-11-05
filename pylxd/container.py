@@ -32,8 +32,8 @@ class LXDContainer(base.LXDBase):
             '/1.0/containers/%s/state' % container)
         data = data.get('metadata')
         container_running = False
-        if data['status'] in ['RUNNING', 'STARTING', 'FREEZING', 'FROZEN',
-                              'THAWED']:
+        if data['status'].upper() in ['RUNNING', 'STARTING', 'FREEZING',
+                                      'FROZEN', 'THAWED']:
             container_running = True
         return container_running
 
