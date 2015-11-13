@@ -21,6 +21,12 @@ from pylxd import exceptions
 from pylxd import utils
 from six.moves import http_client
 
+# Detect SSL tls version
+if hasattr(ssl, 'PROTOCOL_TLSv1_2'):
+    DEFAULT_TLS_VERSION = ssl.PROTOCOL_TLSv1_2
+else:
+    DEFAULT_TLS_VERSION = ssl.PROTOCOL_TLSv1
+
 
 class UnixHTTPConnection(http_client.HTTPConnection):
 
@@ -54,7 +60,7 @@ class HTTPSConnection(http_client.HTTPConnection):
         (cert_file, key_file) = self._get_ssl_certs()
         self.sock = ssl.wrap_socket(sock, certfile=cert_file,
                                     keyfile=key_file,
-                                    ssl_version=ssl.PROTOCOL_TLSv1_2)
+                                    ssl_version=DEFAULT_TLS_VERSION)
 
     @staticmethod
     def _get_ssl_certs():
