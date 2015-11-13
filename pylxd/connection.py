@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from collections import namedtuple
 import json
 import os
 import socket
@@ -62,6 +63,9 @@ class HTTPSConnection(http_client.HTTPConnection):
                 os.path.join(os.environ['HOME'], '.config/lxc/client.key'))
 
 
+_LXDResponse = namedtuple('LXDResponse', ['status', 'body', 'json'])
+
+
 class LXDConnection(object):
 
     def __init__(self, host=None, port=8443):
@@ -78,57 +82,61 @@ class LXDConnection(object):
             self.host, self.port = None, None
         self.connection = None
 
+    def _request(self, *args, **kwargs):
+        if self.connection is None:
+            self.connection = self.get_connection()
+        self.connection.request(*args, **kwargs)
+        response = self.connection.getresponse()
+
+        status = response.status
+        raw_body = response.read()
+        try:
+            body = json.loads(raw_body)
+        except ValueError:
+            body = None
+
+        return _LXDResponse(status, raw_body, body)
+
     def get_connection(self):
         if self.host:
             return HTTPSConnection(self.host, self.port)
         return UnixHTTPConnection(self.unix_socket)
 
     def get_object(self, *args, **kwargs):
-        self.connection = self.get_connection()
-        self.connection.request(*args, **kwargs)
-        response = self.connection.getresponse()
-        state = response.status
-        data = json.loads(response.read())
-        if not data:
-            msg = "Null Data"
-            raise exceptions.PyLXDException(msg)
-        elif state == 200 or (state == 202 and data.get('status_code') == 100):
-            return state, data
+        response = self._request(*args, **kwargs)
+
+        if not response.json:
+            raise exceptions.PyLXDException('Null Data')
+        elif response.status == 200 or (
+                response.status == 202 and
+                response.json.get('status_code') == 100):
+            return response.status, response.json
         else:
-            utils.get_lxd_error(state, data)
+            utils.get_lxd_error(response.status, response.json)
 
     def get_status(self, *args, **kwargs):
-        status = False
-        self.connection = self.get_connection()
-        self.connection.request(*args, **kwargs)
-        response = self.connection.getresponse()
-        state = response.status
-        data = json.loads(response.read())
-        if not data:
-            msg = "Null Data"
-            raise exceptions.PyLXDException(msg)
-        elif data.get('error'):
-            utils.get_lxd_error(state, data)
-        elif state == 200 or (state == 202 and data.get('status_code') == 100):
-            status = True
-        return status
+        response = self._request(*args, **kwargs)
+
+        if not response.json:
+            raise exceptions.PyLXDException('Null Data')
+        elif response.json.get('error'):
+            utils.get_lxd_error(response.status, response.json)
+        elif response.status == 200 or (
+                response.status == 202 and
+                response.json.get('status_code') == 100):
+            return True
+        return False
 
     def get_raw(self, *args, **kwargs):
-        self.connection = self.get_connection()
-        self.connection.request(*args, **kwargs)
-        response = self.connection.getresponse()
-        body = response.read()
-        if not body:
-            msg = "Null Body"
-            raise exceptions.PyLXDException(msg)
+        response = self._request(*args, **kwargs)
+
+        if not response.body:
+            raise exceptions.PyLXDException('Null Body')
         elif response.status == 200:
-            return body
+            return response.body
         else:
-            msg = "Failed to get raw response"
-            raise exceptions.PyLXDException(msg)
+            raise exceptions.PyLXDException('Failed to get raw response')
 
     def get_ws(self, *args, **kwargs):
-        self.connection = self.get_connection()
-        self.connection.request(*args, **kwargs)
-        response = self.connection.getresponse()
+        response = self._request(*args, **kwargs)
         return response.status
