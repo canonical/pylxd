@@ -27,6 +27,7 @@ if hasattr(ssl, 'PROTOCOL_TLSv1_2'):
 else:
     DEFAULT_TLS_VERSION = ssl.PROTOCOL_TLSv1
 
+
 class UnixHTTPConnection(http_client.HTTPConnection):
 
     def __init__(self, path, host='localhost', port=None, strict=None,
