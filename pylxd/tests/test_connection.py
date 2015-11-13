@@ -18,7 +18,7 @@ import mock
 from six.moves import cStringIO
 from six.moves import http_client
 import socket
-import ssl
+import ssl  # noqa
 import unittest
 
 from pylxd import connection

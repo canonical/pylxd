@@ -15,7 +15,7 @@
 import json
 import os
 import socket
-import ssl
+import ssl  # noqa
 
 from pylxd import exceptions
 from pylxd import utils
