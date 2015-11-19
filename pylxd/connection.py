@@ -22,6 +22,22 @@ from pylxd import exceptions
 from pylxd import utils
 from six.moves import http_client
 
+if hasattr(ssl, 'SSLContext'):
+    # For Python >= 2.7.9 and Python 3.x
+    USE_STDLIB_SSL = True
+else:
+    # For Python 2.6 and <= 2.7.8
+    USE_STDLIB_SSL = False
+
+if not USE_STDLIB_SSL:
+    import OpenSSL.SSL
+
+# Detect SSL tls version
+if hasattr(ssl, 'PROTOCOL_TLSv1_2'):
+    DEFAULT_TLS_VERSION = ssl.PROTOCOL_TLSv1_2
+else:
+    DEFAULT_TLS_VERSION = OpenSSL.SSL.TLSv1_2_METHOD
+
 
 class UnixHTTPConnection(http_client.HTTPConnection):
 
@@ -55,7 +71,7 @@ class HTTPSConnection(http_client.HTTPConnection):
         (cert_file, key_file) = self._get_ssl_certs()
         self.sock = ssl.wrap_socket(sock, certfile=cert_file,
                                     keyfile=key_file,
-                                    ssl_version=ssl.PROTOCOL_TLSv1_2)
+                                    ssl_version=DEFAULT_TLS_VERSION)
 
     @staticmethod
     def _get_ssl_certs():
