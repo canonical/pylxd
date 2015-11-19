@@ -18,7 +18,6 @@ import mock
 from six.moves import cStringIO
 from six.moves import http_client
 import socket
-import ssl
 import unittest
 
 from pylxd import connection
@@ -53,7 +52,7 @@ class LXDInitConnectionTest(unittest.TestCase):
                 ms.return_value,
                 certfile='/home/foo/.config/lxc/client.crt',
                 keyfile='/home/foo/.config/lxc/client.key',
-                ssl_version=ssl.PROTOCOL_TLSv1_2,
+                ssl_version=connection.DEFAULT_TLS_VERSION,
             )
 
     @mock.patch('os.environ', {'HOME': '/home/foo'})
@@ -71,7 +70,7 @@ class LXDInitConnectionTest(unittest.TestCase):
                 ms.return_value,
                 certfile='/home/foo/.config/lxc/client.crt',
                 keyfile='/home/foo/.config/lxc/client.key',
-                ssl_version=ssl.PROTOCOL_TLSv1_2)
+                ssl_version=connection.DEFAULT_TLS_VERSION)
 
     @mock.patch('pylxd.connection.HTTPSConnection')
     @mock.patch('pylxd.connection.UnixHTTPConnection')
