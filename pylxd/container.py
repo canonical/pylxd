@@ -131,7 +131,6 @@ class LXDContainer(base.LXDBase):
 
     def container_migrate_sync(self, operation_id, container_secret):
         return self.connection.get_ws(
-            'GET',
             '/1.0/operations/%s/websocket?secret=%s'
             % (operation_id, container_secret))
 

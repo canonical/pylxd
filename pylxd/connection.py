@@ -1,4 +1,5 @@
 # Copyright (c) 2015 Canonical Ltd
+# Copyright (c) 2015 Mirantis inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -13,14 +14,19 @@
 #    under the License.
 
 from collections import namedtuple
+import copy
 import json
 import os
 import socket
 import ssl
+import threading
+
 
 from pylxd import exceptions
 from pylxd import utils
 from six.moves import http_client
+from six.moves import queue
+from ws4py import client as websocket
 
 if hasattr(ssl, 'SSLContext'):
     # For Python >= 2.7.9 and Python 3.x
@@ -80,6 +86,50 @@ class HTTPSConnection(http_client.HTTPConnection):
 
 
 _LXDResponse = namedtuple('LXDResponse', ['status', 'body', 'json'])
+
+
+class WebSocketClient(websocket.WebSocketBaseClient):
+    def __init__(self, url, protocols=None, extensions=None, ssl_options=None,
+                 headers=None):
+        """WebSocket client that executes into a eventlet green thread."""
+        websocket.WebSocketBaseClient.__init__(self, url, protocols,
+                                               extensions,
+                                               ssl_options=ssl_options,
+                                               headers=headers)
+        self._th = threading.Thread(target=self.run, name='WebSocketClient')
+        self._th.daemon = True
+
+        self.messages = queue.Queue()
+
+    def handshake_ok(self):
+        """Starts the client's thread."""
+        self._th.start()
+
+    def received_message(self, message):
+        """Override the base class to store the incoming message."""
+        self.messages.put(copy.deepcopy(message))
+
+    def close(self, code=1000, reason=''):
+        # NOTE(u_glide): Don't send closing frame because socket always
+        # terminated by the LXD
+        pass
+
+    def closed(self, code, reason=None):
+        # When the connection is closed, put a StopIteration
+        # on the message queue to signal there's nothing left
+        # to wait for
+        self.messages.put(StopIteration)
+
+    def receive(self):
+        # If the websocket was terminated and there are no messages
+        # left in the queue, return None immediately otherwise the client
+        # will block forever
+        if self.terminated and self.messages.empty():
+            return None
+        message = self.messages.get()
+        if message is StopIteration:
+            return None
+        return message
 
 
 class LXDConnection(object):
@@ -153,6 +203,17 @@ class LXDConnection(object):
         else:
             raise exceptions.PyLXDException('Failed to get raw response')
 
-    def get_ws(self, *args, **kwargs):
-        response = self._request(*args, **kwargs)
-        return response.status
+    def get_ws(self, path):
+        if self.unix_socket:
+            connection_string = 'ws+unix://%s' % self.unix_socket
+        else:
+            connection_string = (
+                'wss://%(host)s:%(port)s' % {'host': self.host,
+                                             'port': self.port}
+            )
+
+        ws = WebSocketClient(connection_string)
+        ws.resource = path
+        ws.connect()
+
+        return ws

@@ -147,3 +147,15 @@ class LXDConnectionTest(unittest.TestCase):
             self.assertRaises(result, self.conn.get_raw)
         else:
             self.assertEqual(result, self.conn.get_raw())
+
+    @mock.patch('pylxd.connection.WebSocketClient')
+    @annotated_data(
+        ('fake_host', 'wss://fake_host:8443'),
+        (None, 'ws+unix:///var/lib/lxd/unix.socket')
+    )
+    def test_get_ws(self, host, result, mock_ws, _):
+        conn = connection.LXDConnection(host)
+
+        conn.get_ws('/fake/path')
+
+        mock_ws.assert_has_calls([mock.call(result), mock.call().connect()])

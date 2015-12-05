@@ -63,7 +63,7 @@ class LXDOperation(base.LXDBase):
 
     def operation_stream(self, operation, operation_secret):
         return self.connection.get_ws(
-            'GET', '%s/websocket?secret=%s' % (operation, operation_secret))
+            '%s/websocket?secret=%s' % (operation, operation_secret))
 
     def operation_delete(self, operation):
         return self.connection.get_status('DELETE', operation)
