@@ -109,11 +109,6 @@ class WebSocketClient(websocket.WebSocketBaseClient):
         """Override the base class to store the incoming message."""
         self.messages.put(copy.deepcopy(message))
 
-    def close(self, code=1000, reason=''):
-        # NOTE(u_glide): Don't send closing frame because socket always
-        # terminated by the LXD
-        pass
-
     def closed(self, code, reason=None):
         # When the connection is closed, put a StopIteration
         # on the message queue to signal there's nothing left
