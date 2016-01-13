@@ -1,4 +1,4 @@
-# Copyright (c) 2015 Canonical Ltd
+# Copyright (c) 2016 Canonical Ltd
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -33,7 +33,9 @@ class Test_APINode(unittest.TestCase):
         """Nested objects return a more detailed path."""
         lxd = api._APINode(self.ROOT)  # NOQA
 
-        self.assertEqual('{}/fake/path'.format(self.ROOT), lxd.fake.path._api_endpoint)
+        self.assertEqual(
+            '{}/fake/path'.format(self.ROOT),
+            lxd.fake.path._api_endpoint)
 
     def test_getitem(self):
         """`__getitem__` enables dynamic url parts."""
@@ -47,7 +49,9 @@ class Test_APINode(unittest.TestCase):
         """`__getitem__` with an integer allows dynamic integer url parts."""
         lxd = api._APINode(self.ROOT)  # NOQA
 
-        self.assertEqual('{}/fake/0'.format(self.ROOT), lxd.fake[0]._api_endpoint)
+        self.assertEqual(
+            '{}/fake/0'.format(self.ROOT),
+            lxd.fake[0]._api_endpoint)
 
     @mock.patch('pylxd.api.requests.get')
     def test_get(self, _get):

@@ -35,7 +35,8 @@ class _APINode(object):
         >>> node = APINode('http://example.com/api')
         >>> node.users[1].comments.get()
 
-    ...would make an HTTP GET request on http://example.com/api/users/1/comments.
+    ...would make an HTTP GET request on
+    http://example.com/api/users/1/comments
     """
 
     def __init__(self, api_endpoint):
