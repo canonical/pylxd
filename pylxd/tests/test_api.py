@@ -35,15 +35,6 @@ class Test_APINode(unittest.TestCase):
 
         self.assertEqual('{}/fake/path'.format(self.ROOT), lxd.fake.path._api_endpoint)
 
-    @mock.patch('pylxd.api.requests.get')
-    def test_get(self, _get):
-        """`get` will make a request to the smart url."""
-        lxd = api._APINode(self.ROOT)
-
-        lxd.fake.get()
-
-        _get.assert_called_once_with('{}/{}'.format(self.ROOT, 'fake'))
-
     def test_getitem(self):
         """`__getitem__` enables dynamic url parts."""
         lxd = api._APINode(self.ROOT)  # NOQA
@@ -57,3 +48,21 @@ class Test_APINode(unittest.TestCase):
         lxd = api._APINode(self.ROOT)  # NOQA
 
         self.assertEqual('{}/fake/0'.format(self.ROOT), lxd.fake[0]._api_endpoint)
+
+    @mock.patch('pylxd.api.requests.get')
+    def test_get(self, _get):
+        """`get` will make a request to the smart url."""
+        lxd = api._APINode(self.ROOT)
+
+        lxd.fake.get()
+
+        _get.assert_called_once_with('{}/{}'.format(self.ROOT, 'fake'))
+
+    @mock.patch('pylxd.api.requests.post')
+    def test_post(self, _post):
+        """`post` will POST to the smart url."""
+        lxd = api._APINode(self.ROOT)
+
+        lxd.fake.post()
+
+        _post.assert_called_once_with('{}/{}'.format(self.ROOT, 'fake'))

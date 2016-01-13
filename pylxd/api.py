@@ -14,6 +14,7 @@
 #    under the License.
 
 import requests
+import requests_unixsocket
 
 from pylxd import certificate
 from pylxd import connection
@@ -46,9 +47,21 @@ class _APINode(object):
     def __getitem__(self, item):
         return self.__class__('{}/{}'.format(self._api_endpoint, item))
 
+    @property
+    def session(self):
+        if self._api_endpoint.startswith('http+unix://'):
+            return requests_unixsocket.Session()
+        else:
+            return requests
+
     def get(self, *args, **kwargs):
         """Perform an HTTP GET."""
-        requests.get(self._api_endpoint, *args, **kwargs)
+        return self.session.get(self._api_endpoint, *args, **kwargs)
+
+    def post(self, *args, **kwargs):
+        """Perform an HTTP POST."""
+        return self.session.post(self._api_endpoint, *args, **kwargs)
+LXD = _APINode
 
 
 class API(object):
