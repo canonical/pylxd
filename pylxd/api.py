@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import requests
+
 from pylxd import certificate
 from pylxd import connection
 from pylxd import container
@@ -21,6 +23,22 @@ from pylxd import image
 from pylxd import network
 from pylxd import operation
 from pylxd import profiles
+
+
+class _APINode(object):
+    """An api node object."""
+
+    def __init__(self, api_endpoint):
+        self._api_endpoint = api_endpoint
+
+    def __getattr__(self, name):
+        return self.__class__('{}/{}'.format(self._api_endpoint, name))
+
+    def __getitem__(self, item):
+        return self.__class__('{}/{}'.format(self._api_endpoint, item))
+
+    def get(self, *args, **kwargs):
+        requests.get(self._api_endpoint, *args, **kwargs)
 
 
 class API(object):
