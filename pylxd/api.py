@@ -26,7 +26,16 @@ from pylxd import profiles
 
 
 class _APINode(object):
-    """An api node object."""
+    """An api node object.
+
+    This class allows us to dynamically create request urls by expressing them
+    in python. For example:
+
+        >>> node = APINode('http://example.com/api')
+        >>> node.users[1].comments.get()
+
+    ...would make an HTTP GET request on http://example.com/api/users/1/comments.
+    """
 
     def __init__(self, api_endpoint):
         self._api_endpoint = api_endpoint
@@ -38,6 +47,7 @@ class _APINode(object):
         return self.__class__('{}/{}'.format(self._api_endpoint, item))
 
     def get(self, *args, **kwargs):
+        """Perform an HTTP GET."""
         requests.get(self._api_endpoint, *args, **kwargs)
 
 
