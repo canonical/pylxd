@@ -16,10 +16,10 @@
 
 import uuid
 
+from pylxd import api
+
 # Let's pick a random name, avoiding clashes
 CONTAINER_NAME = str(uuid.uuid1())
-
-from pylxd import api
 
 lxd = api.API()
 try:

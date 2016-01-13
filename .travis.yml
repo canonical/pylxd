@@ -3,5 +3,6 @@ python:
   - "2.7"
   - "3.4"
 install: pip install -U -r requirements.txt -r test-requirements.txt
-before_script: flake8 --ignore=E123,E125
-script: ostestr
+script:
+  - nosetests pylxd
+  - flake8 --ignore=E123,E125
