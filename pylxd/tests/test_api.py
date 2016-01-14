@@ -70,3 +70,21 @@ class Test_APINode(unittest.TestCase):
         lxd.fake.post()
 
         _post.assert_called_once_with('{}/{}'.format(self.ROOT, 'fake'))
+
+    @mock.patch('pylxd.api.requests.put')
+    def test_put(self, _put):
+        """`put` will PUT to the smart url."""
+        lxd = api._APINode(self.ROOT)
+
+        lxd.fake.put()
+
+        _put.assert_called_once_with('{}/{}'.format(self.ROOT, 'fake'))
+
+    @mock.patch('pylxd.api.requests.delete')
+    def test_delete(self, _delete):
+        """`delete` will DELETE to the smart url."""
+        lxd = api._APINode(self.ROOT)
+
+        lxd.fake.delete()
+
+        _delete.assert_called_once_with('{}/{}'.format(self.ROOT, 'fake'))
