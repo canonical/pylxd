@@ -27,7 +27,7 @@ except ImportError:
 setuptools.setup(
     setup_requires=[
         'pbr>=1.8',
-        'requests>=2.9.1',
+        'requests!=2.8.0,>=2.5.2',
         'requests-unixsocket==0.1.4',
     ],
     pbr=True)
