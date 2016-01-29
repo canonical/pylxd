@@ -50,7 +50,6 @@ class UnixHTTPConnection(http_client.HTTPConnection):
     def __init__(self, path, host='localhost', port=None, strict=None,
                  timeout=None):
         http_client.HTTPConnection.__init__(self, host, port=port,
-                                            strict=strict,
                                             timeout=timeout)
 
         self.path = path
@@ -152,7 +151,7 @@ class LXDConnection(object):
         status = response.status
         raw_body = response.read()
         try:
-            body = json.loads(raw_body)
+            body = json.loads(raw_body.decode())
         except ValueError:
             body = None
 
