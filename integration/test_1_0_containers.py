@@ -50,6 +50,10 @@ class ContainerTestCase(IntegrationTestCase):
         super(ContainerTestCase, self).setUp()
         self.name = self.create_container()
 
+    def tearDown(self):
+        super(ContainerTestCase, self).tearDown()
+        self.delete_container(self.name)
+
 
 class Test10Container(ContainerTestCase):
     """Tests for /1.0/containers/<name>"""
@@ -88,18 +92,17 @@ class Test10Container(ContainerTestCase):
 class Test10ContainerState(ContainerTestCase):
     """Tests for /1.0/containers/<name>/state."""
 
-    def test10containerstate(self):
+    def test_GET(self):
         """Return: dict representing current state."""
         result = self.lxd['1.0'].containers[self.name].state.get()
 
         self.assertEqual(200, result.status_code)
 
-    def test10containerstate_PUT(self):
+    def test_PUT(self):
         """Return: background operation or standard error."""
         result = self.lxd['1.0'].containers[self.name].state.put(json={
-            'action': 'start',
+            'action': 'freeze',
             'timeout': 30,
-            'force': True
             })
 
         self.assertEqual(202, result.status_code)
@@ -194,27 +197,27 @@ class Test10ContainerExec(ContainerTestCase):
         operation_uuid = result.json()['operation'].split('/')[-1]
         self.lxd['1.0'].operations[operation_uuid].wait.get()
 
-#    def test10containerexec(self):
-#        """Return: background operation + optional websocket information.
-#
-#        ...or standard error."""
-#        result = self.lxd['1.0'].containers[self.name]['exec'].post(json={
-#            'command': ['/bin/bash'],
-#            'wait-for-websocket': False,
-#            'interactive': True,
-#            })
-#
-#        self.assertEqual(202, result.status_code)
+    def test10containerexec(self):
+        """Return: background operation + optional websocket information.
+
+        ...or standard error."""
+        result = self.lxd['1.0'].containers[self.name]['exec'].post(json={
+            'command': ['/bin/bash'],
+            'wait-for-websocket': False,
+            'interactive': True,
+            })
+
+        self.assertEqual(202, result.status_code)
 
 
 class Test10ContainerLogs(ContainerTestCase):
     """Tests for /1.0/containers/<name>/logs."""
 
-#    def test10containerlogs(self):
-#        """Return: a list of the available log files."""
-#        result = self.lxd['1.0'].containers[self.name].logs.get()
-#
-#        self.assertEqual(200, result.status_code)
+    def test10containerlogs(self):
+        """Return: a list of the available log files."""
+        result = self.lxd['1.0'].containers[self.name].logs.get()
+
+        self.assertEqual(200, result.status_code)
 
 
 class Test10ContainerLog(ContainerTestCase):
@@ -225,14 +228,14 @@ class Test10ContainerLog(ContainerTestCase):
         result = self.lxd['1.0'].containers[self.name].logs.get()
         self.log_name = result.json()['metadata'][0]['name']
 
-#    def test10containerlog(self):
-#        """Return: the contents of the log file."""
-#        result = self.lxd['1.0'].containers[self.name].logs[self.log_name].get()
-#
-#        self.assertEqual(200, result.status_code)
-#
-#    def test10containerlog_DELETE(self):
-#        """Return: the contents of the log file."""
-#        result = self.lxd['1.0'].containers[self.name].logs[self.log_name].delete()
-#
-#        self.assertEqual(200, result.status_code)
+    def test10containerlog(self):
+        """Return: the contents of the log file."""
+        result = self.lxd['1.0'].containers[self.name].logs[self.log_name].get()
+
+        self.assertEqual(200, result.status_code)
+
+    def test10containerlog_DELETE(self):
+        """Return: the contents of the log file."""
+        result = self.lxd['1.0'].containers[self.name].logs[self.log_name].delete()
+
+        self.assertEqual(200, result.status_code)
