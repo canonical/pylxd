@@ -45,6 +45,10 @@ class ImageTestCase(IntegrationTestCase):
         super(ImageTestCase, self).setUp()
         self.fingerprint = self.create_image()
 
+    def tearDown(self):
+        super(ImageTestCase, self).tearDown()
+        self.delete_image(self.fingerprint)
+
 
 class Test10Image(ImageTestCase):
     """Tests for /1.0/images/<fingerprint>."""
@@ -123,5 +127,46 @@ class Test10ImageAliases(IntegrationTestCase):
         self.assertEqual(200, response.status_code)
 
 
-class Test10ImageAlias(IntegrationTestCase):
+class Test10ImageAlias(ImageTestCase):
     """Tests for /1.0/images/aliases/<alias>."""
+
+    def setUp(self):
+        super(Test10ImageAlias, self).setUp()
+        self.alias = self.create_alias(self.fingerprint)
+
+    def test_GET(self):
+        """Return: dict representing an alias description or target."""
+        response = self.lxd['1.0'].images.aliases[self.alias].get()
+
+        self.assertEqual(200, response.status_code)
+
+    @unittest.skip("Not yet implemented in LXD")
+    def test_PUT(self):
+        """Return: dict representing an alias description or target."""
+        self.create_alias(self.fingerprint)
+
+        response = self.lxd['1.0'].images.aliases[self.alias].put(json={
+            'description': 'An container alias',
+            'target': self.fingerprint
+            })
+
+        self.assertEqual(200, response.status_code)
+
+    @unittest.skip("Not yet implemented in LXD")
+    def test_POST(self):
+        """Return: dict representing an alias description or target."""
+        self.create_alias(self.fingerprint)
+
+        response = self.lxd['1.0'].images.aliases[self.alias].post(json={
+            'name': self.alias[:-1]
+            })
+
+        self.assertEqual(200, response.status_code)
+
+    def test_DELETE(self):
+        """Return: dict representing an alias description or target."""
+        self.create_alias(self.fingerprint)
+
+        response = self.lxd['1.0'].images.aliases[self.alias].delete()
+
+        self.assertEqual(200, response.status_code)
