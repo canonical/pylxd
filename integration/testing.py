@@ -93,6 +93,19 @@ class IntegrationTestCase(unittest.TestCase):
             })
         return alias
 
+    def create_profile(self):
+        profile = str(uuid.uuid4()).split('-')[0]
+        self._lxd_root['1.0'].profiles.post(json={
+            'name': profile,
+            'config': {
+                'limits.memory': '1GB',
+                }
+            })
+        return profile
+
+    def delete_profile(self, profile):
+        self._lxd_root['1.0'].profiles[profile].delete()
+
     def assertCommon(self, response):
         """Assert common LXD responses.
 
