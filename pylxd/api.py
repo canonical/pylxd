@@ -62,6 +62,14 @@ class _APINode(object):
     def post(self, *args, **kwargs):
         """Perform an HTTP POST."""
         return self.session.post(self._api_endpoint, *args, **kwargs)
+
+    def put(self, *args, **kwargs):
+        """Perform an HTTP PUT."""
+        return self.session.put(self._api_endpoint, *args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """Perform an HTTP delete."""
+        return self.session.delete(self._api_endpoint, *args, **kwargs)
 LXD = _APINode
 
 
