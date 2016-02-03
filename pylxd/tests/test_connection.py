@@ -15,6 +15,7 @@
 from ddt import ddt
 import inspect
 import mock
+import six
 from six.moves import cStringIO
 from six.moves import http_client
 import socket
@@ -24,6 +25,9 @@ from pylxd import connection
 from pylxd import exceptions
 from pylxd.tests import annotated_data
 
+if six.PY34:
+    from io import BytesIO
+
 
 @ddt
 class LXDInitConnectionTest(unittest.TestCase):
@@ -32,8 +36,12 @@ class LXDInitConnectionTest(unittest.TestCase):
     @mock.patch.object(http_client.HTTPConnection, '__init__')
     def test_http_connection(self, mc, ms):
         conn = connection.UnixHTTPConnection('/', 'host', 1234)
-        mc.assert_called_once_with(
-            conn, 'host', port=1234, strict=None, timeout=None)
+        if six.PY34:
+            mc.assert_called_once_with(
+                conn, 'host', port=1234, timeout=None)
+        else:
+            mc.assert_called_once_with(
+                conn, 'host', port=1234, strict=None, timeout=None)
         conn.connect()
         ms.assert_called_once_with(socket.AF_UNIX, socket.SOCK_STREAM)
         ms.return_value.connect.assert_called_once_with('/')
@@ -97,7 +105,10 @@ class FakeResponse(object):
 
     def __init__(self, status, data):
         self.status = status
-        self.read = cStringIO(data).read
+        if six.PY34:
+            self.read = BytesIO(six.b(data)).read
+        else:
+            self.read = cStringIO(data).read
 
 
 @ddt
@@ -137,7 +148,7 @@ class LXDConnectionTest(unittest.TestCase):
 
     @annotated_data(
         ('null', (200, ''), exceptions.PyLXDException),
-        ('200', (200, '{"foo": "bar"}'), '{"foo": "bar"}'),
+        ('200', (200, '{"foo": "bar"}'), six.b('{"foo": "bar"}')),
         ('500', (500, '{"foo": "bar"}'),
          exceptions.PyLXDException),
     )
