@@ -17,6 +17,7 @@ from collections import namedtuple
 import copy
 import json
 import os
+import six
 import socket
 import ssl
 import threading
@@ -49,9 +50,13 @@ class UnixHTTPConnection(http_client.HTTPConnection):
 
     def __init__(self, path, host='localhost', port=None, strict=None,
                  timeout=None):
-        http_client.HTTPConnection.__init__(self, host, port=port,
-                                            strict=strict,
-                                            timeout=timeout)
+        if six.PY34:
+            http_client.HTTPConnection.__init__(self, host, port=port,
+                                                timeout=timeout)
+        else:
+            http_client.HTTPConnection.__init__(self, host, port=port,
+                                                strict=strict,
+                                                timeout=timeout)
 
         self.path = path
 
@@ -152,7 +157,10 @@ class LXDConnection(object):
         status = response.status
         raw_body = response.read()
         try:
-            body = json.loads(raw_body)
+            if six.PY34:
+                body = json.loads(raw_body.decode())
+            else:
+                body = json.loads(raw_body)
         except ValueError:
             body = None
 
