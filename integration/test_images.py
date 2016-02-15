@@ -44,3 +44,32 @@ class TestImages(IntegrationTestCase):
             image = self.client.images.create(f.read(), wait=True)
 
         self.assertEqual(fingerprint, image.fingerprint)
+
+
+class TestImage(IntegrationTestCase):
+    """Tests for Image."""
+
+    def setUp(self):
+        super(TestImage, self).setUp()
+        fingerprint, _ = self.create_image()
+        self.image = self.client.images.get(fingerprint)
+
+    def tearDown(self):
+        super(TestImage, self).tearDown()
+        self.delete_image(self.image.fingerprint)
+
+    def test_update(self):
+        """The image properties are updated."""
+        description = 'an description'
+        self.image.properties['description'] = description
+        self.image.update()
+
+        image = self.client.images.get(self.image.fingerprint)
+        self.assertEqual(description, image.properties['description'])
+
+    def test_delete(self):
+        """The image is deleted."""
+        self.image.delete()
+
+        self.assertRaises(
+            NameError, self.client.images.get, self.image.fingerprint)

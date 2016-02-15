@@ -11,8 +11,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import unittest
-
 from integration.testing import IntegrationTestCase
 
 
@@ -22,39 +20,6 @@ class ImageTestCase(IntegrationTestCase):
     def setUp(self):
         super(ImageTestCase, self).setUp()
         self.fingerprint = self.create_image()
-
-
-class Test10Image(ImageTestCase):
-    """Tests for /1.0/images/<fingerprint>."""
-
-    def test_1_0_images_name(self):
-        """Return: dict representing an image properties."""
-        response = self.lxd['1.0'].images[self.fingerprint].get()
-
-        self.assertEqual(200, response.status_code)
-
-    def test_1_0_images_name_DELETE(self):
-        """Return: dict representing an image properties."""
-        response = self.lxd['1.0'].images[self.fingerprint].delete()
-
-        self.assertEqual(200, response.status_code)
-
-    @unittest.skip("Not yet implemented in LXD")
-    def test_1_0_images_name_POST(self):
-        """Return: dict representing an image properties."""
-        response = self.lxd['1.0'].images[self.fingerprint].post(json={
-            'name': 'test-image'
-            })
-
-        self.assertEqual(200, response.status_code)
-
-    def test_1_0_images_name_PUT(self):
-        """Return: dict representing an image properties."""
-        response = self.lxd['1.0'].images[self.fingerprint].put(json={
-            'public': False
-            })
-
-        self.assertEqual(200, response.status_code)
 
 
 class Test10ImageExport(ImageTestCase):
@@ -99,7 +64,3 @@ class Test10ImageAliases(IntegrationTestCase):
             })
 
         self.assertEqual(200, response.status_code)
-
-
-class Test10ImageAlias(IntegrationTestCase):
-    """Tests for /1.0/images/aliases/<alias>."""

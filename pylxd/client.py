@@ -201,7 +201,7 @@ class Marshallable(object):
         return marshalled
 
 
-class Image(object):
+class Image(Waitable, Marshallable):
 
     __slots__ = [
         '_client',
@@ -213,6 +213,16 @@ class Image(object):
         super(Image, self).__init__()
         for key, value in kwargs.iteritems():
             setattr(self, key, value)
+
+    def update(self):
+        self._client.api.images[self.fingerprint].put(
+            json=self.marshall())
+
+    def delete(self, wait=False):
+        response = self._client.api.images[self.fingerprint].delete()
+
+        if wait:
+            self.wait_for_operation(response.json()['operation'])
 
 
 class Container(Waitable, Marshallable):
