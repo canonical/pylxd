@@ -16,28 +16,6 @@ import unittest
 from integration.testing import IntegrationTestCase
 
 
-class Test10Images(IntegrationTestCase):
-    """Tests for /1.0/images"""
-
-    def test_1_0_images(self):
-        """Return: list of URLs for images this server publishes."""
-        response = self.lxd['1.0'].images.get()
-
-        self.assertEqual(200, response.status_code)
-
-    def test_1_0_images_POST(self):
-        """Return: list of URLs for images this server publishes."""
-        response = self.lxd['1.0'].images.post(json={
-            'public': True,
-            'source': {
-                'type': 'url',
-                'server': 'http://example.com',
-                'alias': 'test-image'
-                }})
-
-        self.assertEqual(202, response.status_code)
-
-
 class ImageTestCase(IntegrationTestCase):
     """An Image test case."""
 

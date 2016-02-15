@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import hashlib
 import os
 import urllib
 
@@ -98,6 +99,7 @@ class Waitable(object):
     def wait_for_operation(self, operation_id):
         operation = self.get_operation(operation_id)
         operation.wait()
+        return operation
 
 
 class _Containers(Waitable):
@@ -120,7 +122,7 @@ class _Containers(Waitable):
         containers = []
         for url in response.json()['metadata']:
             name = url.split('/')[-1]
-            containers.append(Container(name=name))
+            containers.append(Container(_client=self._client, name=name))
         return containers
 
     def create(self, config, wait=False):
@@ -137,6 +139,36 @@ class _Images(Waitable):
 
     def __init__(self, client):
         self._client = client
+
+    def get(self, fingerprint):
+        response = self._client.api.images[fingerprint].get()
+
+        if response.status_code == 404:
+            raise NameError('No image with fingerprint "{}"'.format(fingerprint))
+        image = Image(_client=self._client, **response.json()['metadata'])
+        return image
+
+    def all(self):
+        response = self._client.api.images.get()
+
+        images = []
+        for url in response.json()['metadata']:
+            fingerprint = url.split('/')[-1]
+            images.append(Image(_client=self._client, fingerprint=fingerprint))
+        return images
+
+    def create(self, image_data, public=False, wait=False):
+        fingerprint = hashlib.sha256(image_data).hexdigest()
+
+        headers = {}
+        if public:
+            headers['X-LXD-Public'] = '1'
+        response = self._client.api.images.post(
+            data=image_data, headers=headers)
+
+        if wait:
+            self.wait_for_operation(response.json()['operation'])
+        return self.get(fingerprint)
 
 
 class _Profiles(Waitable):
@@ -167,6 +199,20 @@ class Marshallable(object):
                 continue
             marshalled[name] = getattr(self, name)
         return marshalled
+
+
+class Image(object):
+
+    __slots__ = [
+        '_client',
+        'aliases', 'architecture', 'created_at', 'expires_at', 'filename',
+        'fingerprint', 'properties', 'public', 'size', 'uploaded_at'
+        ]
+
+    def __init__(self, **kwargs):
+        super(Image, self).__init__()
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
 
 
 class Container(Waitable, Marshallable):
