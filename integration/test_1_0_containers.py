@@ -14,35 +14,6 @@
 from integration.testing import IntegrationTestCase
 
 
-class Test10Containers(IntegrationTestCase):
-    """Tests for /1.0/containers"""
-
-    def test_1_0_containers(self):
-        """Return: list of URLs for containers this server publishes."""
-        result = self.lxd['1.0']['containers'].get()
-
-        self.assertCommon(result)
-        self.assertEqual(200, result.status_code)
-
-    def test_1_0_containers_POST(self):
-        """Return: background operation or standard error."""
-        name = self.id().split('.')[-1].replace('_', '')
-        machine = {
-            'name': name,
-            'architecture': 2,
-            'profiles': ['default'],
-            'ephemeral': True,
-            'config': {'limits.cpu': '2'},
-            'source': {'type': 'image',
-                       'alias': 'busybox'},
-        }
-        result = self.lxd['1.0']['containers'].post(json=machine)
-        self.addCleanup(self.delete_container, name, enforce=True)
-
-        # self.assertCommon(result)
-        self.assertEqual(202, result.status_code)
-
-
 class ContainerTestCase(IntegrationTestCase):
     """A Container-specific test case."""
 
