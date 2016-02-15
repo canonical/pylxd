@@ -19,7 +19,7 @@ class ImageTestCase(IntegrationTestCase):
 
     def setUp(self):
         super(ImageTestCase, self).setUp()
-        self.fingerprint = self.create_image()
+        self.fingerprint, _ = self.create_image()
 
 
 class Test10ImageExport(ImageTestCase):
@@ -55,7 +55,7 @@ class Test10ImageAliases(IntegrationTestCase):
 
     def test_1_0_images_aliases_POST(self):
         """Return: list of URLs for images this server publishes."""
-        fingerprint = self.create_image()
+        fingerprint, _ = self.create_image()
         alias = 'test-alias'
         self.addCleanup(self.delete_image, alias)
         response = self.lxd['1.0'].images.aliases.post(json={
