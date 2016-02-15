@@ -12,9 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import os
+import urllib
 
 import requests
 import requests_unixsocket
+
+requests_unixsocket.monkeypatch()
 
 
 class _APINode(object):
@@ -66,16 +69,18 @@ class _APINode(object):
 class Client(object):
     """A LXD client."""
 
-    def __init__(self, endpoint=None):
+    def __init__(self, endpoint=None, version='1.0'):
         if endpoint is not None:
-            self.api = _APINode(endpoint)['1.0']
+            self.api = _APINode(endpoint)
         else:
             if 'LXD_DIR' in os.environ:
                 path = os.path.join(
                     os.environ.get['LXD_DIR'], 'unix.socket')
             else:
                 path = '/var/lib/lxd/unix.socket'
-            self._api = _APINode('http+unix://{}'.format(path))
+            self.api = _APINode('http+unix://{}'.format(
+                urllib.quote(path, safe='')))
+        self.api = self.api[version]
 
         self.containers = _Containers(self)
         self.images = _Images(self)
@@ -83,40 +88,93 @@ class Client(object):
         self.operations = _Operations(self)
 
 
-class _Containers(object):
+class Waitable(object):
+
+    def wait_for_operation(self, operation_id):
+        operation = self._client.operations.get(operation_id)
+        operation.wait()
+
+
+class _Containers(Waitable):
     """A wrapper for working with containers."""
 
     def __init__(self, client):
         self._client = client
 
     def get(self, name):
-        pass
+        response = self._client.api.containers[name].get()
+
+        container = Container(**response.json()['metadata'])
+        return container
 
     def all(self):
-        response = self.client.api.containers.get()
+        response = self._client.api.containers.get()
 
-        return []
+        containers = []
+        for url in response.json()['metadata']:
+            name = url.split('/')[-1]
+            containers.append(Container(name=name))
+        return containers
 
-    def create(self, config):
-        pass
+    def create(self, config, wait=False):
+        response = self._client.api.containers.post(json=config)
+
+        if wait:
+            operation_id = response.json()['operation'].split('/')[-1]
+            self.wait_for_operation(operation_id)
+        return Container(name=config['name'])
 
 
-class _Images(object):
+class _Images(Waitable):
     """A wrapper for working with images."""
 
     def __init__(self, client):
         self._client = client
 
 
-class _Profiles(object):
+class _Profiles(Waitable):
     """A wrapper for working with profiles."""
 
     def __init__(self, client):
         self._client = client
 
 
-class _Operations(object):
+class _Operations(Waitable):
     """A wrapper for working with operations."""
 
     def __init__(self, client):
         self._client = client
+
+    def get(self, operation_id):
+        response = self._client.api.operations[operation_id].get()
+
+        return Operation(_client=self._client, **response.json()['metadata'])
+
+
+class Container(object):
+
+    __slots__ = [
+        'architecture', 'config', 'creation_date', 'devices', 'ephemeral',
+        'expanded_config', 'expanded_devices', 'name', 'profiles', 'status'
+        ]
+
+    def __init__(self, **kwargs):
+        super(Container, self).__init__()
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+
+
+class Operation(object):
+
+    __slots__ = [
+        '_client',
+        'class', 'created_at', 'err', 'id', 'may_cancel', 'metadata', 'resources',
+        'status', 'status_code', 'updated_at']
+
+    def __init__(self, **kwargs):
+        super(Operation, self).__init__()
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+
+    def wait(self):
+        self._client.api.operations[self.id].wait.get()

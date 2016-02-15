@@ -47,7 +47,8 @@ class TestContainers(IntegrationTestCase):
             'source': {'type': 'image',
                        'alias': 'busybox'},
         }
+        self.addCleanup(self.delete_container, config['name'])
 
-        container = self.client.containers.create(config)
+        container = self.client.containers.create(config, wait=True)
 
-        self.assertEqual(config.name, container.name)
+        self.assertEqual(config['name'], container.name)
