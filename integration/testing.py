@@ -32,7 +32,7 @@ class IntegrationTestCase(unittest.TestCase):
             'name': name,
             'architecture': 2,
             'profiles': ['default'],
-            'ephemeral': True,
+            'ephemeral': False,
             'config': {'limits.cpu': '2'},
             'source': {'type': 'image',
                        'alias': 'busybox'},
