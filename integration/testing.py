@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import uuid
 import unittest
 
 from pylxd.client import Client
@@ -25,9 +26,14 @@ class IntegrationTestCase(unittest.TestCase):
         self.client = Client()
         self.lxd = self.client.api
 
+    def generate_object_name(self):
+        test = self.id().split('.')[-1]
+        rando = str(uuid.uuid1()).split('-')[-1]
+        return '{}-{}'.format(test, rando)
+
     def create_container(self):
         """Create a container in lxd."""
-        name = self.id().split('.')[-1].replace('_', '')
+        name = self._generate_object_name()
         machine = {
             'name': name,
             'architecture': 2,
@@ -46,8 +52,6 @@ class IntegrationTestCase(unittest.TestCase):
 
     def delete_container(self, name, enforce=False):
         """Delete a container in lxd."""
-        #response = self.lxd.containers['name'].get()
-        #if response == 200:
         # enforce is a hack. There's a race somewhere in the delete.
         # To ensure we don't get an infinite loop, let's count.
         count = 0
@@ -72,8 +76,15 @@ class IntegrationTestCase(unittest.TestCase):
         operation_uuid = response.json()['operation'].split('/')[-1]
         self.lxd.operations[operation_uuid].wait.get()
 
+        alias = self.generate_object_name()
+        response = self.lxd.images.aliases.post(json={
+            'description': '',
+            'target': fingerprint,
+            'name': alias
+            })
+
         self.addCleanup(self.delete_image, fingerprint)
-        return fingerprint
+        return fingerprint, alias
 
     def delete_image(self, fingerprint):
         """Delete an image in lxd."""
