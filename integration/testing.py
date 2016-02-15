@@ -13,7 +13,7 @@
 #    under the License.
 import unittest
 
-from pylxd.api import LXD
+from pylxd.client import Client
 from integration.busybox import create_busybox_image
 
 
@@ -22,7 +22,8 @@ class IntegrationTestCase(unittest.TestCase):
 
     def setUp(self):
         super(IntegrationTestCase, self).setUp()
-        self.lxd = LXD('http+unix://%2Fvar%2Flib%2Flxd%2Funix.socket')
+        self.client = Client()
+        self.lxd = self.client.api
 
     def create_container(self):
         """Create a container in lxd."""
