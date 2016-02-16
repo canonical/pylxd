@@ -60,6 +60,7 @@ class LXDProfile(base.LXDBase):
 
 
 class Profile(mixin.Marshallable):
+    """A LXD profile."""
 
     __slots__ = [
         '_client',
@@ -68,6 +69,7 @@ class Profile(mixin.Marshallable):
 
     @classmethod
     def get(cls, client, name):
+        """Get a profile."""
         response = client.api.profiles[name].get()
 
         if response.status_code == 404:
@@ -76,6 +78,7 @@ class Profile(mixin.Marshallable):
 
     @classmethod
     def all(cls, client):
+        """Get all profiles."""
         response = client.api.profiles.get()
 
         profiles = []
@@ -86,6 +89,7 @@ class Profile(mixin.Marshallable):
 
     @classmethod
     def create(cls, client, name, config):
+        """Create a profile."""
         client.api.profiles.post(json={
             'name': name,
             'config': config
@@ -99,6 +103,7 @@ class Profile(mixin.Marshallable):
             setattr(self, key, value)
 
     def update(self):
+        """Update the profile in LXD based on local changes."""
         marshalled = self.marshall()
         # The name property cannot be updated.
         del marshalled['name']
@@ -106,10 +111,12 @@ class Profile(mixin.Marshallable):
         self._client.api.profiles[self.name].put(json=marshalled)
 
     def rename(self, new):
+        """Rename the profile."""
         raise NotImplementedError(
             'LXD does not currently support renaming profiles')
         self._client.api.profiles[self.name].post(json={'name': new})
         self.name = new
 
     def delete(self):
+        """Delete a profile."""
         self._client.api.profiles[self.name].delete()

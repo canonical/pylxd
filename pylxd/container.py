@@ -210,6 +210,11 @@ class LXDContainer(base.LXDBase):
 
 
 class Container(mixin.Waitable, mixin.Marshallable):
+    """An LXD Container.
+
+    This class is not intended to be used directly, but rather to be used
+    via `Client.containers.create`.
+    """
 
     __slots__ = [
         '_client',
@@ -219,6 +224,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
 
     @classmethod
     def get(cls, client, name):
+        """Get a container by name."""
         response = client.api.containers[name].get()
 
         if response.status_code == 404:
@@ -228,6 +234,13 @@ class Container(mixin.Waitable, mixin.Marshallable):
 
     @classmethod
     def all(cls, client):
+        """Get all containers.
+
+        Containers returned from this method will only have the name
+        set, as that is the only property returned from LXD. If more
+        information is needed, `Container.reload` is the method call
+        that should be used.
+        """
         response = client.api.containers.get()
 
         containers = []
@@ -238,6 +251,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
 
     @classmethod
     def create(cls, client, config, wait=False):
+        """Create a new container config."""
         response = client.api.containers.post(json=config)
 
         if wait:
@@ -250,6 +264,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
             setattr(self, key, value)
 
     def reload(self):
+        """Reload the container information."""
         response = self._client.api.containers[self.name].get()
         if response.status_code == 404:
             raise NameError(
@@ -258,6 +273,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
             setattr(self, key, value)
 
     def update(self, wait=False):
+        """Update the container in lxd from local changes."""
         marshalled = self.marshall()
         # These two properties are explicitly not allowed.
         del marshalled['name']
@@ -270,6 +286,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
             self.wait_for_operation(response.json()['operation'])
 
     def rename(self, name, wait=False):
+        """Rename a container."""
         response = self._client.api.containers[
             self.name].post(json={'name': name})
 
@@ -278,6 +295,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
         self.name = name
 
     def delete(self, wait=False):
+        """Delete the container."""
         response = self._client.api.containers[self.name].delete()
 
         if wait:
@@ -294,33 +312,41 @@ class Container(mixin.Waitable, mixin.Marshallable):
             self.reload()
 
     def start(self, timeout=30, force=True, wait=False):
+        """Start the container."""
         return self._set_state(
             'start', timeout=timeout, force=force, wait=wait)
 
     def stop(self, timeout=30, force=True, wait=False):
+        """Stop the container."""
         return self._set_state('stop', timeout=timeout, force=force, wait=wait)
 
     def restart(self, timeout=30, force=True, wait=False):
+        """Restart the container."""
         return self._set_state('stop', timeout=timeout, force=force, wait=wait)
 
     def freeze(self, timeout=30, force=True, wait=False):
+        """Freeze the container."""
         return self._set_state('stop', timeout=timeout, force=force, wait=wait)
 
     def unfreeze(self, timeout=30, force=True, wait=False):
+        """Unfreeze the container."""
         return self._set_state('stop', timeout=timeout, force=force, wait=wait)
 
     def snapshot(self, name, stateful=False, wait=False):
+        """Take a snapshot of the container."""
         response = self._client.api.containers[self.name].snapshots.post(json={
             'name': name, 'stateful': stateful})
         if wait:
             self.wait_for_operation(response.json()['operation'])
 
     def list_snapshots(self):
+        """List all container snapshots."""
         response = self._client.api.containers[self.name].snapshots.get()
         return [snapshot.split('/')[-1]
                 for snapshot in response.json()['metadata']]
 
     def rename_snapshot(self, old, new, wait=False):
+        """Rename a snapshot."""
         response = self._client.api.containers[
             self.name].snapshots[old].post(json={
                 'name': new
@@ -329,12 +355,14 @@ class Container(mixin.Waitable, mixin.Marshallable):
             self.wait_for_operation(response.json()['operation'])
 
     def delete_snapshot(self, name, wait=False):
+        """Delete a snapshot."""
         response = self._client.api.containers[
             self.name].snapshots[name].delete()
         if wait:
             self.wait_for_operation(response.json()['operation'])
 
     def get_file(self, filepath):
+        """Get a file from the container."""
         response = self._client.api.containers[self.name].files.get(
             params={'path': filepath})
         if response.status_code == 500:
@@ -344,11 +372,13 @@ class Container(mixin.Waitable, mixin.Marshallable):
         return response.content
 
     def put_file(self, filepath, data):
+        """Put a file on the container."""
         response = self._client.api.containers[self.name].files.post(
             params={'path': filepath}, data=data)
         return response.status_code == 200
 
     def execute(self, commands, environment={}):
+        """Execute a command on the container."""
         # XXX: rockstar (15 Feb 2016) - This functionality is limited by
         # design, for now. It needs to grow the ability to return web sockets
         # and perform interactive functions.

@@ -247,6 +247,7 @@ class LXDAlias(base.LXDBase):
 
 
 class Image(mixin.Waitable, mixin.Marshallable):
+    """A LXD Image."""
 
     __slots__ = [
         '_client',
@@ -256,6 +257,7 @@ class Image(mixin.Waitable, mixin.Marshallable):
 
     @classmethod
     def get(cls, client, fingerprint):
+        """Get an image."""
         response = client.api.images[fingerprint].get()
 
         if response.status_code == 404:
@@ -266,6 +268,7 @@ class Image(mixin.Waitable, mixin.Marshallable):
 
     @classmethod
     def all(cls, client):
+        """Get all images."""
         response = client.api.images.get()
 
         images = []
@@ -276,6 +279,7 @@ class Image(mixin.Waitable, mixin.Marshallable):
 
     @classmethod
     def create(cls, client, image_data, public=False, wait=False):
+        """Create an image."""
         fingerprint = hashlib.sha256(image_data).hexdigest()
 
         headers = {}
@@ -294,10 +298,12 @@ class Image(mixin.Waitable, mixin.Marshallable):
             setattr(self, key, value)
 
     def update(self):
+        """Update LXD based on changes to this image."""
         self._client.api.images[self.fingerprint].put(
             json=self.marshall())
 
     def delete(self, wait=False):
+        """Delete the image."""
         response = self._client.api.images[self.fingerprint].delete()
 
         if wait:

@@ -75,6 +75,7 @@ class LXDOperation(base.LXDBase):
 
 
 class Operation(object):
+    """A LXD operation."""
 
     __slots__ = [
         '_client',
@@ -83,6 +84,7 @@ class Operation(object):
 
     @classmethod
     def wait_for_operation(cls, client, operation_id):
+        """Get an operation and wait for it to complete."""
         if operation_id.startswith('/'):
             operation_id = operation_id.split('/')[-1]
         operation = cls.get(client, operation_id)
@@ -90,6 +92,7 @@ class Operation(object):
 
     @classmethod
     def get(cls, client, operation_id):
+        """Get an operation."""
         response = client.api.operations[operation_id].get()
         return cls(_client=client, **response.json()['metadata'])
 
@@ -99,4 +102,5 @@ class Operation(object):
             setattr(self, key, value)
 
     def wait(self):
+        """Wait for the operation to complete and return."""
         self._client.api.operations[self.id].wait.get()
