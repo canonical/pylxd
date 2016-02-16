@@ -72,3 +72,19 @@ class LXDOperation(base.LXDBase):
 
     def operation_delete(self, operation):
         return self.connection.get_status('DELETE', operation)
+
+
+class Operation(object):
+
+    __slots__ = [
+        '_client',
+        'class', 'created_at', 'err', 'id', 'may_cancel', 'metadata',
+        'resources', 'status', 'status_code', 'updated_at']
+
+    def __init__(self, **kwargs):
+        super(Operation, self).__init__()
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+
+    def wait(self):
+        self._client.api.operations[self.id].wait.get()

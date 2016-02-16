@@ -21,6 +21,7 @@ import requests_unixsocket
 from pylxd import mixin
 from pylxd.container import Container
 from pylxd.image import Image
+from pylxd.operation import Operation
 from pylxd.profiles import Profile
 
 requests_unixsocket.monkeypatch()
@@ -204,19 +205,3 @@ class _Operations(mixin.Waitable):
         response = self._client.api.operations[operation_id].get()
 
         return Operation(_client=self._client, **response.json()['metadata'])
-
-
-class Operation(object):
-
-    __slots__ = [
-        '_client',
-        'class', 'created_at', 'err', 'id', 'may_cancel', 'metadata',
-        'resources', 'status', 'status_code', 'updated_at']
-
-    def __init__(self, **kwargs):
-        super(Operation, self).__init__()
-        for key, value in kwargs.iteritems():
-            setattr(self, key, value)
-
-    def wait(self):
-        self._client.api.operations[self.id].wait.get()
