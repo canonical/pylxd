@@ -81,6 +81,18 @@ class Operation(object):
         'class', 'created_at', 'err', 'id', 'may_cancel', 'metadata',
         'resources', 'status', 'status_code', 'updated_at']
 
+    @classmethod
+    def wait_for_operation(cls, client, operation_id):
+        if operation_id.startswith('/'):
+            operation_id = operation_id.split('/')[-1]
+        operation = cls.get(client, operation_id)
+        operation.wait()
+
+    @classmethod
+    def get(cls, client, operation_id):
+        response = client.api.operations[operation_id].get()
+        return cls(_client=client, **response.json()['metadata'])
+
     def __init__(self, **kwargs):
         super(Operation, self).__init__()
         for key, value in kwargs.iteritems():

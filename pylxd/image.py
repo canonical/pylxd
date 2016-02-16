@@ -13,6 +13,7 @@
 #    under the License.
 from __future__ import print_function
 import datetime
+import hashlib
 import json
 from six.moves import urllib
 
@@ -20,6 +21,7 @@ from pylxd import base
 from pylxd import connection
 from pylxd import exceptions
 from pylxd import mixin
+from pylxd.operation import Operation
 
 image_architecture = {
     0: 'Unknown',
@@ -251,6 +253,39 @@ class Image(mixin.Waitable, mixin.Marshallable):
         'aliases', 'architecture', 'created_at', 'expires_at', 'filename',
         'fingerprint', 'properties', 'public', 'size', 'uploaded_at'
         ]
+
+    @classmethod
+    def get(cls, client, fingerprint):
+        response = client.api.images[fingerprint].get()
+
+        if response.status_code == 404:
+            raise NameError('No image with fingerprint "{}"'.format(fingerprint))
+        image = Image(_client=client, **response.json()['metadata'])
+        return image
+
+    @classmethod
+    def all(cls, client):
+        response = client.api.images.get()
+
+        images = []
+        for url in response.json()['metadata']:
+            fingerprint = url.split('/')[-1]
+            images.append(Image(_client=client, fingerprint=fingerprint))
+        return images
+
+    @classmethod
+    def create(cls, client, image_data, public=False, wait=False):
+        fingerprint = hashlib.sha256(image_data).hexdigest()
+
+        headers = {}
+        if public:
+            headers['X-LXD-Public'] = '1'
+        response = client.api.images.post(
+            data=image_data, headers=headers)
+
+        if wait:
+            Operation.wait_for_operation(client, response.json()['operation'])
+        return cls.get(client, fingerprint)
 
     def __init__(self, **kwargs):
         super(Image, self).__init__()

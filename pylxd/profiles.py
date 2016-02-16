@@ -66,6 +66,33 @@ class Profile(mixin.Marshallable):
         'config', 'devices', 'name'
         ]
 
+    @classmethod
+    def get(cls, client, name):
+        response = client.api.profiles[name].get()
+
+        if response.status_code == 404:
+            raise NameError('No profile with name "{}"'.format(name))
+        return cls(_client=client, **response.json()['metadata'])
+
+    @classmethod
+    def all(cls, client):
+        response = client.api.profiles.get()
+
+        profiles = []
+        for url in response.json()['metadata']:
+            name = url.split('/')[-1]
+            profiles.append(cls(_client=client, name=name))
+        return profiles
+
+    @classmethod
+    def create(cls, client, name, config):
+        client.api.profiles.post(json={
+            'name': name,
+            'config': config
+            })
+
+        return cls.get(client, name)
+
     def __init__(self, **kwargs):
         super(Profile, self).__init__()
         for key, value in kwargs.iteritems():

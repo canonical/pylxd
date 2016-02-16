@@ -11,14 +11,13 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import hashlib
+import functools
 import os
 import urllib
 
 import requests
 import requests_unixsocket
 
-from pylxd import mixin
 from pylxd.container import Container
 from pylxd.image import Image
 from pylxd.operation import Operation
@@ -74,7 +73,37 @@ class _APINode(object):
 
 
 class Client(object):
-    """A LXD client."""
+    """A LXD client.
+
+    This client wraps all the functionality required to interact with
+    LXD, and is meant to be the sole entry point.
+    """
+
+    class Containers(object):
+        """A convenience wrapper for Container."""
+        def __init__(self, client):
+            self.get = functools.partial(Container.get, client)
+            self.all = functools.partial(Container.all, client)
+            self.create = functools.partial(Container.create, client)
+
+    class Images(object):
+        """A convenience wrapper for Image."""
+        def __init__(self, client):
+            self.get = functools.partial(Image.get, client)
+            self.all = functools.partial(Image.all, client)
+            self.create = functools.partial(Image.create, client)
+
+    class Operations(object):
+        """A convenience wrapper for Operation."""
+        def __init__(self, client):
+            self.get = functools.partial(Operation.get, client)
+
+    class Profiles(object):
+        """A convenience wrapper for Profile."""
+        def __init__(self, client):
+            self.get = functools.partial(Profile.get, client)
+            self.all = functools.partial(Profile.all, client)
+            self.create = functools.partial(Profile.create, client)
 
     def __init__(self, endpoint=None, version='1.0'):
         if endpoint is not None:
@@ -89,119 +118,7 @@ class Client(object):
                 urllib.quote(path, safe='')))
         self.api = self.api[version]
 
-        self.containers = _Containers(self)
-        self.images = _Images(self)
-        self.profiles = _Profiles(self)
-        self.operations = _Operations(self)
-
-
-class _Containers(mixin.Waitable):
-    """A wrapper for working with containers."""
-
-    def __init__(self, client):
-        self._client = client
-
-    def get(self, name):
-        response = self._client.api.containers[name].get()
-
-        if response.status_code == 404:
-            raise NameError('No container named "{}"'.format(name))
-        container = Container(_client=self._client, **response.json()['metadata'])
-        return container
-
-    def all(self):
-        response = self._client.api.containers.get()
-
-        containers = []
-        for url in response.json()['metadata']:
-            name = url.split('/')[-1]
-            containers.append(Container(_client=self._client, name=name))
-        return containers
-
-    def create(self, config, wait=False):
-        response = self._client.api.containers.post(json=config)
-
-        if wait:
-            operation_id = response.json()['operation'].split('/')[-1]
-            self.wait_for_operation(operation_id)
-        return Container(name=config['name'])
-
-
-class _Images(mixin.Waitable):
-    """A wrapper for working with images."""
-
-    def __init__(self, client):
-        self._client = client
-
-    def get(self, fingerprint):
-        response = self._client.api.images[fingerprint].get()
-
-        if response.status_code == 404:
-            raise NameError('No image with fingerprint "{}"'.format(fingerprint))
-        image = Image(_client=self._client, **response.json()['metadata'])
-        return image
-
-    def all(self):
-        response = self._client.api.images.get()
-
-        images = []
-        for url in response.json()['metadata']:
-            fingerprint = url.split('/')[-1]
-            images.append(Image(_client=self._client, fingerprint=fingerprint))
-        return images
-
-    def create(self, image_data, public=False, wait=False):
-        fingerprint = hashlib.sha256(image_data).hexdigest()
-
-        headers = {}
-        if public:
-            headers['X-LXD-Public'] = '1'
-        response = self._client.api.images.post(
-            data=image_data, headers=headers)
-
-        if wait:
-            self.wait_for_operation(response.json()['operation'])
-        return self.get(fingerprint)
-
-
-class _Profiles(mixin.Waitable):
-    """A wrapper for working with profiles."""
-
-    def __init__(self, client):
-        self._client = client
-
-    def get(self, name):
-        response = self._client.api.profiles[name].get()
-
-        if response.status_code == 404:
-            raise NameError('No profile with name "{}"'.format(name))
-        return Profile(_client=self._client, **response.json()['metadata'])
-
-    def all(self):
-        response = self._client.api.profiles.get()
-
-        profiles = []
-        for url in response.json()['metadata']:
-            name = url.split('/')[-1]
-            profiles.append(Profile(_client=self._client, name=name))
-        return profiles
-
-    def create(self, name, config):
-        self._client.api.profiles.post(json={
-            'name': name,
-            'config': config
-            })
-
-        return self.get(name)
-
-
-class _Operations(mixin.Waitable):
-    """A wrapper for working with operations."""
-
-    def __init__(self, client):
-        self._client = client
-
-    def get(self, operation_id):
-        response = self._client.api.operations[operation_id].get()
-
-        return Operation(_client=self._client, **response.json()['metadata'])
+        self.containers = self.Containers(self)
+        self.images = self.Images(self)
+        self.operations = self.Operations(self)
+        self.profiles = self.Profiles(self)

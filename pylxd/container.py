@@ -17,6 +17,7 @@ import json
 from pylxd import base
 from pylxd import exceptions
 from pylxd import mixin
+from pylxd.operation import Operation
 
 
 class LXDContainer(base.LXDBase):
@@ -214,6 +215,33 @@ class Container(mixin.Waitable, mixin.Marshallable):
         'architecture', 'config', 'creation_date', 'devices', 'ephemeral',
         'expanded_config', 'expanded_devices', 'name', 'profiles', 'status'
         ]
+
+    @classmethod
+    def get(cls, client, name):
+        response = client.api.containers[name].get()
+
+        if response.status_code == 404:
+            raise NameError('No container named "{}"'.format(name))
+        container = cls(_client=client, **response.json()['metadata'])
+        return container
+
+    @classmethod
+    def all(cls, client):
+        response = client.api.containers.get()
+
+        containers = []
+        for url in response.json()['metadata']:
+            name = url.split('/')[-1]
+            containers.append(cls(_client=client, name=name))
+        return containers
+
+    @classmethod
+    def create(cls, client, config, wait=False):
+        response = client.api.containers.post(json=config)
+
+        if wait:
+            Operation.wait_for_operation(client, response.json()['operation'])
+        return cls(name=config['name'])
 
     def __init__(self, **kwargs):
         super(Container, self).__init__()
