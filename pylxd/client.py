@@ -177,6 +177,30 @@ class _Profiles(Waitable):
     def __init__(self, client):
         self._client = client
 
+    def get(self, name):
+        response = self._client.api.profiles[name].get()
+
+        if response.status_code == 404:
+            raise NameError('No profile with name "{}"'.format(name))
+        return Profile(_client=self._client, **response.json()['metadata'])
+
+    def all(self):
+        response = self._client.api.profiles.get()
+
+        profiles = []
+        for url in response.json()['metadata']:
+            name = url.split('/')[-1]
+            profiles.append(Profile(_client=self._client, name=name))
+        return profiles
+
+    def create(self, name, config):
+        self._client.api.profiles.post(json={
+            'name': name,
+            'config': config
+            })
+
+        return self.get(name)
+
 
 class _Operations(Waitable):
     """A wrapper for working with operations."""
@@ -199,6 +223,34 @@ class Marshallable(object):
                 continue
             marshalled[name] = getattr(self, name)
         return marshalled
+
+
+class Profile(Marshallable):
+
+    __slots__ = [
+        '_client',
+        'config', 'devices', 'name'
+        ]
+
+    def __init__(self, **kwargs):
+        super(Profile, self).__init__()
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+
+    def update(self):
+        marshalled = self.marshall()
+        # The name property cannot be updated.
+        del marshalled['name']
+
+        self._client.api.profiles[self.name].put(json=marshalled)
+
+    def rename(self, new):
+        raise NotImplementedError('LXD does not currently support renaming profiles')
+        self._client.api.profiles[self.name].post(json={'name': new})
+        self.name = new
+
+    def delete(self):
+        self._client.api.profiles[self.name].delete()
 
 
 class Image(Waitable, Marshallable):

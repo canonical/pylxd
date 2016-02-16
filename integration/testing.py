@@ -90,6 +90,18 @@ class IntegrationTestCase(unittest.TestCase):
         """Delete an image in lxd."""
         self.lxd.images[fingerprint].delete()
 
+    def create_profile(self):
+        name = self.generate_object_name()
+        config = {'limits.memory': '1GB'}
+        self.lxd.profiles.post(json={
+            'name': name,
+            'config': config
+            })
+        return name
+
+    def delete_profile(self, name):
+        self.lxd.profiles[name].delete()
+
     def assertCommon(self, response):
         """Assert common LXD responses.
 
