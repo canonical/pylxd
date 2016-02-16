@@ -11,10 +11,11 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
+# XXX: rockstar (15 Feb 2016) - This module should be renamed to 'profile'.
 import json
 
 from pylxd import base
+from pylxd import mixin
 
 
 class LXDProfile(base.LXDBase):
@@ -56,3 +57,31 @@ class LXDProfile(base.LXDBase):
         '''Delete the LXD profile'''
         return self.connection.get_status('DELETE', '/1.0/profiles/%s'
                                           % profile)
+
+
+class Profile(mixin.Marshallable):
+
+    __slots__ = [
+        '_client',
+        'config', 'devices', 'name'
+        ]
+
+    def __init__(self, **kwargs):
+        super(Profile, self).__init__()
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+
+    def update(self):
+        marshalled = self.marshall()
+        # The name property cannot be updated.
+        del marshalled['name']
+
+        self._client.api.profiles[self.name].put(json=marshalled)
+
+    def rename(self, new):
+        raise NotImplementedError('LXD does not currently support renaming profiles')
+        self._client.api.profiles[self.name].post(json={'name': new})
+        self.name = new
+
+    def delete(self):
+        self._client.api.profiles[self.name].delete()

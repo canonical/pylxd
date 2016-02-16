@@ -20,6 +20,7 @@ import requests_unixsocket
 
 from pylxd import mixin
 from pylxd.container import Container
+from pylxd.profiles import Profile
 
 requests_unixsocket.monkeypatch()
 
@@ -202,34 +203,6 @@ class _Operations(mixin.Waitable):
         response = self._client.api.operations[operation_id].get()
 
         return Operation(_client=self._client, **response.json()['metadata'])
-
-
-class Profile(mixin.Marshallable):
-
-    __slots__ = [
-        '_client',
-        'config', 'devices', 'name'
-        ]
-
-    def __init__(self, **kwargs):
-        super(Profile, self).__init__()
-        for key, value in kwargs.iteritems():
-            setattr(self, key, value)
-
-    def update(self):
-        marshalled = self.marshall()
-        # The name property cannot be updated.
-        del marshalled['name']
-
-        self._client.api.profiles[self.name].put(json=marshalled)
-
-    def rename(self, new):
-        raise NotImplementedError('LXD does not currently support renaming profiles')
-        self._client.api.profiles[self.name].post(json={'name': new})
-        self.name = new
-
-    def delete(self):
-        self._client.api.profiles[self.name].delete()
 
 
 class Image(mixin.Waitable, mixin.Marshallable):
