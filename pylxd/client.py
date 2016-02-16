@@ -18,6 +18,9 @@ import urllib
 import requests
 import requests_unixsocket
 
+from pylxd import mixin
+from pylxd.container import Container
+
 requests_unixsocket.monkeypatch()
 
 
@@ -89,20 +92,7 @@ class Client(object):
         self.operations = _Operations(self)
 
 
-class Waitable(object):
-
-    def get_operation(self, operation_id):
-        if operation_id.startswith('/'):
-            operation_id = operation_id.split('/')[-1]
-        return self._client.operations.get(operation_id)
-
-    def wait_for_operation(self, operation_id):
-        operation = self.get_operation(operation_id)
-        operation.wait()
-        return operation
-
-
-class _Containers(Waitable):
+class _Containers(mixin.Waitable):
     """A wrapper for working with containers."""
 
     def __init__(self, client):
@@ -134,7 +124,7 @@ class _Containers(Waitable):
         return Container(name=config['name'])
 
 
-class _Images(Waitable):
+class _Images(mixin.Waitable):
     """A wrapper for working with images."""
 
     def __init__(self, client):
@@ -171,7 +161,7 @@ class _Images(Waitable):
         return self.get(fingerprint)
 
 
-class _Profiles(Waitable):
+class _Profiles(mixin.Waitable):
     """A wrapper for working with profiles."""
 
     def __init__(self, client):
@@ -202,7 +192,7 @@ class _Profiles(Waitable):
         return self.get(name)
 
 
-class _Operations(Waitable):
+class _Operations(mixin.Waitable):
     """A wrapper for working with operations."""
 
     def __init__(self, client):
@@ -214,18 +204,7 @@ class _Operations(Waitable):
         return Operation(_client=self._client, **response.json()['metadata'])
 
 
-class Marshallable(object):
-
-    def marshall(self):
-        marshalled = {}
-        for name in self.__slots__:
-            if name.startswith('_'):
-                continue
-            marshalled[name] = getattr(self, name)
-        return marshalled
-
-
-class Profile(Marshallable):
+class Profile(mixin.Marshallable):
 
     __slots__ = [
         '_client',
@@ -253,7 +232,7 @@ class Profile(Marshallable):
         self._client.api.profiles[self.name].delete()
 
 
-class Image(Waitable, Marshallable):
+class Image(mixin.Waitable, mixin.Marshallable):
 
     __slots__ = [
         '_client',
@@ -275,128 +254,6 @@ class Image(Waitable, Marshallable):
 
         if wait:
             self.wait_for_operation(response.json()['operation'])
-
-
-class Container(Waitable, Marshallable):
-
-    __slots__ = [
-        '_client',
-        'architecture', 'config', 'creation_date', 'devices', 'ephemeral',
-        'expanded_config', 'expanded_devices', 'name', 'profiles', 'status'
-        ]
-
-    def __init__(self, **kwargs):
-        super(Container, self).__init__()
-        for key, value in kwargs.iteritems():
-            setattr(self, key, value)
-
-    def reload(self):
-        response = self._client.api.containers[self.name].get()
-        if response.status_code == 404:
-            raise NameError('Container named "{}" has gone away'.format(self.name))
-        for key, value in response.json()['metadata'].iteritems():
-            setattr(self, key, value)
-
-    def update(self, wait=False):
-        marshalled = self.marshall()
-        # These two properties are explicitly not allowed.
-        del marshalled['name']
-        del marshalled['status']
-
-        response = self._client.api.containers[self.name].put(
-            json=marshalled)
-
-        if wait:
-            self.wait_for_operation(response.json()['operation'])
-
-    def rename(self, name, wait=False):
-        response = self._client.api.containers[self.name].post(json={'name': name})
-
-        if wait:
-            self.wait_for_operation(response.json()['operation'])
-        self.name = name
-
-    def delete(self, wait=False):
-        response = self._client.api.containers[self.name].delete()
-
-        if wait:
-            self.wait_for_operation(response.json()['operation'])
-
-    def _set_state(self, state, timeout=30, force=True, wait=False):
-        response = self._client.api.containers[self.name].state.put(json={
-            'action': state,
-            'timeout': timeout,
-            'force': force
-            })
-        if wait:
-            self.wait_for_operation(response.json()['operation'])
-            self.reload()
-
-    def start(self, timeout=30, force=True, wait=False):
-        return self._set_state('start', timeout=timeout, force=force, wait=wait)
-
-    def stop(self, timeout=30, force=True, wait=False):
-        return self._set_state('stop', timeout=timeout, force=force, wait=wait)
-
-    def restart(self, timeout=30, force=True, wait=False):
-        return self._set_state('stop', timeout=timeout, force=force, wait=wait)
-
-    def freeze(self, timeout=30, force=True, wait=False):
-        return self._set_state('stop', timeout=timeout, force=force, wait=wait)
-
-    def unfreeze(self, timeout=30, force=True, wait=False):
-        return self._set_state('stop', timeout=timeout, force=force, wait=wait)
-
-    def snapshot(self, name, stateful=False, wait=False):
-        response = self._client.api.containers[self.name].snapshots.post(json={
-            'name': name, 'stateful': stateful})
-        if wait:
-            self.wait_for_operation(response.json()['operation'])
-
-    def list_snapshots(self):
-        response = self._client.api.containers[self.name].snapshots.get()
-        return [snapshot.split('/')[-1] for snapshot in response.json()['metadata']]
-
-    def rename_snapshot(self, old, new, wait=False):
-        response = self._client.api.containers[self.name].snapshots[old].post(json={
-            'name': new
-            })
-        if wait:
-            self.wait_for_operation(response.json()['operation'])
-
-    def delete_snapshot(self, name, wait=False):
-        response = self._client.api.containers[self.name].snapshots[name].delete()
-        if wait:
-            self.wait_for_operation(response.json()['operation'])
-
-    def get_file(self, filepath):
-        response = self._client.api.containers[self.name].files.get(
-            params={'path': filepath})
-        if response.status_code == 500:
-            # XXX: rockstar (15 Feb 2016) - This should really return a 404.
-            # I blame LXD. :)
-            raise IOError('Error reading "{}"'.format(filepath))
-        return response.content
-
-    def put_file(self, filepath, data):
-        response = self._client.api.containers[self.name].files.post(
-            params={'path': filepath}, data=data)
-        return response.status_code == 200
-
-    def execute(self, commands, environment={}):
-        # XXX: rockstar (15 Feb 2016) - This functionality is limited by
-        # design, for now. It needs to grow the ability to return web sockets
-        # and perform interactive functions.
-        if type(commands) in [str, unicode]:
-            commands = [commands]
-        response = self._client.api.containers[self.name]['exec'].post(json={
-            'command': commands,
-            'environment': environment,
-            'wait-for-websocket': False,
-            'interactive': False,
-            })
-        operation_id = response.json()['operation']
-        self.wait_for_operation(operation_id)
 
 
 class Operation(object):

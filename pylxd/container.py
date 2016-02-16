@@ -16,6 +16,7 @@ import json
 
 from pylxd import base
 from pylxd import exceptions
+from pylxd import mixin
 
 
 class LXDContainer(base.LXDBase):
@@ -204,3 +205,125 @@ class LXDContainer(base.LXDBase):
         return self.connection.get_object('DELETE',
                                           '/1.0/containers/%s/snapshots/%s'
                                           % (container, snapshot))
+
+
+class Container(mixin.Waitable, mixin.Marshallable):
+
+    __slots__ = [
+        '_client',
+        'architecture', 'config', 'creation_date', 'devices', 'ephemeral',
+        'expanded_config', 'expanded_devices', 'name', 'profiles', 'status'
+        ]
+
+    def __init__(self, **kwargs):
+        super(Container, self).__init__()
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+
+    def reload(self):
+        response = self._client.api.containers[self.name].get()
+        if response.status_code == 404:
+            raise NameError('Container named "{}" has gone away'.format(self.name))
+        for key, value in response.json()['metadata'].iteritems():
+            setattr(self, key, value)
+
+    def update(self, wait=False):
+        marshalled = self.marshall()
+        # These two properties are explicitly not allowed.
+        del marshalled['name']
+        del marshalled['status']
+
+        response = self._client.api.containers[self.name].put(
+            json=marshalled)
+
+        if wait:
+            self.wait_for_operation(response.json()['operation'])
+
+    def rename(self, name, wait=False):
+        response = self._client.api.containers[self.name].post(json={'name': name})
+
+        if wait:
+            self.wait_for_operation(response.json()['operation'])
+        self.name = name
+
+    def delete(self, wait=False):
+        response = self._client.api.containers[self.name].delete()
+
+        if wait:
+            self.wait_for_operation(response.json()['operation'])
+
+    def _set_state(self, state, timeout=30, force=True, wait=False):
+        response = self._client.api.containers[self.name].state.put(json={
+            'action': state,
+            'timeout': timeout,
+            'force': force
+            })
+        if wait:
+            self.wait_for_operation(response.json()['operation'])
+            self.reload()
+
+    def start(self, timeout=30, force=True, wait=False):
+        return self._set_state('start', timeout=timeout, force=force, wait=wait)
+
+    def stop(self, timeout=30, force=True, wait=False):
+        return self._set_state('stop', timeout=timeout, force=force, wait=wait)
+
+    def restart(self, timeout=30, force=True, wait=False):
+        return self._set_state('stop', timeout=timeout, force=force, wait=wait)
+
+    def freeze(self, timeout=30, force=True, wait=False):
+        return self._set_state('stop', timeout=timeout, force=force, wait=wait)
+
+    def unfreeze(self, timeout=30, force=True, wait=False):
+        return self._set_state('stop', timeout=timeout, force=force, wait=wait)
+
+    def snapshot(self, name, stateful=False, wait=False):
+        response = self._client.api.containers[self.name].snapshots.post(json={
+            'name': name, 'stateful': stateful})
+        if wait:
+            self.wait_for_operation(response.json()['operation'])
+
+    def list_snapshots(self):
+        response = self._client.api.containers[self.name].snapshots.get()
+        return [snapshot.split('/')[-1] for snapshot in response.json()['metadata']]
+
+    def rename_snapshot(self, old, new, wait=False):
+        response = self._client.api.containers[self.name].snapshots[old].post(json={
+            'name': new
+            })
+        if wait:
+            self.wait_for_operation(response.json()['operation'])
+
+    def delete_snapshot(self, name, wait=False):
+        response = self._client.api.containers[self.name].snapshots[name].delete()
+        if wait:
+            self.wait_for_operation(response.json()['operation'])
+
+    def get_file(self, filepath):
+        response = self._client.api.containers[self.name].files.get(
+            params={'path': filepath})
+        if response.status_code == 500:
+            # XXX: rockstar (15 Feb 2016) - This should really return a 404.
+            # I blame LXD. :)
+            raise IOError('Error reading "{}"'.format(filepath))
+        return response.content
+
+    def put_file(self, filepath, data):
+        response = self._client.api.containers[self.name].files.post(
+            params={'path': filepath}, data=data)
+        return response.status_code == 200
+
+    def execute(self, commands, environment={}):
+        # XXX: rockstar (15 Feb 2016) - This functionality is limited by
+        # design, for now. It needs to grow the ability to return web sockets
+        # and perform interactive functions.
+        if type(commands) in [str, unicode]:
+            commands = [commands]
+        response = self._client.api.containers[self.name]['exec'].post(json={
+            'command': commands,
+            'environment': environment,
+            'wait-for-websocket': False,
+            'interactive': False,
+            })
+        operation_id = response.json()['operation']
+        self.wait_for_operation(operation_id)
