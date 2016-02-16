@@ -11,8 +11,9 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
 import json
+
+import six
 
 from pylxd import base
 from pylxd import exceptions
@@ -351,7 +352,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
         # XXX: rockstar (15 Feb 2016) - This functionality is limited by
         # design, for now. It needs to grow the ability to return web sockets
         # and perform interactive functions.
-        if type(commands) in [str, unicode]:
+        if isinstance(commands, six.string_types):
             commands = [commands]
         response = self._client.api.containers[self.name]['exec'].post(json={
             'command': commands,
