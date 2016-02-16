@@ -259,7 +259,8 @@ class Image(mixin.Waitable, mixin.Marshallable):
         response = client.api.images[fingerprint].get()
 
         if response.status_code == 404:
-            raise NameError('No image with fingerprint "{}"'.format(fingerprint))
+            raise NameError(
+                'No image with fingerprint "{}"'.format(fingerprint))
         image = Image(_client=client, **response.json()['metadata'])
         return image
 

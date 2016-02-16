@@ -251,7 +251,8 @@ class Container(mixin.Waitable, mixin.Marshallable):
     def reload(self):
         response = self._client.api.containers[self.name].get()
         if response.status_code == 404:
-            raise NameError('Container named "{}" has gone away'.format(self.name))
+            raise NameError(
+                'Container named "{}" has gone away'.format(self.name))
         for key, value in response.json()['metadata'].iteritems():
             setattr(self, key, value)
 
@@ -268,7 +269,8 @@ class Container(mixin.Waitable, mixin.Marshallable):
             self.wait_for_operation(response.json()['operation'])
 
     def rename(self, name, wait=False):
-        response = self._client.api.containers[self.name].post(json={'name': name})
+        response = self._client.api.containers[
+            self.name].post(json={'name': name})
 
         if wait:
             self.wait_for_operation(response.json()['operation'])
@@ -291,7 +293,8 @@ class Container(mixin.Waitable, mixin.Marshallable):
             self.reload()
 
     def start(self, timeout=30, force=True, wait=False):
-        return self._set_state('start', timeout=timeout, force=force, wait=wait)
+        return self._set_state(
+            'start', timeout=timeout, force=force, wait=wait)
 
     def stop(self, timeout=30, force=True, wait=False):
         return self._set_state('stop', timeout=timeout, force=force, wait=wait)
@@ -313,17 +316,20 @@ class Container(mixin.Waitable, mixin.Marshallable):
 
     def list_snapshots(self):
         response = self._client.api.containers[self.name].snapshots.get()
-        return [snapshot.split('/')[-1] for snapshot in response.json()['metadata']]
+        return [snapshot.split('/')[-1]
+                for snapshot in response.json()['metadata']]
 
     def rename_snapshot(self, old, new, wait=False):
-        response = self._client.api.containers[self.name].snapshots[old].post(json={
-            'name': new
-            })
+        response = self._client.api.containers[
+            self.name].snapshots[old].post(json={
+                'name': new
+                })
         if wait:
             self.wait_for_operation(response.json()['operation'])
 
     def delete_snapshot(self, name, wait=False):
-        response = self._client.api.containers[self.name].snapshots[name].delete()
+        response = self._client.api.containers[
+            self.name].snapshots[name].delete()
         if wait:
             self.wait_for_operation(response.json()['operation'])
 

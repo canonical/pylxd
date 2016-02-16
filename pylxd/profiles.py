@@ -106,7 +106,8 @@ class Profile(mixin.Marshallable):
         self._client.api.profiles[self.name].put(json=marshalled)
 
     def rename(self, new):
-        raise NotImplementedError('LXD does not currently support renaming profiles')
+        raise NotImplementedError(
+            'LXD does not currently support renaming profiles')
         self._client.api.profiles[self.name].post(json={'name': new})
         self.name = new
 
