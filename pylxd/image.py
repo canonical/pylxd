@@ -19,6 +19,7 @@ from six.moves import urllib
 from pylxd import base
 from pylxd import connection
 from pylxd import exceptions
+from pylxd import mixin
 
 image_architecture = {
     0: 'Unknown',
@@ -241,3 +242,27 @@ class LXDAlias(base.LXDBase):
     def alias_delete(self, alias):
         return self.connection.get_status('DELETE', '/1.0/images/aliases/%s'
                                           % alias)
+
+
+class Image(mixin.Waitable, mixin.Marshallable):
+
+    __slots__ = [
+        '_client',
+        'aliases', 'architecture', 'created_at', 'expires_at', 'filename',
+        'fingerprint', 'properties', 'public', 'size', 'uploaded_at'
+        ]
+
+    def __init__(self, **kwargs):
+        super(Image, self).__init__()
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+
+    def update(self):
+        self._client.api.images[self.fingerprint].put(
+            json=self.marshall())
+
+    def delete(self, wait=False):
+        response = self._client.api.images[self.fingerprint].delete()
+
+        if wait:
+            self.wait_for_operation(response.json()['operation'])

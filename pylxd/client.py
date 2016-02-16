@@ -20,6 +20,7 @@ import requests_unixsocket
 
 from pylxd import mixin
 from pylxd.container import Container
+from pylxd.image import Image
 from pylxd.profiles import Profile
 
 requests_unixsocket.monkeypatch()
@@ -203,30 +204,6 @@ class _Operations(mixin.Waitable):
         response = self._client.api.operations[operation_id].get()
 
         return Operation(_client=self._client, **response.json()['metadata'])
-
-
-class Image(mixin.Waitable, mixin.Marshallable):
-
-    __slots__ = [
-        '_client',
-        'aliases', 'architecture', 'created_at', 'expires_at', 'filename',
-        'fingerprint', 'properties', 'public', 'size', 'uploaded_at'
-        ]
-
-    def __init__(self, **kwargs):
-        super(Image, self).__init__()
-        for key, value in kwargs.iteritems():
-            setattr(self, key, value)
-
-    def update(self):
-        self._client.api.images[self.fingerprint].put(
-            json=self.marshall())
-
-    def delete(self, wait=False):
-        response = self._client.api.images[self.fingerprint].delete()
-
-        if wait:
-            self.wait_for_operation(response.json()['operation'])
 
 
 class Operation(object):
