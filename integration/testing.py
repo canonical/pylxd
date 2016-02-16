@@ -27,13 +27,14 @@ class IntegrationTestCase(unittest.TestCase):
         self.lxd = self.client.api
 
     def generate_object_name(self):
-        test = self.id().split('.')[-1]
+        # Underscores are not allowed in container names.
+        test = self.id().split('.')[-1].replace('_', '')
         rando = str(uuid.uuid1()).split('-')[-1]
         return '{}-{}'.format(test, rando)
 
     def create_container(self):
         """Create a container in lxd."""
-        name = self._generate_object_name()
+        name = self.generate_object_name()
         machine = {
             'name': name,
             'architecture': 2,
