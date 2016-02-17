@@ -21,7 +21,7 @@ from pylxd.deprecated import hosts
 from pylxd.deprecated import image
 from pylxd.deprecated import network
 from pylxd.deprecated import operation
-from pylxd import profiles
+from pylxd.deprecated import profiles
 
 
 class API(object):
