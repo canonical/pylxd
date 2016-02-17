@@ -13,7 +13,7 @@
 #    under the License.
 from __future__ import print_function
 
-from pylxd import connection
+from pylxd.deprecated import connection
 
 
 class LXDBase(object):

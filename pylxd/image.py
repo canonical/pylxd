@@ -18,7 +18,7 @@ import json
 from six.moves import urllib
 
 from pylxd.deprecated import base
-from pylxd import connection
+from pylxd.deprecated import connection
 from pylxd import exceptions
 from pylxd import mixin
 from pylxd.operation import Operation

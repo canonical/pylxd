@@ -19,7 +19,7 @@ from six.moves import builtins
 from six.moves import cStringIO
 import unittest
 
-from pylxd import connection
+from pylxd.deprecated import connection
 from pylxd import exceptions
 from pylxd import image
 

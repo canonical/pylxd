@@ -16,7 +16,7 @@ from ddt import data
 from ddt import ddt
 import mock
 
-from pylxd import connection
+from pylxd.deprecated import connection
 from pylxd import exceptions
 
 from pylxd.tests import annotated_data

@@ -16,7 +16,7 @@ from ddt import ddt
 import json
 import mock
 
-from pylxd import connection
+from pylxd.deprecated import connection
 
 from pylxd.tests import annotated_data
 from pylxd.tests import fake_api
