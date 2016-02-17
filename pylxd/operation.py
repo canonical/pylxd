@@ -72,3 +72,35 @@ class LXDOperation(base.LXDBase):
 
     def operation_delete(self, operation):
         return self.connection.get_status('DELETE', operation)
+
+
+class Operation(object):
+    """A LXD operation."""
+
+    __slots__ = [
+        '_client',
+        'class', 'created_at', 'err', 'id', 'may_cancel', 'metadata',
+        'resources', 'status', 'status_code', 'updated_at']
+
+    @classmethod
+    def wait_for_operation(cls, client, operation_id):
+        """Get an operation and wait for it to complete."""
+        if operation_id.startswith('/'):
+            operation_id = operation_id.split('/')[-1]
+        operation = cls.get(client, operation_id)
+        operation.wait()
+
+    @classmethod
+    def get(cls, client, operation_id):
+        """Get an operation."""
+        response = client.api.operations[operation_id].get()
+        return cls(_client=client, **response.json()['metadata'])
+
+    def __init__(self, **kwargs):
+        super(Operation, self).__init__()
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+
+    def wait(self):
+        """Wait for the operation to complete and return."""
+        self._client.api.operations[self.id].wait.get()

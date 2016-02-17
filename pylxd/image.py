@@ -13,12 +13,15 @@
 #    under the License.
 from __future__ import print_function
 import datetime
+import hashlib
 import json
 from six.moves import urllib
 
 from pylxd import base
 from pylxd import connection
 from pylxd import exceptions
+from pylxd import mixin
+from pylxd.operation import Operation
 
 image_architecture = {
     0: 'Unknown',
@@ -241,3 +244,67 @@ class LXDAlias(base.LXDBase):
     def alias_delete(self, alias):
         return self.connection.get_status('DELETE', '/1.0/images/aliases/%s'
                                           % alias)
+
+
+class Image(mixin.Waitable, mixin.Marshallable):
+    """A LXD Image."""
+
+    __slots__ = [
+        '_client',
+        'aliases', 'architecture', 'created_at', 'expires_at', 'filename',
+        'fingerprint', 'properties', 'public', 'size', 'uploaded_at'
+        ]
+
+    @classmethod
+    def get(cls, client, fingerprint):
+        """Get an image."""
+        response = client.api.images[fingerprint].get()
+
+        if response.status_code == 404:
+            raise NameError(
+                'No image with fingerprint "{}"'.format(fingerprint))
+        image = Image(_client=client, **response.json()['metadata'])
+        return image
+
+    @classmethod
+    def all(cls, client):
+        """Get all images."""
+        response = client.api.images.get()
+
+        images = []
+        for url in response.json()['metadata']:
+            fingerprint = url.split('/')[-1]
+            images.append(Image(_client=client, fingerprint=fingerprint))
+        return images
+
+    @classmethod
+    def create(cls, client, image_data, public=False, wait=False):
+        """Create an image."""
+        fingerprint = hashlib.sha256(image_data).hexdigest()
+
+        headers = {}
+        if public:
+            headers['X-LXD-Public'] = '1'
+        response = client.api.images.post(
+            data=image_data, headers=headers)
+
+        if wait:
+            Operation.wait_for_operation(client, response.json()['operation'])
+        return cls.get(client, fingerprint)
+
+    def __init__(self, **kwargs):
+        super(Image, self).__init__()
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+
+    def update(self):
+        """Update LXD based on changes to this image."""
+        self._client.api.images[self.fingerprint].put(
+            json=self.marshall())
+
+    def delete(self, wait=False):
+        """Delete the image."""
+        response = self._client.api.images[self.fingerprint].delete()
+
+        if wait:
+            self.wait_for_operation(response.json()['operation'])
