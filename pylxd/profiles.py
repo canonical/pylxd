@@ -14,7 +14,7 @@
 # XXX: rockstar (15 Feb 2016) - This module should be renamed to 'profile'.
 import json
 
-from pylxd import base
+from pylxd.deprecated import base
 from pylxd import mixin
 
 

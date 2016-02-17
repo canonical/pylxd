@@ -14,7 +14,7 @@
 
 from dateutil.parser import parse as parse_date
 
-from pylxd import base
+from pylxd.deprecated import base
 
 
 class LXDOperation(base.LXDBase):

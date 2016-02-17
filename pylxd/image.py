@@ -17,7 +17,7 @@ import hashlib
 import json
 from six.moves import urllib
 
-from pylxd import base
+from pylxd.deprecated import base
 from pylxd import connection
 from pylxd import exceptions
 from pylxd import mixin

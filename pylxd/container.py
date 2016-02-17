@@ -15,7 +15,7 @@ import json
 
 import six
 
-from pylxd import base
+from pylxd.deprecated import base
 from pylxd import exceptions
 from pylxd import mixin
 from pylxd.operation import Operation

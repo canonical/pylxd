@@ -14,7 +14,7 @@
 
 import json
 
-from pylxd import base
+from pylxd.deprecated import base
 
 
 class LXDCertificate(base.LXDBase):

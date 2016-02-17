@@ -13,7 +13,7 @@
 #    under the License.
 from __future__ import print_function
 
-from pylxd import base
+from pylxd.deprecated import base
 from pylxd import exceptions
 
 
