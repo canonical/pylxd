@@ -21,7 +21,7 @@ import unittest
 
 from pylxd.deprecated import connection
 from pylxd.deprecated import exceptions
-from pylxd import image
+from pylxd.deprecated import image
 
 from pylxd.tests import annotated_data
 from pylxd.tests import fake_api
