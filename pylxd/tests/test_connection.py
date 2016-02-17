@@ -22,7 +22,7 @@ import socket
 import unittest
 
 from pylxd.deprecated import connection
-from pylxd import exceptions
+from pylxd.deprecated import exceptions
 from pylxd.tests import annotated_data
 
 if six.PY34:

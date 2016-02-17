@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from pylxd import exceptions
+from pylxd.deprecated import exceptions
 
 
 def wait_for_container(name, timeout):

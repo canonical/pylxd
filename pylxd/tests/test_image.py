@@ -20,7 +20,7 @@ from six.moves import cStringIO
 import unittest
 
 from pylxd.deprecated import connection
-from pylxd import exceptions
+from pylxd.deprecated import exceptions
 from pylxd import image
 
 from pylxd.tests import annotated_data

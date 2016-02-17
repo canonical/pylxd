@@ -15,7 +15,7 @@
 import json
 
 from pylxd.deprecated import base
-from pylxd import exceptions
+from pylxd.deprecated import exceptions
 
 
 class LXDContainer(base.LXDBase):

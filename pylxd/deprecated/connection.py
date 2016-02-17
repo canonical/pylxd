@@ -22,12 +22,12 @@ import socket
 import ssl
 import threading
 
-
-from pylxd import exceptions
-from pylxd.deprecated import utils
 from six.moves import http_client
 from six.moves import queue
 from ws4py import client as websocket
+
+from pylxd.deprecated import exceptions
+from pylxd.deprecated import utils
 
 if hasattr(ssl, 'SSLContext'):
     # For Python >= 2.7.9 and Python 3.x
