@@ -21,7 +21,7 @@ import requests_unixsocket
 from pylxd.container import Container
 from pylxd.image import Image
 from pylxd.operation import Operation
-from pylxd.profiles import Profile
+from pylxd.profile import Profile
 
 requests_unixsocket.monkeypatch()
 

@@ -19,13 +19,13 @@ from six.moves import builtins
 from six.moves import cStringIO
 import unittest
 
-from pylxd import connection
-from pylxd import exceptions
-from pylxd import image
+from pylxd.deprecated import connection
+from pylxd.deprecated import exceptions
+from pylxd.deprecated import image
 
-from pylxd.tests import annotated_data
-from pylxd.tests import fake_api
-from pylxd.tests import LXDAPITestBase
+from pylxd.deprecated.tests import annotated_data
+from pylxd.deprecated.tests import fake_api
+from pylxd.deprecated.tests import LXDAPITestBase
 
 
 @ddt

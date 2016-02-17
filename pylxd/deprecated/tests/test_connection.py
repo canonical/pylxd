@@ -21,9 +21,9 @@ from six.moves import http_client
 import socket
 import unittest
 
-from pylxd import connection
-from pylxd import exceptions
-from pylxd.tests import annotated_data
+from pylxd.deprecated import connection
+from pylxd.deprecated import exceptions
+from pylxd.deprecated.tests import annotated_data
 
 if six.PY34:
     from io import BytesIO
@@ -80,8 +80,8 @@ class LXDInitConnectionTest(unittest.TestCase):
                 keyfile='/home/foo/.config/lxc/client.key',
                 ssl_version=connection.DEFAULT_TLS_VERSION)
 
-    @mock.patch('pylxd.connection.HTTPSConnection')
-    @mock.patch('pylxd.connection.UnixHTTPConnection')
+    @mock.patch('pylxd.deprecated.connection.HTTPSConnection')
+    @mock.patch('pylxd.deprecated.connection.UnixHTTPConnection')
     @annotated_data(
         ('unix', (None,), {}, '/var/lib/lxd/unix.socket'),
         ('unix_path', (None,),
@@ -112,7 +112,7 @@ class FakeResponse(object):
 
 
 @ddt
-@mock.patch('pylxd.connection.LXDConnection.get_connection')
+@mock.patch('pylxd.deprecated.connection.LXDConnection.get_connection')
 class LXDConnectionTest(unittest.TestCase):
 
     def setUp(self):
@@ -159,7 +159,7 @@ class LXDConnectionTest(unittest.TestCase):
         else:
             self.assertEqual(result, self.conn.get_raw())
 
-    @mock.patch('pylxd.connection.WebSocketClient')
+    @mock.patch('pylxd.deprecated.connection.WebSocketClient')
     @annotated_data(
         ('fake_host', 'wss://fake_host:8443'),
         (None, 'ws+unix:///var/lib/lxd/unix.socket')

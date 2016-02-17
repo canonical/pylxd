@@ -11,19 +11,12 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from __future__ import print_function
 
-from pylxd import exceptions
-
-
-def wait_for_container(name, timeout):
-    pass
+from pylxd.deprecated import connection
 
 
-def block_container():
-    pass
+class LXDBase(object):
 
-
-def get_lxd_error(state, data):
-    status_code = data.get('error_code')
-    error = data.get('error')
-    raise exceptions.APIError(error, status_code)
+    def __init__(self, conn=None):
+        self.connection = conn or connection.LXDConnection()
