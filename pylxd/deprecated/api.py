@@ -17,7 +17,7 @@ import warnings
 from pylxd.deprecated import certificate
 from pylxd.deprecated import connection
 from pylxd.deprecated import container
-from pylxd import hosts
+from pylxd.deprecated import hosts
 from pylxd import image
 from pylxd import network
 from pylxd import operation
