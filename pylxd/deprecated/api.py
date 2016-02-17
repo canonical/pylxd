@@ -12,6 +12,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import warnings
+
 from pylxd import certificate
 from pylxd import connection
 from pylxd import container
@@ -25,6 +27,9 @@ from pylxd import profiles
 class API(object):
 
     def __init__(self, host=None, port=8443):
+        warnings.warn(
+            "pylxd.api.API is deprecated. Please use pylxd.Client.",
+            DeprecationWarning)
         conn = self.connection = connection.LXDConnection(host=host, port=port)
         self.hosts = hosts.LXDHost(conn)
         self.image = image.LXDImage(conn)
