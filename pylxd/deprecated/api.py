@@ -14,9 +14,9 @@
 #    under the License.
 import warnings
 
-from pylxd import certificate
+from pylxd.deprecated import certificate
 from pylxd import connection
-from pylxd import container
+from pylxd.deprecated import container
 from pylxd import hosts
 from pylxd import image
 from pylxd import network
