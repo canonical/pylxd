@@ -11,7 +11,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-# XXX: rockstar (15 Feb 2016) - This module should be renamed to 'profile'.
 from pylxd import mixin
 
 
