@@ -24,7 +24,7 @@ import threading
 
 
 from pylxd import exceptions
-from pylxd import utils
+from pylxd.deprecated import utils
 from six.moves import http_client
 from six.moves import queue
 from ws4py import client as websocket
