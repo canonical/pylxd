@@ -28,7 +28,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
 
     __slots__ = [
         '_client',
-        'architecture', 'config', 'creation_date', 'devices', 'ephemeral',
+        'architecture', 'config', 'created_at', 'devices', 'ephemeral',
         'expanded_config', 'expanded_devices', 'name', 'profiles', 'status'
         ]
 
