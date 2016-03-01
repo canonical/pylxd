@@ -15,7 +15,7 @@
 import six
 
 from pylxd import mixin
-from pylxd.deprecated.container import LXDContainer  # NOQA
+from pylxd.containerState import ContainerState
 from pylxd.operation import Operation
 
 
@@ -120,6 +120,13 @@ class Container(mixin.Waitable, mixin.Marshallable):
         if wait:
             self.wait_for_operation(response.json()['operation'])
             self.reload()
+
+    def state(self):
+        state = ContainerState()
+        response = self._client.api.containers[self.name].state.get()
+        for key, value in response.json()['metadata'].iteritems():
+            setattr(state, key, value)
+        return state
 
     def start(self, timeout=30, force=True, wait=False):
         """Start the container."""
