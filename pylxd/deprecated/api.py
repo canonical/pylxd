@@ -68,6 +68,9 @@ class API(object):
     def get_kernel_version(self, data=None):
         return self.hosts.get_kernel_version(data)
 
+    def get_host_certificate(self):
+        return self.hosts.get_certificate()
+
     # images
     def image_list(self):
         return self.image.image_list()
