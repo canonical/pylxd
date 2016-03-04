@@ -108,3 +108,11 @@ class LXDHost(base.LXDBase):
             return data['environment']['kernel_version']
         except exceptions.PyLXDException as e:
             print('Handling run-time error: {}'.format(e))
+
+    def get_certificate(self):
+        try:
+            (state, data) = self.connection.get_object('GET', '/1.0')
+            data = data.get('metadata')
+            return data['environment']['certificate']
+        except exceptions.PyLXDException as e:
+            print('Handling run-time error: {}'.format(e))
