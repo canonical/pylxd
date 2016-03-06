@@ -86,13 +86,6 @@ class TestContainer(IntegrationTestCase):
         container = self.client.containers.get(name)
         self.assertEqual(name, container.name)
 
-    def test_delete(self):
-        """The container is deleted."""
-        self.container.delete(wait=True)
-
-        self.assertRaises(
-            NameError, self.client.containers.get, self.container.name)
-
     def test_start_stop(self):
         """The container is started and then stopped."""
         # NOTE: rockstar (15 Feb 2016) - I don't care for the
@@ -147,3 +140,10 @@ class TestContainer(IntegrationTestCase):
         self.addCleanup(self.container.stop, wait=True)
 
         self.container.execute('ls /')
+
+    def test_delete(self):
+        """The container is delete."""
+        self.container.delete(wait=True)
+
+        self.assertRaises(
+            NameError, self.client.containers.get, self.container.name)
