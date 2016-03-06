@@ -20,11 +20,12 @@ class TestContainers(IntegrationTestCase):
     def test_get(self):
         """A container is fetched by name."""
         name = self.create_container()
-        self.addCleanup(self.delete_container, name)
 
         container = self.client.containers.get(name)
 
         self.assertEqual(name, container.name)
+        self.addCleanup(self.delete_container, name)
+
 
     def test_all(self):
         """A list of all containers is returned."""
