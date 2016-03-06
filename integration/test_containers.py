@@ -26,7 +26,6 @@ class TestContainers(IntegrationTestCase):
         self.assertEqual(name, container.name)
         self.addCleanup(self.delete_container, name)
 
-
     def test_all(self):
         """A list of all containers is returned."""
         name = self.create_container()
