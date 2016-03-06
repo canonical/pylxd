@@ -39,6 +39,7 @@ class TestContainers(IntegrationTestCase):
 
     def test_create(self):
         """Creates and returns a new container."""
+        fingerprint, alias = self.create_image()
         config = {
             'name': 'an-container',
             'architecture': 'x86_64',
@@ -46,13 +47,13 @@ class TestContainers(IntegrationTestCase):
             'ephemeral': True,
             'config': {'limits.cpu': '2'},
             'source': {'type': 'image',
-                       'alias': 'busybox'},
+                       'alias': alias},
         }
-        self.addCleanup(self.delete_container, config['name'])
-
         container = self.client.containers.create(config, wait=True)
 
         self.assertEqual(config['name'], container.name)
+        self.addCleanup(self.delete_container, config['name'])
+        self.addCleanup(self.delete_image, fingerprint)
 
 
 class TestContainer(IntegrationTestCase):
