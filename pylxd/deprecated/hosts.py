@@ -116,3 +116,11 @@ class LXDHost(base.LXDBase):
             return data['environment']['certificate']
         except exceptions.PyLXDException as e:
             print('Handling run-time error: {}'.format(e))
+
+    def host_config(self):
+        try:
+            (state, data) = self.connection.get_object('GET', '/1.0')
+            return data.get('metadata')
+        except exceptions.PyLXDException as e:
+            print('Handling run-time error: {}'.format(e))
+
