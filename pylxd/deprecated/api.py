@@ -71,6 +71,9 @@ class API(object):
     def get_host_certificate(self):
         return self.hosts.get_certificate()
 
+    def host_config(self):
+        return self.hosts.host_config()
+
     # images
     def image_list(self):
         return self.image.image_list()
