@@ -123,4 +123,3 @@ class LXDHost(base.LXDBase):
             return data.get('metadata')
         except exceptions.PyLXDException as e:
             print('Handling run-time error: {}'.format(e))
-
