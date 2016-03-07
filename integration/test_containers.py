@@ -20,11 +20,11 @@ class TestContainers(IntegrationTestCase):
     def test_get(self):
         """A container is fetched by name."""
         name = self.create_container()
-        self.addCleanup(self.delete_container, name)
 
         container = self.client.containers.get(name)
 
         self.assertEqual(name, container.name)
+        self.addCleanup(self.delete_container, name)
 
     def test_all(self):
         """A list of all containers is returned."""
@@ -38,20 +38,21 @@ class TestContainers(IntegrationTestCase):
 
     def test_create(self):
         """Creates and returns a new container."""
+        fingerprint, alias = self.create_image()
         config = {
             'name': 'an-container',
-            'architecture': 2,
+            'architecture': 'x86_64',
             'profiles': ['default'],
             'ephemeral': True,
             'config': {'limits.cpu': '2'},
             'source': {'type': 'image',
-                       'alias': 'busybox'},
+                       'alias': alias},
         }
-        self.addCleanup(self.delete_container, config['name'])
-
         container = self.client.containers.create(config, wait=True)
 
         self.assertEqual(config['name'], container.name)
+        self.addCleanup(self.delete_container, config['name'])
+        self.addCleanup(self.delete_image, fingerprint)
 
 
 class TestContainer(IntegrationTestCase):
@@ -84,13 +85,6 @@ class TestContainer(IntegrationTestCase):
         container = self.client.containers.get(name)
         self.assertEqual(name, container.name)
 
-    def test_delete(self):
-        """The container is deleted."""
-        self.container.delete(wait=True)
-
-        self.assertRaises(
-            NameError, self.client.containers.get, self.container.name)
-
     def test_start_stop(self):
         """The container is started and then stopped."""
         # NOTE: rockstar (15 Feb 2016) - I don't care for the
@@ -98,15 +92,15 @@ class TestContainer(IntegrationTestCase):
         # to test what we need.
         self.container.start(wait=True)
 
-        self.assertEqual('Running', self.container.status['status'])
+        self.assertEqual('Running', self.container.status)
         container = self.client.containers.get(self.container.name)
-        self.assertEqual('Running', container.status['status'])
+        self.assertEqual('Running', container.status)
 
         self.container.stop(wait=True)
 
-        self.assertEqual('Stopped', self.container.status['status'])
+        self.assertEqual('Stopped', self.container.status)
         container = self.client.containers.get(self.container.name)
-        self.assertEqual('Stopped', container.status['status'])
+        self.assertEqual('Stopped', container.status)
 
     def test_snapshot(self):
         """A container snapshot is made, renamed, and deleted."""
@@ -145,3 +139,10 @@ class TestContainer(IntegrationTestCase):
         self.addCleanup(self.container.stop, wait=True)
 
         self.container.execute('ls /')
+
+    def test_delete(self):
+        """The container is delete."""
+        self.container.delete(wait=True)
+
+        self.assertRaises(
+            NameError, self.client.containers.get, self.container.name)

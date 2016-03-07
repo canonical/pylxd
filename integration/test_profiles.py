@@ -84,4 +84,4 @@ class TestProfile(IntegrationTestCase):
         self.profile.delete()
 
         self.assertRaises(
-            NameError, self.client.profiles.get, self.profile.name)
+            KeyError, self.client.profiles.get, self.profile.name)
