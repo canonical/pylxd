@@ -50,7 +50,7 @@ class UnixHTTPConnection(http_client.HTTPConnection):
 
     def __init__(self, path, host='localhost', port=None, strict=None,
                  timeout=None):
-        if six.PY34:
+        if six.PY3:
             http_client.HTTPConnection.__init__(self, host, port=port,
                                                 timeout=timeout)
         else:
@@ -157,7 +157,7 @@ class LXDConnection(object):
         status = response.status
         raw_body = response.read()
         try:
-            if six.PY34:
+            if six.PY3:
                 body = json.loads(raw_body.decode())
             else:
                 body = json.loads(raw_body)
