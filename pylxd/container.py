@@ -130,24 +130,38 @@ class Container(mixin.Waitable, mixin.Marshallable):
 
     def start(self, timeout=30, force=True, wait=False):
         """Start the container."""
-        return self._set_state(
-            'start', timeout=timeout, force=force, wait=wait)
+        return self._set_state('start',
+                               timeout=timeout,
+                               force=force,
+                               wait=wait)
 
     def stop(self, timeout=30, force=True, wait=False):
         """Stop the container."""
-        return self._set_state('stop', timeout=timeout, force=force, wait=wait)
+        return self._set_state('stop',
+                               timeout=timeout,
+                               force=force,
+                               wait=wait)
 
     def restart(self, timeout=30, force=True, wait=False):
         """Restart the container."""
-        return self._set_state('stop', timeout=timeout, force=force, wait=wait)
+        return self._set_state('restart',
+                               timeout=timeout,
+                               force=force,
+                               wait=wait)
 
     def freeze(self, timeout=30, force=True, wait=False):
         """Freeze the container."""
-        return self._set_state('stop', timeout=timeout, force=force, wait=wait)
+        return self._set_state('freeze',
+                               timeout=timeout,
+                               force=force,
+                               wait=wait)
 
     def unfreeze(self, timeout=30, force=True, wait=False):
         """Unfreeze the container."""
-        return self._set_state('stop', timeout=timeout, force=force, wait=wait)
+        return self._set_state('unfreeze',
+                               timeout=timeout,
+                               force=force,
+                               wait=wait)
 
     def snapshot(self, name, stateful=False, wait=False):
         """Take a snapshot of the container."""
