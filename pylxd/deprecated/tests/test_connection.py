@@ -25,7 +25,7 @@ from pylxd.deprecated import connection
 from pylxd.deprecated import exceptions
 from pylxd.deprecated.tests import annotated_data
 
-if six.PY34:
+if six.PY3:
     from io import BytesIO
 
 
@@ -36,7 +36,7 @@ class LXDInitConnectionTest(unittest.TestCase):
     @mock.patch.object(http_client.HTTPConnection, '__init__')
     def test_http_connection(self, mc, ms):
         conn = connection.UnixHTTPConnection('/', 'host', 1234)
-        if six.PY34:
+        if six.PY3:
             mc.assert_called_once_with(
                 conn, 'host', port=1234, timeout=None)
         else:
@@ -105,7 +105,7 @@ class FakeResponse(object):
 
     def __init__(self, status, data):
         self.status = status
-        if six.PY34:
+        if six.PY3:
             self.read = BytesIO(six.b(data)).read
         else:
             self.read = cStringIO(data).read
