@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 
 class Operation(object):
     """A LXD operation."""
@@ -37,7 +39,7 @@ class Operation(object):
 
     def __init__(self, **kwargs):
         super(Operation, self).__init__()
-        for key, value in kwargs.iteritems():
+        for key, value in six.iteritems(kwargs):
             setattr(self, key, value)
 
     def wait(self):

@@ -13,7 +13,11 @@
 #    under the License.
 import functools
 import os
-import urllib
+
+try:
+    from urllib.parse import quote
+except ImportError:
+    from urllib import quote
 
 import requests
 import requests_unixsocket
@@ -115,7 +119,7 @@ class Client(object):
             else:
                 path = '/var/lib/lxd/unix.socket'
             self.api = _APINode('http+unix://{}'.format(
-                urllib.quote(path, safe='')))
+                quote(path, safe='')))
         self.api = self.api[version]
 
         self.containers = self.Containers(self)

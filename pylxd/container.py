@@ -70,7 +70,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
 
     def __init__(self, **kwargs):
         super(Container, self).__init__()
-        for key, value in kwargs.iteritems():
+        for key, value in six.iteritems(kwargs):
             setattr(self, key, value)
 
     def reload(self):
@@ -79,7 +79,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
         if response.status_code == 404:
             raise NameError(
                 'Container named "{}" has gone away'.format(self.name))
-        for key, value in response.json()['metadata'].iteritems():
+        for key, value in six.iteritems(response.json()['metadata']):
             setattr(self, key, value)
 
     def update(self, wait=False):
@@ -124,7 +124,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
     def state(self):
         state = ContainerState()
         response = self._client.api.containers[self.name].state.get()
-        for key, value in response.json()['metadata'].iteritems():
+        for key, value in six.iteritems(response.json()['metadata']):
             setattr(state, key, value)
         return state
 

@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import six
 from pylxd import mixin
 
 
@@ -54,7 +55,7 @@ class Profile(mixin.Marshallable):
 
     def __init__(self, **kwargs):
         super(Profile, self).__init__()
-        for key, value in kwargs.iteritems():
+        for key, value in six.iteritems(kwargs):
             setattr(self, key, value)
 
     def update(self):

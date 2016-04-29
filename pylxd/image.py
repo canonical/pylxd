@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import hashlib
+import six
 
 from pylxd import mixin
 from pylxd.operation import Operation
@@ -65,7 +66,7 @@ class Image(mixin.Waitable, mixin.Marshallable):
 
     def __init__(self, **kwargs):
         super(Image, self).__init__()
-        for key, value in kwargs.iteritems():
+        for key, value in six.iteritems(kwargs):
             setattr(self, key, value)
 
     def update(self):
