@@ -13,6 +13,7 @@
 #    under the License.
 import uuid
 import unittest
+import os
 
 from pylxd.client import Client
 from integration.busybox import create_busybox_image
@@ -23,7 +24,7 @@ class IntegrationTestCase(unittest.TestCase):
 
     def setUp(self):
         super(IntegrationTestCase, self).setUp()
-        self.client = Client()
+        self.client = Client(os.environ.get('LXD_ENDPOINT', None))
         self.lxd = self.client.api
 
     def generate_object_name(self):
