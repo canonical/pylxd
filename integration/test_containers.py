@@ -98,15 +98,15 @@ class TestContainer(IntegrationTestCase):
         # to test what we need.
         self.container.start(wait=True)
 
-        self.assertEqual('Running', self.container.status['status'])
+        self.assertEqual('Running', self.container.status)
         container = self.client.containers.get(self.container.name)
-        self.assertEqual('Running', container.status['status'])
+        self.assertEqual('Running', container.status)
 
         self.container.stop(wait=True)
 
-        self.assertEqual('Stopped', self.container.status['status'])
+        self.assertEqual('Stopped', self.container.status)
         container = self.client.containers.get(self.container.name)
-        self.assertEqual('Stopped', container.status['status'])
+        self.assertEqual('Stopped', container.status)
 
     def test_snapshot(self):
         """A container snapshot is made, renamed, and deleted."""
