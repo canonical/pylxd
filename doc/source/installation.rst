@@ -2,11 +2,15 @@
 Installation
 ============
 
-At the command line::
+If you're running on Ubuntu Wily or greater::
 
-    $ pip install pylxd
+    sudo apt-get install python-pylxd lxd
 
-Or, if you have virtualenvwrapper installed::
+Otherwise you can track LXD development on other Ubuntu releases::
 
-    $ mkvirtualenv pylxd
-    $ pip install pylxd
+    sudo add-apt-repository ppa:ubuntu-lxc/lxd-git-master && sudo apt-get update
+    sudo apt-get install lxd
+
+Or install pylxd using pip::
+
+    pip install pylxd
