@@ -28,12 +28,17 @@ class TestContainers(IntegrationTestCase):
 
     def test_all(self):
         """A list of all containers is returned."""
+        containers_before_create = self.client.containers.all()
+
         name = self.create_container()
         self.addCleanup(self.delete_container, name)
 
         containers = self.client.containers.all()
 
-        self.assertEqual(1, len(containers))
+        self.assertEqual(
+            len(containers_before_create) + 1,
+            len(containers)
+        )
         self.assertEqual(name, containers[0].name)
 
     def test_create(self):
