@@ -40,7 +40,7 @@ class TestContainers(IntegrationTestCase):
         """Creates and returns a new container."""
         config = {
             'name': 'an-container',
-            'architecture': 2,
+            'architecture': '2',
             'profiles': ['default'],
             'ephemeral': True,
             'config': {'limits.cpu': '2'},
