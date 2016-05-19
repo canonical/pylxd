@@ -41,6 +41,20 @@ class TestContainers(IntegrationTestCase):
         )
         self.assertEqual(name, containers[0].name)
 
+    def test_create_failure(self):
+        config = {
+            'name': 'an-container',
+            'architecture': '2',
+            'profiles': ['default'],
+            'ephemeral': True,
+            'config': {'limits.cpu': '2'},
+            'source': {'type': 'image',
+                       'alias': self.generate_object_name()},
+        }
+
+        with self.assertRaises(RuntimeError):
+            self.client.containers.create(config, wait=True)
+
     def test_create(self):
         """Creates and returns a new container."""
         config = {

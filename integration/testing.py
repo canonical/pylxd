@@ -24,7 +24,12 @@ class IntegrationTestCase(unittest.TestCase):
 
     def setUp(self):
         super(IntegrationTestCase, self).setUp()
-        self.client = Client(os.environ.get('LXD_ENDPOINT', None))
+        self.client = Client(
+            os.environ.get('LXD_ENDPOINT', None),
+            insecure='LXD_INSECURE' in os.environ,
+            client_crt=os.environ.get('LXD_CLIENT_CRT', None),
+            client_key=os.environ.get('LXD_CLIENT_KEY', None)
+        )
         self.lxd = self.client.api
 
     def generate_object_name(self):

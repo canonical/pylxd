@@ -53,38 +53,50 @@ class Test_APINode(unittest.TestCase):
             '{}/fake/0'.format(self.ROOT),
             lxd.fake[0]._api_endpoint)
 
-    @mock.patch('pylxd.client.requests.get')
-    def test_get(self, _get):
+    @mock.patch('pylxd.client.requests.request')
+    def test_get(self, _request):
         """`get` will make a request to the smart url."""
         lxd = client._APINode(self.ROOT)
 
         lxd.fake.get()
 
-        _get.assert_called_once_with('{}/{}'.format(self.ROOT, 'fake'))
+        _request.assert_called_once_with(
+            'GET',
+            '{}/{}'.format(self.ROOT, 'fake')
+        )
 
-    @mock.patch('pylxd.client.requests.post')
-    def test_post(self, _post):
+    @mock.patch('pylxd.client.requests.request')
+    def test_post(self, _request):
         """`post` will POST to the smart url."""
         lxd = client._APINode(self.ROOT)
 
         lxd.fake.post()
 
-        _post.assert_called_once_with('{}/{}'.format(self.ROOT, 'fake'))
+        _request.assert_called_once_with(
+            'POST',
+            '{}/{}'.format(self.ROOT, 'fake')
+        )
 
-    @mock.patch('pylxd.client.requests.put')
-    def test_put(self, _put):
+    @mock.patch('pylxd.client.requests.request')
+    def test_put(self, _request):
         """`put` will PUT to the smart url."""
         lxd = client._APINode(self.ROOT)
 
         lxd.fake.put()
 
-        _put.assert_called_once_with('{}/{}'.format(self.ROOT, 'fake'))
+        _request.assert_called_once_with(
+            'PUT',
+            '{}/{}'.format(self.ROOT, 'fake')
+        )
 
-    @mock.patch('pylxd.client.requests.delete')
-    def test_delete(self, _delete):
+    @mock.patch('pylxd.client.requests.request')
+    def test_delete(self, _request):
         """`delete` will DELETE to the smart url."""
         lxd = client._APINode(self.ROOT)
 
         lxd.fake.delete()
 
-        _delete.assert_called_once_with('{}/{}'.format(self.ROOT, 'fake'))
+        _request.assert_called_once_with(
+            'DELETE',
+            '{}/{}'.format(self.ROOT, 'fake')
+        )
