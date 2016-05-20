@@ -6,6 +6,10 @@ pylxd
 
 A Python library for interacting with the LXD REST API.
 
+Installation
+=============
+``pip install pylxd``
+
 Documentation
 =============
 
