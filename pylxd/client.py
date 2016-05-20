@@ -84,26 +84,26 @@ class Client(object):
     """
 
     class Containers(object):
-        """A convenience wrapper for Container."""
+        """A convenience wrapper for :py:class:`~pylxd.container.Container`."""
         def __init__(self, client):
             self.get = functools.partial(Container.get, client)
             self.all = functools.partial(Container.all, client)
             self.create = functools.partial(Container.create, client)
 
     class Images(object):
-        """A convenience wrapper for Image."""
+        """A convenience wrapper for :py:class:`~pylxd.image.Image`."""
         def __init__(self, client):
             self.get = functools.partial(Image.get, client)
             self.all = functools.partial(Image.all, client)
             self.create = functools.partial(Image.create, client)
 
     class Operations(object):
-        """A convenience wrapper for Operation."""
+        """A convenience wrapper for :py:class:`~pylxd.operation.Operation`."""
         def __init__(self, client):
             self.get = functools.partial(Operation.get, client)
 
     class Profiles(object):
-        """A convenience wrapper for Profile."""
+        """A convenience wrapper for :py:class:`~pylxd.profile.Profile`."""
         def __init__(self, client):
             self.get = functools.partial(Profile.get, client)
             self.all = functools.partial(Profile.all, client)

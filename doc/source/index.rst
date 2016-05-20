@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to pylxd's documentation!
-========================================================
+=================================
 
 Contents:
 
@@ -15,6 +15,7 @@ Contents:
    installation
    usage
    contributing
+   api
 
 Indices and tables
 ==================
