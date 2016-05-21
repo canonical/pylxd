@@ -115,7 +115,7 @@ class Client(object):
         else:
             if 'LXD_DIR' in os.environ:
                 path = os.path.join(
-                    os.environ.get['LXD_DIR'], 'unix.socket')
+                    os.environ.get('LXD_DIR'), 'unix.socket')
             else:
                 path = '/var/lib/lxd/unix.socket'
             self.api = _APINode('http+unix://{}'.format(
