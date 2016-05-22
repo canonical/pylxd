@@ -2,30 +2,50 @@
 Usage
 =====
 
-Once you have pylxd installed, you're ready to start interacting with LXD:
+.. currentmodule:: pylxd
+
+Once you have :doc:`installed <installation>`, you're ready to
+instanciate an API client to start interacting with the LXD daemon on
+localhost:
 
 .. code-block:: python
 
-    import uuid
-    from pylxd import api
+    >>> from pylxd.client import Client
+    >>> client = Client()
 
-    # Let's pick a random name, avoiding clashes
-    CONTAINER_NAME = str(uuid.uuid1())
+This :class:`~client.Client` object exposes managers for:
 
-    lxd = api.API()
+- :class:`~container.Container`,
+- :class:`~profile.Profile`,
+- :class:`~operation.Operation`,
+- :class:`~image.Image`,
 
-    try:
-        lxd.container_defined(CONTAINER_NAME)
-    except Exception as e:
-        print("Container does not exist: %s" % e)
+Also, it exposes the HTTP API with the `api <api.html#Client.api>`_ attribute,
+allowing lower-level operations.
 
-    config = {'name': CONTAINER_NAME,
-              'source': {'type': 'none'}}
-    lxd.container_init(config)
-    if lxd.container_defined(CONTAINER_NAME):
-        print("Container is running")
-    else:
-        print("Whoops - please report a bug!")
-    containers = lxd.container_list()
-    for x in containers:
-        lxd.container_destroy(x)
+Containers
+==========
+
+Example creating a :class:`~container.Container` with
+:class:`client.containers <client.Client.Containers>`'s ``create(config,
+wait=False)``
+attribute, the partial of :meth:`Container.create
+<container.Container.create>`:
+
+.. code-block:: python
+
+    >>> container = client.container.create(dict(name='testcont'))
+    [<container.Container at 0x7f95d8af72b0>,]
+
+Example getting a list of :class:`~container.Container` with
+:meth:`Client.containers.all() <client.Client.Containers.all>`:
+
+.. code-block:: python
+
+    >>> client.container.all()
+    [<container.Container at 0x7f95d8af72b0>,]
+
+Examples
+========
+
+See more examples in the ``examples/`` directory of the repository.
