@@ -1,8 +1,19 @@
 language: python
 python:
-  - "2.7"
-  - "3.4"
-install: pip install -U -r requirements.txt -r test-requirements.txt
+- "3.5"
+env:
+  matrix:
+  - TOXENV=py27
+  - TOXENV=py3
+  - TOXENV=pep8
+  # - TOXENV=integration # requires a remote lxd setup
+
+install:
+- travis_retry pip install tox
 script:
-  - nosetests pylxd
-  - flake8 --ignore=E123,E125
+- tox
+- test -d .tox/$TOXENV/log && cat .tox/$TOXENV/log/*.log || true
+cache:
+  directories:
+  - .tox/$TOXENV
+  - $HOME/.cache/pip
