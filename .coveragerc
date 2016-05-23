@@ -3,5 +3,6 @@ branch = True
 source = pylxd
 
 [report]
-ignore-errors = True
-omit = pylxd/tests/*
+omit =
+    pylxd/tests/*
+    pylxd/deprecated/*
