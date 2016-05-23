@@ -21,6 +21,7 @@ except ImportError:
 
 import requests
 import requests_unixsocket
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 from pylxd.container import Container
 from pylxd.image import Image
@@ -43,14 +44,21 @@ class _APINode(object):
     http://example.com/api/users/1/comments
     """
 
-    def __init__(self, api_endpoint):
+    def __init__(self, api_endpoint, default_kwargs=None):
         self._api_endpoint = api_endpoint
+        self._default_kwargs = default_kwargs or {}
+
+    def create_child(self, child):
+        return self.__class__(
+            '{}/{}'.format(self._api_endpoint, child),
+            self._default_kwargs,
+        )
 
     def __getattr__(self, name):
-        return self.__class__('{}/{}'.format(self._api_endpoint, name))
+        return self.create_child(name)
 
     def __getitem__(self, item):
-        return self.__class__('{}/{}'.format(self._api_endpoint, item))
+        return self.create_child(item)
 
     @property
     def session(self):
@@ -59,21 +67,44 @@ class _APINode(object):
         else:
             return requests
 
+    def request(self, method, *args, **kwargs):
+        kwargs.update(self._default_kwargs)
+
+        response = self.session.request(
+            method.upper(),
+            self._api_endpoint,
+            *args,
+            **kwargs
+        )
+
+        if int(response.status_code) >= 500:
+            # A bit rough for now, let's see how it looks like in bug reports
+            # and refine over time.
+            raise RuntimeError(
+                self._api_endpoint,
+                args,
+                kwargs,
+                response.status_code,
+                response.json()
+            )
+
+        return response
+
     def get(self, *args, **kwargs):
         """Perform an HTTP GET."""
-        return self.session.get(self._api_endpoint, *args, **kwargs)
+        return self.request('GET', *args, **kwargs)
 
     def post(self, *args, **kwargs):
         """Perform an HTTP POST."""
-        return self.session.post(self._api_endpoint, *args, **kwargs)
+        return self.request('POST', *args, **kwargs)
 
     def put(self, *args, **kwargs):
         """Perform an HTTP PUT."""
-        return self.session.put(self._api_endpoint, *args, **kwargs)
+        return self.request('PUT', *args, **kwargs)
 
     def delete(self, *args, **kwargs):
         """Perform an HTTP delete."""
-        return self.session.delete(self._api_endpoint, *args, **kwargs)
+        return self.request('DELETE', *args, **kwargs)
 
 
 class Client(object):
@@ -109,9 +140,23 @@ class Client(object):
             self.all = functools.partial(Profile.all, client)
             self.create = functools.partial(Profile.create, client)
 
-    def __init__(self, endpoint=None, version='1.0'):
+    def __init__(self, endpoint=None, version='1.0',
+                 client_crt=None, client_key=None, insecure=False):
         if endpoint is not None:
             self.api = _APINode(endpoint)
+
+            # This should be made constructor arguments at some point.
+            if client_crt and client_key:
+                self.api._default_kwargs['cert'] = (client_crt, client_key)
+
+            if insecure:
+                self.api._default_kwargs['verify'] = False
+
+            # Since disabling the warning is global, we can't and should not
+            # try to do this per-instance.
+            if 'LXD_INSECURE' in os.environ:
+                requests.packages.urllib3.disable_warnings(
+                    InsecureRequestWarning)
         else:
             if 'LXD_DIR' in os.environ:
                 path = os.path.join(
@@ -120,6 +165,7 @@ class Client(object):
                 path = '/var/lib/lxd/unix.socket'
             self.api = _APINode('http+unix://{}'.format(
                 quote(path, safe='')))
+
         self.api = self.api[version]
 
         self.containers = self.Containers(self)
