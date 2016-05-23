@@ -31,3 +31,9 @@ Profile
 
 .. autoclass:: pylxd.profile.Profile
    :members:
+
+Exceptions
+----------
+
+.. automodule:: pylxd.exceptions
+   :members:

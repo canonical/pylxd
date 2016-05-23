@@ -3,6 +3,14 @@ import json
 
 def containers_POST(request, context):
     context.status_code = 202
+    if request.json()['name'] == 'fake-fail':
+        response_text = json.dumps({
+            'type': 'error',
+            'error_code': 400,
+            'error': u'unknown source type'
+        })
+        context.status_code = 400
+        return response_text
     return json.dumps({'operation': 'operation-abc'})
 
 
