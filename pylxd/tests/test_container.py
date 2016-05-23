@@ -1,4 +1,5 @@
 from pylxd import container
+from pylxd.exceptions import ContainerCreationFailure
 from pylxd.tests import testing
 
 
@@ -34,6 +35,16 @@ class TestContainer(testing.PyLXDTestCase):
             self.client, config, wait=True)
 
         self.assertEqual(config['name'], an_new_container.name)
+
+    def test_create_failure(self):
+        """Container creation API responds with an error."""
+        config = {'name': 'fake-fail'}
+
+        with self.assertRaises(ContainerCreationFailure) as e:
+            container.Container.create(self.client, config, wait=True)
+
+        # Check that we have the response object
+        self.assertEqual(e.exception.response.status_code, 400)
 
     def test_reload(self):
         """A reload updates the properties of a container."""
