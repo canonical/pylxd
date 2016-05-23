@@ -16,6 +16,7 @@ import six
 
 from pylxd import mixin
 from pylxd.containerState import ContainerState
+from pylxd.exceptions import ContainerCreationFailure
 from pylxd.operation import Operation
 
 
@@ -61,11 +62,23 @@ class Container(mixin.Waitable, mixin.Marshallable):
 
     @classmethod
     def create(cls, client, config, wait=False):
-        """Create a new container config."""
+        """Create a new container config test.
+
+        :param client: Instance of :class:`~pylxd.client.Client`.
+        :param config: Dict to pass to the API.
+        :param wait: Whether to wait for creation to complete or not.
+        :returns: :class:`~pylxd.container.Container`.
+        :raises: :class:`~pylxd.exceptions.ContainerCreationFailure`
+        """
         response = client.api.containers.post(json=config)
 
+        data = response.json()
+
+        if data.get('type', None) == 'error':
+            raise ContainerCreationFailure(response)
+
         if wait:
-            Operation.wait_for_operation(client, response.json()['operation'])
+            Operation.wait_for_operation(client, data['operation'])
         return cls(name=config['name'])
 
     def __init__(self, **kwargs):
