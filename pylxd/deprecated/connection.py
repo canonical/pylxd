@@ -31,19 +31,14 @@ from pylxd.deprecated import utils
 
 if hasattr(ssl, 'SSLContext'):
     # For Python >= 2.7.9 and Python 3.x
-    USE_STDLIB_SSL = True
+    if hasattr(ssl, 'PROTOCOL_TLSv1_2'):
+        DEFAULT_TLS_VERSION = ssl.PROTOCOL_TLSv1_2
+    else:
+        DEFAULT_TLS_VERSION = ssl.PROTOCOL_TLSv1
 else:
     # For Python 2.6 and <= 2.7.8
-    USE_STDLIB_SSL = False
-
-if not USE_STDLIB_SSL:
-    import OpenSSL.SSL
-
-# Detect SSL tls version
-if hasattr(ssl, 'PROTOCOL_TLSv1_2'):
-    DEFAULT_TLS_VERSION = ssl.PROTOCOL_TLSv1_2
-else:
-    DEFAULT_TLS_VERSION = OpenSSL.SSL.TLSv1_2_METHOD
+    from OpenSSL import SSL
+    DEFAULT_TLS_VERSION = SSL.TLSv1_2_METHOD
 
 
 class UnixHTTPConnection(http_client.HTTPConnection):
