@@ -32,15 +32,6 @@ requests_unixsocket.monkeypatch()
 
 class _APINode(object):
     """An api node object.
-
-    This class allows us to dynamically create request urls by expressing them
-    in python. For example:
-
-        >>> node = _APINode('http://example.com/api')
-        >>> node.users[1].comments.get()
-
-    ...would make an HTTP GET request on
-    http://example.com/api/users/1/comments
     """
 
     def __init__(self, api_endpoint):
@@ -77,33 +68,122 @@ class _APINode(object):
 
 
 class Client(object):
-    """A LXD client.
+    """
+    Client class for LXD REST API.
 
     This client wraps all the functionality required to interact with
     LXD, and is meant to be the sole entry point.
+
+    .. attribute:: containers
+
+        Instance of :class:`Client.Containers
+        <pylxd.client.Client.Containers>`:
+
+    .. attribute:: images
+
+        Instance of :class:`Client.Images <pylxd.client.Client.Images>`.
+
+    .. attribute:: operations
+
+        Instance of :class:`Client.Operations
+        <pylxd.client.Client.Operations>`.
+
+    .. attribute:: profiles
+
+        Instance of :class:`Client.Profiles <pylxd.client.Client.Profiles>`.
+
+    .. attribute:: api
+
+        This attribute provides tree traversal syntax to LXD's REST API for
+        lower-level interaction.
+
+        Use the name of the url part as attribute or item of an api object to
+        create another api object appended with the new url part name, ie:
+
+            >>> api = Client().api
+            # /
+            >>> response = api.get()
+            # Check status code and response
+            >>> print response.status_code, response.json()
+            # /containers/test/
+            >>> print api.containers['test'].get().json()
     """
 
     class Containers(object):
-        """A convenience wrapper for :py:class:`~pylxd.container.Container`."""
+        """
+        Manager for :class:`~pylxd.container.Container` of a :class:`Client`.
+
+        .. attribute:: all
+
+            Partial of :meth:`Container.all <pylxd.container.Container.all>`,
+            calling it without argument returns the same as calling that method
+            with just the client argument.
+
+        .. attribute:: get
+
+            Partial of of :meth:`Container.get
+            <pylxd.container.Container.get>`.
+
+        .. attribute:: create
+
+            Partial of of :meth:`Container.create
+            <pylxd.container.Container.create>`.
+        """
         def __init__(self, client):
             self.get = functools.partial(Container.get, client)
             self.all = functools.partial(Container.all, client)
             self.create = functools.partial(Container.create, client)
 
     class Images(object):
-        """A convenience wrapper for :py:class:`~pylxd.image.Image`."""
+        """
+        Manager for :py:class:`~pylxd.image.Image` of a :class:`Client`.
+
+        .. attribute:: all
+
+            Partial of :meth:`Image.all <pylxd.image.Image.all>`,
+
+        .. attribute:: get
+
+            Partial of of :meth:`Image.get <pylxd.image.Image.get>`.
+
+        .. attribute:: create
+
+            Partial of of :meth:`Image.create <pylxd.image.Image.create>`.
+        """
         def __init__(self, client):
             self.get = functools.partial(Image.get, client)
             self.all = functools.partial(Image.all, client)
             self.create = functools.partial(Image.create, client)
 
     class Operations(object):
-        """A convenience wrapper for :py:class:`~pylxd.operation.Operation`."""
+        """
+        Manager for :class:`~pylxd.operation.Operation` of a :class:`Client`.
+
+        .. attribute:: get
+
+            Partial of of :meth:`Operation.get
+            <pylxd.operation.Operation.get>`.
+        """
         def __init__(self, client):
             self.get = functools.partial(Operation.get, client)
 
     class Profiles(object):
-        """A convenience wrapper for :py:class:`~pylxd.profile.Profile`."""
+        """
+        Manager for :py:class:`~pylxd.profile.Profile` of a :class:`Client`.
+
+        .. attribute:: all
+
+            Partial of :meth:`Profile.all <pylxd.profile.Profile.all>`,
+
+        .. attribute:: get
+
+            Partial of of :meth:`Profile.get <pylxd.profile.Profile.get>`.
+
+        .. attribute:: create
+
+            Partial of of :meth:`Profile.create
+            <pylxd.profile.Profile.create>`.
+        """
         def __init__(self, client):
             self.get = functools.partial(Profile.get, client)
             self.all = functools.partial(Profile.all, client)
