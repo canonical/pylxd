@@ -13,6 +13,8 @@
 #    under the License.
 from integration.testing import IntegrationTestCase
 
+from pylxd.exceptions import ContainerCreationFailure
+
 
 class TestContainers(IntegrationTestCase):
     """Tests for `Client.containers`"""
@@ -57,6 +59,13 @@ class TestContainers(IntegrationTestCase):
         container = self.client.containers.create(config, wait=True)
 
         self.assertEqual(config['name'], container.name)
+
+    def test_create_failure(self):
+        with self.assertRaises(ContainerCreationFailure) as e:
+            self.client.containers.create(dict(name=self.id()))
+
+        # Check that we have the response object
+        self.assertEqual(e.exception.response.status_code, 400)
 
 
 class TestContainer(IntegrationTestCase):
