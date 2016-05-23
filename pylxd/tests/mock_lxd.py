@@ -2,7 +2,7 @@ import json
 
 
 def containers_POST(request, context):
-    context.status_code = 201
+    context.status_code = 202
     return json.dumps({'operation': 'operation-abc'})
 
 
@@ -16,6 +16,11 @@ def container_GET(request, context):
         return response_text
     else:
         context.status_code = 404
+
+
+def container_DELETE(request, context):
+    context.status_code = 202
+    return json.dumps({'operation': 'operation-abc'})
 
 
 def profile_GET(request, context):
@@ -60,7 +65,7 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)$',
     },
     {
-        'text': json.dumps({'operation': 'operation-abc'}),
+        'text': container_DELETE,
         'method': 'DELETE',
         'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)$',
     },

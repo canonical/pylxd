@@ -64,9 +64,11 @@ class Container(mixin.Waitable, mixin.Marshallable):
         """Create a new container config."""
         response = client.api.containers.post(json=config)
 
+        if response.status_code != 202:
+            raise RuntimeError('Error creating instance')
         if wait:
             Operation.wait_for_operation(client, response.json()['operation'])
-        return cls(name=config['name'])
+        return cls(name=config['name'], _client=client)
 
     def __init__(self, **kwargs):
         super(Container, self).__init__()
@@ -108,6 +110,8 @@ class Container(mixin.Waitable, mixin.Marshallable):
         """Delete the container."""
         response = self._client.api.containers[self.name].delete()
 
+        if response.status_code != 202:
+            raise RuntimeError('Error deleting instance {}'.format(self.name))
         if wait:
             self.wait_for_operation(response.json()['operation'])
 
@@ -179,9 +183,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
     def rename_snapshot(self, old, new, wait=False):
         """Rename a snapshot."""
         response = self._client.api.containers[
-            self.name].snapshots[old].post(json={
-                'name': new
-                })
+            self.name].snapshots[old].post(json={'name': new})
         if wait:
             self.wait_for_operation(response.json()['operation'])
 
