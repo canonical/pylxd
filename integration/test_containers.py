@@ -28,19 +28,24 @@ class TestContainers(IntegrationTestCase):
 
     def test_all(self):
         """A list of all containers is returned."""
+        containers_before_create = self.client.containers.all()
+
         name = self.create_container()
         self.addCleanup(self.delete_container, name)
 
         containers = self.client.containers.all()
 
-        self.assertEqual(1, len(containers))
+        self.assertEqual(
+            len(containers_before_create) + 1,
+            len(containers)
+        )
         self.assertEqual(name, containers[0].name)
 
     def test_create(self):
         """Creates and returns a new container."""
         config = {
             'name': 'an-container',
-            'architecture': 2,
+            'architecture': '2',
             'profiles': ['default'],
             'ephemeral': True,
             'config': {'limits.cpu': '2'},
@@ -98,15 +103,15 @@ class TestContainer(IntegrationTestCase):
         # to test what we need.
         self.container.start(wait=True)
 
-        self.assertEqual('Running', self.container.status['status'])
+        self.assertEqual('Running', self.container.status)
         container = self.client.containers.get(self.container.name)
-        self.assertEqual('Running', container.status['status'])
+        self.assertEqual('Running', container.status)
 
         self.container.stop(wait=True)
 
-        self.assertEqual('Stopped', self.container.status['status'])
+        self.assertEqual('Stopped', self.container.status)
         container = self.client.containers.get(self.container.name)
-        self.assertEqual('Stopped', container.status['status'])
+        self.assertEqual('Stopped', container.status)
 
     def test_snapshot(self):
         """A container snapshot is made, renamed, and deleted."""
