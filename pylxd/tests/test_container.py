@@ -1,4 +1,4 @@
-from pylxd import container
+from pylxd import container, exceptions
 from pylxd.tests import testing
 
 
@@ -24,7 +24,8 @@ class TestContainer(testing.PyLXDTestCase):
         name = 'an-missing-container'
 
         self.assertRaises(
-            NameError, container.Container.get, self.client, name)
+            exceptions.NotFound,
+            container.Container.get, self.client, name)
 
     def test_create(self):
         """A new container is created."""
