@@ -36,6 +36,13 @@ def profile_GET(request, context):
 
 
 RULES = [
+    # General service endpoints
+    {
+        'text': '',
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0$',
+    },
+
     # Containers
     {
         'text': json.dumps({'metadata': [

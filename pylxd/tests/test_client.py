@@ -11,6 +11,16 @@ from pylxd import client
 class TestClient(unittest.TestCase):
     """Tests for pylxd.client.Client."""
 
+    def setUp(self):
+        self.patcher = mock.patch('pylxd.client._APINode.get')
+        self.get = self.patcher.start()
+
+        response = mock.MagicMock(status_code=200)
+        self.get.return_value = response
+
+    def tearDown(self):
+        self.patcher.stop()
+
     def test_create(self):
         """Client creation sets default API endpoint."""
         expected = 'http+unix://%2Fvar%2Flib%2Flxd%2Funix.socket/1.0'
@@ -36,6 +46,22 @@ class TestClient(unittest.TestCase):
         an_client = client.Client(endpoint=endpoint)
 
         self.assertEqual(expected, an_client.api._api_endpoint)
+
+    def test_connection_404(self):
+        """If the endpoint 404s, an exception is raised."""
+        response = mock.MagicMock(status_code=404)
+        self.get.return_value = response
+
+        self.assertRaises(Exception, client.Client)
+
+    def test_connection_failed(self):
+        """If the connection fails, an exception is raised."""
+        def raise_exception():
+            raise requests.exceptions.ConnectionError()
+        self.get.side_effect = raise_exception
+        self.get.return_value = None
+
+        self.assertRaises(Exception, client.Client)
 
 
 class TestAPINode(unittest.TestCase):

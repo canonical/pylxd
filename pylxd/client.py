@@ -22,6 +22,7 @@ except ImportError:
 import requests
 import requests_unixsocket
 
+from pylxd import exceptions
 from pylxd.container import Container
 from pylxd.image import Image
 from pylxd.operation import Operation
@@ -201,6 +202,15 @@ class Client(object):
             self.api = _APINode('http+unix://{}'.format(
                 quote(path, safe='')))
         self.api = self.api[version]
+
+        # Verify the connection is valid.
+        try:
+            response = self.api.get()
+            if response.status_code != 200:
+                raise exceptions.ClientConnectionFailed()
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.InvalidURL):
+            raise exceptions.ClientConnectionFailed()
 
         self.containers = self.Containers(self)
         self.images = self.Images(self)
