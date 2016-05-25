@@ -1,9 +1,30 @@
-from pylxd import profile
+from pylxd import exceptions, profile
 from pylxd.tests import testing
 
 
 class TestProfile(testing.PyLXDTestCase):
     """Tests for pylxd.profile.Profile."""
+
+    def test_get(self):
+        """A profile is fetched."""
+        name = 'an-profile'
+        an_profile = profile.Profile.get(self.client, name)
+
+        self.assertEqual(name, an_profile.name)
+
+    def test_get_not_found(self):
+        """NotFound is raised on unknown profiles."""
+        def not_found(request, context):
+            context.status_code = 404
+        self.add_rule({
+            'text': not_found,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/profiles/(?P<container_name>.*)$',
+        })
+
+        self.assertRaises(
+            exceptions.NotFound,
+            profile.Profile.get, self.client, 'an-profile')
 
     def test_all(self):
         """A list of all profiles is returned."""
@@ -18,3 +39,18 @@ class TestProfile(testing.PyLXDTestCase):
 
         self.assertIsInstance(an_profile, profile.Profile)
         self.assertEqual('an-new-profile', an_profile.name)
+
+    def test_create_failed(self):
+        """CreateFailed is raised when errors occur."""
+        def error(request, context):
+            context.status_code = 503
+        self.add_rule({
+            'text': error,
+            'method': 'POST',
+            'url': r'^http://pylxd.test/1.0/profiles$',
+        })
+
+        self.assertRaises(
+            exceptions.CreateFailed,
+            profile.Profile.create, self.client,
+            name='an-new-profile', config={})

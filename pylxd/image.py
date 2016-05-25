@@ -14,7 +14,7 @@
 import hashlib
 import six
 
-from pylxd import mixin
+from pylxd import exceptions, mixin
 from pylxd.operation import Operation
 
 
@@ -33,8 +33,7 @@ class Image(mixin.Waitable, mixin.Marshallable):
         response = client.api.images[fingerprint].get()
 
         if response.status_code == 404:
-            raise NameError(
-                'No image with fingerprint "{}"'.format(fingerprint))
+            raise exceptions.NotFound()
         image = Image(_client=client, **response.json()['metadata'])
         return image
 
@@ -59,6 +58,9 @@ class Image(mixin.Waitable, mixin.Marshallable):
             headers['X-LXD-Public'] = '1'
         response = client.api.images.post(
             data=image_data, headers=headers)
+
+        if response.status_code != 202:
+            raise exceptions.CreateFailed()
 
         if wait:
             Operation.wait_for_operation(client, response.json()['operation'])

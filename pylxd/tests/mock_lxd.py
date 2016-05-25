@@ -23,6 +23,16 @@ def container_DELETE(request, context):
     return json.dumps({'operation': 'operation-abc'})
 
 
+def images_POST(request, context):
+    context.status_code = 202
+    return json.dumps({'metadata': {}})
+
+
+def profiles_POST(request, context):
+    context.status_code = 202
+    return json.dumps({'metadata': {}})
+
+
 def profile_GET(request, context):
     name = request.path.split('/')[-1]
     if name in ('an-profile', 'an-new-profile'):
@@ -86,7 +96,7 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/images$',
     },
     {
-        'text': json.dumps({'metadata': {}}),
+        'text': images_POST,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/images$',
     },
@@ -109,6 +119,7 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/profiles$',
     },
     {
+        'text': profiles_POST,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/profiles$',
     },

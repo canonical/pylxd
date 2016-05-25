@@ -1,11 +1,34 @@
 import hashlib
 
-from pylxd import image
+from pylxd import exceptions, image
 from pylxd.tests import testing
 
 
 class TestImage(testing.PyLXDTestCase):
     """Tests for pylxd.image.Image."""
+
+    def test_get(self):
+        """An image is fetched."""
+        fingerprint = hashlib.sha256(b'').hexdigest()
+        a_image = image.Image.get(self.client, fingerprint)
+
+        self.assertEqual(fingerprint, a_image.fingerprint)
+
+    def test_get_not_found(self):
+        """NotFound is raised when the image isn't found."""
+        def not_found(request, context):
+            context.status_code = 404
+        self.add_rule({
+            'text': not_found,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
+        })
+
+        fingerprint = hashlib.sha256(b'').hexdigest()
+
+        self.assertRaises(
+            exceptions.NotFound,
+            image.Image.get, self.client, fingerprint)
 
     def test_all(self):
         """A list of all images is returned."""
@@ -20,3 +43,17 @@ class TestImage(testing.PyLXDTestCase):
 
         self.assertIsInstance(a_image, image.Image)
         self.assertEqual(fingerprint, a_image.fingerprint)
+
+    def test_create_failed(self):
+        """If image creation fails, CreateFailed is raised."""
+        def create_fail(request, context):
+            context.status_code = 500
+        self.add_rule({
+            'text': create_fail,
+            'method': 'POST',
+            'url': r'^http://pylxd.test/1.0/images$',
+        })
+
+        self.assertRaises(
+            exceptions.CreateFailed,
+            image.Image.create, self.client, b'')

@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import six
-from pylxd import mixin
+from pylxd import exceptions, mixin
 
 
 class Profile(mixin.Marshallable):
@@ -29,7 +29,7 @@ class Profile(mixin.Marshallable):
         response = client.api.profiles[name].get()
 
         if response.status_code == 404:
-            raise NameError('No profile with name "{}"'.format(name))
+            raise exceptions.NotFound()
         return cls(_client=client, **response.json()['metadata'])
 
     @classmethod
@@ -46,10 +46,13 @@ class Profile(mixin.Marshallable):
     @classmethod
     def create(cls, client, name, config):
         """Create a profile."""
-        client.api.profiles.post(json={
+        request = client.api.profiles.post(json={
             'name': name,
             'config': config
             })
+
+        if request.status_code is not 202:
+            raise exceptions.CreateFailed()
 
         return cls.get(client, name)
 
