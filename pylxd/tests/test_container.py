@@ -1,4 +1,6 @@
-from pylxd import container
+import json
+
+from pylxd import container, exceptions
 from pylxd.tests import testing
 
 
@@ -21,10 +23,23 @@ class TestContainer(testing.PyLXDTestCase):
 
     def test_get_not_found(self):
         """NameError is raised when the container doesn't exist."""
+        def not_found(request, context):
+            context.status_code = 404
+            return json.dumps({
+                'type': 'error',
+                'error': 'Not found',
+                'error_code': 404})
+        self.add_rule({
+            'text': not_found,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)$',  # NOQA
+        })
+
         name = 'an-missing-container'
 
         self.assertRaises(
-            NameError, container.Container.get, self.client, name)
+            exceptions.NotFound,
+            container.Container.get, self.client, name)
 
     def test_create(self):
         """A new container is created."""
@@ -34,6 +49,25 @@ class TestContainer(testing.PyLXDTestCase):
             self.client, config, wait=True)
 
         self.assertEqual(config['name'], an_new_container.name)
+
+    def test_create_failed(self):
+        """If the container creation fails, CreateFailed is raised."""
+        def create_fail(request, context):
+            context.status_code = 500
+            return json.dumps({
+                'type': 'error',
+                'error': 'An unknown error',
+                'error_code': 500})
+        self.add_rule({
+            'text': create_fail,
+            'method': 'POST',
+            'url': r'^http://pylxd.test/1.0/containers$',
+        })
+        config = {'name': 'an-new-container'}
+
+        self.assertRaises(
+            exceptions.CreateFailed,
+            container.Container.create, self.client, config)
 
     def test_reload(self):
         """A reload updates the properties of a container."""
@@ -46,6 +80,18 @@ class TestContainer(testing.PyLXDTestCase):
 
     def test_reload_not_found(self):
         """NameError is raised on a 404 for updating container."""
+        def not_found(request, context):
+            context.status_code = 404
+            return json.dumps({
+                'type': 'error',
+                'error': 'Not found',
+                'error_code': 404})
+        self.add_rule({
+            'text': not_found,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)$',  # NOQA
+        })
+
         an_container = container.Container(
             name='an-missing-container', _client=self.client)
 

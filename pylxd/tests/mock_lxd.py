@@ -6,21 +6,19 @@ def containers_POST(request, context):
     return json.dumps({'operation': 'operation-abc'})
 
 
-def container_GET(request, context):
-    if request.path.endswith('an-container'):
-        response_text = json.dumps({'metadata': {
-            'name': 'an-container',
-            'ephemeral': True,
-        }})
-        context.status_code = 200
-        return response_text
-    else:
-        context.status_code = 404
-
-
 def container_DELETE(request, context):
     context.status_code = 202
     return json.dumps({'operation': 'operation-abc'})
+
+
+def images_POST(request, context):
+    context.status_code = 202
+    return json.dumps({'metadata': {}})
+
+
+def profiles_POST(request, context):
+    context.status_code = 202
+    return json.dumps({'metadata': {}})
 
 
 def profile_GET(request, context):
@@ -57,7 +55,10 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/containers$',
     },
     {
-        'text': container_GET,
+        'text': json.dumps({'metadata': {
+            'name': 'an-container',
+            'ephemeral': True,
+        }}),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)$',
     },
@@ -86,7 +87,7 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/images$',
     },
     {
-        'text': json.dumps({'metadata': {}}),
+        'text': images_POST,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/images$',
     },
@@ -109,6 +110,7 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/profiles$',
     },
     {
+        'text': profiles_POST,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/profiles$',
     },

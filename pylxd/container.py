@@ -14,7 +14,7 @@
 
 import six
 
-from pylxd import mixin
+from pylxd import exceptions, mixin
 from pylxd.containerState import ContainerState
 from pylxd.operation import Operation
 
@@ -38,7 +38,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
         response = client.api.containers[name].get()
 
         if response.status_code == 404:
-            raise NameError('No container named "{}"'.format(name))
+            raise exceptions.NotFound(response.json())
         container = cls(_client=client, **response.json()['metadata'])
         return container
 
@@ -65,7 +65,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
         response = client.api.containers.post(json=config)
 
         if response.status_code != 202:
-            raise RuntimeError('Error creating instance')
+            raise exceptions.CreateFailed(response.json())
         if wait:
             Operation.wait_for_operation(client, response.json()['operation'])
         return cls(name=config['name'], _client=client)
