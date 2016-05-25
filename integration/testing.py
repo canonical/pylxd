@@ -37,7 +37,7 @@ class IntegrationTestCase(unittest.TestCase):
         name = self.generate_object_name()
         machine = {
             'name': name,
-            'architecture': 2,
+            'architecture': '2',
             'profiles': ['default'],
             'ephemeral': False,
             'config': {'limits.cpu': '2'},
