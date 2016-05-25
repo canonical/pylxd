@@ -44,11 +44,12 @@ class Profile(mixin.Marshallable):
         return profiles
 
     @classmethod
-    def create(cls, client, name, config):
+    def create(cls, client, name, config, devices={}):
         """Create a profile."""
         client.api.profiles.post(json={
             'name': name,
-            'config': config
+            'config': config,
+            'devices': devices
             })
 
         return cls.get(client, name)

@@ -14,7 +14,7 @@ class TestProfile(testing.PyLXDTestCase):
     def test_create(self):
         """A new profile is created."""
         an_profile = profile.Profile.create(
-            self.client, name='an-new-profile', config={})
+            self.client, name='an-new-profile', config={}, devices={})
 
         self.assertIsInstance(an_profile, profile.Profile)
         self.assertEqual('an-new-profile', an_profile.name)
