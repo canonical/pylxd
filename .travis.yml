@@ -17,3 +17,5 @@ cache:
   directories:
   - .tox/$TOXENV
   - $HOME/.cache/pip
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
