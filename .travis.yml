@@ -1,6 +1,6 @@
 language: python
 python:
-- "3.5"
+  - "3.5"
 env:
   matrix:
   - TOXENV=py27
@@ -9,13 +9,14 @@ env:
   # - TOXENV=integration # requires a remote lxd setup
 
 install:
-- travis_retry pip install tox
+  - travis_retry pip install tox
+  - pip install codecov
 script:
-- tox
-- test -d .tox/$TOXENV/log && cat .tox/$TOXENV/log/*.log || true
+  - tox
+  - test -d .tox/$TOXENV/log && cat .tox/$TOXENV/log/*.log || true
 cache:
   directories:
-  - .tox/$TOXENV
-  - $HOME/.cache/pip
+    - .tox/$TOXENV
+    - $HOME/.cache/pip
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+  - codecov
