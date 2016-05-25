@@ -5,8 +5,8 @@ pylxd
     :target: https://pypi.python.org/pypi/pylxd
 .. image:: https://travis-ci.org/lxc/pylxd.svg?branch=master
     :target: https://travis-ci.org/lxc/pylxd
-.. image:: https://codecov.io/github/lxc/lxd/coverage.svg?branch=master
-    :target: https://codecov.io/github/lxc/lxd
+.. image:: https://codecov.io/github/lxc/pylxd/coverage.svg?branch=master
+    :target: https://codecov.io/github/lxc/pylxd
 
 A Python library for interacting with the LXD REST API.
 
