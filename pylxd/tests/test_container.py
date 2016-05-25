@@ -36,6 +36,21 @@ class TestContainer(testing.PyLXDTestCase):
 
         self.assertEqual(config['name'], an_new_container.name)
 
+    def test_create_failed(self):
+        """If the container creation fails, CreateFailed is raised."""
+        def create_fail(request, context):
+            context.status_code = 500
+        self.add_rule({
+            'text': create_fail,
+            'method': 'POST',
+            'url': r'^http://pylxd.test/1.0/containers$',
+        })
+        config = {'name': 'an-new-container'}
+
+        self.assertRaises(
+            exceptions.CreateFailed,
+            container.Container.create, self.client, config)
+
     def test_reload(self):
         """A reload updates the properties of a container."""
         an_container = container.Container(

@@ -66,7 +66,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
         response = client.api.containers.post(json=config)
 
         if response.status_code != 202:
-            raise RuntimeError('Error creating instance')
+            raise exceptions.CreateFailed()
         if wait:
             Operation.wait_for_operation(client, response.json()['operation'])
         return cls(name=config['name'], _client=client)

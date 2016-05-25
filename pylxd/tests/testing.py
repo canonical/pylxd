@@ -17,3 +17,7 @@ class PyLXDTestCase(unittest.TestCase):
 
     def tearDown(self):
         mock_services.stop_http_mock()
+
+    def add_rule(self, rule):
+        """Add a rule to the mock LXD service."""
+        mock_services.update_http_rules([rule])
