@@ -1,3 +1,5 @@
+import json
+
 from pylxd import exceptions, profile
 from pylxd.tests import testing
 
@@ -16,6 +18,10 @@ class TestProfile(testing.PyLXDTestCase):
         """NotFound is raised on unknown profiles."""
         def not_found(request, context):
             context.status_code = 404
+            return json.dumps({
+                'type': 'error',
+                'error': 'Not found',
+                'error_code': 404})
         self.add_rule({
             'text': not_found,
             'method': 'GET',
@@ -44,6 +50,10 @@ class TestProfile(testing.PyLXDTestCase):
         """CreateFailed is raised when errors occur."""
         def error(request, context):
             context.status_code = 503
+            return json.dumps({
+                'type': 'error',
+                'error': 'An unknown error',
+                'error_code': 500})
         self.add_rule({
             'text': error,
             'method': 'POST',

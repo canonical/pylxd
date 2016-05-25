@@ -1,4 +1,5 @@
 import hashlib
+import json
 
 from pylxd import exceptions, image
 from pylxd.tests import testing
@@ -18,6 +19,10 @@ class TestImage(testing.PyLXDTestCase):
         """NotFound is raised when the image isn't found."""
         def not_found(request, context):
             context.status_code = 404
+            return json.dumps({
+                'type': 'error',
+                'error': 'Not found',
+                'error_code': 404})
         self.add_rule({
             'text': not_found,
             'method': 'GET',
@@ -48,6 +53,10 @@ class TestImage(testing.PyLXDTestCase):
         """If image creation fails, CreateFailed is raised."""
         def create_fail(request, context):
             context.status_code = 500
+            return json.dumps({
+                'type': 'error',
+                'error': 'An unknown error',
+                'error_code': 500})
         self.add_rule({
             'text': create_fail,
             'method': 'POST',

@@ -33,7 +33,7 @@ class Image(mixin.Waitable, mixin.Marshallable):
         response = client.api.images[fingerprint].get()
 
         if response.status_code == 404:
-            raise exceptions.NotFound()
+            raise exceptions.NotFound(response.json())
         image = Image(_client=client, **response.json()['metadata'])
         return image
 
@@ -60,7 +60,7 @@ class Image(mixin.Waitable, mixin.Marshallable):
             data=image_data, headers=headers)
 
         if response.status_code != 202:
-            raise exceptions.CreateFailed()
+            raise exceptions.CreateFailed(response.json())
 
         if wait:
             Operation.wait_for_operation(client, response.json()['operation'])

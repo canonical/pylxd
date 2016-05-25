@@ -29,7 +29,7 @@ class Profile(mixin.Marshallable):
         response = client.api.profiles[name].get()
 
         if response.status_code == 404:
-            raise exceptions.NotFound()
+            raise exceptions.NotFound(response.json())
         return cls(_client=client, **response.json()['metadata'])
 
     @classmethod
@@ -46,13 +46,13 @@ class Profile(mixin.Marshallable):
     @classmethod
     def create(cls, client, name, config):
         """Create a profile."""
-        request = client.api.profiles.post(json={
+        response = client.api.profiles.post(json={
             'name': name,
             'config': config
             })
 
-        if request.status_code is not 202:
-            raise exceptions.CreateFailed()
+        if response.status_code is not 202:
+            raise exceptions.CreateFailed(response.json())
 
         return cls.get(client, name)
 
