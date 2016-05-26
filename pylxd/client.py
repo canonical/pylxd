@@ -35,21 +35,24 @@ class _APINode(object):
     """An api node object.
     """
 
-    def __init__(self, api_endpoint):
+    def __init__(self, api_endpoint, verify=True):
         self._api_endpoint = api_endpoint
 
+        if self._api_endpoint.startswith('http+unix://'):
+            self.session = requests_unixsocket.Session()
+        else:
+            self.session = requests.Session()
+            self.session.verify = verify
+
     def __getattr__(self, name):
-        return self.__class__('{}/{}'.format(self._api_endpoint, name))
+        return self.__class__(
+            '{}/{}'.format(self._api_endpoint, name),
+            verify=self.session.verify)
 
     def __getitem__(self, item):
-        return self.__class__('{}/{}'.format(self._api_endpoint, item))
-
-    @property
-    def session(self):
-        if self._api_endpoint.startswith('http+unix://'):
-            return requests_unixsocket.Session()
-        else:
-            return requests
+        return self.__class__(
+            '{}/{}'.format(self._api_endpoint, item),
+            verify=self.session.verify)
 
     def get(self, *args, **kwargs):
         """Perform an HTTP GET."""
@@ -190,9 +193,9 @@ class Client(object):
             self.all = functools.partial(Profile.all, client)
             self.create = functools.partial(Profile.create, client)
 
-    def __init__(self, endpoint=None, version='1.0'):
+    def __init__(self, endpoint=None, version='1.0', verify=True):
         if endpoint is not None:
-            self.api = _APINode(endpoint)
+            self.api = _APINode(endpoint, verify)
         else:
             if 'LXD_DIR' in os.environ:
                 path = os.path.join(
