@@ -63,6 +63,14 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)$',
     },
     {
+        'text': json.dumps({'metadata': {
+            'status': 'Running',
+            'status_code': 103,
+        }}),
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)/state$',  # NOQA
+    },
+    {
         'text': json.dumps({'operation': 'operation-abc'}),
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)$',

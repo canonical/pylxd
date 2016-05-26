@@ -15,8 +15,13 @@
 import six
 
 from pylxd import exceptions, mixin
-from pylxd.containerState import ContainerState
 from pylxd.operation import Operation
+
+
+class ContainerState():
+    def __init__(self, **kwargs):
+        for key, value in six.iteritems(kwargs):
+            setattr(self, key, value)
 
 
 class Container(mixin.Waitable, mixin.Marshallable):
@@ -126,10 +131,8 @@ class Container(mixin.Waitable, mixin.Marshallable):
             self.reload()
 
     def state(self):
-        state = ContainerState()
         response = self._client.api.containers[self.name].state.get()
-        for key, value in six.iteritems(response.json()['metadata']):
-            setattr(state, key, value)
+        state = ContainerState(**response.json()['metadata'])
         return state
 
     def start(self, timeout=30, force=True, wait=False):

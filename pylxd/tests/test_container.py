@@ -132,3 +132,17 @@ class TestContainer(testing.PyLXDTestCase):
             name='an-container', _client=self.client)
 
         an_container.delete(wait=True)
+
+
+class TestContainerState(testing.PyLXDTestCase):
+    """Tests for pylxd.container.ContainerState."""
+
+    def test_get(self):
+        """Return a container."""
+        name = 'an-container'
+
+        an_container = container.Container.get(self.client, name)
+        state = an_container.state()
+
+        self.assertEqual('Running', state.status)
+        self.assertEqual(103, state.status_code)
