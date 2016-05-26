@@ -15,8 +15,13 @@
 import six
 
 from pylxd import exceptions, mixin
-from pylxd.containerState import ContainerState
 from pylxd.operation import Operation
+
+
+class ContainerState():
+    def __init__(self, **kwargs):
+        for key, value in six.iteritems(kwargs):
+            setattr(self, key, value)
 
 
 class Container(mixin.Waitable, mixin.Marshallable):
