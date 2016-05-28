@@ -36,7 +36,7 @@ def profile_GET(request, context):
 RULES = [
     # General service endpoints
     {
-        'text': '',
+        'text': json.dumps({'metadata': {'auth': 'trusted'}}),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0$',
     },

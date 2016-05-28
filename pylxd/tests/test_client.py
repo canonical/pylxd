@@ -5,7 +5,7 @@ import mock
 import requests
 import requests_unixsocket
 
-from pylxd import client
+from pylxd import client, exceptions
 
 
 class TestClient(unittest.TestCase):
@@ -16,6 +16,7 @@ class TestClient(unittest.TestCase):
         self.get = self.patcher.start()
 
         response = mock.MagicMock(status_code=200)
+        response.json.return_value = {'metadata': {'auth': 'trusted'}}
         self.get.return_value = response
 
     def tearDown(self):
@@ -52,7 +53,7 @@ class TestClient(unittest.TestCase):
         response = mock.MagicMock(status_code=404)
         self.get.return_value = response
 
-        self.assertRaises(Exception, client.Client)
+        self.assertRaises(exceptions.ClientConnectionFailed, client.Client)
 
     def test_connection_failed(self):
         """If the connection fails, an exception is raised."""
@@ -61,7 +62,15 @@ class TestClient(unittest.TestCase):
         self.get.side_effect = raise_exception
         self.get.return_value = None
 
-        self.assertRaises(Exception, client.Client)
+        self.assertRaises(exceptions.ClientConnectionFailed, client.Client)
+
+    def test_authentication_failed(self):
+        """If the authentication fails, an exception is raised."""
+        response = mock.MagicMock(status_code=200)
+        response.json.return_value = {'metadata': {'auth': 'untrusted'}}
+        self.get.return_value = response
+
+        self.assertRaises(exceptions.ClientAuthenticationFailed, client.Client)
 
 
 class TestAPINode(unittest.TestCase):

@@ -10,8 +10,21 @@ localhost:
 
 .. code-block:: python
 
-    >>> from pylxd.client import Client
+    >>> from pylxd import Client
     >>> client = Client()
+
+If your LXD instance is listening on HTTPS, you can pass a two part tuple
+of (cert, key) as the `cert` argument.
+
+.. code-block:: python
+
+    >>> from pylxd import Client
+    >>> client = Client(
+    ...     endpoint='http://10.0.0.1:8443',
+    ...     cert=('/path/to/client.crt', '/path/to/client.key'))
+
+Note: in the case where the certificate is self signed (LXD default),
+you may need to pass `verify=False`.
 
 This :class:`~client.Client` object exposes managers for:
 
@@ -20,8 +33,6 @@ This :class:`~client.Client` object exposes managers for:
 - :class:`~operation.Operation`,
 - :class:`~image.Image`,
 
-Also, it exposes the HTTP API with the `api <api.html#Client.api>`_ attribute,
-allowing lower-level operations.
 
 Containers
 ==========
@@ -34,7 +45,7 @@ attribute, the partial of :meth:`Container.create
 
 .. code-block:: python
 
-    >>> container = client.container.create(dict(name='testcont'))
+    >>> container = client.containers.create(dict(name='testcont'))
     [<container.Container at 0x7f95d8af72b0>,]
 
 Example getting a list of :class:`~container.Container` with
@@ -42,7 +53,7 @@ Example getting a list of :class:`~container.Container` with
 
 .. code-block:: python
 
-    >>> client.container.all()
+    >>> client.containers.all()
     [<container.Container at 0x7f95d8af72b0>,]
 
 Examples
