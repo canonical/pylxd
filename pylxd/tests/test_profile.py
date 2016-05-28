@@ -64,3 +64,9 @@ class TestProfile(testing.PyLXDTestCase):
             exceptions.CreateFailed,
             profile.Profile.create, self.client,
             name='an-new-profile', config={})
+
+    def test_partial_objects(self):
+        """A partially fetched profile can't be pushed."""
+        profile = self.client.profiles.all()[0]
+
+        profile.update()
