@@ -2,6 +2,11 @@ class ClientConnectionFailed(Exception):
     """An exception raised when the Client connection fails."""
 
 
+class ClientAuthenticationFailed(Exception):
+    """The LXD client's certificates are not trusted."""
+    message = "LXD client certificates are not trusted."""
+
+
 class _LXDAPIException(Exception):
     """A LXD API Exception.
 
