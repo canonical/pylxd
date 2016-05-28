@@ -27,6 +27,9 @@ def profile_GET(request, context):
         return json.dumps({
             'metadata': {
                 'name': name,
+                'description': 'An description',
+                'config': {},
+                'devices': {},
             },
         })
     else:

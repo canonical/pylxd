@@ -27,3 +27,15 @@ class NotFound(_LXDAPIException):
 
 class CreateFailed(_LXDAPIException):
     """Generic create failure exception."""
+
+
+class ObjectIncomplete(Exception):
+    """An exception raised when an object isn't completely populated.
+
+    When an object is fetched via `all`, it isn't a complete object
+    just yet. It requires a call to `fetch` to populate the object before
+    it can be pushed back up to the server.
+    """
+
+    def __str__(self):
+        return 'Object incomplete. Please call `fetch` before updating.'
