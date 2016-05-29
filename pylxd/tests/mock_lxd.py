@@ -92,7 +92,7 @@ RULES = [
     # Images
     {
         'text': json.dumps({'metadata': [
-            'http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
+            'http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',  # NOQA
         ]}),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/images$',
@@ -105,7 +105,24 @@ RULES = [
     {
         'text': json.dumps({
             'metadata': {
+                'aliases': [
+                    {
+                        'name': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',  # NOQA
+                        'fingerprint': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',  # NOQA
+                    }
+                ],
+                'architecture': 'x86_64',
+                'cached': False,
+                'filename': 'a_image.tar.bz2',
                 'fingerprint': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',  # NOQA
+                'properties': {},
+                'size': 1,
+                'auto_update': False,
+                'created_at': '1983-06-16T02:42:00Z',
+                'expires_at': '1983-06-16T02:42:00Z',
+                'last_used_at': '1983-06-16T02:42:00Z',
+                'uploaded_at': '1983-06-16T02:42:00Z',
+
             },
         }),
         'method': 'GET',
