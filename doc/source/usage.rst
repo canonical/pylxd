@@ -4,6 +4,9 @@ Usage
 
 .. currentmodule:: pylxd
 
+Client
+======
+
 Once you have :doc:`installed <installation>`, you're ready to
 instantiate an API client to start interacting with the LXD daemon on
 localhost:
@@ -25,6 +28,9 @@ of (cert, key) as the `cert` argument.
 
 Note: in the case where the certificate is self signed (LXD default),
 you may need to pass `verify=False`.
+
+Client Managers
+---------------
 
 :class:`~client.Client` exposes an object manager protocol for
 :class:`~container.Container`, :class:`~image.Image`, and
@@ -99,7 +105,7 @@ container.
 
 
 Images
-------
+======
 
 :class:`~image.Image` operations follow the same protocol from the client`s
 `images` manager (i.e. `get`, `all`, and `create`). Images are keyed on
@@ -136,7 +142,7 @@ you may also want to `wait=True`.
 
 
 Profiles
---------
+========
 
 :class:`~profile.Profile` operations follow the same manager-style as
 Containers and Images. Profiles are keyed on a unique name.
