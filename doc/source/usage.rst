@@ -5,7 +5,7 @@ Usage
 .. currentmodule:: pylxd
 
 Once you have :doc:`installed <installation>`, you're ready to
-instanciate an API client to start interacting with the LXD daemon on
+instantiate an API client to start interacting with the LXD daemon on
 localhost:
 
 .. code-block:: python
@@ -37,26 +37,40 @@ This :class:`~client.Client` object exposes managers for:
 Containers
 ==========
 
-Example creating a :class:`~container.Container` with
-:class:`client.containers <client.Client.Containers>`'s ``create(config,
-wait=False)``
-attribute, the partial of :meth:`Container.create
-<container.Container.create>`:
+In order to create a new container, a container config dictionary is needed,
+containing a name and the source. A create operation is asynchronous, so
+the operation will take some time. If you'd like to wait for the container
+to be created before the command returns, you'll pass `wait=True` as well.
 
 .. code-block:: python
 
-    >>> container = client.containers.create(dict(name='testcont'))
-    [<container.Container at 0x7f95d8af72b0>,]
+    >>> config = {'name': 'my-container', 'source': {'type': 'none'}}
+    >>> container = client.containers.create(config, wait=False)
+    >>> container
+    <container.Container at 0x7f95d8af72b0>
 
-Example getting a list of :class:`~container.Container` with
-:meth:`Client.containers.all() <client.Client.Containers.all>`:
+
+If you were to use an actual image source, you would be able to operate
+on the container, starting, stopping, snapshotting, and deleting the
+container.
+
+    >>> container.start()
+    >>> container.freeze()
+    >>> container.delete()
+
+
+If you're looking to operate on all containers of a LXD instance, you can
+get a list of all LXD containers with `all`.
 
 .. code-block:: python
 
     >>> client.containers.all()
     [<container.Container at 0x7f95d8af72b0>,]
 
-Examples
-========
 
-See more examples in the ``examples/`` directory of the repository.
+...or if you'd only like to fetch a single container by its name...
+
+.. code-block:: python
+
+    >>> client.containers.get('my-container')
+    <container.Container at 0x7f95d8af72b0>
