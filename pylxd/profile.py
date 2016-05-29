@@ -78,8 +78,6 @@ class Profile(mixin.Marshallable):
         """Rename the profile."""
         raise NotImplementedError(
             'LXD does not currently support renaming profiles')
-        self._client.api.profiles[self.name].post(json={'name': new})
-        self.name = new
 
     def delete(self):
         """Delete a profile."""
