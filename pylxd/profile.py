@@ -65,7 +65,10 @@ class Profile(mixin.Marshallable):
 
     def update(self):
         """Update the profile in LXD based on local changes."""
-        marshalled = self.marshall()
+        try:
+            marshalled = self.marshall()
+        except AttributeError:
+            raise exceptions.ObjectIncomplete()
         # The name property cannot be updated.
         del marshalled['name']
 
@@ -81,3 +84,13 @@ class Profile(mixin.Marshallable):
     def delete(self):
         """Delete a profile."""
         self._client.api.profiles[self.name].delete()
+
+    def fetch(self):
+        """Fetch the object from LXD, populating attributes."""
+        response = self._client.api.profiles[self.name].get()
+
+        if response.status_code == 404:
+            raise exceptions.NotFound(response.json())
+
+        for key, val in six.iteritems(response.json()['metadata']):
+            setattr(self, key, val)

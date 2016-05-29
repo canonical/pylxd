@@ -80,7 +80,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
         for key, value in six.iteritems(kwargs):
             setattr(self, key, value)
 
-    def reload(self):
+    def fetch(self):
         """Reload the container information."""
         response = self._client.api.containers[self.name].get()
         if response.status_code == 404:
@@ -88,10 +88,16 @@ class Container(mixin.Waitable, mixin.Marshallable):
                 'Container named "{}" has gone away'.format(self.name))
         for key, value in six.iteritems(response.json()['metadata']):
             setattr(self, key, value)
+    # XXX: rockstar (28 Mar 2016) - This method was named improperly
+    # originally. It's being kept here for backwards compatibility.
+    reload = fetch
 
     def update(self, wait=False):
         """Update the container in lxd from local changes."""
-        marshalled = self.marshall()
+        try:
+            marshalled = self.marshall()
+        except AttributeError:
+            raise exceptions.ObjectIncomplete()
         # These two properties are explicitly not allowed.
         del marshalled['name']
         del marshalled['status']

@@ -64,3 +64,37 @@ class TestProfile(testing.PyLXDTestCase):
             exceptions.CreateFailed,
             profile.Profile.create, self.client,
             name='an-new-profile', config={})
+
+    def test_partial_objects(self):
+        """A partially fetched profile can't be pushed."""
+        an_profile = self.client.profiles.all()[0]
+
+        self.assertRaises(
+            exceptions.ObjectIncomplete,
+            an_profile.update)
+
+    def test_fetch(self):
+        """A partially fetched profile is made complete."""
+        an_profile = self.client.profiles.all()[0]
+
+        an_profile.fetch()
+
+        self.assertEqual('An description', an_profile.description)
+
+    def test_fetch_notfound(self):
+        """NotFound is raised on bogus profile fetches."""
+        def not_found(request, context):
+            context.status_code = 404
+            return json.dumps({
+                'type': 'error',
+                'error': 'Not found',
+                'error_code': 404})
+        self.add_rule({
+            'text': not_found,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/profiles/(?P<container_name>.*)$',
+        })
+
+        an_profile = profile.Profile(name='an-profile', _client=self.client)
+
+        self.assertRaises(exceptions.NotFound, an_profile.fetch)

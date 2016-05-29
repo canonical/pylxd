@@ -73,8 +73,12 @@ class Image(mixin.Waitable, mixin.Marshallable):
 
     def update(self):
         """Update LXD based on changes to this image."""
+        try:
+            marshalled = self.marshall()
+        except AttributeError:
+            raise exceptions.ObjectIncomplete()
         self._client.api.images[self.fingerprint].put(
-            json=self.marshall())
+            json=marshalled)
 
     def delete(self, wait=False):
         """Delete the image."""
@@ -82,3 +86,13 @@ class Image(mixin.Waitable, mixin.Marshallable):
 
         if wait:
             self.wait_for_operation(response.json()['operation'])
+
+    def fetch(self):
+        """Fetch the object from LXD, populating attributes."""
+        response = self._client.api.images[self.fingerprint].get()
+
+        if response.status_code == 404:
+            raise exceptions.NotFound(response.json())
+
+        for key, val in six.iteritems(response.json()['metadata']):
+            setattr(self, key, val)
