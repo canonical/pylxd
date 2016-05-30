@@ -251,8 +251,9 @@ class Snapshot(mixin.Waitable, mixin.Marshallable):
         snapshot = cls(
             _client=client, _container=container,
             **response.json()['metadata'])
-        # Snapshot names are namespaced in LXD, as container-name/snapshot-name.
-        # We hide that implementation detail.
+        # Snapshot names are namespaced in LXD, as
+        # container-name/snapshot-name. We hide that implementation
+        # detail.
         snapshot.name = snapshot.name.split('/')[-1]
         return snapshot
 
