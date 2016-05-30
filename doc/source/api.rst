@@ -14,6 +14,9 @@ Container
 .. autoclass:: pylxd.container.Container
    :members:
 
+.. autoclass:: pylxd.container.Snapshot
+   :members:
+
 Image
 -----
 

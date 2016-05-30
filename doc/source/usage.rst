@@ -104,6 +104,37 @@ container.
     >>> container.delete()
 
 
+Container Snapshots
+-------------------
+
+Each container carries its own manager for managing :class:`~container.Snapshot`
+functionality. It has `get`, `all`, and `create` functionality.
+
+Snapshots are keyed by their name (and only their name, in pylxd; LXD
+keys them by <container-name>/<snapshot-name>, but the manager allows
+us to use our own namespacing).
+
+.. code-block:: python
+
+    >>> snapshot = container.snapshots.get('an-snapshot')
+    >>> snapshot.created_at
+    '1983-06-16T2:38:00'
+    >>> snapshot.rename('backup-snapshot', wait=True)
+    >>> snapshot.delete(wait=True)
+
+
+To create a new snapshot, use `create` with a `name` argument. If you want
+to capture the contents of RAM in the snapshot, you can use `stateful=True`.
+**Note: Your LXD requires a relatively recent version of CRIU for this.**
+
+.. code-block:: python
+
+    >>> snapshot = container.snapshots.create(
+    ...     'my-backup', stateful=True, wait=True)
+    >>> snapshot.name
+    'my-backup'
+
+
 Images
 ======
 
