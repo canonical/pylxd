@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import functools
 
 import six
 
@@ -31,6 +32,12 @@ class Container(mixin.Waitable, mixin.Marshallable):
     This class is not intended to be used directly, but rather to be used
     via `Client.containers.create`.
     """
+
+    class Snapshots(object):
+        def __init__(self, client, container):
+            self.get = functools.partial(Snapshot.get, client, container)
+            self.all = functools.partial(Snapshot.all, client, container)
+            self.create = functools.partial(Snapshot.create, client, container)
 
     __slots__ = [
         '_client',
@@ -80,6 +87,8 @@ class Container(mixin.Waitable, mixin.Marshallable):
         super(Container, self).__init__()
         for key, value in six.iteritems(kwargs):
             setattr(self, key, value)
+
+        self.snapshots = self.Snapshots(self._client, self)
 
     def fetch(self):
         """Reload the container information."""
@@ -179,32 +188,27 @@ class Container(mixin.Waitable, mixin.Marshallable):
                                force=force,
                                wait=wait)
 
-    def snapshot(self, name, stateful=False, wait=False):
+    @deprecated('Container.snapshot is deprecated. Please use Container.snapshots.create')  # NOQA
+    def snapshot(self, name, stateful=False, wait=False):  # pragma: no cover
         """Take a snapshot of the container."""
-        response = self._client.api.containers[self.name].snapshots.post(json={
-            'name': name, 'stateful': stateful})
-        if wait:
-            self.wait_for_operation(response.json()['operation'])
+        self.snapshots.create(name, stateful, wait)
 
-    def list_snapshots(self):
+    @deprecated('Container.list_snapshots is deprecated. Please use Container.snapshots.all')  # NOQA
+    def list_snapshots(self):  # pragma: no cover
         """List all container snapshots."""
-        response = self._client.api.containers[self.name].snapshots.get()
-        return [snapshot.split('/')[-1]
-                for snapshot in response.json()['metadata']]
+        return [s.name for s in self.snapshots.all()]
 
-    def rename_snapshot(self, old, new, wait=False):
+    @deprecated('Container.rename_snapshot is deprecated. Please use Snapshot.rename')  # NOQA
+    def rename_snapshot(self, old, new, wait=False):  # pragma: no cover
         """Rename a snapshot."""
-        response = self._client.api.containers[
-            self.name].snapshots[old].post(json={'name': new})
-        if wait:
-            self.wait_for_operation(response.json()['operation'])
+        snapshot = self.snapshots.get(old)
+        snapshot.rename(new, wait=wait)
 
-    def delete_snapshot(self, name, wait=False):
+    @deprecated('Container.delete_snapshot is deprecated. Please use Snapshot.delete')  # NOQA
+    def delete_snapshot(self, name, wait=False):  # pragma: no cover
         """Delete a snapshot."""
-        response = self._client.api.containers[
-            self.name].snapshots[name].delete()
-        if wait:
-            self.wait_for_operation(response.json()['operation'])
+        snapshot = self.snapshots.get(name)
+        snapshot.delete()
 
     def get_file(self, filepath):
         """Get a file from the container."""
@@ -237,3 +241,66 @@ class Container(mixin.Waitable, mixin.Marshallable):
             })
         operation_id = response.json()['operation']
         self.wait_for_operation(operation_id)
+
+
+class Snapshot(mixin.Waitable, mixin.Marshallable):
+    """A container snapshot."""
+
+    @classmethod
+    def get(cls, client, container, name):
+        response = client.api.containers[container.name].snapshots[name].get()
+
+        if response.status_code == 404:
+            raise exceptions.NotFound(response.json())
+
+        snapshot = cls(
+            _client=client, _container=container,
+            **response.json()['metadata'])
+        # Snapshot names are namespaced in LXD, as
+        # container-name/snapshot-name. We hide that implementation
+        # detail.
+        snapshot.name = snapshot.name.split('/')[-1]
+        return snapshot
+
+    @classmethod
+    def all(cls, client, container):
+        response = client.api.containers[container.name].snapshots.get()
+
+        return [cls(
+                name=snapshot.split('/')[-1], _client=client,
+                _container=container)
+                for snapshot in response.json()['metadata']]
+
+    @classmethod
+    def create(cls, client, container, name, stateful=False, wait=False):
+        response = client.api.containers[container.name].snapshots.post(json={
+            'name': name, 'stateful': stateful})
+
+        snapshot = cls(_client=client, _container=container, name=name)
+        if wait:
+            snapshot.wait_for_operation(response.json()['operation'])
+        return snapshot
+
+    def __init__(self, **kwargs):
+        super(Snapshot, self).__init__()
+        for key, value in six.iteritems(kwargs):
+            setattr(self, key, value)
+
+    def rename(self, new_name, wait=False):
+        """Rename a snapshot."""
+        response = self._client.api.containers[
+            self._container.name].snapshots[self.name].post(
+            json={'name': new_name})
+        if wait:
+            self.wait_for_operation(response.json()['operation'])
+        self.name = new_name
+
+    def delete(self, wait=False):
+        """Delete a snapshot."""
+        response = self._client.api.containers[
+            self._container.name].snapshots[self.name].delete()
+
+        if response.status_code != 202:
+            raise RuntimeError('Error deleting snapshot {}'.format(self.name))
+        if wait:
+            self.wait_for_operation(response.json()['operation'])
