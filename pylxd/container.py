@@ -11,11 +11,9 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import functools
-
 import six
 
-from pylxd import exceptions, mixin
+from pylxd import exceptions, managers, mixin
 from pylxd.deprecation import deprecated
 from pylxd.operation import Operation
 
@@ -32,12 +30,6 @@ class Container(mixin.Waitable, mixin.Marshallable):
     This class is not intended to be used directly, but rather to be used
     via `Client.containers.create`.
     """
-
-    class Snapshots(object):
-        def __init__(self, client, container):
-            self.get = functools.partial(Snapshot.get, client, container)
-            self.all = functools.partial(Snapshot.all, client, container)
-            self.create = functools.partial(Snapshot.create, client, container)
 
     __slots__ = [
         '_client',
@@ -88,7 +80,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
         for key, value in six.iteritems(kwargs):
             setattr(self, key, value)
 
-        self.snapshots = self.Snapshots(self._client, self)
+        self.snapshots = managers.SnapshotManager(self._client, self)
 
     def fetch(self):
         """Reload the container information."""
