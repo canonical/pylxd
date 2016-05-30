@@ -7,23 +7,14 @@ pylxd
     :target: https://travis-ci.org/lxc/pylxd
 .. image:: https://codecov.io/github/lxc/pylxd/coverage.svg?branch=master
     :target: https://codecov.io/github/lxc/pylxd
+.. image:: https://readthedocs.org/projects/docs/badge/?version=latest
+    :target: https://pylxd.readthedocs.io/en/latest/?badge=latest
 
 A Python library for interacting with the LXD REST API.
 
 Installation
 =============
 ``pip install pylxd``
-
-Documentation
-=============
-
-Documentation is maintained in the doc directory. It can be built with the
-``python setup.py build_sphinx`` command.
-
-Tests
-=====
-
-Tests can be run with tox: ``tox -e integration``.
 
 Bug reports
 ===========
