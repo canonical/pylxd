@@ -69,16 +69,16 @@ class TestContainer(testing.PyLXDTestCase):
             exceptions.CreateFailed,
             container.Container.create, self.client, config)
 
-    def test_reload(self):
-        """A reload updates the properties of a container."""
+    def test_fetch(self):
+        """A fetch updates the properties of a container."""
         an_container = container.Container(
             name='an-container', _client=self.client)
 
-        an_container.reload()
+        an_container.fetch()
 
         self.assertTrue(an_container.ephemeral)
 
-    def test_reload_not_found(self):
+    def test_fetch_not_found(self):
         """NameError is raised on a 404 for updating container."""
         def not_found(request, context):
             context.status_code = 404
@@ -95,7 +95,7 @@ class TestContainer(testing.PyLXDTestCase):
         an_container = container.Container(
             name='an-missing-container', _client=self.client)
 
-        self.assertRaises(NameError, an_container.reload)
+        self.assertRaises(NameError, an_container.fetch)
 
     def test_update(self):
         """A container is updated."""

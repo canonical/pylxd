@@ -54,7 +54,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
 
         Containers returned from this method will only have the name
         set, as that is the only property returned from LXD. If more
-        information is needed, `Container.reload` is the method call
+        information is needed, `Container.fetch` is the method call
         that should be used.
         """
         response = client.api.containers.get()
@@ -137,7 +137,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
             })
         if wait:
             self.wait_for_operation(response.json()['operation'])
-            self.reload()
+            self.fetch()
 
     def state(self):
         response = self._client.api.containers[self.name].state.get()
