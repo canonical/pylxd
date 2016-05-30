@@ -3,7 +3,7 @@ import warnings
 warnings.simplefilter('once', DeprecationWarning)
 
 
-class deprecated():
+class deprecated():  # pragma: no cover
     """A decorator for warning about deprecation warnings.
 
     The decorator takes an optional message argument. This message can
