@@ -7,7 +7,7 @@ class BaseManager(object):
     """A BaseManager class for handling collection operations."""
 
     @property
-    def manager_for(self):
+    def manager_for(self):  # pragma: no cover
         raise AttributeError(
             "Manager class requires 'manager_for' attribute")
 
