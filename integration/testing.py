@@ -34,6 +34,20 @@ class IntegrationTestCase(unittest.TestCase):
 
     def create_container(self):
         """Create a container in lxd."""
+        if not getattr(type(self), '_busybox_ready', False):
+            path, fingerprint = create_busybox_image()
+
+            with open(path) as f:
+                self.client.images.create(f.read(), wait=True)
+
+            self.lxd.images.aliases.post(json={
+                'description': '',
+                'target': fingerprint,
+                'name': 'busybox',
+            })
+
+            type(self)._busybox_ready = True
+
         name = self.generate_object_name()
         machine = {
             'name': name,
