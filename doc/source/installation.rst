@@ -2,7 +2,7 @@
 Installation
 ============
 
-If you're running on Ubuntu Wily or greater::
+If you're running on Ubuntu Xenial or greater::
 
     sudo apt-get install python-pylxd lxd
 
