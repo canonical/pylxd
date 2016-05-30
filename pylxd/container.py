@@ -16,6 +16,7 @@ import functools
 import six
 
 from pylxd import exceptions, mixin
+from pylxd.deprecation import deprecated
 from pylxd.operation import Operation
 
 
@@ -60,7 +61,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
 
         Containers returned from this method will only have the name
         set, as that is the only property returned from LXD. If more
-        information is needed, `Container.reload` is the method call
+        information is needed, `Container.fetch` is the method call
         that should be used.
         """
         response = client.api.containers.get()
@@ -99,7 +100,9 @@ class Container(mixin.Waitable, mixin.Marshallable):
             setattr(self, key, value)
     # XXX: rockstar (28 Mar 2016) - This method was named improperly
     # originally. It's being kept here for backwards compatibility.
-    reload = fetch
+    reload = deprecated(
+        "Container.reload is deprecated. Please use Container.fetch")(
+        fetch)
 
     def update(self, wait=False):
         """Update the container in lxd from local changes."""
@@ -143,7 +146,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
             })
         if wait:
             self.wait_for_operation(response.json()['operation'])
-            self.reload()
+            self.fetch()
 
     def state(self):
         response = self._client.api.containers[self.name].state.get()
