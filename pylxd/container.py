@@ -188,21 +188,23 @@ class Container(mixin.Waitable, mixin.Marshallable):
                                force=force,
                                wait=wait)
 
-    # The next four methods are left for backwards compatibility,
-    # but are deprecated for the snapshots manager API.
+    @deprecated('Container.snapshot is deprecated. Please use Container.snapshots.create')  # NOQA
     def snapshot(self, name, stateful=False, wait=False):  # pragma: no cover
         """Take a snapshot of the container."""
         self.snapshots.create(name, stateful, wait)
 
+    @deprecated('Container.list_snapshots is deprecated. Please use Container.snapshots.all')  # NOQA
     def list_snapshots(self):  # pragma: no cover
         """List all container snapshots."""
         return [s.name for s in self.snapshots.all()]
 
+    @deprecated('Container.rename_snapshot is deprecated. Please use Snapshot.rename')  # NOQA
     def rename_snapshot(self, old, new, wait=False):  # pragma: no cover
         """Rename a snapshot."""
         snapshot = self.snapshots.get(old)
         snapshot.rename(new, wait=wait)
 
+    @deprecated('Container.delete_snapshot is deprecated. Please use Snapshot.delete')  # NOQA
     def delete_snapshot(self, name, wait=False):  # pragma: no cover
         """Delete a snapshot."""
         snapshot = self.snapshots.get(name)
