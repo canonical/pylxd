@@ -74,6 +74,36 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)/state$',  # NOQA
     },
     {
+        'text': json.dumps({'metadata': [
+            '/1.0/containers/an_container/snapshots/an-snapshot',
+        ]}),
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)/snapshots$',  # NOQA
+    },
+    {
+        'text': json.dumps({'operation': 'operation-abc'}),
+        'method': 'POST',
+        'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)/snapshots$',  # NOQA
+    },
+    {
+        'text': json.dumps({'metadata': {
+            'name': 'an_container/an-snapshot',
+            'stateful': False,
+        }}),
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/containers/(?P<container>.*)/snapshots/(?P<snapshot>.*)$',  # NOQA
+    },
+    {
+        'text': json.dumps({'operation': 'operation-abc'}),
+        'method': 'POST',
+        'url': r'^http://pylxd.test/1.0/containers/(?P<container>.*)/snapshots/(?P<snapshot>.*)$',  # NOQA
+    },
+    {
+        'text': json.dumps({'operation': 'operation-abc'}),
+        'method': 'DELETE',
+        'url': r'^http://pylxd.test/1.0/containers/(?P<container>.*)/snapshots/(?P<snapshot>.*)$',  # NOQA
+    },
+    {
         'text': json.dumps({'operation': 'operation-abc'}),
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)$',

@@ -154,3 +154,81 @@ class TestContainerState(testing.PyLXDTestCase):
 
         self.assertEqual('Running', state.status)
         self.assertEqual(103, state.status_code)
+
+
+class TestContainerSnapshots(testing.PyLXDTestCase):
+    """Tests for pylxd.container.Container.snapshots."""
+
+    def setUp(self):
+        super(TestContainerSnapshots, self).setUp()
+        self.container = container.Container.get(self.client, 'an-container')
+
+    def test_get(self):
+        """Return a specific snapshot."""
+        snapshot = self.container.snapshots.get('an-snapshot')
+
+        self.assertEqual('an-snapshot', snapshot.name)
+
+    def test_all(self):
+        """Return all snapshots."""
+        snapshots = self.container.snapshots.all()
+
+        self.assertEqual(1, len(snapshots))
+        self.assertEqual('an-snapshot', snapshots[0].name)
+        self.assertEqual(self.client, snapshots[0]._client)
+        self.assertEqual(self.container, snapshots[0]._container)
+
+    def test_create(self):
+        """Create a snapshot."""
+        snapshot = self.container.snapshots.create(
+            'an-snapshot', stateful=True, wait=True)
+
+        self.assertEqual('an-snapshot', snapshot.name)
+
+
+class TestSnapshot(testing.PyLXDTestCase):
+    """Tests for pylxd.container.Snapshot."""
+
+    def setUp(self):
+        super(TestSnapshot, self).setUp()
+        self.container = container.Container.get(self.client, 'an-container')
+
+    def test_rename(self):
+        """A snapshot is renamed."""
+        snapshot = container.Snapshot(
+            _client=self.client, _container=self.container,
+            name='an-snapshot')
+
+        snapshot.rename('an-renamed-snapshot', wait=True)
+
+        self.assertEqual('an-renamed-snapshot', snapshot.name)
+
+    def test_delete(self):
+        """A snapshot is deleted."""
+        snapshot = container.Snapshot(
+            _client=self.client, _container=self.container,
+            name='an-snapshot')
+
+        snapshot.delete(wait=True)
+
+        # TODO: add an assertion here
+
+    def test_delete_failure(self):
+        """If the response indicates delete failure, raise RuntimeError."""
+        def not_found(request, context):
+            context.status_code = 404
+            return json.dumps({
+                'type': 'error',
+                'error': 'Not found',
+                'error_code': 404})
+        self.add_rule({
+            'text': not_found,
+            'method': 'DELETE',
+            'url': r'^http://pylxd.test/1.0/containers/(?P<container>.*)/snapshots/(?P<snapshot>.*)$',  # NOQA
+        })
+
+        snapshot = container.Snapshot(
+            _client=self.client, _container=self.container,
+            name='an-snapshot')
+
+        self.assertRaises(RuntimeError, snapshot.delete)
