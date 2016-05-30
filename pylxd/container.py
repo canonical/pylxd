@@ -15,6 +15,7 @@
 import six
 
 from pylxd import exceptions, mixin
+from pylxd.deprecation import deprecated
 from pylxd.operation import Operation
 
 
@@ -90,7 +91,9 @@ class Container(mixin.Waitable, mixin.Marshallable):
             setattr(self, key, value)
     # XXX: rockstar (28 Mar 2016) - This method was named improperly
     # originally. It's being kept here for backwards compatibility.
-    reload = fetch
+    reload = deprecated(
+        "Container.reload is deprecated. Please use Container.fetch")(
+        fetch)
 
     def update(self, wait=False):
         """Update the container in lxd from local changes."""
