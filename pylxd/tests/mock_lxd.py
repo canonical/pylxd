@@ -21,19 +21,21 @@ def profiles_POST(request, context):
     return json.dumps({'metadata': {}})
 
 
+def snapshot_DELETE(request, context):
+    context.status_code = 202
+    return json.dumps({'operation': 'operation-abc'})
+
+
 def profile_GET(request, context):
     name = request.path.split('/')[-1]
-    if name in ('an-profile', 'an-new-profile'):
-        return json.dumps({
-            'metadata': {
-                'name': name,
-                'description': 'An description',
-                'config': {},
-                'devices': {},
-            },
-        })
-    else:
-        context.status_code = 404
+    return json.dumps({
+        'metadata': {
+            'name': name,
+            'description': 'An description',
+            'config': {},
+            'devices': {},
+        },
+    })
 
 
 RULES = [
@@ -63,7 +65,7 @@ RULES = [
             'ephemeral': True,
         }}),
         'method': 'GET',
-        'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)$',
+        'url': r'^http://pylxd.test/1.0/containers/an-container$',
     },
     {
         'text': json.dumps({'metadata': {
@@ -71,19 +73,19 @@ RULES = [
             'status_code': 103,
         }}),
         'method': 'GET',
-        'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)/state$',  # NOQA
+        'url': r'^http://pylxd.test/1.0/containers/an-container/state$',  # NOQA
     },
     {
         'text': json.dumps({'metadata': [
             '/1.0/containers/an_container/snapshots/an-snapshot',
         ]}),
         'method': 'GET',
-        'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)/snapshots$',  # NOQA
+        'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots$',  # NOQA
     },
     {
         'text': json.dumps({'operation': 'operation-abc'}),
         'method': 'POST',
-        'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)/snapshots$',  # NOQA
+        'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots$',  # NOQA
     },
     {
         'text': json.dumps({'metadata': {
@@ -91,32 +93,32 @@ RULES = [
             'stateful': False,
         }}),
         'method': 'GET',
-        'url': r'^http://pylxd.test/1.0/containers/(?P<container>.*)/snapshots/(?P<snapshot>.*)$',  # NOQA
+        'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots/an-snapshot$',  # NOQA
     },
     {
         'text': json.dumps({'operation': 'operation-abc'}),
         'method': 'POST',
-        'url': r'^http://pylxd.test/1.0/containers/(?P<container>.*)/snapshots/(?P<snapshot>.*)$',  # NOQA
+        'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots/an-snapshot$',  # NOQA
     },
     {
-        'text': json.dumps({'operation': 'operation-abc'}),
+        'text': snapshot_DELETE,
         'method': 'DELETE',
-        'url': r'^http://pylxd.test/1.0/containers/(?P<container>.*)/snapshots/(?P<snapshot>.*)$',  # NOQA
+        'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots/an-snapshot$',  # NOQA
     },
     {
         'text': json.dumps({'operation': 'operation-abc'}),
         'method': 'POST',
-        'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)$',
+        'url': r'^http://pylxd.test/1.0/containers/an-container$',
     },
     {
         'text': json.dumps({'operation': 'operation-abc'}),
         'method': 'PUT',
-        'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)$',
+        'url': r'^http://pylxd.test/1.0/containers/an-container$',
     },
     {
         'text': container_DELETE,
         'method': 'DELETE',
-        'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)$',
+        'url': r'^http://pylxd.test/1.0/containers/an-container$',
     },
 
     # Images
@@ -175,13 +177,18 @@ RULES = [
     {
         'text': profile_GET,
         'method': 'GET',
-        'url': r'^http://pylxd.test/1.0/profiles/(?P<container_name>.*)$',
+        'url': r'^http://pylxd.test/1.0/profiles/(an-profile|an-new-profile)$',
     },
 
     # Operations
     {
         'text': '{"metadata": {"id": "operation-abc"}}',
         'method': 'GET',
-        'url': r'^http://pylxd.test/1.0/operations/(?P<operation_id>.*)$',
+        'url': r'^http://pylxd.test/1.0/operations/operation-abc$',
+    },
+    {
+        'text': '{"metadata": {}',
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/operations/operation-abc/wait$',
     },
 ]

@@ -25,7 +25,7 @@ class TestProfile(testing.PyLXDTestCase):
         self.add_rule({
             'text': not_found,
             'method': 'GET',
-            'url': r'^http://pylxd.test/1.0/profiles/(?P<container_name>.*)$',
+            'url': r'^http://pylxd.test/1.0/profiles/an-profile$',
         })
 
         self.assertRaises(
@@ -99,7 +99,7 @@ class TestProfile(testing.PyLXDTestCase):
         self.add_rule({
             'text': not_found,
             'method': 'GET',
-            'url': r'^http://pylxd.test/1.0/profiles/(?P<container_name>.*)$',
+            'url': r'^http://pylxd.test/1.0/profiles/an-profile$',
         })
 
         an_profile = profile.Profile(name='an-profile', _client=self.client)
