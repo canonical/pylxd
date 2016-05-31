@@ -32,6 +32,31 @@ class Container(mixin.Waitable, mixin.Marshallable):
     This class is not intended to be used directly, but rather to be used
     via `Client.containers.create`.
     """
+    class FilesManager(object):
+        """A pseudo-manager for namespacing file operations."""
+
+        def __init__(self, client, container):
+            self._client = client
+            self._container = container
+
+        def put(self, filepath, data):
+            response = self._client.api.containers[
+                self._container.name].files.post(
+                params={'path': filepath}, data=data)
+            return response.status_code == 200
+
+        def get(self, filepath):
+            response = self._client.api.containers[
+                self._container.name].files.get(
+                params={'path': filepath})
+            if response.status_code == 500:
+                # XXX: rockstar (15 Feb 2016) - This should really
+                # return a 404. I blame LXD.
+                raise exceptions.NotFound({
+                    'error': '{} not found in container {}'.format(
+                        filepath, self._container.name
+                        )})
+            return response.content
 
     class Snapshots(object):
         def __init__(self, client, container):
@@ -89,6 +114,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
             setattr(self, key, value)
 
         self.snapshots = self.Snapshots(self._client, self)
+        self.files = self.FilesManager(self._client, self)
 
     def fetch(self):
         """Reload the container information."""
@@ -210,21 +236,15 @@ class Container(mixin.Waitable, mixin.Marshallable):
         snapshot = self.snapshots.get(name)
         snapshot.delete()
 
-    def get_file(self, filepath):
+    @deprecated('Container.get_file is deprecated. Please use Container.files.get')  # NOQA
+    def get_file(self, filepath):  # pragma: no cover
         """Get a file from the container."""
-        response = self._client.api.containers[self.name].files.get(
-            params={'path': filepath})
-        if response.status_code == 500:
-            # XXX: rockstar (15 Feb 2016) - This should really return a 404.
-            # I blame LXD. :)
-            raise IOError('Error reading "{}"'.format(filepath))
-        return response.content
+        return self.files.get(filepath)
 
-    def put_file(self, filepath, data):
+    @deprecated('Container.put_file is deprecated. Please use Container.files.put')  # NOQA
+    def put_file(self, filepath, data):  # pragma: no cover
         """Put a file on the container."""
-        response = self._client.api.containers[self.name].files.post(
-            params={'path': filepath}, data=data)
-        return response.status_code == 200
+        return self.files.put(filepath, data)
 
     def execute(self, commands, environment={}):
         """Execute a command on the container."""

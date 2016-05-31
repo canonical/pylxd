@@ -4,7 +4,9 @@ class ClientConnectionFailed(Exception):
 
 class ClientAuthenticationFailed(Exception):
     """The LXD client's certificates are not trusted."""
-    message = "LXD client certificates are not trusted."""
+
+    def __str__(self):
+        return "LXD client certificates are not trusted."""
 
 
 class _LXDAPIException(Exception):
@@ -18,7 +20,9 @@ class _LXDAPIException(Exception):
 
     def __init__(self, data):
         self.data = data
-        self.message = self.data.get('error')
+
+    def __str__(self):
+        return self.data.get('error')
 
 
 class NotFound(_LXDAPIException):
