@@ -11,7 +11,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import functools
 import os
 
 try:
@@ -22,11 +21,7 @@ except ImportError:
 import requests
 import requests_unixsocket
 
-from pylxd import exceptions
-from pylxd.container import Container
-from pylxd.image import Image
-from pylxd.operation import Operation
-from pylxd.profile import Profile
+from pylxd import exceptions, managers
 
 requests_unixsocket.monkeypatch()
 
@@ -114,86 +109,6 @@ class Client(object):
             >>> print api.containers['test'].get().json()
     """
 
-    class Containers(object):
-        """
-        Manager for :class:`~pylxd.container.Container` of a :class:`Client`.
-
-        .. attribute:: all
-
-            Partial of :meth:`Container.all <pylxd.container.Container.all>`,
-            calling it without argument returns the same as calling that method
-            with just the client argument.
-
-        .. attribute:: get
-
-            Partial of of :meth:`Container.get
-            <pylxd.container.Container.get>`.
-
-        .. attribute:: create
-
-            Partial of of :meth:`Container.create
-            <pylxd.container.Container.create>`.
-        """
-        def __init__(self, client):
-            self.get = functools.partial(Container.get, client)
-            self.all = functools.partial(Container.all, client)
-            self.create = functools.partial(Container.create, client)
-
-    class Images(object):
-        """
-        Manager for :py:class:`~pylxd.image.Image` of a :class:`Client`.
-
-        .. attribute:: all
-
-            Partial of :meth:`Image.all <pylxd.image.Image.all>`,
-
-        .. attribute:: get
-
-            Partial of of :meth:`Image.get <pylxd.image.Image.get>`.
-
-        .. attribute:: create
-
-            Partial of of :meth:`Image.create <pylxd.image.Image.create>`.
-        """
-        def __init__(self, client):
-            self.get = functools.partial(Image.get, client)
-            self.all = functools.partial(Image.all, client)
-            self.create = functools.partial(Image.create, client)
-
-    class Operations(object):
-        """
-        Manager for :class:`~pylxd.operation.Operation` of a :class:`Client`.
-
-        .. attribute:: get
-
-            Partial of of :meth:`Operation.get
-            <pylxd.operation.Operation.get>`.
-        """
-        def __init__(self, client):
-            self.get = functools.partial(Operation.get, client)
-
-    class Profiles(object):
-        """
-        Manager for :py:class:`~pylxd.profile.Profile` of a :class:`Client`.
-
-        .. attribute:: all
-
-            Partial of :meth:`Profile.all <pylxd.profile.Profile.all>`,
-
-        .. attribute:: get
-
-            Partial of of :meth:`Profile.get <pylxd.profile.Profile.get>`.
-
-        .. attribute:: create
-
-            Partial of of :meth:`Profile.create
-            <pylxd.profile.Profile.create>`.
-        """
-        def __init__(self, client):
-            self.get = functools.partial(Profile.get, client)
-            self.all = functools.partial(Profile.all, client)
-            self.create = functools.partial(Profile.create, client)
-
     def __init__(self, endpoint=None, version='1.0', cert=None, verify=True):
         if endpoint is not None:
             self.api = _APINode(endpoint, cert=cert, verify=verify)
@@ -219,7 +134,7 @@ class Client(object):
                 requests.exceptions.InvalidURL):
             raise exceptions.ClientConnectionFailed()
 
-        self.containers = self.Containers(self)
-        self.images = self.Images(self)
-        self.operations = self.Operations(self)
-        self.profiles = self.Profiles(self)
+        self.containers = managers.ContainerManager(self)
+        self.images = managers.ImageManager(self)
+        self.operations = managers.OperationManager(self)
+        self.profiles = managers.ProfileManager(self)
