@@ -232,3 +232,39 @@ class TestSnapshot(testing.PyLXDTestCase):
             name='an-snapshot')
 
         self.assertRaises(RuntimeError, snapshot.delete)
+
+
+class TestFiles(testing.PyLXDTestCase):
+    """Tests for pylxd.container.Container.files."""
+
+    def setUp(self):
+        super(TestFiles, self).setUp()
+        self.container = container.Container.get(self.client, 'an-container')
+
+    def test_put(self):
+        """A file is put on the container."""
+        data = 'The quick brown fox'
+
+        self.container.files.put('/tmp/putted', data)
+
+        # TODO: Add an assertion here
+
+    def test_get(self):
+        """A file is retrieved from the container."""
+        data = self.container.files.get('/tmp/getted')
+
+        self.assertEqual(b'This is a getted file', data)
+
+    def test_get_not_found(self):
+        """NotFound is raised on bogus filenames."""
+        def not_found(request, context):
+            context.status_code = 500
+        rule = {
+            'text': not_found,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Fgetted$',  # NOQA
+        }
+        self.add_rule(rule)
+
+        self.assertRaises(
+            exceptions.NotFound, self.container.files.get, '/tmp/getted')

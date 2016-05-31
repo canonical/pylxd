@@ -46,6 +46,7 @@ RULES = [
         'url': r'^http://pylxd.test/1.0$',
     },
 
+
     # Containers
     {
         'text': json.dumps({'metadata': [
@@ -76,6 +77,24 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/containers/an-container/state$',  # NOQA
     },
     {
+        'text': json.dumps({'operation': 'operation-abc'}),
+        'method': 'POST',
+        'url': r'^http://pylxd.test/1.0/containers/an-container$',
+    },
+    {
+        'text': json.dumps({'operation': 'operation-abc'}),
+        'method': 'PUT',
+        'url': r'^http://pylxd.test/1.0/containers/an-container$',
+    },
+    {
+        'text': container_DELETE,
+        'method': 'DELETE',
+        'url': r'^http://pylxd.test/1.0/containers/an-container$',
+    },
+
+
+    # Container Snapshots
+    {
         'text': json.dumps({'metadata': [
             '/1.0/containers/an_container/snapshots/an-snapshot',
         ]}),
@@ -105,21 +124,20 @@ RULES = [
         'method': 'DELETE',
         'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots/an-snapshot$',  # NOQA
     },
+
+
+    # Container files
     {
-        'text': json.dumps({'operation': 'operation-abc'}),
+        'text': 'This is a getted file',
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Fgetted$',  # NOQA
+    },
+    {
         'method': 'POST',
-        'url': r'^http://pylxd.test/1.0/containers/an-container$',
+        'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Fputted$',  # NOQA
     },
-    {
-        'text': json.dumps({'operation': 'operation-abc'}),
-        'method': 'PUT',
-        'url': r'^http://pylxd.test/1.0/containers/an-container$',
-    },
-    {
-        'text': container_DELETE,
-        'method': 'DELETE',
-        'url': r'^http://pylxd.test/1.0/containers/an-container$',
-    },
+
+
 
     # Images
     {
