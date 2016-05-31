@@ -6,3 +6,6 @@ source = pylxd
 omit =
     pylxd/tests/*
     pylxd/deprecated/*
+exclude_lines =
+    def __str__
+    pragma: no cover
