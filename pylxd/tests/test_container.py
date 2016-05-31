@@ -32,7 +32,7 @@ class TestContainer(testing.PyLXDTestCase):
         self.add_rule({
             'text': not_found,
             'method': 'GET',
-            'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)$',  # NOQA
+            'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',  # NOQA
         })
 
         name = 'an-missing-container'
@@ -89,7 +89,7 @@ class TestContainer(testing.PyLXDTestCase):
         self.add_rule({
             'text': not_found,
             'method': 'GET',
-            'url': r'^http://pylxd.test/1.0/containers/(?P<container_name>.*)$',  # NOQA
+            'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',  # NOQA
         })
 
         an_container = container.Container(
@@ -224,7 +224,7 @@ class TestSnapshot(testing.PyLXDTestCase):
         self.add_rule({
             'text': not_found,
             'method': 'DELETE',
-            'url': r'^http://pylxd.test/1.0/containers/(?P<container>.*)/snapshots/(?P<snapshot>.*)$',  # NOQA
+            'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots/an-snapshot$',  # NOQA
         })
 
         snapshot = container.Snapshot(
