@@ -17,7 +17,7 @@ def images_POST(request, context):
 
 
 def profiles_POST(request, context):
-    context.status_code = 202
+    context.status_code = 200
     return json.dumps({'metadata': {}})
 
 
