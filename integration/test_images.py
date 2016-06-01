@@ -74,4 +74,5 @@ class TestImage(IntegrationTestCase):
         self.image.delete(wait=True)
 
         self.assertRaises(
-            exceptions.NotFound, self.client.images.get, self.image.fingerprint)
+            exceptions.NotFound,
+            self.client.images.get, self.image.fingerprint)

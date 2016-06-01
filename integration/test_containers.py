@@ -92,7 +92,8 @@ class TestContainer(IntegrationTestCase):
         self.container.delete(wait=True)
 
         self.assertRaises(
-            exceptions.NotFound, self.client.containers.get, self.container.name)
+            exceptions.NotFound,
+            self.client.containers.get, self.container.name)
 
     def test_start_stop(self):
         """The container is started and then stopped."""
