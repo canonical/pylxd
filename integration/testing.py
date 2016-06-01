@@ -11,8 +11,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import uuid
 import unittest
+import uuid
 
 from pylxd.client import Client
 from integration.busybox import create_busybox_image
@@ -27,6 +27,7 @@ class IntegrationTestCase(unittest.TestCase):
         self.lxd = self.client.api
 
     def generate_object_name(self):
+        """Generate a random object name."""
         # Underscores are not allowed in container names.
         test = self.id().split('.')[-1].replace('_', '')
         rando = str(uuid.uuid1()).split('-')[-1]
@@ -34,6 +35,8 @@ class IntegrationTestCase(unittest.TestCase):
 
     def create_container(self):
         """Create a container in lxd."""
+        fingerprint, alias = self.create_image()
+
         name = self.generate_object_name()
         machine = {
             'name': name,
@@ -42,7 +45,7 @@ class IntegrationTestCase(unittest.TestCase):
             'ephemeral': False,
             'config': {'limits.cpu': '2'},
             'source': {'type': 'image',
-                       'alias': 'busybox'},
+                       'alias': alias},
         }
         result = self.lxd['containers'].post(json=machine)
         operation_uuid = result.json()['operation'].split('/')[-1]
@@ -92,6 +95,7 @@ class IntegrationTestCase(unittest.TestCase):
         self.lxd.images[fingerprint].delete()
 
     def create_profile(self):
+        """Create a profile."""
         name = self.generate_object_name()
         config = {'limits.memory': '1GB'}
         self.lxd.profiles.post(json={
@@ -101,6 +105,7 @@ class IntegrationTestCase(unittest.TestCase):
         return name
 
     def delete_profile(self, name):
+        """Delete a profile."""
         self.lxd.profiles[name].delete()
 
     def assertCommon(self, response):
