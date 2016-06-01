@@ -70,9 +70,7 @@ class TestClient(unittest.TestCase):
     def test_authentication_failed(self):
         """If the authentication fails, an exception is raised."""
         response = mock.MagicMock(status_code=200)
-        response.json.return_value = {'metadata': {'auth': 'untrusted',
-                                                   'environment': {}
-                                                   }}
+        response.json.return_value = {'metadata': {'auth': 'untrusted'}}
         self.get.return_value = response
 
         self.assertRaises(exceptions.ClientAuthenticationFailed, client.Client)
@@ -80,7 +78,7 @@ class TestClient(unittest.TestCase):
     def test_host_info(self):
         """Perform a host query """
         an_client = client.Client()
-        self.assertEqual('zfs', an_client.host_info['storage'])
+        self.assertEqual('zfs', an_client.host_info['environment']['storage'])
 
 
 class TestAPINode(unittest.TestCase):

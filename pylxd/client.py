@@ -131,7 +131,7 @@ class Client(object):
             if auth != "trusted":
                 raise exceptions.ClientAuthenticationFailed()
 
-            self.host_info = response.json()['metadata']['environment']
+            self.host_info = response.json()['metadata']
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.InvalidURL):
             raise exceptions.ClientConnectionFailed()
