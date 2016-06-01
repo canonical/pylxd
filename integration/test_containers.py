@@ -35,8 +35,7 @@ class TestContainers(IntegrationTestCase):
 
         containers = self.client.containers.all()
 
-        self.assertEqual(1, len(containers))
-        self.assertEqual(name, containers[0].name)
+        self.assertIn(name, [c.name for c in containers])
 
     def test_create(self):
         """Creates and returns a new container."""
