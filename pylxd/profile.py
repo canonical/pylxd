@@ -53,7 +53,7 @@ class Profile(mixin.Marshallable):
             profile['devices'] = devices
         response = client.api.profiles.post(json=profile)
 
-        if response.status_code is not 202:
+        if response.status_code is not 200:
             raise exceptions.CreateFailed(response.json())
 
         return cls.get(client, name)
