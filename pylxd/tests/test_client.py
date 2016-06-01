@@ -16,7 +16,10 @@ class TestClient(unittest.TestCase):
         self.get = self.patcher.start()
 
         response = mock.MagicMock(status_code=200)
-        response.json.return_value = {'metadata': {'auth': 'trusted'}}
+        response.json.return_value = {'metadata': {
+            'auth': 'trusted',
+            'environment': {'storage': 'zfs'},
+        }}
         self.get.return_value = response
 
     def tearDown(self):
@@ -71,6 +74,11 @@ class TestClient(unittest.TestCase):
         self.get.return_value = response
 
         self.assertRaises(exceptions.ClientAuthenticationFailed, client.Client)
+
+    def test_host_info(self):
+        """Perform a host query """
+        an_client = client.Client()
+        self.assertEqual('zfs', an_client.host_info['environment']['storage'])
 
 
 class TestAPINode(unittest.TestCase):
