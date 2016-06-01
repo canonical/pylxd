@@ -11,6 +11,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from pylxd import exceptions
+
 from integration.testing import create_busybox_image, IntegrationTestCase
 
 
@@ -69,7 +71,7 @@ class TestImage(IntegrationTestCase):
 
     def test_delete(self):
         """The image is deleted."""
-        self.image.delete()
+        self.image.delete(wait=True)
 
         self.assertRaises(
-            NameError, self.client.images.get, self.image.fingerprint)
+            exceptions.NotFound, self.client.images.get, self.image.fingerprint)
