@@ -226,7 +226,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
     def delete_snapshot(self, name, wait=False):  # pragma: no cover
         """Delete a snapshot."""
         snapshot = self.snapshots.get(name)
-        snapshot.delete()
+        snapshot.delete(wait=wait)
 
     @deprecated('Container.get_file is deprecated. Please use Container.files.get')  # NOQA
     def get_file(self, filepath):  # pragma: no cover

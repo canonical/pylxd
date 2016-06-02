@@ -13,6 +13,8 @@
 #    under the License.
 import unittest
 
+from pylxd import exceptions
+
 from integration.testing import IntegrationTestCase
 
 
@@ -40,7 +42,7 @@ class TestProfiles(IntegrationTestCase):
     def test_create(self):
         """A profile is created."""
         name = 'an-profile'
-        config = {'limits.memory': '4GB'}
+        config = {'limits.memory': '1GB'}
         profile = self.client.profiles.create(name, config)
         self.addCleanup(self.delete_profile, name)
 
@@ -84,4 +86,4 @@ class TestProfile(IntegrationTestCase):
         self.profile.delete()
 
         self.assertRaises(
-            NameError, self.client.profiles.get, self.profile.name)
+            exceptions.NotFound, self.client.profiles.get, self.profile.name)

@@ -11,11 +11,13 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from pylxd import exceptions
+
 from integration.testing import IntegrationTestCase
 
 
 class TestContainers(IntegrationTestCase):
-    """Tests for `Client.containers`"""
+    """Tests for `Client.containers`."""
 
     def test_get(self):
         """A container is fetched by name."""
@@ -33,11 +35,11 @@ class TestContainers(IntegrationTestCase):
 
         containers = self.client.containers.all()
 
-        self.assertEqual(1, len(containers))
-        self.assertEqual(name, containers[0].name)
+        self.assertIn(name, [c.name for c in containers])
 
     def test_create(self):
         """Creates and returns a new container."""
+        _, alias = self.create_image()
         config = {
             'name': 'an-container',
             'architecture': '2',
@@ -45,7 +47,7 @@ class TestContainers(IntegrationTestCase):
             'ephemeral': True,
             'config': {'limits.cpu': '2'},
             'source': {'type': 'image',
-                       'alias': 'busybox'},
+                       'alias': alias},
         }
         self.addCleanup(self.delete_container, config['name'])
 
@@ -89,7 +91,8 @@ class TestContainer(IntegrationTestCase):
         self.container.delete(wait=True)
 
         self.assertRaises(
-            NameError, self.client.containers.get, self.container.name)
+            exceptions.NotFound,
+            self.client.containers.get, self.container.name)
 
     def test_start_stop(self):
         """The container is started and then stopped."""
