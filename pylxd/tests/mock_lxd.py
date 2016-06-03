@@ -22,11 +22,25 @@ def images_POST(request, context):
         'metadata': {}})
 
 
+def image_DELETE(request, context):
+    context.status_code = 202
+    return json.dumps({
+        'type': 'async',
+        'operation': 'operation-abc'})
+
+
 def profiles_POST(request, context):
     context.status_code = 200
     return json.dumps({
         'type': 'sync',
         'metadata': {}})
+
+
+def profile_DELETE(request, context):
+    context.status_code = 200
+    return json.dumps({
+        'type': 'sync',
+        'operation': 'operation-abc'})
 
 
 def snapshot_DELETE(request, context):
@@ -213,6 +227,12 @@ RULES = [
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
     },
+    {
+        'text': image_DELETE,
+        'method': 'DELETE',
+        'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
+    },
+
 
     # Profiles
     {
@@ -234,6 +254,17 @@ RULES = [
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/profiles/(an-profile|an-new-profile)$',
     },
+    {
+        'text': json.dumps({'type': 'sync'}),
+        'method': 'PUT',
+        'url': r'^http://pylxd.test/1.0/profiles/(an-profile|an-new-profile)$',
+    },
+    {
+        'text': profile_DELETE,
+        'method': 'DELETE',
+        'url': r'^http://pylxd.test/1.0/profiles/(an-profile|an-new-profile)$',
+    },
+
 
     # Operations
     {

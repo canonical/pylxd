@@ -44,7 +44,7 @@ class TestImage(testing.PyLXDTestCase):
     def test_create(self):
         """An image is created."""
         fingerprint = hashlib.sha256(b'').hexdigest()
-        a_image = image.Image.create(self.client, b'')
+        a_image = image.Image.create(self.client, b'', public=True)
 
         self.assertIsInstance(a_image, image.Image)
         self.assertEqual(fingerprint, a_image.fingerprint)
@@ -101,3 +101,31 @@ class TestImage(testing.PyLXDTestCase):
         a_image = image.Image(fingerprint=fingerprint, _client=self.client)
 
         self.assertRaises(exceptions.NotFound, a_image.fetch)
+
+    def test_fetch_error(self):
+        """A 500 error raises LXDAPIException."""
+        def not_found(request, context):
+            context.status_code = 500
+            return json.dumps({
+                'type': 'error',
+                'error': 'Not found',
+                'error_code': 500})
+        self.add_rule({
+            'text': not_found,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
+        })
+        fingerprint = hashlib.sha256(b'').hexdigest()
+
+        a_image = image.Image(fingerprint=fingerprint, _client=self.client)
+
+        self.assertRaises(exceptions.LXDAPIException, a_image.fetch)
+
+    def test_delete(self):
+        """An image is deleted."""
+        # XXX: rockstar (03 Jun 2016) - This just executes
+        # a code path. There should be an assertion here, but
+        # it's not clear how to assert that, just yet.
+        a_image = self.client.images.all()[0]
+
+        a_image.delete(wait=True)
