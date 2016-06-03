@@ -320,4 +320,5 @@ class TestFiles(testing.PyLXDTestCase):
         self.add_rule(rule)
 
         self.assertRaises(
-            exceptions.LXDAPIException, self.container.files.get, '/tmp/getted')
+            exceptions.LXDAPIException,
+            self.container.files.get, '/tmp/getted')
