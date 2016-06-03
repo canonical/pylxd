@@ -44,16 +44,15 @@ class Container(mixin.Waitable, mixin.Marshallable):
             return response.status_code == 200
 
         def get(self, filepath):
-            response = self._client.api.containers[
-                self._container.name].files.get(
-                params={'path': filepath})
-            if response.status_code == 500:
-                # XXX: rockstar (15 Feb 2016) - This should really
-                # return a 404. I blame LXD.
-                raise exceptions.NotFound({
-                    'error': '{} not found in container {}'.format(
-                        filepath, self._container.name
-                        )})
+            try:
+                response = self._client.api.containers[
+                    self._container.name].files.get(
+                    params={'path': filepath})
+            except exceptions.LXDAPIException as e:
+                # LXD 2.0.3+ return 404, not 500,
+                if e.response.status_code in (500, 404):
+                    raise exceptions.NotFound()
+                raise
             return response.content
 
     __slots__ = [
@@ -65,10 +64,13 @@ class Container(mixin.Waitable, mixin.Marshallable):
     @classmethod
     def get(cls, client, name):
         """Get a container by name."""
-        response = client.api.containers[name].get()
+        try:
+            response = client.api.containers[name].get()
+        except exceptions.LXDAPIException as e:
+            if e.response.status_code == 404:
+                raise exceptions.NotFound()
+            raise
 
-        if response.status_code == 404:
-            raise exceptions.NotFound(response.json())
         container = cls(_client=client, **response.json()['metadata'])
         return container
 
@@ -95,7 +97,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
         response = client.api.containers.post(json=config)
 
         if response.status_code != 202:
-            raise exceptions.CreateFailed(response.json())
+            raise exceptions.CreateFailed(response)
         if wait:
             Operation.wait_for_operation(client, response.json()['operation'])
         return cls(name=config['name'], _client=client)
@@ -151,8 +153,6 @@ class Container(mixin.Waitable, mixin.Marshallable):
         """Delete the container."""
         response = self._client.api.containers[self.name].delete()
 
-        if response.status_code != 202:
-            raise RuntimeError('Error deleting instance {}'.format(self.name))
         if wait:
             self.wait_for_operation(response.json()['operation'])
 
@@ -260,10 +260,12 @@ class Snapshot(mixin.Waitable, mixin.Marshallable):
 
     @classmethod
     def get(cls, client, container, name):
-        response = client.api.containers[container.name].snapshots[name].get()
-
-        if response.status_code == 404:
-            raise exceptions.NotFound(response.json())
+        try:
+            response = client.api.containers[container.name].snapshots[name].get()
+        except exceptions.LXDAPIException as e:
+            if e.response.status_code == 404:
+                raise exceptions.NotFound()
+            raise
 
         snapshot = cls(
             _client=client, _container=container,

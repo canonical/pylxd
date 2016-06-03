@@ -26,10 +26,13 @@ class Profile(mixin.Marshallable):
     @classmethod
     def get(cls, client, name):
         """Get a profile."""
-        response = client.api.profiles[name].get()
+        try:
+            response = client.api.profiles[name].get()
+        except exceptions.LXDAPIException as e:
+            if e.response.status_code == 404:
+                raise exceptions.NotFound()
+            raise
 
-        if response.status_code == 404:
-            raise exceptions.NotFound(response.json())
         return cls(_client=client, **response.json()['metadata'])
 
     @classmethod
@@ -85,10 +88,12 @@ class Profile(mixin.Marshallable):
 
     def fetch(self):
         """Fetch the object from LXD, populating attributes."""
-        response = self._client.api.profiles[self.name].get()
-
-        if response.status_code == 404:
-            raise exceptions.NotFound(response.json())
+        try:
+            response = self._client.api.profiles[self.name].get()
+        except exceptions.LXDAPIException as e:
+            if e.response.status_code == 404:
+                raise exceptions.NotFound()
+            raise
 
         for key, val in six.iteritems(response.json()['metadata']):
             setattr(self, key, val)
