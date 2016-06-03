@@ -179,10 +179,26 @@ class TestAPINode(unittest.TestCase):
             node.post)
 
     @mock.patch('pylxd.client.requests.Session')
-    def test_post_missing_type(self, Session):
+    def test_post_missing_type_200(self, Session):
         """A missing response type raises an exception."""
         response = mock.Mock(**{
             'status_code': 200,
+            'json.return_value': {},
+        })
+        session = mock.Mock(**{'post.return_value': response})
+        Session.return_value = session
+
+        node = client._APINode('http://test.com')
+
+        self.assertRaises(
+            exceptions.LXDAPIException,
+            node.post)
+
+    @mock.patch('pylxd.client.requests.Session')
+    def test_post_missing_type_202(self, Session):
+        """A missing response type raises an exception."""
+        response = mock.Mock(**{
+            'status_code': 202,
             'json.return_value': {},
         })
         session = mock.Mock(**{'post.return_value': response})

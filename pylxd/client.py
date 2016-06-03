@@ -13,9 +13,9 @@
 #    under the License.
 import os
 
-try:
+try:  # pragma: no cover
     from urllib.parse import quote
-except ImportError:
+except ImportError:  # pragma: no cover
     from urllib import quote
 
 import requests
