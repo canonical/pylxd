@@ -19,7 +19,7 @@ def images_POST(request, context):
     context.status_code = 202
     return json.dumps({
         'type': 'async',
-        'metadata': {}})
+        'operation': 'operation-abc'})
 
 
 def image_DELETE(request, context):
@@ -214,6 +214,7 @@ RULES = [
                 'cached': False,
                 'filename': 'a_image.tar.bz2',
                 'fingerprint': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',  # NOQA
+                'public': False,
                 'properties': {},
                 'size': 1,
                 'auto_update': False,
@@ -225,6 +226,11 @@ RULES = [
             },
         }),
         'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
+    },
+    {
+        'text': json.dumps({'type': 'sync'}),  # should be async
+        'method': 'PUT',
         'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
     },
     {
