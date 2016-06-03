@@ -147,6 +147,54 @@ class TestAPINode(unittest.TestCase):
         session.post.assert_called_once_with('http://test.com')
 
     @mock.patch('pylxd.client.requests.Session')
+    def test_post_200_not_sync(self, Session):
+        """A status code of 200 with async request raises an exception."""
+        response = mock.Mock(**{
+            'status_code': 200,
+            'json.return_value': {'type': 'async'},
+        })
+        session = mock.Mock(**{'post.return_value': response})
+        Session.return_value = session
+
+        node = client._APINode('http://test.com')
+
+        self.assertRaises(
+            exceptions.LXDAPIException,
+            node.post)
+
+    @mock.patch('pylxd.client.requests.Session')
+    def test_post_202_sync(self, Session):
+        """A status code of 202 with sync request raises an exception."""
+        response = mock.Mock(**{
+            'status_code': 202,
+            'json.return_value': {'type': 'sync'},
+        })
+        session = mock.Mock(**{'post.return_value': response})
+        Session.return_value = session
+
+        node = client._APINode('http://test.com')
+
+        self.assertRaises(
+            exceptions.LXDAPIException,
+            node.post)
+
+    @mock.patch('pylxd.client.requests.Session')
+    def test_post_missing_type(self, Session):
+        """A missing response type raises an exception."""
+        response = mock.Mock(**{
+            'status_code': 200,
+            'json.return_value': {},
+        })
+        session = mock.Mock(**{'post.return_value': response})
+        Session.return_value = session
+
+        node = client._APINode('http://test.com')
+
+        self.assertRaises(
+            exceptions.LXDAPIException,
+            node.post)
+
+    @mock.patch('pylxd.client.requests.Session')
     def test_put(self, Session):
         """Perform a session put."""
         response = mock.Mock(**{
