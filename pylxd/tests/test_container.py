@@ -22,7 +22,7 @@ class TestContainer(testing.PyLXDTestCase):
         self.assertEqual(name, an_container.name)
 
     def test_get_not_found(self):
-        """NameError is raised when the container doesn't exist."""
+        """NotFound is raised when the container doesn't exist."""
         def not_found(request, context):
             context.status_code = 404
             return json.dumps({
@@ -39,6 +39,26 @@ class TestContainer(testing.PyLXDTestCase):
 
         self.assertRaises(
             exceptions.NotFound,
+            container.Container.get, self.client, name)
+
+    def test_get_error(self):
+        """LXDAPIException is raised when the LXD API errors."""
+        def not_found(request, context):
+            context.status_code = 500
+            return json.dumps({
+                'type': 'error',
+                'error': 'Not found',
+                'error_code': 500})
+        self.add_rule({
+            'text': not_found,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',  # NOQA
+        })
+
+        name = 'an-missing-container'
+
+        self.assertRaises(
+            exceptions.LXDAPIException,
             container.Container.get, self.client, name)
 
     def test_create(self):
@@ -96,6 +116,25 @@ class TestContainer(testing.PyLXDTestCase):
             name='an-missing-container', _client=self.client)
 
         self.assertRaises(exceptions.NotFound, an_container.fetch)
+
+    def test_fetch_error(self):
+        """LXDAPIException is raised on error."""
+        def not_found(request, context):
+            context.status_code = 500
+            return json.dumps({
+                'type': 'error',
+                'error': 'An bad error',
+                'error_code': 500})
+        self.add_rule({
+            'text': not_found,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',  # NOQA
+        })
+
+        an_container = container.Container(
+            name='an-missing-container', _client=self.client)
+
+        self.assertRaises(exceptions.LXDAPIException, an_container.fetch)
 
     def test_update(self):
         """A container is updated."""
@@ -268,3 +307,17 @@ class TestFiles(testing.PyLXDTestCase):
 
         self.assertRaises(
             exceptions.NotFound, self.container.files.get, '/tmp/getted')
+
+    def test_get_error(self):
+        """LXDAPIException is raised on error."""
+        def not_found(request, context):
+            context.status_code = 503
+        rule = {
+            'text': not_found,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Fgetted$',  # NOQA
+        }
+        self.add_rule(rule)
+
+        self.assertRaises(
+            exceptions.LXDAPIException, self.container.files.get, '/tmp/getted')

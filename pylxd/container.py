@@ -318,7 +318,5 @@ class Snapshot(mixin.Waitable, mixin.Marshallable):
         response = self._client.api.containers[
             self._container.name].snapshots[self.name].delete()
 
-        if response.status_code != 202:
-            raise RuntimeError('Error deleting snapshot {}'.format(self.name))
         if wait:
             self.wait_for_operation(response.json()['operation'])
