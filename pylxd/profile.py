@@ -54,10 +54,10 @@ class Profile(mixin.Marshallable):
             profile['config'] = config
         if devices is not None:
             profile['devices'] = devices
-        response = client.api.profiles.post(json=profile)
-
-        if response.status_code is not 200:
-            raise exceptions.CreateFailed(response.json())
+        try:
+            client.api.profiles.post(json=profile)
+        except exceptions.LXDAPIException as e:
+            raise exceptions.CreateFailed(e.response.json())
 
         return cls.get(client, name)
 

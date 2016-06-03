@@ -117,7 +117,11 @@ class TestAPINode(unittest.TestCase):
     @mock.patch('pylxd.client.requests.Session')
     def test_get(self, Session):
         """Perform a session get."""
-        session = mock.Mock()
+        response = mock.Mock(**{
+            'status_code': 200,
+            'json.return_value': {'type': 'sync'},
+        })
+        session = mock.Mock(**{'get.return_value': response})
         Session.return_value = session
 
         node = client._APINode('http://test.com')
@@ -129,7 +133,11 @@ class TestAPINode(unittest.TestCase):
     @mock.patch('pylxd.client.requests.Session')
     def test_post(self, Session):
         """Perform a session post."""
-        session = mock.Mock()
+        response = mock.Mock(**{
+            'status_code': 200,
+            'json.return_value': {'type': 'sync'},
+        })
+        session = mock.Mock(**{'post.return_value': response})
         Session.return_value = session
 
         node = client._APINode('http://test.com')
@@ -141,7 +149,11 @@ class TestAPINode(unittest.TestCase):
     @mock.patch('pylxd.client.requests.Session')
     def test_put(self, Session):
         """Perform a session put."""
-        session = mock.Mock()
+        response = mock.Mock(**{
+            'status_code': 200,
+            'json.return_value': {'type': 'sync'},
+        })
+        session = mock.Mock(**{'put.return_value': response})
         Session.return_value = session
 
         node = client._APINode('http://test.com')
@@ -153,7 +165,11 @@ class TestAPINode(unittest.TestCase):
     @mock.patch('pylxd.client.requests.Session')
     def test_delete(self, Session):
         """Perform a session delete."""
-        session = mock.Mock()
+        response = mock.Mock(**{
+            'status_code': 200,
+            'json.return_value': {'type': 'sync'},
+        })
+        session = mock.Mock(**{'delete.return_value': response})
         Session.return_value = session
 
         node = client._APINode('http://test.com')

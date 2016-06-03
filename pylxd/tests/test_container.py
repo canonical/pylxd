@@ -79,7 +79,7 @@ class TestContainer(testing.PyLXDTestCase):
         self.assertTrue(an_container.ephemeral)
 
     def test_fetch_not_found(self):
-        """NameError is raised on a 404 for updating container."""
+        """NotFound is raised on a 404 for updating container."""
         def not_found(request, context):
             context.status_code = 404
             return json.dumps({
@@ -95,7 +95,7 @@ class TestContainer(testing.PyLXDTestCase):
         an_container = container.Container(
             name='an-missing-container', _client=self.client)
 
-        self.assertRaises(NameError, an_container.fetch)
+        self.assertRaises(exceptions.NotFound, an_container.fetch)
 
     def test_update(self):
         """A container is updated."""
@@ -214,7 +214,7 @@ class TestSnapshot(testing.PyLXDTestCase):
         # TODO: add an assertion here
 
     def test_delete_failure(self):
-        """If the response indicates delete failure, raise RuntimeError."""
+        """If the response indicates delete failure, raise an exception."""
         def not_found(request, context):
             context.status_code = 404
             return json.dumps({
@@ -231,7 +231,7 @@ class TestSnapshot(testing.PyLXDTestCase):
             _client=self.client, _container=self.container,
             name='an-snapshot')
 
-        self.assertRaises(RuntimeError, snapshot.delete)
+        self.assertRaises(exceptions.LXDAPIException, snapshot.delete)
 
 
 class TestFiles(testing.PyLXDTestCase):

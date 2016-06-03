@@ -94,10 +94,11 @@ class Container(mixin.Waitable, mixin.Marshallable):
     @classmethod
     def create(cls, client, config, wait=False):
         """Create a new container config."""
-        response = client.api.containers.post(json=config)
+        try:
+            response = client.api.containers.post(json=config)
+        except exceptions.LXDAPIException as e:
+            raise exceptions.CreateFailed(e.response)
 
-        if response.status_code != 202:
-            raise exceptions.CreateFailed(response)
         if wait:
             Operation.wait_for_operation(client, response.json()['operation'])
         return cls(name=config['name'], _client=client)
@@ -112,10 +113,12 @@ class Container(mixin.Waitable, mixin.Marshallable):
 
     def fetch(self):
         """Reload the container information."""
-        response = self._client.api.containers[self.name].get()
-        if response.status_code == 404:
-            raise NameError(
-                'Container named "{}" has gone away'.format(self.name))
+        try:
+            response = self._client.api.containers[self.name].get()
+        except exceptions.LXDAPIException as e:
+            if e.response.status_code == 404:
+                raise exceptions.NotFound()
+            raise
         for key, value in six.iteritems(response.json()['metadata']):
             setattr(self, key, value)
     # XXX: rockstar (28 Mar 2016) - This method was named improperly

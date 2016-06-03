@@ -59,11 +59,11 @@ class Image(mixin.Waitable, mixin.Marshallable):
         headers = {}
         if public:
             headers['X-LXD-Public'] = '1'
-        response = client.api.images.post(
-            data=image_data, headers=headers)
-
-        if response.status_code != 202:
-            raise exceptions.CreateFailed(response.json())
+        try:
+            response = client.api.images.post(
+                data=image_data, headers=headers)
+        except exceptions.LXDAPIException as e:
+            raise exceptions.CreateFailed(e.response.json())
 
         if wait:
             Operation.wait_for_operation(client, response.json()['operation'])
