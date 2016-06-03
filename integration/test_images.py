@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import hashlib
 import time
 
 from pylxd import exceptions
@@ -82,3 +83,10 @@ class TestImage(IntegrationTestCase):
         self.assertRaises(
             exceptions.NotFound,
             self.client.images.get, self.image.fingerprint)
+
+    def test_export(self):
+        """The imerage is successfully exported."""
+        data = self.image.export()
+        data_sha = hashlib.sha256(data).hexdigest()
+
+        self.assertEqual(self.image.fingerprint, data_sha)

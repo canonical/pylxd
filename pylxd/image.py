@@ -25,7 +25,7 @@ class Image(mixin.Waitable, mixin.Marshallable):
         '_client',
         'aliases', 'architecture', 'created_at', 'expires_at', 'filename',
         'fingerprint', 'properties', 'public', 'size', 'uploaded_at'
-        ]
+    ]
 
     @classmethod
     def get(cls, client, fingerprint):
@@ -101,3 +101,14 @@ class Image(mixin.Waitable, mixin.Marshallable):
 
         for key, val in six.iteritems(response.json()['metadata']):
             setattr(self, key, val)
+
+    def export(self):
+        """Export the image."""
+        try:
+            response = self._client.api.images[self.fingerprint].export.get()
+        except exceptions.LXDAPIException as e:
+            if e.response.status_code == 404:
+                raise exceptions.NotFound()
+            raise
+
+        return response.content

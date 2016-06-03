@@ -129,3 +129,46 @@ class TestImage(testing.PyLXDTestCase):
         a_image = self.client.images.all()[0]
 
         a_image.delete(wait=True)
+
+    def test_export(self):
+        """An image is exported."""
+        a_image = self.client.images.all()[0]
+
+        data = a_image.export()
+        data_sha = hashlib.sha256(data).hexdigest()
+
+        self.assertEqual(a_image.fingerprint, data_sha)
+
+    def test_export_not_found(self):
+        """NotFound is raised on export of bogus image."""
+        def not_found(request, context):
+            context.status_code = 404
+            return json.dumps({
+                'type': 'error',
+                'error': 'Not found',
+                'error_code': 404})
+        self.add_rule({
+            'text': not_found,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855/export$',  # NOQA
+        })
+        a_image = self.client.images.all()[0]
+
+        self.assertRaises(exceptions.NotFound, a_image.export)
+
+    def test_export_error(self):
+        """LXDAPIException is raised on API error."""
+        def error(request, context):
+            context.status_code = 500
+            return json.dumps({
+                'type': 'error',
+                'error': 'LOLOLOLOL',
+                'error_code': 500})
+        self.add_rule({
+            'text': error,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855/export$',  # NOQA
+        })
+        a_image = self.client.images.all()[0]
+
+        self.assertRaises(exceptions.LXDAPIException, a_image.export)
