@@ -264,7 +264,8 @@ class Snapshot(mixin.Waitable, mixin.Marshallable):
     @classmethod
     def get(cls, client, container, name):
         try:
-            response = client.api.containers[container.name].snapshots[name].get()
+            response = client.api.containers[
+                container.name].snapshots[name].get()
         except exceptions.LXDAPIException as e:
             if e.response.status_code == 404:
                 raise exceptions.NotFound()
