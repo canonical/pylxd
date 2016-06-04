@@ -30,11 +30,14 @@ class Image(mixin.Waitable, mixin.Marshallable):
     @classmethod
     def get(cls, client, fingerprint):
         """Get an image."""
-        response = client.api.images[fingerprint].get()
+        try:
+            response = client.api.images[fingerprint].get()
+        except exceptions.LXDAPIException as e:
+            if e.response.status_code == 404:
+                raise exceptions.NotFound()
+            raise
 
-        if response.status_code == 404:
-            raise exceptions.NotFound(response.json())
-        image = Image(_client=client, **response.json()['metadata'])
+        image = cls(_client=client, **response.json()['metadata'])
         return image
 
     @classmethod
@@ -45,7 +48,7 @@ class Image(mixin.Waitable, mixin.Marshallable):
         images = []
         for url in response.json()['metadata']:
             fingerprint = url.split('/')[-1]
-            images.append(Image(_client=client, fingerprint=fingerprint))
+            images.append(cls(_client=client, fingerprint=fingerprint))
         return images
 
     @classmethod
@@ -56,15 +59,15 @@ class Image(mixin.Waitable, mixin.Marshallable):
         headers = {}
         if public:
             headers['X-LXD-Public'] = '1'
-        response = client.api.images.post(
-            data=image_data, headers=headers)
-
-        if response.status_code != 202:
-            raise exceptions.CreateFailed(response.json())
+        try:
+            response = client.api.images.post(
+                data=image_data, headers=headers)
+        except exceptions.LXDAPIException as e:
+            raise exceptions.CreateFailed(e.response.json())
 
         if wait:
             Operation.wait_for_operation(client, response.json()['operation'])
-        return cls.get(client, fingerprint)
+        return cls(_client=client, fingerprint=fingerprint)
 
     def __init__(self, **kwargs):
         super(Image, self).__init__()
@@ -89,10 +92,12 @@ class Image(mixin.Waitable, mixin.Marshallable):
 
     def fetch(self):
         """Fetch the object from LXD, populating attributes."""
-        response = self._client.api.images[self.fingerprint].get()
-
-        if response.status_code == 404:
-            raise exceptions.NotFound(response.json())
+        try:
+            response = self._client.api.images[self.fingerprint].get()
+        except exceptions.LXDAPIException as e:
+            if e.response.status_code == 404:
+                raise exceptions.NotFound()
+            raise
 
         for key, val in six.iteritems(response.json()['metadata']):
             setattr(self, key, val)

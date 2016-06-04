@@ -14,6 +14,7 @@
 import unittest
 import uuid
 
+from pylxd import exceptions
 from pylxd.client import Client
 from integration.busybox import create_busybox_image
 
@@ -59,9 +60,19 @@ class IntegrationTestCase(unittest.TestCase):
         # enforce is a hack. There's a race somewhere in the delete.
         # To ensure we don't get an infinite loop, let's count.
         count = 0
-        result = self.lxd['containers'][name].delete()
-        while enforce and result.status_code == 404 and count < 10:
+        try:
             result = self.lxd['containers'][name].delete()
+        except exceptions.LXDAPIException as e:
+            if e.response.status_code in (400, 404):
+                return
+            raise
+        while enforce and result.status_code == 404 and count < 10:
+            try:
+                result = self.lxd['containers'][name].delete()
+            except exceptions.LXDAPIException as e:
+                if e.response.status_code in (400, 404):
+                    return
+                raise
             count += 1
         try:
             operation_uuid = result.json()['operation'].split('/')[-1]
@@ -92,7 +103,12 @@ class IntegrationTestCase(unittest.TestCase):
 
     def delete_image(self, fingerprint):
         """Delete an image in lxd."""
-        self.lxd.images[fingerprint].delete()
+        try:
+            self.lxd.images[fingerprint].delete()
+        except exceptions.LXDAPIException as e:
+            if e.response.status_code == 404:
+                return
+            raise
 
     def create_profile(self):
         """Create a profile."""
@@ -106,7 +122,12 @@ class IntegrationTestCase(unittest.TestCase):
 
     def delete_profile(self, name):
         """Delete a profile."""
-        self.lxd.profiles[name].delete()
+        try:
+            self.lxd.profiles[name].delete()
+        except exceptions.LXDAPIException as e:
+            if e.response.status_code == 404:
+                return
+            raise
 
     def assertCommon(self, response):
         """Assert common LXD responses.

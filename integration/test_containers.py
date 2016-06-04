@@ -132,7 +132,7 @@ class TestContainer(IntegrationTestCase):
     def test_put_get_file(self):
         """A file is written to the container and then read."""
         filepath = '/tmp/an_file'
-        data = 'abcdef'
+        data = b'abcdef'
 
         retval = self.container.put_file(filepath, data)
 

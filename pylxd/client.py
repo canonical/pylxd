@@ -13,9 +13,9 @@
 #    under the License.
 import os
 
-try:
+try:  # pragma: no cover
     from urllib.parse import quote
-except ImportError:
+except ImportError:  # pragma: no cover
     from urllib import quote
 
 import requests
@@ -27,8 +27,7 @@ requests_unixsocket.monkeypatch()
 
 
 class _APINode(object):
-    """An api node object.
-    """
+    """An api node object."""
 
     def __init__(self, api_endpoint, cert=None, verify=True):
         self._api_endpoint = api_endpoint
@@ -50,21 +49,64 @@ class _APINode(object):
             '{}/{}'.format(self._api_endpoint, item),
             cert=self.session.cert, verify=self.session.verify)
 
+    def _assert_response(self, response, allowed_status_codes=(200,)):
+        """Assert properties of the response.
+
+        LXD's API clearly defines specific responses. If the API
+        response is something unexpected (i.e. an error), then
+        we need to raise an exception and have the call points
+        handle the errors or just let the issue be raised to the
+        user.
+        """
+        if response.status_code not in allowed_status_codes:
+            raise exceptions.LXDAPIException(response)
+
+        try:
+            data = response.json()
+        except ValueError:
+            # Not a JSON response
+            return
+
+        if response.status_code == 200:
+            # Synchronous request
+            try:
+                if data['type'] != 'sync':
+                    raise exceptions.LXDAPIException(response)
+            except KeyError:
+                # Missing 'type' in response
+                raise exceptions.LXDAPIException(response)
+
+        if response.status_code == 202:
+            try:
+                if data['type'] != 'async':
+                    raise exceptions.LXDAPIException(response)
+            except KeyError:
+                # Missing 'type' in response
+                raise exceptions.LXDAPIException(response)
+
     def get(self, *args, **kwargs):
         """Perform an HTTP GET."""
-        return self.session.get(self._api_endpoint, *args, **kwargs)
+        response = self.session.get(self._api_endpoint, *args, **kwargs)
+        self._assert_response(response)
+        return response
 
     def post(self, *args, **kwargs):
         """Perform an HTTP POST."""
-        return self.session.post(self._api_endpoint, *args, **kwargs)
+        response = self.session.post(self._api_endpoint, *args, **kwargs)
+        self._assert_response(response, allowed_status_codes=(200, 202))
+        return response
 
     def put(self, *args, **kwargs):
         """Perform an HTTP PUT."""
-        return self.session.put(self._api_endpoint, *args, **kwargs)
+        response = self.session.put(self._api_endpoint, *args, **kwargs)
+        self._assert_response(response, allowed_status_codes=(200, 202))
+        return response
 
     def delete(self, *args, **kwargs):
         """Perform an HTTP delete."""
-        return self.session.delete(self._api_endpoint, *args, **kwargs)
+        response = self.session.delete(self._api_endpoint, *args, **kwargs)
+        self._assert_response(response, allowed_status_codes=(200, 202))
+        return response
 
 
 class Client(object):

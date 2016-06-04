@@ -3,32 +3,57 @@ import json
 
 def containers_POST(request, context):
     context.status_code = 202
-    return json.dumps({'operation': 'operation-abc'})
+    return json.dumps({
+        'type': 'async',
+        'operation': 'operation-abc'})
 
 
 def container_DELETE(request, context):
     context.status_code = 202
-    return json.dumps({'operation': 'operation-abc'})
+    return json.dumps({
+        'type': 'async',
+        'operation': 'operation-abc'})
 
 
 def images_POST(request, context):
     context.status_code = 202
-    return json.dumps({'metadata': {}})
+    return json.dumps({
+        'type': 'async',
+        'metadata': {}})
+
+
+def image_DELETE(request, context):
+    context.status_code = 202
+    return json.dumps({
+        'type': 'async',
+        'operation': 'operation-abc'})
 
 
 def profiles_POST(request, context):
     context.status_code = 200
-    return json.dumps({'metadata': {}})
+    return json.dumps({
+        'type': 'sync',
+        'metadata': {}})
+
+
+def profile_DELETE(request, context):
+    context.status_code = 200
+    return json.dumps({
+        'type': 'sync',
+        'operation': 'operation-abc'})
 
 
 def snapshot_DELETE(request, context):
     context.status_code = 202
-    return json.dumps({'operation': 'operation-abc'})
+    return json.dumps({
+        'type': 'async',
+        'operation': 'operation-abc'})
 
 
 def profile_GET(request, context):
     name = request.path.split('/')[-1]
     return json.dumps({
+        'type': 'sync',
         'metadata': {
             'name': name,
             'description': 'An description',
@@ -41,8 +66,10 @@ def profile_GET(request, context):
 RULES = [
     # General service endpoints
     {
-        'text': json.dumps({'metadata': {'auth': 'trusted',
-                                         'environment': {}}}),
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': {'auth': 'trusted',
+                         'environment': {}}}),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0$',
     },
@@ -50,9 +77,11 @@ RULES = [
 
     # Containers
     {
-        'text': json.dumps({'metadata': [
-            'http://pylxd.test/1.0/containers/an-container',
-        ]}),
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': [
+                'http://pylxd.test/1.0/containers/an-container',
+            ]}),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/containers$',
     },
@@ -62,28 +91,36 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/containers$',
     },
     {
-        'text': json.dumps({'metadata': {
-            'name': 'an-container',
-            'ephemeral': True,
-        }}),
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': {
+                'name': 'an-container',
+                'ephemeral': True,
+            }}),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/containers/an-container$',
     },
     {
-        'text': json.dumps({'metadata': {
-            'status': 'Running',
-            'status_code': 103,
-        }}),
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': {
+                'status': 'Running',
+                'status_code': 103,
+            }}),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/containers/an-container/state$',  # NOQA
     },
     {
-        'text': json.dumps({'operation': 'operation-abc'}),
+        'text': json.dumps({
+            'type': 'sync',  # This should be async
+            'operation': 'operation-abc'}),
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container$',
     },
     {
-        'text': json.dumps({'operation': 'operation-abc'}),
+        'text': json.dumps({
+            'type': 'sync',  # This should be async
+            'operation': 'operation-abc'}),
         'method': 'PUT',
         'url': r'^http://pylxd.test/1.0/containers/an-container$',
     },
@@ -96,27 +133,35 @@ RULES = [
 
     # Container Snapshots
     {
-        'text': json.dumps({'metadata': [
-            '/1.0/containers/an_container/snapshots/an-snapshot',
-        ]}),
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': [
+                '/1.0/containers/an_container/snapshots/an-snapshot',
+            ]}),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots$',  # NOQA
     },
     {
-        'text': json.dumps({'operation': 'operation-abc'}),
+        'text': json.dumps({
+            'type': 'sync',  # This should be async
+            'operation': 'operation-abc'}),
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots$',  # NOQA
     },
     {
-        'text': json.dumps({'metadata': {
-            'name': 'an_container/an-snapshot',
-            'stateful': False,
-        }}),
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': {
+                'name': 'an_container/an-snapshot',
+                'stateful': False,
+            }}),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots/an-snapshot$',  # NOQA
     },
     {
-        'text': json.dumps({'operation': 'operation-abc'}),
+        'text': json.dumps({
+            'type': 'sync',  # This should be async
+            'operation': 'operation-abc'}),
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots/an-snapshot$',  # NOQA
     },
@@ -142,9 +187,11 @@ RULES = [
 
     # Images
     {
-        'text': json.dumps({'metadata': [
-            'http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',  # NOQA
-        ]}),
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': [
+                'http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',  # NOQA
+            ]}),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/images$',
     },
@@ -155,6 +202,7 @@ RULES = [
     },
     {
         'text': json.dumps({
+            'type': 'sync',
             'metadata': {
                 'aliases': [
                     {
@@ -179,12 +227,20 @@ RULES = [
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
     },
+    {
+        'text': image_DELETE,
+        'method': 'DELETE',
+        'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
+    },
+
 
     # Profiles
     {
-        'text': json.dumps({'metadata': [
-            'http://pylxd.test/1.0/profiles/an-profile',
-        ]}),
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': [
+                'http://pylxd.test/1.0/profiles/an-profile',
+            ]}),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/profiles$',
     },
@@ -198,15 +254,31 @@ RULES = [
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/profiles/(an-profile|an-new-profile)$',
     },
+    {
+        'text': json.dumps({'type': 'sync'}),
+        'method': 'PUT',
+        'url': r'^http://pylxd.test/1.0/profiles/(an-profile|an-new-profile)$',
+    },
+    {
+        'text': profile_DELETE,
+        'method': 'DELETE',
+        'url': r'^http://pylxd.test/1.0/profiles/(an-profile|an-new-profile)$',
+    },
+
 
     # Operations
     {
-        'text': '{"metadata": {"id": "operation-abc"}}',
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': {'id': 'operation-abc'},
+            }),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/operations/operation-abc$',
     },
     {
-        'text': '{"metadata": {}',
+        'text': json.dumps({
+            'type': 'sync',
+            }),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/operations/operation-abc/wait$',
     },

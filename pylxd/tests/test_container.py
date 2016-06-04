@@ -22,7 +22,7 @@ class TestContainer(testing.PyLXDTestCase):
         self.assertEqual(name, an_container.name)
 
     def test_get_not_found(self):
-        """NameError is raised when the container doesn't exist."""
+        """NotFound is raised when the container doesn't exist."""
         def not_found(request, context):
             context.status_code = 404
             return json.dumps({
@@ -39,6 +39,26 @@ class TestContainer(testing.PyLXDTestCase):
 
         self.assertRaises(
             exceptions.NotFound,
+            container.Container.get, self.client, name)
+
+    def test_get_error(self):
+        """LXDAPIException is raised when the LXD API errors."""
+        def not_found(request, context):
+            context.status_code = 500
+            return json.dumps({
+                'type': 'error',
+                'error': 'Not found',
+                'error_code': 500})
+        self.add_rule({
+            'text': not_found,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',  # NOQA
+        })
+
+        name = 'an-missing-container'
+
+        self.assertRaises(
+            exceptions.LXDAPIException,
             container.Container.get, self.client, name)
 
     def test_create(self):
@@ -79,7 +99,7 @@ class TestContainer(testing.PyLXDTestCase):
         self.assertTrue(an_container.ephemeral)
 
     def test_fetch_not_found(self):
-        """NameError is raised on a 404 for updating container."""
+        """NotFound is raised on a 404 for updating container."""
         def not_found(request, context):
             context.status_code = 404
             return json.dumps({
@@ -95,7 +115,26 @@ class TestContainer(testing.PyLXDTestCase):
         an_container = container.Container(
             name='an-missing-container', _client=self.client)
 
-        self.assertRaises(NameError, an_container.fetch)
+        self.assertRaises(exceptions.NotFound, an_container.fetch)
+
+    def test_fetch_error(self):
+        """LXDAPIException is raised on error."""
+        def not_found(request, context):
+            context.status_code = 500
+            return json.dumps({
+                'type': 'error',
+                'error': 'An bad error',
+                'error_code': 500})
+        self.add_rule({
+            'text': not_found,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',  # NOQA
+        })
+
+        an_container = container.Container(
+            name='an-missing-container', _client=self.client)
+
+        self.assertRaises(exceptions.LXDAPIException, an_container.fetch)
 
     def test_update(self):
         """A container is updated."""
@@ -214,7 +253,7 @@ class TestSnapshot(testing.PyLXDTestCase):
         # TODO: add an assertion here
 
     def test_delete_failure(self):
-        """If the response indicates delete failure, raise RuntimeError."""
+        """If the response indicates delete failure, raise an exception."""
         def not_found(request, context):
             context.status_code = 404
             return json.dumps({
@@ -231,7 +270,7 @@ class TestSnapshot(testing.PyLXDTestCase):
             _client=self.client, _container=self.container,
             name='an-snapshot')
 
-        self.assertRaises(RuntimeError, snapshot.delete)
+        self.assertRaises(exceptions.LXDAPIException, snapshot.delete)
 
 
 class TestFiles(testing.PyLXDTestCase):
@@ -268,3 +307,18 @@ class TestFiles(testing.PyLXDTestCase):
 
         self.assertRaises(
             exceptions.NotFound, self.container.files.get, '/tmp/getted')
+
+    def test_get_error(self):
+        """LXDAPIException is raised on error."""
+        def not_found(request, context):
+            context.status_code = 503
+        rule = {
+            'text': not_found,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Fgetted$',  # NOQA
+        }
+        self.add_rule(rule)
+
+        self.assertRaises(
+            exceptions.LXDAPIException,
+            self.container.files.get, '/tmp/getted')

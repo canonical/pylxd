@@ -11,6 +11,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import time
+
 from pylxd import exceptions
 
 from integration.testing import create_busybox_image, IntegrationTestCase
@@ -33,6 +35,9 @@ class TestImages(IntegrationTestCase):
         fingerprint, _ = self.create_image()
         self.addCleanup(self.delete_image, fingerprint)
 
+        # XXX: rockstar (02 Jun 2016) - This seems to have a failure
+        # of some sort. This is a hack.
+        time.sleep(5)
         images = self.client.images.all()
 
         self.assertIn(fingerprint, [image.fingerprint for image in images])
@@ -42,8 +47,9 @@ class TestImages(IntegrationTestCase):
         path, fingerprint = create_busybox_image()
         self.addCleanup(self.delete_image, fingerprint)
 
-        with open(path) as f:
-            image = self.client.images.create(f.read(), wait=True)
+        with open(path, 'rb') as f:
+            data = f.read()
+            image = self.client.images.create(data, wait=True)
 
         self.assertEqual(fingerprint, image.fingerprint)
 

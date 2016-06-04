@@ -32,6 +32,24 @@ class TestProfile(testing.PyLXDTestCase):
             exceptions.NotFound,
             profile.Profile.get, self.client, 'an-profile')
 
+    def test_get_error(self):
+        """LXDAPIException is raised on get error."""
+        def error(request, context):
+            context.status_code = 500
+            return json.dumps({
+                'type': 'error',
+                'error': 'Not found',
+                'error_code': 500})
+        self.add_rule({
+            'text': error,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/profiles/an-profile$',
+        })
+
+        self.assertRaises(
+            exceptions.LXDAPIException,
+            profile.Profile.get, self.client, 'an-profile')
+
     def test_all(self):
         """A list of all profiles is returned."""
         profiles = profile.Profile.all(self.client)
@@ -72,7 +90,18 @@ class TestProfile(testing.PyLXDTestCase):
             profile.Profile.create, self.client,
             name='an-new-profile', config={})
 
-    def test_partial_objects(self):
+    def test_update(self):
+        """A profile is updated."""
+        # XXX: rockstar (03 Jun 2016) - This just executes
+        # a code path. There should be an assertion here, but
+        # it's not clear how to assert that, just yet.
+        an_profile = profile.Profile.get(self.client, 'an-profile')
+
+        an_profile.update()
+
+        self.assertEqual({}, an_profile.config)
+
+    def test_update_partial_objects(self):
         """A partially fetched profile can't be pushed."""
         an_profile = self.client.profiles.all()[0]
 
@@ -105,3 +134,30 @@ class TestProfile(testing.PyLXDTestCase):
         an_profile = profile.Profile(name='an-profile', _client=self.client)
 
         self.assertRaises(exceptions.NotFound, an_profile.fetch)
+
+    def test_fetch_error(self):
+        """LXDAPIException is raised on fetch error."""
+        def error(request, context):
+            context.status_code = 500
+            return json.dumps({
+                'type': 'error',
+                'error': 'Not found',
+                'error_code': 500})
+        self.add_rule({
+            'text': error,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/profiles/an-profile$',
+        })
+
+        an_profile = profile.Profile(name='an-profile', _client=self.client)
+
+        self.assertRaises(exceptions.LXDAPIException, an_profile.fetch)
+
+    def test_delete(self):
+        """A profile is deleted."""
+        # XXX: rockstar (03 Jun 2016) - This just executes
+        # a code path. There should be an assertion here, but
+        # it's not clear how to assert that, just yet.
+        an_profile = self.client.profiles.all()[0]
+
+        an_profile.delete()
