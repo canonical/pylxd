@@ -1,3 +1,4 @@
+import json
 import os
 import unittest
 
@@ -241,3 +242,25 @@ class TestAPINode(unittest.TestCase):
         node.delete()
 
         session.delete.assert_called_once_with('http://test.com')
+
+
+class TestWebsocketClient(unittest.TestCase):
+    """Tests for pylxd.client.WebsocketClient."""
+
+    def test_handshake_ok(self):
+        """A `message` attribute of an empty list is created."""
+        ws_client = client._WebsocketClient('ws://an/fake/path')
+
+        ws_client.handshake_ok()
+
+        self.assertEqual([], ws_client.messages)
+
+    def test_received_message(self):
+        """A json dict is added to the messages attribute."""
+        message = mock.Mock(data=json.dumps({'test': 'data'}).encode('utf-8'))
+        ws_client = client._WebsocketClient('ws://an/fake/path')
+        ws_client.handshake_ok()
+
+        ws_client.received_message(message)
+
+        self.assertEqual({'test': 'data'}, ws_client.messages[0])
