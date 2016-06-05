@@ -11,15 +11,13 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import json
 import os
-
-try:  # pragma: no cover
-    from urllib.parse import quote
-except ImportError:  # pragma: no cover
-    from urllib import quote
 
 import requests
 import requests_unixsocket
+from six.moves.urllib import parse
+from ws4py.client import WebSocketBaseClient
 
 from pylxd import exceptions, managers
 
@@ -109,6 +107,22 @@ class _APINode(object):
         return response
 
 
+class _WebsocketClient(WebSocketBaseClient):
+    """A basic websocket client for the LXD API.
+
+    This client is intentionally barebones, and serves
+    as a simple default. It simply connects and saves
+    all json messages to a messages attribute, which can
+    then be read are parsed.
+    """
+    def handshake_ok(self):
+        self.messages = []
+
+    def received_message(self, message):
+        json_message = json.loads(message.data.decode('utf-8'))
+        self.messages.append(json_message)
+
+
 class Client(object):
     """
     Client class for LXD REST API.
@@ -161,7 +175,7 @@ class Client(object):
             else:
                 path = '/var/lib/lxd/unix.socket'
             self.api = _APINode('http+unix://{}'.format(
-                quote(path, safe='')))
+                parse.quote(path, safe='')))
         self.api = self.api[version]
 
         # Verify the connection is valid.
@@ -182,3 +196,34 @@ class Client(object):
         self.images = managers.ImageManager(self)
         self.operations = managers.OperationManager(self)
         self.profiles = managers.ProfileManager(self)
+
+    def events(self, websocket_client=None):
+        """Get a websocket client for getting events.
+
+        /events is a websocket url, and so must be handled differently than
+        most other LXD API endpoints. This method returns
+        a client that can be interacted with like any
+        regular python socket.
+
+        An optional `websocket_client` parameter can be
+        specified for implementation-specific handling
+        of events as they occur.
+        """
+        if websocket_client is None:
+            websocket_client = _WebsocketClient
+
+        parsed = parse.urlparse(self.api.events._api_endpoint)
+        if parsed.scheme in ('http', 'https'):
+            host = parsed.netloc
+            if parsed.scheme == 'http':
+                scheme = 'ws'
+            else:
+                scheme = 'wss'
+        else:
+            scheme = 'ws+unix'
+            host = parse.unquote(parsed.netloc)
+        url = parse.urlunparse((scheme, host, '', '', '', ''))
+        client = websocket_client(url)
+        client.resource = parsed.path
+
+        return client

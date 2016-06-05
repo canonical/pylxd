@@ -1,3 +1,4 @@
+import json
 import os
 import unittest
 
@@ -79,6 +80,47 @@ class TestClient(unittest.TestCase):
         """Perform a host query """
         an_client = client.Client()
         self.assertEqual('zfs', an_client.host_info['environment']['storage'])
+
+    def test_events(self):
+        """The default websocket client is returned."""
+        an_client = client.Client()
+
+        ws_client = an_client.events()
+
+        self.assertEqual('/1.0/events', ws_client.resource)
+
+    def test_events_unix_socket(self):
+        """A unix socket compatible websocket client is returned."""
+        websocket_client = mock.Mock(resource=None)
+        WebsocketClient = mock.Mock()
+        WebsocketClient.return_value = websocket_client
+        an_client = client.Client()
+
+        an_client.events(websocket_client=WebsocketClient)
+
+        WebsocketClient.assert_called_once_with('ws+unix:///lxd/unix.socket')
+
+    def test_events_htt(self):
+        """An http compatible websocket client is returned."""
+        websocket_client = mock.Mock(resource=None)
+        WebsocketClient = mock.Mock()
+        WebsocketClient.return_value = websocket_client
+        an_client = client.Client('http://lxd.local')
+
+        an_client.events(websocket_client=WebsocketClient)
+
+        WebsocketClient.assert_called_once_with('ws://lxd.local')
+
+    def test_events_https(self):
+        """An https compatible websocket client is returned."""
+        websocket_client = mock.Mock(resource=None)
+        WebsocketClient = mock.Mock()
+        WebsocketClient.return_value = websocket_client
+        an_client = client.Client('https://lxd.local')
+
+        an_client.events(websocket_client=WebsocketClient)
+
+        WebsocketClient.assert_called_once_with('wss://lxd.local')
 
 
 class TestAPINode(unittest.TestCase):
@@ -241,3 +283,25 @@ class TestAPINode(unittest.TestCase):
         node.delete()
 
         session.delete.assert_called_once_with('http://test.com')
+
+
+class TestWebsocketClient(unittest.TestCase):
+    """Tests for pylxd.client.WebsocketClient."""
+
+    def test_handshake_ok(self):
+        """A `message` attribute of an empty list is created."""
+        ws_client = client._WebsocketClient('ws://an/fake/path')
+
+        ws_client.handshake_ok()
+
+        self.assertEqual([], ws_client.messages)
+
+    def test_received_message(self):
+        """A json dict is added to the messages attribute."""
+        message = mock.Mock(data=json.dumps({'test': 'data'}).encode('utf-8'))
+        ws_client = client._WebsocketClient('ws://an/fake/path')
+        ws_client.handshake_ok()
+
+        ws_client.received_message(message)
+
+        self.assertEqual({'test': 'data'}, ws_client.messages[0])
