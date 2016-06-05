@@ -59,7 +59,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
         '_client',
         'architecture', 'config', 'created_at', 'devices', 'ephemeral',
         'expanded_config', 'expanded_devices', 'name', 'profiles', 'status'
-        ]
+    ]
 
     @classmethod
     def get(cls, client, name):
@@ -164,7 +164,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
             'action': state,
             'timeout': timeout,
             'force': force
-            })
+        })
         if wait:
             self.wait_for_operation(response.json()['operation'])
             self.fetch()
@@ -253,7 +253,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
             'environment': environment,
             'wait-for-websocket': False,
             'interactive': False,
-            })
+        })
         operation_id = response.json()['operation']
         self.wait_for_operation(operation_id)
 
