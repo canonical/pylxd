@@ -213,15 +213,15 @@ class Client(object):
             websocket_client = _WebsocketClient
 
         parsed = parse.urlparse(self.api.events._api_endpoint)
-        if parsed.scheme == 'http+unix':
-            scheme = 'ws+unix'
-            host = parse.unquote(parsed.netloc)
-        elif parsed.scheme in ('http', 'https'):
+        if parsed.scheme in ('http', 'https'):
             host = parsed.netloc
             if parsed.scheme == 'http':
                 scheme = 'ws'
-            elif parsed.scheme == 'https':
+            else:
                 scheme = 'wss'
+        else:
+            scheme = 'ws+unix'
+            host = parse.unquote(parsed.netloc)
         url = parse.urlunparse((scheme, host, '', '', '', ''))
         client = websocket_client(url)
         client.resource = parsed.path

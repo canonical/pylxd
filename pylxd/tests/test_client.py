@@ -81,6 +81,47 @@ class TestClient(unittest.TestCase):
         an_client = client.Client()
         self.assertEqual('zfs', an_client.host_info['environment']['storage'])
 
+    def test_events(self):
+        """The default websocket client is returned."""
+        an_client = client.Client()
+
+        ws_client = an_client.events()
+
+        self.assertEqual('/1.0/events', ws_client.resource)
+
+    def test_events_unix_socket(self):
+        """A unix socket compatible websocket client is returned."""
+        websocket_client = mock.Mock(resource=None)
+        WebsocketClient = mock.Mock()
+        WebsocketClient.return_value = websocket_client
+        an_client = client.Client()
+
+        an_client.events(websocket_client=WebsocketClient)
+
+        WebsocketClient.assert_called_once_with('ws+unix:///lxd/unix.socket')
+
+    def test_events_htt(self):
+        """An http compatible websocket client is returned."""
+        websocket_client = mock.Mock(resource=None)
+        WebsocketClient = mock.Mock()
+        WebsocketClient.return_value = websocket_client
+        an_client = client.Client('http://lxd.local')
+
+        an_client.events(websocket_client=WebsocketClient)
+
+        WebsocketClient.assert_called_once_with('ws://lxd.local')
+
+    def test_events_https(self):
+        """An https compatible websocket client is returned."""
+        websocket_client = mock.Mock(resource=None)
+        WebsocketClient = mock.Mock()
+        WebsocketClient.return_value = websocket_client
+        an_client = client.Client('https://lxd.local')
+
+        an_client.events(websocket_client=WebsocketClient)
+
+        WebsocketClient.assert_called_once_with('wss://lxd.local')
+
 
 class TestAPINode(unittest.TestCase):
     """Tests for pylxd.client._APINode."""
