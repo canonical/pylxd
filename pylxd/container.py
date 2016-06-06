@@ -174,6 +174,12 @@ class Container(mixin.Waitable, mixin.Marshallable):
         state = ContainerState(**response.json()['metadata'])
         return state
 
+    def migrate(self):
+        response = self._client.api.containers[self.name].post(json={
+            'migration': True})
+        migrate = ContainerState(**response.json()['metadata'])
+        return migrate
+
     def start(self, timeout=30, force=True, wait=False):
         """Start the container."""
         return self._set_state('start',

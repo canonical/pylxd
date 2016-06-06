@@ -180,6 +180,13 @@ class TestContainer(testing.PyLXDTestCase):
 
         an_container.delete(wait=True)
 
+    def test_migrate(self):
+        """A container is migrate."""
+        name = 'an-container'
+
+        an_container = container.Container.get(self.client, name)
+        an_container.migrate()
+
 
 class TestContainerState(testing.PyLXDTestCase):
     """Tests for pylxd.container.ContainerState."""
