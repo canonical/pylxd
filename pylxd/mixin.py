@@ -11,16 +11,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from pylxd.operation import Operation
-
-
-class Waitable(object):
-
-    def wait_for_operation(self, operation_id):
-        operation = Operation.get(self._client, operation_id)
-        operation.wait()
-        return operation
-
 
 class Marshallable(object):
 

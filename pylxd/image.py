@@ -88,7 +88,7 @@ class Image(mixin.Waitable, mixin.Marshallable):
         response = self._client.api.images[self.fingerprint].delete()
 
         if wait:
-            self.wait_for_operation(response.json()['operation'])
+            Operation.wait_for_operation(self._client, response.json()['operation'])
 
     def fetch(self):
         """Fetch the object from LXD, populating attributes."""
