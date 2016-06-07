@@ -129,7 +129,23 @@ RULES = [
         'method': 'DELETE',
         'url': r'^http://pylxd.test/1.0/containers/an-container$',
     },
-
+    {
+        'json': {
+            'type': 'sync',  # This should be async
+            'metadata': {
+                'metadata': {
+                    'fds': {
+                        '0': 'abc',
+                        '1': 'def',
+                        '2': 'ghi',
+                        'control': 'jkl',
+                    }
+                },
+            },
+            'operation': 'operation-abc'},
+        'method': 'POST',
+        'url': r'^http://pylxd.test/1.0/containers/an-container/exec$',  # NOQA
+    },
 
     # Container Snapshots
     {

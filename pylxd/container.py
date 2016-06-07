@@ -11,7 +11,12 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import time
+
 import six
+from six.moves.urllib import parse
+from ws4py.manager import WebSocketManager
+from ws4py.client import WebSocketBaseClient
 
 from pylxd import exceptions, managers, mixin
 from pylxd.deprecation import deprecated
@@ -247,15 +252,72 @@ class Container(mixin.Waitable, mixin.Marshallable):
         # design, for now. It needs to grow the ability to return web sockets
         # and perform interactive functions.
         if isinstance(commands, six.string_types):
-            commands = [commands]
+            raise TypeError("First argument must be a list.")
         response = self._client.api.containers[self.name]['exec'].post(json={
             'command': commands,
             'environment': environment,
-            'wait-for-websocket': False,
+            'wait-for-websocket': True,
             'interactive': False,
         })
-        operation_id = response.json()['operation']
-        self.wait_for_operation(operation_id)
+
+        fds = response.json()['metadata']['metadata']['fds']
+        operation_id = response.json()['operation'].split('/')[-1]
+        parsed = parse.urlparse(self._client.api.operations[operation_id].websocket._api_endpoint)
+
+        manager = WebSocketManager()
+
+        stdin = _StdinWebsocket(manager, self._client.websocket_url)
+        stdin.resource = '{}?secret={}'.format(parsed.path, fds['0'])
+        stdin.connect()
+        stdout = _CommandWebsocketClient(manager, self._client.websocket_url)
+        stdout.resource = '{}?secret={}'.format(parsed.path, fds['1'])
+        stdout.connect()
+        stderr = _CommandWebsocketClient(manager, self._client.websocket_url)
+        stderr.resource = '{}?secret={}'.format(parsed.path, fds['2'])
+        stderr.connect()
+
+        manager.start()
+
+        while True:  # pragma: no cover
+            for websocket in manager.websockets.values():
+                if not websocket.terminated:
+                    break
+            else:
+                break
+            time.sleep(1)
+
+        return stdout.data, stderr.data
+
+
+class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
+    def __init__(self, manager, *args, **kwargs):
+        self.manager = manager
+        super(_CommandWebsocketClient, self).__init__(*args, **kwargs)
+
+    def handshake_ok(self):
+        self.manager.add(self)
+        self.buffer = []
+
+    def received_message(self, message):
+        if message.encoding:
+            self.buffer.append(message.data.decode(message.encoding))
+        else:
+            self.buffer.append(message.data.decode('utf-8'))
+
+    @property
+    def data(self):
+        return ''.join(self.buffer)
+
+
+class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
+    """A websocket client for handling stdin."""
+    def __init__(self, manager, *args, **kwargs):
+        self.manager = manager
+        super(_StdinWebsocket, self).__init__(*args, **kwargs)
+
+    def handshake_ok(self):
+        self.manager.add(self)
+        self.close()
 
 
 class Snapshot(mixin.Waitable, mixin.Marshallable):
