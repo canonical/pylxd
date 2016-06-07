@@ -15,26 +15,29 @@ import time
 
 import six
 from six.moves.urllib import parse
-from ws4py.manager import WebSocketManager
 from ws4py.client import WebSocketBaseClient
+from ws4py.manager import WebSocketManager
 
 from pylxd import exceptions, managers, mixin
 from pylxd.deprecation import deprecated
 from pylxd.operation import Operation
 
 
-class ContainerState():
+class ContainerState(object):
+    """A simple object for representing container state."""
+
     def __init__(self, **kwargs):
         for key, value in six.iteritems(kwargs):
             setattr(self, key, value)
 
 
-class Container(mixin.Waitable, mixin.Marshallable):
+class Container(mixin.Marshallable):
     """An LXD Container.
 
     This class is not intended to be used directly, but rather to be used
     via `Client.containers.create`.
     """
+
     class FilesManager(object):
         """A pseudo-manager for namespacing file operations."""
 
@@ -146,7 +149,8 @@ class Container(mixin.Waitable, mixin.Marshallable):
             json=marshalled)
 
         if wait:
-            self.wait_for_operation(response.json()['operation'])
+            Operation.wait_for_operation(
+                self._client, response.json()['operation'])
 
     def rename(self, name, wait=False):
         """Rename a container."""
@@ -154,7 +158,8 @@ class Container(mixin.Waitable, mixin.Marshallable):
             self.name].post(json={'name': name})
 
         if wait:
-            self.wait_for_operation(response.json()['operation'])
+            Operation.wait_for_operation(
+                self._client, response.json()['operation'])
         self.name = name
 
     def delete(self, wait=False):
@@ -162,7 +167,8 @@ class Container(mixin.Waitable, mixin.Marshallable):
         response = self._client.api.containers[self.name].delete()
 
         if wait:
-            self.wait_for_operation(response.json()['operation'])
+            Operation.wait_for_operation(
+                self._client, response.json()['operation'])
 
     def _set_state(self, state, timeout=30, force=True, wait=False):
         response = self._client.api.containers[self.name].state.put(json={
@@ -171,7 +177,8 @@ class Container(mixin.Waitable, mixin.Marshallable):
             'force': force
         })
         if wait:
-            self.wait_for_operation(response.json()['operation'])
+            Operation.wait_for_operation(
+                self._client, response.json()['operation'])
             self.fetch()
 
     def state(self):
@@ -318,7 +325,7 @@ class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
         self.close()
 
 
-class Snapshot(mixin.Waitable, mixin.Marshallable):
+class Snapshot(mixin.Marshallable):
     """A container snapshot."""
 
     @classmethod
@@ -356,7 +363,7 @@ class Snapshot(mixin.Waitable, mixin.Marshallable):
 
         snapshot = cls(_client=client, _container=container, name=name)
         if wait:
-            snapshot.wait_for_operation(response.json()['operation'])
+            Operation.wait_for_operation(client, response.json()['operation'])
         return snapshot
 
     def __init__(self, **kwargs):
@@ -370,7 +377,8 @@ class Snapshot(mixin.Waitable, mixin.Marshallable):
             self._container.name].snapshots[self.name].post(
             json={'name': new_name})
         if wait:
-            self.wait_for_operation(response.json()['operation'])
+            Operation.wait_for_operation(
+                self._client, response.json()['operation'])
         self.name = new_name
 
     def delete(self, wait=False):
@@ -379,4 +387,5 @@ class Snapshot(mixin.Waitable, mixin.Marshallable):
             self._container.name].snapshots[self.name].delete()
 
         if wait:
-            self.wait_for_operation(response.json()['operation'])
+            Operation.wait_for_operation(
+                self._client, response.json()['operation'])

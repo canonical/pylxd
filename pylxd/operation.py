@@ -26,14 +26,15 @@ class Operation(object):
     @classmethod
     def wait_for_operation(cls, client, operation_id):
         """Get an operation and wait for it to complete."""
-        if operation_id.startswith('/'):
-            operation_id = operation_id.split('/')[-1]
         operation = cls.get(client, operation_id)
         operation.wait()
+        return operation
 
     @classmethod
     def get(cls, client, operation_id):
         """Get an operation."""
+        if operation_id.startswith('/'):
+            operation_id = operation_id.split('/')[-1]
         response = client.api.operations[operation_id].get()
         return cls(_client=client, **response.json()['metadata'])
 

@@ -13,19 +13,6 @@
 #    under the License.
 
 
-class Waitable(object):
-
-    def get_operation(self, operation_id):
-        if operation_id.startswith('/'):
-            operation_id = operation_id.split('/')[-1]
-        return self._client.operations.get(operation_id)
-
-    def wait_for_operation(self, operation_id):
-        operation = self.get_operation(operation_id)
-        operation.wait()
-        return operation
-
-
 class Marshallable(object):
 
     def marshall(self):

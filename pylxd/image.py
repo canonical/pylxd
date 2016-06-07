@@ -12,13 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import hashlib
+
 import six
 
 from pylxd import exceptions, mixin
 from pylxd.operation import Operation
 
 
-class Image(mixin.Waitable, mixin.Marshallable):
+class Image(mixin.Marshallable):
     """A LXD Image."""
 
     __slots__ = [
@@ -88,7 +89,8 @@ class Image(mixin.Waitable, mixin.Marshallable):
         response = self._client.api.images[self.fingerprint].delete()
 
         if wait:
-            self.wait_for_operation(response.json()['operation'])
+            Operation.wait_for_operation(
+                self._client, response.json()['operation'])
 
     def fetch(self):
         """Fetch the object from LXD, populating attributes."""
