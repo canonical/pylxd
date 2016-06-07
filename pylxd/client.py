@@ -197,6 +197,21 @@ class Client(object):
         self.operations = managers.OperationManager(self)
         self.profiles = managers.ProfileManager(self)
 
+    @property
+    def websocket_url(self):
+        parsed = parse.urlparse(self.api._api_endpoint)
+        if parsed.scheme in ('http', 'https'):
+            host = parsed.netloc
+            if parsed.scheme == 'http':
+                scheme = 'ws'
+            else:
+                scheme = 'wss'
+        else:
+            scheme = 'ws+unix'
+            host = parse.unquote(parsed.netloc)
+        url = parse.urlunparse((scheme, host, '', '', '', ''))
+        return url
+
     def events(self, websocket_client=None):
         """Get a websocket client for getting events.
 
@@ -212,18 +227,8 @@ class Client(object):
         if websocket_client is None:
             websocket_client = _WebsocketClient
 
+        client = websocket_client(self.websocket_url)
         parsed = parse.urlparse(self.api.events._api_endpoint)
-        if parsed.scheme in ('http', 'https'):
-            host = parsed.netloc
-            if parsed.scheme == 'http':
-                scheme = 'ws'
-            else:
-                scheme = 'wss'
-        else:
-            scheme = 'ws+unix'
-            host = parse.unquote(parsed.netloc)
-        url = parse.urlunparse((scheme, host, '', '', '', ''))
-        client = websocket_client(url)
         client.resource = parsed.path
 
         return client

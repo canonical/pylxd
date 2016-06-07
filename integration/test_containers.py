@@ -147,4 +147,6 @@ class TestContainer(IntegrationTestCase):
         self.container.start(wait=True)
         self.addCleanup(self.container.stop, wait=True)
 
-        self.container.execute('ls /')
+        stdout, stderr = self.container.execute(['echo', 'test'])
+
+        self.assertEqual('test\n', stdout)
