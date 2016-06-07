@@ -248,9 +248,6 @@ class Container(mixin.Waitable, mixin.Marshallable):
 
     def execute(self, commands, environment={}):
         """Execute a command on the container."""
-        # XXX: rockstar (15 Feb 2016) - This functionality is limited by
-        # design, for now. It needs to grow the ability to return web sockets
-        # and perform interactive functions.
         if isinstance(commands, six.string_types):
             raise TypeError("First argument must be a list.")
         response = self._client.api.containers[self.name]['exec'].post(json={
