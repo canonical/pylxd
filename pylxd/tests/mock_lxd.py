@@ -78,7 +78,8 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/containers/an-container/state$',  # NOQA
     },
     {
-        'text': json.dumps({'operation': 'operation-abc'}),
+        'text': json.dumps({'operation': 'operation-abc',
+                            'metadata': {}}),
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container$',
     },

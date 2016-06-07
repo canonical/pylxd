@@ -142,11 +142,13 @@ class TestContainer(testing.PyLXDTestCase):
         an_container.delete(wait=True)
 
     def test_migrate(self):
-        """A container is migrate."""
+        """A container is migrated."""
         name = 'an-container'
 
         an_container = container.Container.get(self.client, name)
         an_container.migrate()
+
+        self.assertEqual(an_container.metadata)
 
 
 class TestContainerState(testing.PyLXDTestCase):
