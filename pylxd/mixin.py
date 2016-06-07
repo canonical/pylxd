@@ -16,9 +16,6 @@ from pylxd.operation import Operation
 
 class Waitable(object):
 
-    def get_operation(self, operation_id):
-        return Operation.get(self._client, operation_id)
-
     def wait_for_operation(self, operation_id):
         operation = Operation.get(self._client, operation_id)
         operation.wait()
