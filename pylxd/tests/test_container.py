@@ -1,5 +1,7 @@
 import json
 
+import mock
+
 from pylxd import container, exceptions
 from pylxd.tests import testing
 
@@ -179,6 +181,29 @@ class TestContainer(testing.PyLXDTestCase):
             name='an-container', _client=self.client)
 
         an_container.delete(wait=True)
+
+    @mock.patch('pylxd.container._StdinWebsocket')
+    @mock.patch('pylxd.container._CommandWebsocketClient')
+    def test_execute(self, _CommandWebsocketClient, _StdinWebsocket):
+        """A command is executed on a container."""
+        fake_websocket = mock.Mock()
+        fake_websocket.data = 'test\n'
+        _StdinWebsocket.return_value = fake_websocket
+        _CommandWebsocketClient.return_value = fake_websocket
+
+        an_container = container.Container(
+            name='an-container', _client=self.client)
+
+        stdout, _ = an_container.execute(['echo', 'test'])
+
+        self.assertEqual('test\n', stdout)
+
+    def test_execute_string(self):
+        """A command passed as string raises a TypeError."""
+        an_container = container.Container(
+            name='an-container', _client=self.client)
+
+        self.assertRaises(TypeError, an_container.execute, 'apt-get update')
 
 
 class TestContainerState(testing.PyLXDTestCase):
