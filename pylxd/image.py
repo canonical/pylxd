@@ -12,13 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import hashlib
+
 import six
 
 from pylxd import exceptions, mixin
 from pylxd.operation import Operation
 
 
-class Image(mixin.Waitable, mixin.Marshallable):
+class Image(mixin.Marshallable):
     """A LXD Image."""
 
     __slots__ = [

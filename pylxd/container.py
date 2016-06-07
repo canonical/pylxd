@@ -26,7 +26,7 @@ class ContainerState(object):
             setattr(self, key, value)
 
 
-class Container(mixin.Waitable, mixin.Marshallable):
+class Container(mixin.Marshallable):
     """An LXD Container.
 
     This class is not intended to be used directly, but rather to be used
@@ -260,7 +260,7 @@ class Container(mixin.Waitable, mixin.Marshallable):
         Operation.wait_for_operation(self._client, response.json()['operation'])
 
 
-class Snapshot(mixin.Waitable, mixin.Marshallable):
+class Snapshot(mixin.Marshallable):
     """A container snapshot."""
 
     @classmethod
