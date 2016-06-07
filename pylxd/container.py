@@ -259,7 +259,8 @@ class Container(mixin.Waitable, mixin.Marshallable):
 
         fds = response.json()['metadata']['metadata']['fds']
         operation_id = response.json()['operation'].split('/')[-1]
-        parsed = parse.urlparse(self._client.api.operations[operation_id].websocket._api_endpoint)
+        parsed = parse.urlparse(
+            self._client.api.operations[operation_id].websocket._api_endpoint)
 
         manager = WebSocketManager()
 
