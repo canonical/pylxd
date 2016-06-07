@@ -11,17 +11,16 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from pylxd.operation import Operation
 
 
 class Waitable(object):
 
     def get_operation(self, operation_id):
-        if operation_id.startswith('/'):
-            operation_id = operation_id.split('/')[-1]
-        return self._client.operations.get(operation_id)
+        return Operation.get(self._client, operation_id)
 
     def wait_for_operation(self, operation_id):
-        operation = self.get_operation(operation_id)
+        operation = Operation.get(self._client, operation_id)
         operation.wait()
         return operation
 
