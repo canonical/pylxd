@@ -219,6 +219,36 @@ class TestContainerState(testing.PyLXDTestCase):
         self.assertEqual('Running', state.status)
         self.assertEqual(103, state.status_code)
 
+    def test_start(self):
+        """A container is started."""
+        an_container = container.Container.get(self.client, 'an-container')
+
+        an_container.start(wait=True)
+
+    def test_stop(self):
+        """A container is stopped."""
+        an_container = container.Container.get(self.client, 'an-container')
+
+        an_container.stop()
+
+    def test_restart(self):
+        """A container is restarted."""
+        an_container = container.Container.get(self.client, 'an-container')
+
+        an_container.restart()
+
+    def test_freeze(self):
+        """A container is suspended."""
+        an_container = container.Container.get(self.client, 'an-container')
+
+        an_container.freeze()
+
+    def test_unfreeze(self):
+        """A container is resumed."""
+        an_container = container.Container.get(self.client, 'an-container')
+
+        an_container.unfreeze()
+
 
 class TestContainerSnapshots(testing.PyLXDTestCase):
     """Tests for pylxd.container.Container.snapshots."""

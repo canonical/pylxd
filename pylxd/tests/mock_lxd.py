@@ -106,8 +106,39 @@ RULES = [
             'metadata': {
                 'status': 'Running',
                 'status_code': 103,
+                'disk': {
+                    'root': {
+                        'usage': 10,
+                    }
+                },
+                'memory': {
+                    'usage': 15,
+                    'usage_peak': 20,
+                    'swap_usage': 0,
+                    'swap_usage_peak': 5,
+                },
+                'network': {
+                    'l0': {
+                        'addresses': [
+                            {'family': 'inet',
+                             'address': '127.0.0.1',
+                             'netmask': '8',
+                             'scope': 'local'}
+                        ],
+                    }
+                },
+                'pid': 69,
+                'processes': 100,
             }}),
         'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/containers/an-container/state$',  # NOQA
+    },
+    {
+        'status_code': 202,
+        'json': {
+            'type': 'async',
+            'operation': 'operation-abc'},
+        'method': 'PUT',
         'url': r'^http://pylxd.test/1.0/containers/an-container/state$',  # NOQA
     },
     {
