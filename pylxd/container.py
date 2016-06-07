@@ -144,7 +144,8 @@ class Container(mixin.Marshallable):
             json=marshalled)
 
         if wait:
-            Operation.wait_for_operation(self._client, response.json()['operation'])
+            Operation.wait_for_operation(
+                self._client, response.json()['operation'])
 
     def rename(self, name, wait=False):
         """Rename a container."""
@@ -152,7 +153,8 @@ class Container(mixin.Marshallable):
             self.name].post(json={'name': name})
 
         if wait:
-            Operation.wait_for_operation(self._client, response.json()['operation'])
+            Operation.wait_for_operation(
+                self._client, response.json()['operation'])
         self.name = name
 
     def delete(self, wait=False):
@@ -160,7 +162,8 @@ class Container(mixin.Marshallable):
         response = self._client.api.containers[self.name].delete()
 
         if wait:
-            Operation.wait_for_operation(self._client, response.json()['operation'])
+            Operation.wait_for_operation(
+                self._client, response.json()['operation'])
 
     def _set_state(self, state, timeout=30, force=True, wait=False):
         response = self._client.api.containers[self.name].state.put(json={
@@ -169,7 +172,8 @@ class Container(mixin.Marshallable):
             'force': force
         })
         if wait:
-            Operation.wait_for_operation(self._client, response.json()['operation'])
+            Operation.wait_for_operation(
+                self._client, response.json()['operation'])
             self.fetch()
 
     def state(self):
@@ -257,7 +261,8 @@ class Container(mixin.Marshallable):
             'wait-for-websocket': False,
             'interactive': False,
         })
-        Operation.wait_for_operation(self._client, response.json()['operation'])
+        Operation.wait_for_operation(
+            self._client, response.json()['operation'])
 
 
 class Snapshot(mixin.Marshallable):
@@ -312,7 +317,8 @@ class Snapshot(mixin.Marshallable):
             self._container.name].snapshots[self.name].post(
             json={'name': new_name})
         if wait:
-            Operation.wait_for_operation(self._client, response.json()['operation'])
+            Operation.wait_for_operation(
+                self._client, response.json()['operation'])
         self.name = new_name
 
     def delete(self, wait=False):
@@ -321,4 +327,5 @@ class Snapshot(mixin.Marshallable):
             self._container.name].snapshots[self.name].delete()
 
         if wait:
-            Operation.wait_for_operation(self._client, response.json()['operation'])
+            Operation.wait_for_operation(
+                self._client, response.json()['operation'])
