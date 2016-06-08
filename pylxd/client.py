@@ -115,6 +115,7 @@ class _WebsocketClient(WebSocketBaseClient):
     all json messages to a messages attribute, which can
     then be read are parsed.
     """
+
     def handshake_ok(self):
         self.messages = []
 
@@ -124,8 +125,7 @@ class _WebsocketClient(WebSocketBaseClient):
 
 
 class Client(object):
-    """
-    Client class for LXD REST API.
+    """Client class for LXD REST API.
 
     This client wraps all the functionality required to interact with
     LXD, and is meant to be the sole entry point.
@@ -163,9 +163,11 @@ class Client(object):
             >>> print response.status_code, response.json()
             # /containers/test/
             >>> print api.containers['test'].get().json()
+
     """
 
     def __init__(self, endpoint=None, version='1.0', cert=None, verify=True):
+        self.cert = cert
         if endpoint is not None:
             self.api = _APINode(endpoint, cert=cert, verify=verify)
         else:
@@ -183,19 +185,34 @@ class Client(object):
             response = self.api.get()
             if response.status_code != 200:
                 raise exceptions.ClientConnectionFailed()
-            auth = response.json()['metadata']['auth']
-            if auth != "trusted":
-                raise exceptions.ClientAuthenticationFailed()
-
             self.host_info = response.json()['metadata']
+
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.InvalidURL):
             raise exceptions.ClientConnectionFailed()
 
+        self.certificates = managers.CertificateManager(self)
         self.containers = managers.ContainerManager(self)
         self.images = managers.ImageManager(self)
         self.operations = managers.OperationManager(self)
         self.profiles = managers.ProfileManager(self)
+
+    @property
+    def authenticated(self):
+        return self.host_info['auth'] == 'trusted'
+
+    def authenticate(self, password):
+        if self.authenticated:
+            return
+        # This is naive. There might be a library that can parse this
+        # better, but we basically just want to trim off BEGIN/END
+        # certificate lines.
+        cert = open(self.cert[0]).read().encode('utf-8')
+        self.certificates.create(password, cert)
+
+        # Refresh the host info
+        response = self.api.get()
+        self.host_info = response.json()['metadata']
 
     @property
     def websocket_url(self):
