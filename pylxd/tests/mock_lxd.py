@@ -111,13 +111,6 @@ RULES = [
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/certificates/an-certificate$',
     },
-
-
-
-
-
-
-
     {
         'status_code': 202,
         'method': 'DELETE',
