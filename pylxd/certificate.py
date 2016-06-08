@@ -59,7 +59,8 @@ class Certificate(object):
 
         # XXX: rockstar (08 Jun 2016) - Please see the open lxd bug here:
         # https://github.com/lxc/lxd/issues/2092
-        fingerprint = binascii.hexlify(cert.fingerprint(hashes.SHA256())).decode('utf-8')
+        fingerprint = binascii.hexlify(
+            cert.fingerprint(hashes.SHA256())).decode('utf-8')
         return cls.get(client, fingerprint)
 
     def __init__(self, **kwargs):
