@@ -204,9 +204,6 @@ class Client(object):
     def authenticate(self, password):
         if self.trusted:
             return
-        # This is naive. There might be a library that can parse this
-        # better, but we basically just want to trim off BEGIN/END
-        # certificate lines.
         cert = open(self.cert[0]).read().encode('utf-8')
         self.certificates.create(password, cert)
 
