@@ -198,11 +198,11 @@ class Client(object):
         self.profiles = managers.ProfileManager(self)
 
     @property
-    def authenticated(self):
+    def trusted(self):
         return self.host_info['auth'] == 'trusted'
 
     def authenticate(self, password):
-        if self.authenticated:
+        if self.trusted:
             return
         # This is naive. There might be a library that can parse this
         # better, but we basically just want to trim off BEGIN/END

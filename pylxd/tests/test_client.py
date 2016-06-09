@@ -89,24 +89,24 @@ class TestClient(unittest.TestCase):
         self.assertRaises(exceptions.ClientConnectionFailed, client.Client)
 
     def test_connection_untrusted(self):
-        """Client.authenticated is False when certs are untrusted."""
+        """Client.trusted is False when certs are untrusted."""
         response = mock.MagicMock(status_code=200)
         response.json.return_value = {'metadata': {'auth': 'untrusted'}}
         self.get.return_value = response
 
         an_client = client.Client()
 
-        self.assertFalse(an_client.authenticated)
+        self.assertFalse(an_client.trusted)
 
     def test_connection_trusted(self):
-        """Client.authenticated is True when certs are untrusted."""
+        """Client.trusted is True when certs are untrusted."""
         response = mock.MagicMock(status_code=200)
         response.json.return_value = {'metadata': {'auth': 'trusted'}}
         self.get.return_value = response
 
         an_client = client.Client()
 
-        self.assertTrue(an_client.authenticated)
+        self.assertTrue(an_client.trusted)
 
     def test_authenticate(self):
         """A client is authenticated."""
@@ -136,7 +136,7 @@ class TestClient(unittest.TestCase):
 
         an_client.authenticate('test-password')
 
-        self.assertTrue(an_client.authenticated)
+        self.assertTrue(an_client.trusted)
 
     def test_authenticate_already_authenticated(self):
         """If the client is already authenticated, nothing happens."""
@@ -144,7 +144,7 @@ class TestClient(unittest.TestCase):
 
         an_client.authenticate('test-password')
 
-        self.assertTrue(an_client.authenticated)
+        self.assertTrue(an_client.trusted)
 
     def test_host_info(self):
         """Perform a host query."""
