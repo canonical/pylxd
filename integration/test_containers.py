@@ -118,12 +118,14 @@ class TestContainer(IntegrationTestCase):
         name = 'an-snapshot'
         snapshot = self.container.snapshots.create(name, wait=True)
 
-        self.assertEqual([name], [s.name for s in self.container.snapshots.all()])
+        self.assertEqual(
+            [name], [s.name for s in self.container.snapshots.all()])
 
         new_name = 'an-other-snapshot'
         snapshot.rename(new_name, wait=True)
 
-        self.assertEqual([new_name], [s.name for s in self.container.snapshots.all()])
+        self.assertEqual(
+            [new_name], [s.name for s in self.container.snapshots.all()])
 
         snapshot.delete(wait=True)
 
