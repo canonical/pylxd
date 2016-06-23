@@ -1,7 +1,7 @@
 pbr>=1.6
 python-dateutil>=2.4.2
 six>=1.9.0
-ws4py>=0.3.4
+ws4py!=0.3.5,>=0.3.4  # 0.3.5 is broken for websocket support
 requests!=2.8.0,>=2.5.2
 requests-unixsocket>=0.1.5
 cryptography>=1.4
