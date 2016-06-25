@@ -110,7 +110,11 @@ class Model(object):
         it can modified. This method is called when getattr is called on
         a non-initaliazed object.
         """
-        raise NotImplemented('sync is not implemented')
+        # XXX: rockstar (25 Jun 2016) - This has the potential to step
+        # on existing attributes.
+        response = self.api.get()
+        for key, val in response.json()['metadata'].items():
+            setattr(self, key, val)
 
     def save(self):  # pragma: no cover
         """Save data to the server.

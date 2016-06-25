@@ -37,12 +37,16 @@ class ImageManager(BaseManager):
     manager_for = 'pylxd.image.Image'
 
 
-class ProfileManager(BaseManager):
-    manager_for = 'pylxd.profile.Profile'
+class NetworkManager(BaseManager):
+    manager_for = 'pylxd.network.Network'
 
 
 class OperationManager(BaseManager):
     manager_for = 'pylxd.operation.Operation'
+
+
+class ProfileManager(BaseManager):
+    manager_for = 'pylxd.profile.Profile'
 
 
 class SnapshotManager(BaseManager):

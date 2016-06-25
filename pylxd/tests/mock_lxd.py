@@ -335,6 +335,29 @@ RULES = [
     },
 
 
+    # Networks
+    {
+        'json': {
+            'type': 'sync',
+            'metadata': [
+                'http://pylxd.test/1.0/networks/lo',
+            ]},
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/networks$',
+    },
+    {
+        'json': {
+            'type': 'sync',
+            'metadata': {
+                'name': 'lo',
+                'type': 'loopback',
+                'used_by': [],
+            }},
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/networks/lo$',
+    },
+
+
     # Profiles
     {
         'text': json.dumps({
