@@ -25,6 +25,10 @@ class BaseManager(object):
         return super(BaseManager, self).__init__()
 
 
+class CertificateManager(BaseManager):
+    manager_for = 'pylxd.certificate.Certificate'
+
+
 class ContainerManager(BaseManager):
     manager_for = 'pylxd.container.Container'
 

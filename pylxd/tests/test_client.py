@@ -1,3 +1,16 @@
+# Copyright (c) 2016 Canonical Ltd
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
 import json
 import os
 import unittest
@@ -13,8 +26,11 @@ class TestClient(unittest.TestCase):
     """Tests for pylxd.client.Client."""
 
     def setUp(self):
-        self.patcher = mock.patch('pylxd.client._APINode.get')
-        self.get = self.patcher.start()
+        self.get_patcher = mock.patch('pylxd.client._APINode.get')
+        self.get = self.get_patcher.start()
+
+        self.post_patcher = mock.patch('pylxd.client._APINode.post')
+        self.post = self.post_patcher.start()
 
         response = mock.MagicMock(status_code=200)
         response.json.return_value = {'metadata': {
@@ -23,8 +39,12 @@ class TestClient(unittest.TestCase):
         }}
         self.get.return_value = response
 
+        post_response = mock.MagicMock(status_code=200)
+        self.post.return_value = post_response
+
     def tearDown(self):
-        self.patcher.stop()
+        self.get_patcher.stop()
+        self.post_patcher.stop()
 
     def test_create(self):
         """Client creation sets default API endpoint."""
@@ -68,16 +88,66 @@ class TestClient(unittest.TestCase):
 
         self.assertRaises(exceptions.ClientConnectionFailed, client.Client)
 
-    def test_authentication_failed(self):
-        """If the authentication fails, an exception is raised."""
+    def test_connection_untrusted(self):
+        """Client.trusted is False when certs are untrusted."""
         response = mock.MagicMock(status_code=200)
         response.json.return_value = {'metadata': {'auth': 'untrusted'}}
         self.get.return_value = response
 
-        self.assertRaises(exceptions.ClientAuthenticationFailed, client.Client)
+        an_client = client.Client()
+
+        self.assertFalse(an_client.trusted)
+
+    def test_connection_trusted(self):
+        """Client.trusted is True when certs are untrusted."""
+        response = mock.MagicMock(status_code=200)
+        response.json.return_value = {'metadata': {'auth': 'trusted'}}
+        self.get.return_value = response
+
+        an_client = client.Client()
+
+        self.assertTrue(an_client.trusted)
+
+    def test_authenticate(self):
+        """A client is authenticated."""
+        response = mock.MagicMock(status_code=200)
+        response.json.return_value = {'metadata': {'auth': 'untrusted'}}
+        self.get.return_value = response
+
+        certs = (
+            os.path.join(os.path.dirname(__file__), 'lxd.crt'),
+            os.path.join(os.path.dirname(__file__), 'lxd.key'))
+        an_client = client.Client(cert=certs)
+
+        get_count = []
+
+        def _get(*args, **kwargs):
+            if len(get_count) == 0:
+                get_count.append(None)
+                return {'metadata': {
+                    'type': 'client',
+                    'fingerprint': 'eaf55b72fc23aa516d709271df9b0116064bf8cfa009cf34c67c33ad32c2320c',  # NOQA
+                }}
+            else:
+                return {'metadata': {'auth': 'trusted'}}
+        response = mock.MagicMock(status_code=200)
+        response.json.side_effect = _get
+        self.get.return_value = response
+
+        an_client.authenticate('test-password')
+
+        self.assertTrue(an_client.trusted)
+
+    def test_authenticate_already_authenticated(self):
+        """If the client is already authenticated, nothing happens."""
+        an_client = client.Client()
+
+        an_client.authenticate('test-password')
+
+        self.assertTrue(an_client.trusted)
 
     def test_host_info(self):
-        """Perform a host query """
+        """Perform a host query."""
         an_client = client.Client()
         self.assertEqual('zfs', an_client.host_info['environment']['storage'])
 

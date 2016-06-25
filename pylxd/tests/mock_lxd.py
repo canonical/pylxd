@@ -75,6 +75,49 @@ RULES = [
     },
 
 
+    # Certificates
+    {
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': [
+                'http://pylxd.test/1.0/certificates/an-certificate',
+            ]}),
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/certificates$',
+    },
+    {
+        'method': 'POST',
+        'url': r'^http://pylxd.test/1.0/certificates$',
+    },
+    {
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': {
+                'certificate': 'certificate-content',
+                'fingerprint': 'eaf55b72fc23aa516d709271df9b0116064bf8cfa009cf34c67c33ad32c2320c',  # NOQA
+                'type': 'client',
+            }}),
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/certificates/eaf55b72fc23aa516d709271df9b0116064bf8cfa009cf34c67c33ad32c2320c$',  # NOQA
+    },
+    {
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': {
+                'certificate': 'certificate-content',
+                'fingerprint': 'an-certificate',
+                'type': 'client',
+            }}),
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/certificates/an-certificate$',
+    },
+    {
+        'status_code': 202,
+        'method': 'DELETE',
+        'url': r'^http://pylxd.test/1.0/certificates/an-certificate$',
+    },
+
+
     # Containers
     {
         'text': json.dumps({
