@@ -56,8 +56,7 @@ class Busybox(object):
                         'description': "Busybox %s" % os.uname()[4],
                         'name': "busybox-%s" % os.uname()[4],
                         # Don't overwrite actual busybox images.
-                        'obfuscate': str(uuid.uuid4),
-                        },
+                        'obfuscate': str(uuid.uuid4()), },
                     }
 
         # Add busybox
