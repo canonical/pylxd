@@ -116,29 +116,31 @@ class TestContainer(IntegrationTestCase):
         # NOTE: rockstar (15 Feb 2016) - Once again, multiple things
         # asserted in the same test.
         name = 'an-snapshot'
-        self.container.snapshot(name, wait=True)
+        snapshot = self.container.snapshots.create(name, wait=True)
 
-        self.assertEqual([name], self.container.list_snapshots())
+        self.assertEqual(
+            [name], [s.name for s in self.container.snapshots.all()])
 
         new_name = 'an-other-snapshot'
-        self.container.rename_snapshot(name, new_name, wait=True)
+        snapshot.rename(new_name, wait=True)
 
-        self.assertEqual([new_name], self.container.list_snapshots())
+        self.assertEqual(
+            [new_name], [s.name for s in self.container.snapshots.all()])
 
-        self.container.delete_snapshot(new_name, wait=True)
+        snapshot.delete(wait=True)
 
-        self.assertEqual([], self.container.list_snapshots())
+        self.assertEqual([], self.container.snapshots.all())
 
     def test_put_get_file(self):
         """A file is written to the container and then read."""
         filepath = '/tmp/an_file'
         data = b'abcdef'
 
-        retval = self.container.put_file(filepath, data)
+        retval = self.container.files.put(filepath, data)
 
         self.assertTrue(retval)
 
-        contents = self.container.get_file(filepath)
+        contents = self.container.files.get(filepath)
 
         self.assertEqual(data, contents)
 
