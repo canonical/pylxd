@@ -314,7 +314,8 @@ class Container(mixin.Marshallable):
             'default': self.profiles,
             'source': {
                 'type': 'migration',
-                'operation': self._client.api.operations[operation.id]._api_endpoint,
+                'operation': self._client.api.operations[
+                    operation.id]._api_endpoint,
                 'mode': 'pull',
                 'secrets': secrets,
             }
