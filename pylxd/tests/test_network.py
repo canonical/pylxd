@@ -42,10 +42,12 @@ class TestNetwork(testing.PyLXDTestCase):
         """delete is not implemented in networks."""
         an_network = network.Network(self.client, name='lo')
 
-        self.assertRaises(NotImplemented, an_network.delete)
+        with self.assertRaises(NotImplementedError):
+            an_network.delete()
 
     def test_save(self):
         """save is not implemented in networks."""
         an_network = network.Network(self.client, name='lo')
 
-        self.assertRaises(NotImplemented, an_network.save)
+        with self.assertRaises(NotImplementedError):
+            an_network.save()

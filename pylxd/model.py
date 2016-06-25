@@ -116,15 +116,15 @@ class Model(object):
         for key, val in response.json()['metadata'].items():
             setattr(self, key, val)
 
-    def save(self):  # pragma: no cover
+    def save(self):
         """Save data to the server.
 
         This method should write the new data to the server via marshalling.
         It should be a no-op when the object is not dirty, to prevent needless
         I/O.
         """
-        raise NotImplemented('save is not implemented')
+        raise NotImplementedError('save is not implemented')
 
-    def delete(self):  # pragma: no cover
+    def delete(self):
         """Delete an object from the server."""
-        raise NotImplemented('delete is not implemented')
+        raise NotImplementedError('delete is not implemented')
