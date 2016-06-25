@@ -37,3 +37,15 @@ class TestNetwork(testing.PyLXDTestCase):
         an_network = network.Network(self.client, name='lo')
 
         self.assertEqual('loopback', an_network.type)
+
+    def test_delete(self):
+        """delete is not implemented in networks."""
+        an_network = network.Network(self.client, name='lo')
+
+        self.assertRaises(NotImplemented, an_network.delete)
+
+    def test_save(self):
+        """save is not implemented in networks."""
+        an_network = network.Network(self.client, name='lo')
+
+        self.assertRaises(NotImplemented, an_network.save)
