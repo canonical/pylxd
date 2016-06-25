@@ -31,3 +31,9 @@ class TestNetwork(testing.PyLXDTestCase):
         an_network = network.Network.get(self.client, name)
 
         self.assertEqual(name, an_network.name)
+
+    def test_partial(self):
+        """A partial network is synced."""
+        an_network = network.Network(self.client, name='lo')
+
+        self.assertEqual('loopback', an_network.type)

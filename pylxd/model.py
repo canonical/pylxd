@@ -102,7 +102,7 @@ class Model(object):
     def dirty(self):
         return self.__dirty__
 
-    def sync(self):  # pragma: no cover
+    def sync(self):
         """Sync from the server.
 
         When collections of objects are retrieved from the server, they
