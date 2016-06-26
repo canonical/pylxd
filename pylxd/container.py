@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import socket
 import time
 
 import six
@@ -305,6 +306,13 @@ class Container(mixin.Marshallable):
         operation = self._client.operations.get(response.json()['operation'])
         secrets = response.json()['metadata']['metadata']
 
+        # Translate the host name to an IP address. Otherwise, there could be
+        # certificate validation issues.
+        operation_url = self._client.api.operations[operation.id]._api_endpoint
+        parsed = parse.urlparse(operation_url)
+        host_ip = socket.gethostbyname(parsed.hostname)
+        operation_url = operation_url.replace(parsed.hostname, host_ip)
+
         config = {
             'name': self.name,
             'architecture': self.architecture,
@@ -314,8 +322,7 @@ class Container(mixin.Marshallable):
             'default': self.profiles,
             'source': {
                 'type': 'migration',
-                'operation': self._client.api.operations[
-                    operation.id]._api_endpoint,
+                'operation': operation_url,
                 'mode': 'pull',
                 'secrets': secrets,
             }
