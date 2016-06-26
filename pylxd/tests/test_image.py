@@ -94,14 +94,6 @@ class TestImage(testing.PyLXDTestCase):
 
         a_image.update()
 
-    def test_update_partial_objects(self):
-        """A partially fetched image can't be pushed."""
-        a_image = self.client.images.all()[0]
-
-        self.assertRaises(
-            exceptions.ObjectIncomplete,
-            a_image.update)
-
     def test_fetch(self):
         """A partial object is fetched and populated."""
         a_image = self.client.images.all()[0]
@@ -125,7 +117,7 @@ class TestImage(testing.PyLXDTestCase):
         })
         fingerprint = hashlib.sha256(b'').hexdigest()
 
-        a_image = image.Image(fingerprint=fingerprint, _client=self.client)
+        a_image = image.Image(self.client, fingerprint=fingerprint)
 
         self.assertRaises(exceptions.NotFound, a_image.fetch)
 
@@ -144,7 +136,7 @@ class TestImage(testing.PyLXDTestCase):
         })
         fingerprint = hashlib.sha256(b'').hexdigest()
 
-        a_image = image.Image(fingerprint=fingerprint, _client=self.client)
+        a_image = image.Image(self.client, fingerprint=fingerprint)
 
         self.assertRaises(exceptions.LXDAPIException, a_image.fetch)
 

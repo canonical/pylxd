@@ -15,6 +15,7 @@ import six
 
 from pylxd import exceptions
 from pylxd.deprecation import deprecated
+from pylxd.operation import Operation
 
 
 class Attribute(object):
@@ -134,9 +135,13 @@ class Model(object):
         """
         raise NotImplementedError('save is not implemented')
 
-    def delete(self):
+    def delete(self, wait=False):
         """Delete an object from the server."""
-        self.api.delete()
+        response = self.api.delete()
+
+        if response.json()['type'] == 'async' and wait:
+            Operation.wait_for_operation(
+                self.client, response.json()['operation'])
 
     def marshall(self):
         """Marshall the object in preparation for updating to the server."""
