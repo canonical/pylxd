@@ -51,9 +51,8 @@ class Certificate(object):
         """Create a new certificate."""
         cert = x509.load_pem_x509_certificate(cert_data, default_backend())
         base64_cert = cert.public_bytes(Encoding.PEM).decode('utf-8')
-        if base64_cert.startswith('-----BEGIN CERTIFICATE-----'):
-            base64_cert = '\n'.join(
-                base64_cert.split('\n')[1:-2])
+        # STRIP OUT CERT META "-----BEGIN CERTIFICATE-----"
+        base64_cert = '\n'.join(base64_cert.split('\n')[1:-2])
         data = {
             'type': 'client',
             'certificate': base64_cert,
