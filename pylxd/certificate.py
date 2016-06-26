@@ -50,9 +50,12 @@ class Certificate(object):
     def create(cls, client, password, cert_data):
         """Create a new certificate."""
         cert = x509.load_pem_x509_certificate(cert_data, default_backend())
+        base64_cert = cert.public_bytes(Encoding.PEM).decode('utf-8')
+        # STRIP OUT CERT META "-----BEGIN CERTIFICATE-----"
+        base64_cert = '\n'.join(base64_cert.split('\n')[1:-2])
         data = {
             'type': 'client',
-            'certificate': cert.public_bytes(Encoding.PEM).decode('utf-8'),
+            'certificate': base64_cert,
             'password': password,
         }
         client.api.certificates.post(json=data)
