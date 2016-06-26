@@ -94,7 +94,7 @@ class TestContainer(testing.PyLXDTestCase):
     def test_fetch(self):
         """A fetch updates the properties of a container."""
         an_container = container.Container(
-            name='an-container', _client=self.client)
+            self.client, name='an-container')
 
         an_container.fetch()
 
@@ -115,7 +115,7 @@ class TestContainer(testing.PyLXDTestCase):
         })
 
         an_container = container.Container(
-            name='an-missing-container', _client=self.client)
+            self.client, name='an-missing-container')
 
         self.assertRaises(exceptions.NotFound, an_container.fetch)
 
@@ -134,14 +134,14 @@ class TestContainer(testing.PyLXDTestCase):
         })
 
         an_container = container.Container(
-            name='an-missing-container', _client=self.client)
+            self.client, name='an-missing-container')
 
         self.assertRaises(exceptions.LXDAPIException, an_container.fetch)
 
     def test_update(self):
         """A container is updated."""
         an_container = container.Container(
-            name='an-container', _client=self.client)
+            self.client, name='an-container')
         an_container.architecture = 1
         an_container.config = {}
         an_container.created_at = 1
@@ -166,7 +166,7 @@ class TestContainer(testing.PyLXDTestCase):
 
     def test_rename(self):
         an_container = container.Container(
-            name='an-container', _client=self.client)
+            self.client, name='an-container')
 
         an_container.rename('an-renamed-container', wait=True)
 
@@ -178,7 +178,7 @@ class TestContainer(testing.PyLXDTestCase):
         # a code path. There should be an assertion here, but
         # it's not clear how to assert that, just yet.
         an_container = container.Container(
-            name='an-container', _client=self.client)
+            self.client, name='an-container')
 
         an_container.delete(wait=True)
 
@@ -192,7 +192,7 @@ class TestContainer(testing.PyLXDTestCase):
         _CommandWebsocketClient.return_value = fake_websocket
 
         an_container = container.Container(
-            name='an-container', _client=self.client)
+            self.client, name='an-container')
 
         stdout, _ = an_container.execute(['echo', 'test'])
 
@@ -201,7 +201,7 @@ class TestContainer(testing.PyLXDTestCase):
     def test_execute_string(self):
         """A command passed as string raises a TypeError."""
         an_container = container.Container(
-            name='an-container', _client=self.client)
+            self.client, name='an-container')
 
         self.assertRaises(TypeError, an_container.execute, 'apt-get update')
 

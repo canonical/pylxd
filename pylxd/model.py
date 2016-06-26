@@ -25,6 +25,14 @@ class Attribute(object):
         self.validator = validator
 
 
+class Manager(object):
+    """A manager declaration.
+
+    This class signals to the model that it will have a Manager
+    attribute.
+    """
+
+
 class ModelType(type):
     """A Model metaclass.
 
@@ -37,10 +45,14 @@ class ModelType(type):
             raise TypeError('__slots__ should not be specified.')
         attributes = {}
         for_removal = []
+        managers = []
 
         for key, val in attrs.items():
             if type(val) == Attribute:
                 attributes[key] = val
+                for_removal.append(key)
+            if type(val) == Manager:
+                managers.append(key)
                 for_removal.append(key)
         for key in for_removal:
             del attrs[key]
@@ -51,6 +63,8 @@ class ModelType(type):
         for base in bases:
             if '__slots__' in dir(base):
                 slots = slots + base.__slots__
+        if len(managers) > 0:
+            slots = slots + managers
         attrs['__slots__'] = slots
         attrs['__attributes__'] = attributes
 

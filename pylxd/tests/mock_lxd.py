@@ -112,6 +112,10 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/certificates/an-certificate$',
     },
     {
+        'json': {
+            'type': 'sync',
+            'metadata': {},
+        },
         'status_code': 202,
         'method': 'DELETE',
         'url': r'^http://pylxd.test/1.0/certificates/an-certificate$',
