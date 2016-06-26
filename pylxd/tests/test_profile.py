@@ -101,14 +101,6 @@ class TestProfile(testing.PyLXDTestCase):
 
         self.assertEqual({}, an_profile.config)
 
-    def test_update_partial_objects(self):
-        """A partially fetched profile can't be pushed."""
-        an_profile = self.client.profiles.all()[0]
-
-        self.assertRaises(
-            exceptions.ObjectIncomplete,
-            an_profile.update)
-
     def test_fetch(self):
         """A partially fetched profile is made complete."""
         an_profile = self.client.profiles.all()[0]
@@ -131,7 +123,7 @@ class TestProfile(testing.PyLXDTestCase):
             'url': r'^http://pylxd.test/1.0/profiles/an-profile$',
         })
 
-        an_profile = profile.Profile(name='an-profile', _client=self.client)
+        an_profile = profile.Profile(self.client, name='an-profile')
 
         self.assertRaises(exceptions.NotFound, an_profile.fetch)
 
@@ -149,7 +141,7 @@ class TestProfile(testing.PyLXDTestCase):
             'url': r'^http://pylxd.test/1.0/profiles/an-profile$',
         })
 
-        an_profile = profile.Profile(name='an-profile', _client=self.client)
+        an_profile = profile.Profile(self.client, name='an-profile')
 
         self.assertRaises(exceptions.LXDAPIException, an_profile.fetch)
 

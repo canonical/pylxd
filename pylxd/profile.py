@@ -11,17 +11,16 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import six
-from pylxd import exceptions, mixin
+from pylxd import exceptions, model
 
 
-class Profile(mixin.Marshallable):
+class Profile(model.Model):
     """A LXD profile."""
 
-    __slots__ = [
-        '_client',
-        'config', 'devices', 'name'
-        ]
+    name = model.Attribute()
+    description = model.Attribute()
+    config = model.Attribute()
+    devices = model.Attribute()
 
     @classmethod
     def get(cls, client, name):
@@ -33,7 +32,7 @@ class Profile(mixin.Marshallable):
                 raise exceptions.NotFound()
             raise
 
-        return cls(_client=client, **response.json()['metadata'])
+        return cls(client, **response.json()['metadata'])
 
     @classmethod
     def all(cls, client):
@@ -43,7 +42,7 @@ class Profile(mixin.Marshallable):
         profiles = []
         for url in response.json()['metadata']:
             name = url.split('/')[-1]
-            profiles.append(cls(_client=client, name=name))
+            profiles.append(cls(client, name=name))
         return profiles
 
     @classmethod
@@ -61,10 +60,9 @@ class Profile(mixin.Marshallable):
 
         return cls.get(client, name)
 
-    def __init__(self, **kwargs):
-        super(Profile, self).__init__()
-        for key, value in six.iteritems(kwargs):
-            setattr(self, key, value)
+    @property
+    def api(self):
+        return self.client.api.profiles[self.name]
 
     def update(self):
         """Update the profile in LXD based on local changes."""
@@ -75,25 +73,9 @@ class Profile(mixin.Marshallable):
         # The name property cannot be updated.
         del marshalled['name']
 
-        self._client.api.profiles[self.name].put(json=marshalled)
+        self.api.put(json=marshalled)
 
     def rename(self, new):
         """Rename the profile."""
         raise NotImplementedError(
             'LXD does not currently support renaming profiles')
-
-    def delete(self):
-        """Delete a profile."""
-        self._client.api.profiles[self.name].delete()
-
-    def fetch(self):
-        """Fetch the object from LXD, populating attributes."""
-        try:
-            response = self._client.api.profiles[self.name].get()
-        except exceptions.LXDAPIException as e:
-            if e.response.status_code == 404:
-                raise exceptions.NotFound()
-            raise
-
-        for key, val in six.iteritems(response.json()['metadata']):
-            setattr(self, key, val)

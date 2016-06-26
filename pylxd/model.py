@@ -13,6 +13,7 @@
 #    under the License.
 import six
 
+from pylxd import exceptions
 from pylxd.deprecation import deprecated
 
 
@@ -114,7 +115,12 @@ class Model(object):
         """
         # XXX: rockstar (25 Jun 2016) - This has the potential to step
         # on existing attributes.
-        response = self.api.get()
+        try:
+            response = self.api.get()
+        except exceptions.LXDAPIException as e:
+            if e.response.status_code == 404:
+                raise exceptions.NotFound()
+            raise
         for key, val in response.json()['metadata'].items():
             setattr(self, key, val)
     fetch = deprecated("fetch is deprecated; please use sync")(sync)
@@ -131,3 +137,10 @@ class Model(object):
     def delete(self):
         """Delete an object from the server."""
         self.api.delete()
+
+    def marshall(self):
+        """Marshall the object in preparation for updating to the server."""
+        marshalled = {}
+        for key, val in self.__attributes__.items():
+            marshalled[key] = getattr(self, key)
+        return marshalled
