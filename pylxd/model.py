@@ -13,6 +13,8 @@
 #    under the License.
 import six
 
+from pylxd.deprecation import deprecated
+
 
 class Attribute(object):
     """A metadata class for model attributes."""
@@ -115,6 +117,7 @@ class Model(object):
         response = self.api.get()
         for key, val in response.json()['metadata'].items():
             setattr(self, key, val)
+    fetch = deprecated("fetch is deprecated; please use sync")(sync)
 
     def save(self):
         """Save data to the server.
@@ -127,4 +130,4 @@ class Model(object):
 
     def delete(self):
         """Delete an object from the server."""
-        raise NotImplementedError('delete is not implemented')
+        self.api.delete()

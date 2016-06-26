@@ -42,3 +42,7 @@ class Network(model.Model):
     @property
     def api(self):
         return self.client.api.networks[self.name]
+
+    def delete(self):
+        """Delete an object from the server."""
+        raise NotImplementedError('delete is not implemented')

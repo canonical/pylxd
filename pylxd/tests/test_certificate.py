@@ -46,7 +46,7 @@ class TestCertificate(testing.PyLXDTestCase):
     def test_fetch(self):
         """A partial object is fully fetched."""
         an_certificate = certificate.Certificate(
-            _client=self.client, fingerprint='an-certificate')
+            self.client, fingerprint='an-certificate')
 
         an_certificate.fetch()
 
@@ -57,6 +57,6 @@ class TestCertificate(testing.PyLXDTestCase):
         # XXX: rockstar (08 Jun 2016) - This just executes a code path. An
         # assertion should be added.
         an_certificate = certificate.Certificate(
-            _client=self.client, fingerprint='an-certificate')
+            self.client, fingerprint='an-certificate')
 
         an_certificate.delete()
