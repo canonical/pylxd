@@ -158,7 +158,7 @@ class Model(object):
         marshalled = self.marshall()
         response = self.api.put(json=marshalled)
 
-        if wait:
+        if response.json()['type'] == 'async' and wait:
             Operation.wait_for_operation(
                 self.client, response.json()['operation'])
     update = deprecated('update is deprecated; please use save')(save)
