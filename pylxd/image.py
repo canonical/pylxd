@@ -79,14 +79,6 @@ class Image(model.Model):
             Operation.wait_for_operation(client, response.json()['operation'])
         return cls(client, fingerprint=fingerprint)
 
-    def update(self):
-        """Update LXD based on changes to this image."""
-        try:
-            marshalled = self.marshall()
-        except AttributeError:
-            raise exceptions.ObjectIncomplete()
-        self.api.put(json=marshalled)
-
     def export(self):
         """Export the image."""
         try:

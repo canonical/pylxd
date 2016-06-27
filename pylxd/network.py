@@ -43,6 +43,10 @@ class Network(model.Model):
     def api(self):
         return self.client.api.networks[self.name]
 
+    def save(self, wait=False):
+        """Save is not available for networks."""
+        raise NotImplementedError('save is not implemented')
+
     def delete(self):
-        """Delete an object from the server."""
+        """Delete is not available for networks."""
         raise NotImplementedError('delete is not implemented')

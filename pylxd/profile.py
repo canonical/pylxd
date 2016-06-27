@@ -17,7 +17,7 @@ from pylxd import exceptions, model
 class Profile(model.Model):
     """A LXD profile."""
 
-    name = model.Attribute()
+    name = model.Attribute(readonly=True)
     description = model.Attribute()
     config = model.Attribute()
     devices = model.Attribute()
@@ -63,17 +63,6 @@ class Profile(model.Model):
     @property
     def api(self):
         return self.client.api.profiles[self.name]
-
-    def update(self):
-        """Update the profile in LXD based on local changes."""
-        try:
-            marshalled = self.marshall()
-        except AttributeError:
-            raise exceptions.ObjectIncomplete()
-        # The name property cannot be updated.
-        del marshalled['name']
-
-        self.api.put(json=marshalled)
 
     def rename(self, new):
         """Rename the profile."""

@@ -44,9 +44,9 @@ class Container(model.Model):
     ephemeral = model.Attribute()
     expanded_config = model.Attribute()
     expanded_devices = model.Attribute()
-    name = model.Attribute()
+    name = model.Attribute(readonly=True)
     profiles = model.Attribute()
-    status = model.Attribute()
+    status = model.Attribute(readonly=True)
 
     snapshots = model.Manager()
     files = model.Manager()
@@ -133,22 +133,6 @@ class Container(model.Model):
     reload = deprecated(
         "Container.reload is deprecated. Please use Container.sync")(
         model.Model.sync)
-
-    def update(self, wait=False):
-        """Update the container in lxd from local changes."""
-        try:
-            marshalled = self.marshall()
-        except AttributeError:
-            raise exceptions.ObjectIncomplete()
-        # These two properties are explicitly not allowed.
-        del marshalled['name']
-        del marshalled['status']
-
-        response = self.api.put(json=marshalled)
-
-        if wait:
-            Operation.wait_for_operation(
-                self.client, response.json()['operation'])
 
     def rename(self, name, wait=False):
         """Rename a container."""

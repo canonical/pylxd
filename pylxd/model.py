@@ -21,8 +21,9 @@ from pylxd.operation import Operation
 class Attribute(object):
     """A metadata class for model attributes."""
 
-    def __init__(self, validator=None):
+    def __init__(self, validator=None, readonly=False):
         self.validator = validator
+        self.readonly = False
 
 
 class Manager(object):
@@ -147,14 +148,24 @@ class Model(object):
             setattr(self, key, val)
     fetch = deprecated("fetch is deprecated; please use sync")(sync)
 
-    def save(self):
+    def save(self, wait=False):
         """Save data to the server.
 
         This method should write the new data to the server via marshalling.
         It should be a no-op when the object is not dirty, to prevent needless
         I/O.
         """
-        raise NotImplementedError('save is not implemented')
+        try:
+            marshalled = self.marshall()
+        except AttributeError:
+            raise exceptions.ObjectIncomplete()
+
+        response = self.api.put(json=marshalled)
+
+        if wait:
+            Operation.wait_for_operation(
+                self.client, response.json()['operation'])
+    update = deprecated('update is deprecated; please use save')(save)
 
     def delete(self, wait=False):
         """Delete an object from the server."""
@@ -168,5 +179,6 @@ class Model(object):
         """Marshall the object in preparation for updating to the server."""
         marshalled = {}
         for key, val in self.__attributes__.items():
-            marshalled[key] = getattr(self, key)
+            if not val.readonly:
+                marshalled[key] = getattr(self, key)
         return marshalled
