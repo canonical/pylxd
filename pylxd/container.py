@@ -102,7 +102,7 @@ class Container(model.Model):
 
         Containers returned from this method will only have the name
         set, as that is the only property returned from LXD. If more
-        information is needed, `Container.fetch` is the method call
+        information is needed, `Container.sync` is the method call
         that should be used.
         """
         response = client.api.containers.get()
@@ -155,7 +155,7 @@ class Container(model.Model):
         if wait:
             Operation.wait_for_operation(
                 self.client, response.json()['operation'])
-            self.fetch()
+            self.sync()
 
     def state(self):
         response = self.api.state.get()

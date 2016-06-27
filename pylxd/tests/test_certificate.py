@@ -48,7 +48,7 @@ class TestCertificate(testing.PyLXDTestCase):
         an_certificate = certificate.Certificate(
             self.client, fingerprint='an-certificate')
 
-        an_certificate.fetch()
+        an_certificate.sync()
 
         self.assertEqual('certificate-content', an_certificate.certificate)
 

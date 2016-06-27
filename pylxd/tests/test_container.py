@@ -92,11 +92,11 @@ class TestContainer(testing.PyLXDTestCase):
             container.Container.create, self.client, config)
 
     def test_fetch(self):
-        """A fetch updates the properties of a container."""
+        """A sync updates the properties of a container."""
         an_container = container.Container(
             self.client, name='an-container')
 
-        an_container.fetch()
+        an_container.sync()
 
         self.assertTrue(an_container.ephemeral)
 
@@ -117,7 +117,7 @@ class TestContainer(testing.PyLXDTestCase):
         an_container = container.Container(
             self.client, name='an-missing-container')
 
-        self.assertRaises(exceptions.NotFound, an_container.fetch)
+        self.assertRaises(exceptions.NotFound, an_container.sync)
 
     def test_fetch_error(self):
         """LXDAPIException is raised on error."""
@@ -136,7 +136,7 @@ class TestContainer(testing.PyLXDTestCase):
         an_container = container.Container(
             self.client, name='an-missing-container')
 
-        self.assertRaises(exceptions.LXDAPIException, an_container.fetch)
+        self.assertRaises(exceptions.LXDAPIException, an_container.sync)
 
     def test_update(self):
         """A container is updated."""
@@ -152,7 +152,7 @@ class TestContainer(testing.PyLXDTestCase):
         an_container.profiles = 1
         an_container.status = 1
 
-        an_container.update(wait=True)
+        an_container.save(wait=True)
 
         self.assertTrue(an_container.ephemeral)
 

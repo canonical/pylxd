@@ -97,7 +97,7 @@ class TestProfile(testing.PyLXDTestCase):
         # it's not clear how to assert that, just yet.
         an_profile = profile.Profile.get(self.client, 'an-profile')
 
-        an_profile.update()
+        an_profile.save()
 
         self.assertEqual({}, an_profile.config)
 
@@ -105,7 +105,7 @@ class TestProfile(testing.PyLXDTestCase):
         """A partially fetched profile is made complete."""
         an_profile = self.client.profiles.all()[0]
 
-        an_profile.fetch()
+        an_profile.sync()
 
         self.assertEqual('An description', an_profile.description)
 
@@ -125,7 +125,7 @@ class TestProfile(testing.PyLXDTestCase):
 
         an_profile = profile.Profile(self.client, name='an-profile')
 
-        self.assertRaises(exceptions.NotFound, an_profile.fetch)
+        self.assertRaises(exceptions.NotFound, an_profile.sync)
 
     def test_fetch_error(self):
         """LXDAPIException is raised on fetch error."""
@@ -143,7 +143,7 @@ class TestProfile(testing.PyLXDTestCase):
 
         an_profile = profile.Profile(self.client, name='an-profile')
 
-        self.assertRaises(exceptions.LXDAPIException, an_profile.fetch)
+        self.assertRaises(exceptions.LXDAPIException, an_profile.sync)
 
     def test_delete(self):
         """A profile is deleted."""

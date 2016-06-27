@@ -90,15 +90,15 @@ class TestImage(testing.PyLXDTestCase):
     def test_update(self):
         """An image is updated."""
         a_image = self.client.images.all()[0]
-        a_image.fetch()
+        a_image.sync()
 
-        a_image.update()
+        a_image.save()
 
     def test_fetch(self):
         """A partial object is fetched and populated."""
         a_image = self.client.images.all()[0]
 
-        a_image.fetch()
+        a_image.sync()
 
         self.assertEqual(1, a_image.size)
 
@@ -119,7 +119,7 @@ class TestImage(testing.PyLXDTestCase):
 
         a_image = image.Image(self.client, fingerprint=fingerprint)
 
-        self.assertRaises(exceptions.NotFound, a_image.fetch)
+        self.assertRaises(exceptions.NotFound, a_image.sync)
 
     def test_fetch_error(self):
         """A 500 error raises LXDAPIException."""
@@ -138,7 +138,7 @@ class TestImage(testing.PyLXDTestCase):
 
         a_image = image.Image(self.client, fingerprint=fingerprint)
 
-        self.assertRaises(exceptions.LXDAPIException, a_image.fetch)
+        self.assertRaises(exceptions.LXDAPIException, a_image.sync)
 
     def test_delete(self):
         """An image is deleted."""
