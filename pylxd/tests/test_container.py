@@ -156,14 +156,6 @@ class TestContainer(testing.PyLXDTestCase):
 
         self.assertTrue(an_container.ephemeral)
 
-    def test_update_partial_objects(self):
-        """A partially fetched profile can't be pushed."""
-        an_container = self.client.containers.all()[0]
-
-        self.assertRaises(
-            exceptions.ObjectIncomplete,
-            an_container.update)
-
     def test_rename(self):
         an_container = container.Container(
             self.client, name='an-container')

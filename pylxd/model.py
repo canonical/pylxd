@@ -155,11 +155,7 @@ class Model(object):
         It should be a no-op when the object is not dirty, to prevent needless
         I/O.
         """
-        try:
-            marshalled = self.marshall()
-        except AttributeError:
-            raise exceptions.ObjectIncomplete()
-
+        marshalled = self.marshall()
         response = self.api.put(json=marshalled)
 
         if wait:

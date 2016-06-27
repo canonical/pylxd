@@ -138,17 +138,50 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/containers$',
     },
     {
-        'text': json.dumps({
+        'json': {
             'type': 'sync',
             'metadata': {
                 'name': 'an-container',
+
+                'architecture': "x86_64",
+                'config': {
+                    'security.privileged': "true",
+                },
+                'created_at': "1983-06-16T00:00:00-00:00",
+                'devices': {
+                    'root': {
+                        'path': "/",
+                        'type': "disk"
+                    }
+                },
                 'ephemeral': True,
-            }}),
+                'expanded_config': {
+                    'security.privileged': "true",
+                },
+                'expanded_devices': {
+                    'eth0': {
+                        'name': "eth0",
+                        'nictype': "bridged",
+                        'parent': "lxdbr0",
+                        'type': "nic"
+                    },
+                    'root': {
+                        'path': "/",
+                        'type': "disk"
+                    }
+                },
+                'profiles': [
+                    "default"
+                ],
+                'stateful': False,
+                'status': "Running",
+                'status_code': 103
+            }},
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/containers/an-container$',
     },
     {
-        'text': json.dumps({
+        'json': {
             'type': 'sync',
             'metadata': {
                 'status': 'Running',
@@ -176,7 +209,7 @@ RULES = [
                 },
                 'pid': 69,
                 'processes': 100,
-            }}),
+            }},
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/containers/an-container/state$',  # NOQA
     },

@@ -48,8 +48,8 @@ class Container(model.Model):
     profiles = model.Attribute()
     status = model.Attribute(readonly=True)
 
-    status_code = model.Attribute()
-    stateful = model.Attribute()
+    status_code = model.Attribute(readonly=True)
+    stateful = model.Attribute(readonly=True)
 
     snapshots = model.Manager()
     files = model.Manager()
