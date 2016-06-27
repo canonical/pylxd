@@ -33,6 +33,13 @@ class Manager(object):
     """
 
 
+class Parent(object):
+    """A parent declaration.
+
+    Child managers must keep a reference to their parent.
+    """
+
+
 class ModelType(type):
     """A Model metaclass.
 
@@ -51,7 +58,7 @@ class ModelType(type):
             if type(val) == Attribute:
                 attributes[key] = val
                 for_removal.append(key)
-            if type(val) == Manager:
+            if type(val) in (Manager, Parent):
                 managers.append(key)
                 for_removal.append(key)
         for key in for_removal:

@@ -18,7 +18,7 @@ from six.moves.urllib import parse
 from ws4py.client import WebSocketBaseClient
 from ws4py.manager import WebSocketManager
 
-from pylxd import exceptions, managers, mixin, model
+from pylxd import exceptions, managers, model
 from pylxd.deprecation import deprecated
 from pylxd.operation import Operation
 
@@ -314,8 +314,17 @@ class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
         self.close()
 
 
-class Snapshot(mixin.Marshallable):
+class Snapshot(model.Model):
     """A container snapshot."""
+    name = model.Attribute()
+    stateful = model.Attribute()
+
+    container = model.Parent()
+
+    @property
+    def api(self):
+        return self.client.api.containers[
+            self.container.name].snapshots[self.name]
 
     @classmethod
     def get(cls, client, container, name):
@@ -328,7 +337,7 @@ class Snapshot(mixin.Marshallable):
             raise
 
         snapshot = cls(
-            _client=client, _container=container,
+            client, container=container,
             **response.json()['metadata'])
         # Snapshot names are namespaced in LXD, as
         # container-name/snapshot-name. We hide that implementation
@@ -341,8 +350,8 @@ class Snapshot(mixin.Marshallable):
         response = client.api.containers[container.name].snapshots.get()
 
         return [cls(
-                name=snapshot.split('/')[-1], _client=client,
-                _container=container)
+                client, name=snapshot.split('/')[-1],
+                container=container)
                 for snapshot in response.json()['metadata']]
 
     @classmethod
@@ -350,31 +359,15 @@ class Snapshot(mixin.Marshallable):
         response = client.api.containers[container.name].snapshots.post(json={
             'name': name, 'stateful': stateful})
 
-        snapshot = cls(_client=client, _container=container, name=name)
+        snapshot = cls(client, container=container, name=name)
         if wait:
             Operation.wait_for_operation(client, response.json()['operation'])
         return snapshot
 
-    def __init__(self, **kwargs):
-        super(Snapshot, self).__init__()
-        for key, value in six.iteritems(kwargs):
-            setattr(self, key, value)
-
     def rename(self, new_name, wait=False):
         """Rename a snapshot."""
-        response = self._client.api.containers[
-            self._container.name].snapshots[self.name].post(
-            json={'name': new_name})
+        response = self.api.post(json={'name': new_name})
         if wait:
             Operation.wait_for_operation(
-                self._client, response.json()['operation'])
+                self.client, response.json()['operation'])
         self.name = new_name
-
-    def delete(self, wait=False):
-        """Delete a snapshot."""
-        response = self._client.api.containers[
-            self._container.name].snapshots[self.name].delete()
-
-        if wait:
-            Operation.wait_for_operation(
-                self._client, response.json()['operation'])

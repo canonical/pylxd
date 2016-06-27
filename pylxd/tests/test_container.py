@@ -269,8 +269,8 @@ class TestContainerSnapshots(testing.PyLXDTestCase):
 
         self.assertEqual(1, len(snapshots))
         self.assertEqual('an-snapshot', snapshots[0].name)
-        self.assertEqual(self.client, snapshots[0]._client)
-        self.assertEqual(self.container, snapshots[0]._container)
+        self.assertEqual(self.client, snapshots[0].client)
+        self.assertEqual(self.container, snapshots[0].container)
 
     def test_create(self):
         """Create a snapshot."""
@@ -290,7 +290,7 @@ class TestSnapshot(testing.PyLXDTestCase):
     def test_rename(self):
         """A snapshot is renamed."""
         snapshot = container.Snapshot(
-            _client=self.client, _container=self.container,
+            self.client, container=self.container,
             name='an-snapshot')
 
         snapshot.rename('an-renamed-snapshot', wait=True)
@@ -300,7 +300,7 @@ class TestSnapshot(testing.PyLXDTestCase):
     def test_delete(self):
         """A snapshot is deleted."""
         snapshot = container.Snapshot(
-            _client=self.client, _container=self.container,
+            self.client, container=self.container,
             name='an-snapshot')
 
         snapshot.delete(wait=True)
@@ -322,7 +322,7 @@ class TestSnapshot(testing.PyLXDTestCase):
         })
 
         snapshot = container.Snapshot(
-            _client=self.client, _container=self.container,
+            self.client, container=self.container,
             name='an-snapshot')
 
         self.assertRaises(exceptions.LXDAPIException, snapshot.delete)
