@@ -223,15 +223,17 @@ RULES = [
     },
     {
         'text': json.dumps({
-            'type': 'sync',  # This should be async
+            'type': 'async',
             'operation': 'operation-abc'}),
+        'status_code': 202,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container$',
     },
     {
         'text': json.dumps({
-            'type': 'sync',  # This should be async
+            'type': 'async',
             'operation': 'operation-abc'}),
+        'status_code': 202,
         'method': 'PUT',
         'url': r'^http://pylxd.test/1.0/containers/an-container$',
     },
@@ -242,7 +244,7 @@ RULES = [
     },
     {
         'json': {
-            'type': 'sync',  # This should be async
+            'type': 'async',
             'metadata': {
                 'metadata': {
                     'fds': {
@@ -254,6 +256,7 @@ RULES = [
                 },
             },
             'operation': 'operation-abc'},
+        'status_code': 202,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container/exec$',  # NOQA
     },
@@ -270,8 +273,9 @@ RULES = [
     },
     {
         'text': json.dumps({
-            'type': 'sync',  # This should be async
+            'type': 'async',
             'operation': 'operation-abc'}),
+        'status_code': 202,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots$',  # NOQA
     },
@@ -287,8 +291,9 @@ RULES = [
     },
     {
         'text': json.dumps({
-            'type': 'sync',  # This should be async
+            'type': 'async',
             'operation': 'operation-abc'}),
+        'status_code': 202,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots/an-snapshot$',  # NOQA
     },
@@ -356,7 +361,8 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
     },
     {
-        'text': json.dumps({'type': 'sync'}),  # should be async
+        'text': json.dumps({'type': 'async', 'operation': 'operation-abc'}),
+        'status_code': 202,
         'method': 'PUT',
         'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
     },
