@@ -64,7 +64,8 @@ class Profile(model.Model):
     def api(self):
         return self.client.api.profiles[self.name]
 
-    def rename(self, new):
+    def rename(self, new_name):
         """Rename the profile."""
-        raise NotImplementedError(
-            'LXD does not currently support renaming profiles')
+        self.api.post(json={'name': new_name})
+
+        return Profile.get(self.client, new_name)

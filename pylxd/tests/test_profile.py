@@ -65,11 +65,12 @@ class TestProfile(testing.PyLXDTestCase):
         self.assertEqual('an-new-profile', an_profile.name)
 
     def test_rename(self):
-        """Profiles cannot yet be renamed."""
+        """A profile is renamed."""
         an_profile = profile.Profile.get(self.client, 'an-profile')
 
-        self.assertRaises(
-            NotImplementedError, an_profile.rename, 'an-renamed-profile')
+        an_renamed_profile = an_profile.rename('an-renamed-profile')
+
+        self.assertEqual('an-renamed-profile', an_renamed_profile.name)
 
     def test_create_failed(self):
         """CreateFailed is raised when errors occur."""
