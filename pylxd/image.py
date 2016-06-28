@@ -13,7 +13,7 @@
 #    under the License.
 import hashlib
 
-from pylxd import exceptions, model
+from pylxd import model
 from pylxd.operation import Operation
 
 
@@ -40,12 +40,7 @@ class Image(model.Model):
     @classmethod
     def get(cls, client, fingerprint):
         """Get an image."""
-        try:
-            response = client.api.images[fingerprint].get()
-        except exceptions.LXDAPIException as e:
-            if e.response.status_code == 404:
-                raise exceptions.NotFound()
-            raise
+        response = client.api.images[fingerprint].get()
 
         image = cls(client, **response.json()['metadata'])
         return image
@@ -69,11 +64,8 @@ class Image(model.Model):
         headers = {}
         if public:
             headers['X-LXD-Public'] = '1'
-        try:
-            response = client.api.images.post(
-                data=image_data, headers=headers)
-        except exceptions.LXDAPIException as e:
-            raise exceptions.CreateFailed(e.response.json())
+        response = client.api.images.post(
+            data=image_data, headers=headers)
 
         if wait:
             Operation.wait_for_operation(client, response.json()['operation'])
@@ -81,11 +73,5 @@ class Image(model.Model):
 
     def export(self):
         """Export the image."""
-        try:
-            response = self.api.export.get()
-        except exceptions.LXDAPIException as e:
-            if e.response.status_code == 404:
-                raise exceptions.NotFound()
-            raise
-
+        response = self.api.export.get()
         return response.content

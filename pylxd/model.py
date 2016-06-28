@@ -13,7 +13,6 @@
 #    under the License.
 import six
 
-from pylxd import exceptions
 from pylxd.deprecation import deprecated
 from pylxd.operation import Operation
 
@@ -139,12 +138,7 @@ class Model(object):
         """
         # XXX: rockstar (25 Jun 2016) - This has the potential to step
         # on existing attributes.
-        try:
-            response = self.api.get()
-        except exceptions.LXDAPIException as e:
-            if e.response.status_code == 404:
-                raise exceptions.NotFound()
-            raise
+        response = self.api.get()
         for key, val in response.json()['metadata'].items():
             if key not in self.__dirty__ or rollback:
                 setattr(self, key, val)

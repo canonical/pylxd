@@ -16,7 +16,7 @@ class TestImage(testing.PyLXDTestCase):
         self.assertEqual(fingerprint, a_image.fingerprint)
 
     def test_get_not_found(self):
-        """NotFound is raised when the image isn't found."""
+        """LXDAPIException is raised when the image isn't found."""
         def not_found(request, context):
             context.status_code = 404
             return json.dumps({
@@ -32,7 +32,7 @@ class TestImage(testing.PyLXDTestCase):
         fingerprint = hashlib.sha256(b'').hexdigest()
 
         self.assertRaises(
-            exceptions.NotFound,
+            exceptions.LXDAPIException,
             image.Image.get, self.client, fingerprint)
 
     def test_get_error(self):
@@ -69,24 +69,6 @@ class TestImage(testing.PyLXDTestCase):
         self.assertIsInstance(a_image, image.Image)
         self.assertEqual(fingerprint, a_image.fingerprint)
 
-    def test_create_failed(self):
-        """If image creation fails, CreateFailed is raised."""
-        def create_fail(request, context):
-            context.status_code = 500
-            return json.dumps({
-                'type': 'error',
-                'error': 'An unknown error',
-                'error_code': 500})
-        self.add_rule({
-            'text': create_fail,
-            'method': 'POST',
-            'url': r'^http://pylxd.test/1.0/images$',
-        })
-
-        self.assertRaises(
-            exceptions.CreateFailed,
-            image.Image.create, self.client, b'')
-
     def test_update(self):
         """An image is updated."""
         a_image = self.client.images.all()[0]
@@ -103,7 +85,7 @@ class TestImage(testing.PyLXDTestCase):
         self.assertEqual(1, a_image.size)
 
     def test_fetch_notfound(self):
-        """A bogus image fetch raises NotFound."""
+        """A bogus image fetch raises LXDAPIException."""
         def not_found(request, context):
             context.status_code = 404
             return json.dumps({
@@ -119,7 +101,7 @@ class TestImage(testing.PyLXDTestCase):
 
         a_image = image.Image(self.client, fingerprint=fingerprint)
 
-        self.assertRaises(exceptions.NotFound, a_image.sync)
+        self.assertRaises(exceptions.LXDAPIException, a_image.sync)
 
     def test_fetch_error(self):
         """A 500 error raises LXDAPIException."""
@@ -159,7 +141,7 @@ class TestImage(testing.PyLXDTestCase):
         self.assertEqual(a_image.fingerprint, data_sha)
 
     def test_export_not_found(self):
-        """NotFound is raised on export of bogus image."""
+        """LXDAPIException is raised on export of bogus image."""
         def not_found(request, context):
             context.status_code = 404
             return json.dumps({
@@ -173,7 +155,7 @@ class TestImage(testing.PyLXDTestCase):
         })
         a_image = self.client.images.all()[0]
 
-        self.assertRaises(exceptions.NotFound, a_image.export)
+        self.assertRaises(exceptions.LXDAPIException, a_image.export)
 
     def test_export_error(self):
         """LXDAPIException is raised on API error."""

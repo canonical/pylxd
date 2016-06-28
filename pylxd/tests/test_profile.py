@@ -15,7 +15,7 @@ class TestProfile(testing.PyLXDTestCase):
         self.assertEqual(name, an_profile.name)
 
     def test_get_not_found(self):
-        """NotFound is raised on unknown profiles."""
+        """LXDAPIException is raised on unknown profiles."""
         def not_found(request, context):
             context.status_code = 404
             return json.dumps({
@@ -29,7 +29,7 @@ class TestProfile(testing.PyLXDTestCase):
         })
 
         self.assertRaises(
-            exceptions.NotFound,
+            exceptions.LXDAPIException,
             profile.Profile.get, self.client, 'an-profile')
 
     def test_get_error(self):
@@ -72,25 +72,6 @@ class TestProfile(testing.PyLXDTestCase):
 
         self.assertEqual('an-renamed-profile', an_renamed_profile.name)
 
-    def test_create_failed(self):
-        """CreateFailed is raised when errors occur."""
-        def error(request, context):
-            context.status_code = 503
-            return json.dumps({
-                'type': 'error',
-                'error': 'An unknown error',
-                'error_code': 500})
-        self.add_rule({
-            'text': error,
-            'method': 'POST',
-            'url': r'^http://pylxd.test/1.0/profiles$',
-        })
-
-        self.assertRaises(
-            exceptions.CreateFailed,
-            profile.Profile.create, self.client,
-            name='an-new-profile', config={})
-
     def test_update(self):
         """A profile is updated."""
         # XXX: rockstar (03 Jun 2016) - This just executes
@@ -111,7 +92,7 @@ class TestProfile(testing.PyLXDTestCase):
         self.assertEqual('An description', an_profile.description)
 
     def test_fetch_notfound(self):
-        """NotFound is raised on bogus profile fetches."""
+        """LXDAPIException is raised on bogus profile fetches."""
         def not_found(request, context):
             context.status_code = 404
             return json.dumps({
@@ -126,7 +107,7 @@ class TestProfile(testing.PyLXDTestCase):
 
         an_profile = profile.Profile(self.client, name='an-profile')
 
-        self.assertRaises(exceptions.NotFound, an_profile.sync)
+        self.assertRaises(exceptions.LXDAPIException, an_profile.sync)
 
     def test_fetch_error(self):
         """LXDAPIException is raised on fetch error."""
