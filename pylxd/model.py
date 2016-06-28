@@ -25,8 +25,6 @@ class Attribute(object):
         self.validator = validator
         self.readonly = False
 
-        self.dirty = False
-
 
 class Manager(object):
     """A manager declaration.
@@ -97,23 +95,21 @@ class Model(object):
     the instance is marked as dirty. `save` will save the changes
     to the server.
     """
-    __slots__ = ['client']
+    __slots__ = ['client', '__dirty__']
 
     def __init__(self, client, **kwargs):
+        self.__dirty__ = []
         self.client = client
 
         for key, val in kwargs.items():
             setattr(self, key, val)
-            try:
-                self.__attributes__[key].dirty = False
-            except KeyError:  # Manager or Parent attribute
-                pass
+        del self.__dirty__[:]
 
     def __getattribute__(self, name):
         try:
             return super(Model, self).__getattribute__(name)
         except AttributeError:
-            if name in self.__slots__:
+            if name in self.__attributes__:
                 self.sync()
                 return super(Model, self).__getattribute__(name)
             else:
@@ -126,17 +122,14 @@ class Model(object):
             if attribute.validator is not None:
                 if attribute.validator is not type(value):
                     value = attribute.validator(value)
-            attribute.dirty = True
+            self.__dirty__.append(name)
         return super(Model, self).__setattr__(name, value)
 
     @property
     def dirty(self):
-        for name, attr in self.__attributes__.items():
-            if attr.dirty:
-                return True
-        return False
+        return len(self.__dirty__) > 0
 
-    def sync(self):
+    def sync(self, rollback=False):
         """Sync from the server.
 
         When collections of objects are retrieved from the server, they
@@ -153,8 +146,13 @@ class Model(object):
                 raise exceptions.NotFound()
             raise
         for key, val in response.json()['metadata'].items():
-            setattr(self, key, val)
+            if key not in self.__dirty__ or rollback:
+                setattr(self, key, val)
     fetch = deprecated("fetch is deprecated; please use sync")(sync)
+
+    def rollback(self):
+        """Reset the object from the server."""
+        return self.sync(rollback=True)
 
     def save(self, wait=False):
         """Save data to the server.
@@ -169,6 +167,7 @@ class Model(object):
         if response.json()['type'] == 'async' and wait:
             Operation.wait_for_operation(
                 self.client, response.json()['operation'])
+        del self.__dirty__[:]
     update = deprecated('update is deprecated; please use save')(save)
 
     def delete(self, wait=False):

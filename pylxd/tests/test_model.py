@@ -21,13 +21,29 @@ class Item(model.Model):
     age = model.Attribute(int)
     data = model.Attribute()
 
-    def sync(self):
-        self.age = 1000
-        self.data = {'key': 'val'}
+    @property
+    def api(self):
+        return self.client.api.items[self.name]
 
 
 class TestModel(testing.PyLXDTestCase):
     """Tests for pylxd.model.Model."""
+
+    def setUp(self):
+        super(TestModel, self).setUp()
+
+        self.add_rule({
+            'json': {
+                'type': 'sync',
+                'metadata': {
+                    'name': 'an-item',
+                    'age': 1000,
+                    'data': {'key': 'val'},
+                }
+            },
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/items/an-item',
+        })
 
     def test_init(self):
         """Initial attributes are set."""
@@ -59,6 +75,15 @@ class TestModel(testing.PyLXDTestCase):
     def test_unset_attribute_sync(self):
         """Reading unavailable attributes calls sync."""
         item = Item(self.client, name='an-item')
+
+        self.assertEqual(1000, item.age)
+
+    def test_rollback(self):
+        """Rollback resets the object from the server."""
+        item = Item(self.client, name='an-item', age=15, data={'key': 'val'})
+
+        item.age = 50
+        item.rollback()
 
         self.assertEqual(1000, item.age)
 
