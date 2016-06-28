@@ -269,6 +269,40 @@ class Container(model.Model):
 
         return stdout.data, stderr.data
 
+    def migrate(self, new_client, wait=False):
+        """Migrate a container.
+
+        Destination host information is contained in the client
+        connection passed in.
+
+        If the container is running, it either must be shut down
+        first or criu must be installed on the source and destination
+        machines.
+        """
+        self.sync()  # Make sure the object isn't stale
+        response = self.api.post(json={'migration': True})
+        operation = self.client.operations.get(response.json()['operation'])
+        operation_url = self.client.api.operations[operation.id]._api_endpoint
+        secrets = response.json()['metadata']['metadata']
+        cert = self.client.host_info['environment']['certificate']
+
+        config = {
+            'name': self.name,
+            'architecture': self.architecture,
+            'config': self.config,
+            'devices': self.devices,
+            'epehemeral': self.ephemeral,
+            'default': self.profiles,
+            'source': {
+                'type': 'migration',
+                'operation': operation_url,
+                'mode': 'pull',
+                'certificate': cert,
+                'secrets': secrets,
+            }
+        }
+        return new_client.containers.create(config, wait=wait)
+
 
 class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
     def __init__(self, manager, *args, **kwargs):
@@ -292,6 +326,7 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
 
 class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
     """A websocket client for handling stdin."""
+
     def __init__(self, manager, *args, **kwargs):
         self.manager = manager
         super(_StdinWebsocket, self).__init__(*args, **kwargs)
