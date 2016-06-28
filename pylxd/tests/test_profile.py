@@ -65,11 +65,12 @@ class TestProfile(testing.PyLXDTestCase):
         self.assertEqual('an-new-profile', an_profile.name)
 
     def test_rename(self):
-        """Profiles cannot yet be renamed."""
+        """A profile is renamed."""
         an_profile = profile.Profile.get(self.client, 'an-profile')
 
-        self.assertRaises(
-            NotImplementedError, an_profile.rename, 'an-renamed-profile')
+        an_renamed_profile = an_profile.rename('an-renamed-profile')
+
+        self.assertEqual('an-renamed-profile', an_renamed_profile.name)
 
     def test_create_failed(self):
         """CreateFailed is raised when errors occur."""
@@ -97,23 +98,15 @@ class TestProfile(testing.PyLXDTestCase):
         # it's not clear how to assert that, just yet.
         an_profile = profile.Profile.get(self.client, 'an-profile')
 
-        an_profile.update()
+        an_profile.save()
 
         self.assertEqual({}, an_profile.config)
-
-    def test_update_partial_objects(self):
-        """A partially fetched profile can't be pushed."""
-        an_profile = self.client.profiles.all()[0]
-
-        self.assertRaises(
-            exceptions.ObjectIncomplete,
-            an_profile.update)
 
     def test_fetch(self):
         """A partially fetched profile is made complete."""
         an_profile = self.client.profiles.all()[0]
 
-        an_profile.fetch()
+        an_profile.sync()
 
         self.assertEqual('An description', an_profile.description)
 
@@ -131,9 +124,9 @@ class TestProfile(testing.PyLXDTestCase):
             'url': r'^http://pylxd.test/1.0/profiles/an-profile$',
         })
 
-        an_profile = profile.Profile(name='an-profile', _client=self.client)
+        an_profile = profile.Profile(self.client, name='an-profile')
 
-        self.assertRaises(exceptions.NotFound, an_profile.fetch)
+        self.assertRaises(exceptions.NotFound, an_profile.sync)
 
     def test_fetch_error(self):
         """LXDAPIException is raised on fetch error."""
@@ -149,9 +142,9 @@ class TestProfile(testing.PyLXDTestCase):
             'url': r'^http://pylxd.test/1.0/profiles/an-profile$',
         })
 
-        an_profile = profile.Profile(name='an-profile', _client=self.client)
+        an_profile = profile.Profile(self.client, name='an-profile')
 
-        self.assertRaises(exceptions.LXDAPIException, an_profile.fetch)
+        self.assertRaises(exceptions.LXDAPIException, an_profile.sync)
 
     def test_delete(self):
         """A profile is deleted."""

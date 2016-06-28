@@ -17,23 +17,23 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
-import six
+
+from pylxd import model
 
 
-class Certificate(object):
+class Certificate(model.Model):
     """A LXD certificate."""
 
-    __slots__ = [
-        '_client',
-        'certificate', 'fingerprint', 'type',
-    ]
+    certificate = model.Attribute()
+    fingerprint = model.Attribute()
+    type = model.Attribute()
 
     @classmethod
     def get(cls, client, fingerprint):
         """Get a certificate by fingerprint."""
         response = client.api.certificates[fingerprint].get()
 
-        return cls(_client=client, **response.json()['metadata'])
+        return cls(client, **response.json()['metadata'])
 
     @classmethod
     def all(cls, client):
@@ -43,7 +43,7 @@ class Certificate(object):
         certs = []
         for cert in response.json()['metadata']:
             fingerprint = cert.split('/')[-1]
-            certs.append(cls(_client=client, fingerprint=fingerprint))
+            certs.append(cls(client, fingerprint=fingerprint))
         return certs
 
     @classmethod
@@ -66,18 +66,6 @@ class Certificate(object):
             cert.fingerprint(hashes.SHA256())).decode('utf-8')
         return cls.get(client, fingerprint)
 
-    def __init__(self, **kwargs):
-        super(Certificate, self).__init__()
-        for key, value in six.iteritems(kwargs):
-            setattr(self, key, value)
-
-    def delete(self):
-        """Delete the certificate."""
-        self._client.api.certificates[self.fingerprint].delete()
-
-    def fetch(self):
-        """Fetch an updated representation of the certificate."""
-        response = self._client.api.certificates[self.fingerprint].get()
-
-        for key, value in six.iteritems(response.json()['metadata']):
-            setattr(self, key, value)
+    @property
+    def api(self):
+        return self.client.api.certificates[self.fingerprint]

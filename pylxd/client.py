@@ -74,14 +74,6 @@ class _APINode(object):
                 # Missing 'type' in response
                 raise exceptions.LXDAPIException(response)
 
-        if response.status_code == 202:
-            try:
-                if data['type'] != 'async':
-                    raise exceptions.LXDAPIException(response)
-            except KeyError:
-                # Missing 'type' in response
-                raise exceptions.LXDAPIException(response)
-
     def get(self, *args, **kwargs):
         """Perform an HTTP GET."""
         response = self.session.get(self._api_endpoint, *args, **kwargs)
@@ -194,6 +186,7 @@ class Client(object):
         self.certificates = managers.CertificateManager(self)
         self.containers = managers.ContainerManager(self)
         self.images = managers.ImageManager(self)
+        self.networks = managers.NetworkManager(self)
         self.operations = managers.OperationManager(self)
         self.profiles = managers.ProfileManager(self)
 
