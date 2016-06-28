@@ -83,7 +83,9 @@ class _APINode(object):
     def post(self, *args, **kwargs):
         """Perform an HTTP POST."""
         response = self.session.post(self._api_endpoint, *args, **kwargs)
-        self._assert_response(response, allowed_status_codes=(200, 202))
+        # Prior to LXD 2.0.3, successful synchronous requests returned 200,
+        # rather than 201.
+        self._assert_response(response, allowed_status_codes=(200, 201, 202))
         return response
 
     def put(self, *args, **kwargs):
