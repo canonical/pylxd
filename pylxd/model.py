@@ -25,6 +25,8 @@ class Attribute(object):
         self.validator = validator
         self.readonly = False
 
+        self.dirty = False
+
 
 class Manager(object):
     """A manager declaration.
@@ -95,14 +97,17 @@ class Model(object):
     the instance is marked as dirty. `save` will save the changes
     to the server.
     """
-    __slots__ = ['client', '__dirty__']
+    __slots__ = ['client']
 
     def __init__(self, client, **kwargs):
         self.client = client
 
         for key, val in kwargs.items():
             setattr(self, key, val)
-        self.__dirty__ = False
+            try:
+                self.__attributes__[key].dirty = False
+            except KeyError:  # Manager or Parent attribute
+                pass
 
     def __getattribute__(self, name):
         try:
@@ -121,12 +126,15 @@ class Model(object):
             if attribute.validator is not None:
                 if attribute.validator is not type(value):
                     value = attribute.validator(value)
-            self.__dirty__ = True
+            attribute.dirty = True
         return super(Model, self).__setattr__(name, value)
 
     @property
     def dirty(self):
-        return self.__dirty__
+        for name, attr in self.__attributes__.items():
+            if attr.dirty:
+                return True
+        return False
 
     def sync(self):
         """Sync from the server.
