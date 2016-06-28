@@ -92,11 +92,11 @@ class TestContainer(testing.PyLXDTestCase):
             container.Container.create, self.client, config)
 
     def test_fetch(self):
-        """A fetch updates the properties of a container."""
+        """A sync updates the properties of a container."""
         an_container = container.Container(
-            name='an-container', _client=self.client)
+            self.client, name='an-container')
 
-        an_container.fetch()
+        an_container.sync()
 
         self.assertTrue(an_container.ephemeral)
 
@@ -115,9 +115,9 @@ class TestContainer(testing.PyLXDTestCase):
         })
 
         an_container = container.Container(
-            name='an-missing-container', _client=self.client)
+            self.client, name='an-missing-container')
 
-        self.assertRaises(exceptions.NotFound, an_container.fetch)
+        self.assertRaises(exceptions.NotFound, an_container.sync)
 
     def test_fetch_error(self):
         """LXDAPIException is raised on error."""
@@ -134,14 +134,14 @@ class TestContainer(testing.PyLXDTestCase):
         })
 
         an_container = container.Container(
-            name='an-missing-container', _client=self.client)
+            self.client, name='an-missing-container')
 
-        self.assertRaises(exceptions.LXDAPIException, an_container.fetch)
+        self.assertRaises(exceptions.LXDAPIException, an_container.sync)
 
     def test_update(self):
         """A container is updated."""
         an_container = container.Container(
-            name='an-container', _client=self.client)
+            self.client, name='an-container')
         an_container.architecture = 1
         an_container.config = {}
         an_container.created_at = 1
@@ -152,21 +152,13 @@ class TestContainer(testing.PyLXDTestCase):
         an_container.profiles = 1
         an_container.status = 1
 
-        an_container.update(wait=True)
+        an_container.save(wait=True)
 
         self.assertTrue(an_container.ephemeral)
 
-    def test_update_partial_objects(self):
-        """A partially fetched profile can't be pushed."""
-        an_container = self.client.containers.all()[0]
-
-        self.assertRaises(
-            exceptions.ObjectIncomplete,
-            an_container.update)
-
     def test_rename(self):
         an_container = container.Container(
-            name='an-container', _client=self.client)
+            self.client, name='an-container')
 
         an_container.rename('an-renamed-container', wait=True)
 
@@ -178,7 +170,7 @@ class TestContainer(testing.PyLXDTestCase):
         # a code path. There should be an assertion here, but
         # it's not clear how to assert that, just yet.
         an_container = container.Container(
-            name='an-container', _client=self.client)
+            self.client, name='an-container')
 
         an_container.delete(wait=True)
 
@@ -192,7 +184,7 @@ class TestContainer(testing.PyLXDTestCase):
         _CommandWebsocketClient.return_value = fake_websocket
 
         an_container = container.Container(
-            name='an-container', _client=self.client)
+            self.client, name='an-container')
 
         stdout, _ = an_container.execute(['echo', 'test'])
 
@@ -201,7 +193,7 @@ class TestContainer(testing.PyLXDTestCase):
     def test_execute_string(self):
         """A command passed as string raises a TypeError."""
         an_container = container.Container(
-            name='an-container', _client=self.client)
+            self.client, name='an-container')
 
         self.assertRaises(TypeError, an_container.execute, 'apt-get update')
 
@@ -269,8 +261,8 @@ class TestContainerSnapshots(testing.PyLXDTestCase):
 
         self.assertEqual(1, len(snapshots))
         self.assertEqual('an-snapshot', snapshots[0].name)
-        self.assertEqual(self.client, snapshots[0]._client)
-        self.assertEqual(self.container, snapshots[0]._container)
+        self.assertEqual(self.client, snapshots[0].client)
+        self.assertEqual(self.container, snapshots[0].container)
 
     def test_create(self):
         """Create a snapshot."""
@@ -290,7 +282,7 @@ class TestSnapshot(testing.PyLXDTestCase):
     def test_rename(self):
         """A snapshot is renamed."""
         snapshot = container.Snapshot(
-            _client=self.client, _container=self.container,
+            self.client, container=self.container,
             name='an-snapshot')
 
         snapshot.rename('an-renamed-snapshot', wait=True)
@@ -300,7 +292,7 @@ class TestSnapshot(testing.PyLXDTestCase):
     def test_delete(self):
         """A snapshot is deleted."""
         snapshot = container.Snapshot(
-            _client=self.client, _container=self.container,
+            self.client, container=self.container,
             name='an-snapshot')
 
         snapshot.delete(wait=True)
@@ -322,7 +314,7 @@ class TestSnapshot(testing.PyLXDTestCase):
         })
 
         snapshot = container.Snapshot(
-            _client=self.client, _container=self.container,
+            self.client, container=self.container,
             name='an-snapshot')
 
         self.assertRaises(exceptions.LXDAPIException, snapshot.delete)

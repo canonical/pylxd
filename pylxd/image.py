@@ -13,20 +13,29 @@
 #    under the License.
 import hashlib
 
-import six
-
-from pylxd import exceptions, mixin
+from pylxd import exceptions, model
 from pylxd.operation import Operation
 
 
-class Image(mixin.Marshallable):
+class Image(model.Model):
     """A LXD Image."""
+    aliases = model.Attribute()
+    auto_update = model.Attribute()
+    architecture = model.Attribute()
+    cached = model.Attribute()
+    created_at = model.Attribute()
+    expires_at = model.Attribute()
+    filename = model.Attribute()
+    fingerprint = model.Attribute()
+    last_used_at = model.Attribute()
+    properties = model.Attribute()
+    public = model.Attribute()
+    size = model.Attribute()
+    uploaded_at = model.Attribute()
 
-    __slots__ = [
-        '_client',
-        'aliases', 'architecture', 'created_at', 'expires_at', 'filename',
-        'fingerprint', 'properties', 'public', 'size', 'uploaded_at'
-    ]
+    @property
+    def api(self):
+        return self.client.api.images[self.fingerprint]
 
     @classmethod
     def get(cls, client, fingerprint):
@@ -38,7 +47,7 @@ class Image(mixin.Marshallable):
                 raise exceptions.NotFound()
             raise
 
-        image = cls(_client=client, **response.json()['metadata'])
+        image = cls(client, **response.json()['metadata'])
         return image
 
     @classmethod
@@ -49,7 +58,7 @@ class Image(mixin.Marshallable):
         images = []
         for url in response.json()['metadata']:
             fingerprint = url.split('/')[-1]
-            images.append(cls(_client=client, fingerprint=fingerprint))
+            images.append(cls(client, fingerprint=fingerprint))
         return images
 
     @classmethod
@@ -68,46 +77,12 @@ class Image(mixin.Marshallable):
 
         if wait:
             Operation.wait_for_operation(client, response.json()['operation'])
-        return cls(_client=client, fingerprint=fingerprint)
-
-    def __init__(self, **kwargs):
-        super(Image, self).__init__()
-        for key, value in six.iteritems(kwargs):
-            setattr(self, key, value)
-
-    def update(self):
-        """Update LXD based on changes to this image."""
-        try:
-            marshalled = self.marshall()
-        except AttributeError:
-            raise exceptions.ObjectIncomplete()
-        self._client.api.images[self.fingerprint].put(
-            json=marshalled)
-
-    def delete(self, wait=False):
-        """Delete the image."""
-        response = self._client.api.images[self.fingerprint].delete()
-
-        if wait:
-            Operation.wait_for_operation(
-                self._client, response.json()['operation'])
-
-    def fetch(self):
-        """Fetch the object from LXD, populating attributes."""
-        try:
-            response = self._client.api.images[self.fingerprint].get()
-        except exceptions.LXDAPIException as e:
-            if e.response.status_code == 404:
-                raise exceptions.NotFound()
-            raise
-
-        for key, val in six.iteritems(response.json()['metadata']):
-            setattr(self, key, val)
+        return cls(client, fingerprint=fingerprint)
 
     def export(self):
         """Export the image."""
         try:
-            response = self._client.api.images[self.fingerprint].export.get()
+            response = self.api.export.get()
         except exceptions.LXDAPIException as e:
             if e.response.status_code == 404:
                 raise exceptions.NotFound()

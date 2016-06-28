@@ -112,6 +112,10 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/certificates/an-certificate$',
     },
     {
+        'json': {
+            'type': 'sync',
+            'metadata': {},
+        },
         'status_code': 202,
         'method': 'DELETE',
         'url': r'^http://pylxd.test/1.0/certificates/an-certificate$',
@@ -134,17 +138,50 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/containers$',
     },
     {
-        'text': json.dumps({
+        'json': {
             'type': 'sync',
             'metadata': {
                 'name': 'an-container',
+
+                'architecture': "x86_64",
+                'config': {
+                    'security.privileged': "true",
+                },
+                'created_at': "1983-06-16T00:00:00-00:00",
+                'devices': {
+                    'root': {
+                        'path': "/",
+                        'type': "disk"
+                    }
+                },
                 'ephemeral': True,
-            }}),
+                'expanded_config': {
+                    'security.privileged': "true",
+                },
+                'expanded_devices': {
+                    'eth0': {
+                        'name': "eth0",
+                        'nictype': "bridged",
+                        'parent': "lxdbr0",
+                        'type': "nic"
+                    },
+                    'root': {
+                        'path': "/",
+                        'type': "disk"
+                    }
+                },
+                'profiles': [
+                    "default"
+                ],
+                'stateful': False,
+                'status': "Running",
+                'status_code': 103
+            }},
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/containers/an-container$',
     },
     {
-        'text': json.dumps({
+        'json': {
             'type': 'sync',
             'metadata': {
                 'status': 'Running',
@@ -172,7 +209,7 @@ RULES = [
                 },
                 'pid': 69,
                 'processes': 100,
-            }}),
+            }},
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/containers/an-container/state$',  # NOQA
     },
@@ -186,15 +223,17 @@ RULES = [
     },
     {
         'text': json.dumps({
-            'type': 'sync',  # This should be async
+            'type': 'async',
             'operation': 'operation-abc'}),
+        'status_code': 202,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container$',
     },
     {
         'text': json.dumps({
-            'type': 'sync',  # This should be async
+            'type': 'async',
             'operation': 'operation-abc'}),
+        'status_code': 202,
         'method': 'PUT',
         'url': r'^http://pylxd.test/1.0/containers/an-container$',
     },
@@ -205,7 +244,7 @@ RULES = [
     },
     {
         'json': {
-            'type': 'sync',  # This should be async
+            'type': 'async',
             'metadata': {
                 'metadata': {
                     'fds': {
@@ -217,6 +256,7 @@ RULES = [
                 },
             },
             'operation': 'operation-abc'},
+        'status_code': 202,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container/exec$',  # NOQA
     },
@@ -233,8 +273,9 @@ RULES = [
     },
     {
         'text': json.dumps({
-            'type': 'sync',  # This should be async
+            'type': 'async',
             'operation': 'operation-abc'}),
+        'status_code': 202,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots$',  # NOQA
     },
@@ -250,8 +291,9 @@ RULES = [
     },
     {
         'text': json.dumps({
-            'type': 'sync',  # This should be async
+            'type': 'async',
             'operation': 'operation-abc'}),
+        'status_code': 202,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots/an-snapshot$',  # NOQA
     },
@@ -319,7 +361,8 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
     },
     {
-        'text': json.dumps({'type': 'sync'}),  # should be async
+        'text': json.dumps({'type': 'async', 'operation': 'operation-abc'}),
+        'status_code': 202,
         'method': 'PUT',
         'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
     },
