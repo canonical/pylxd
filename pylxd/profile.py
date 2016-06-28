@@ -68,4 +68,4 @@ class Profile(model.Model):
         """Rename the profile."""
         self.api.post(json={'name': new_name})
 
-        return Profile.get(self._client, new_name)
+        return Profile.get(self.client, new_name)
