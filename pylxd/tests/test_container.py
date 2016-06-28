@@ -24,7 +24,7 @@ class TestContainer(testing.PyLXDTestCase):
         self.assertEqual(name, an_container.name)
 
     def test_get_not_found(self):
-        """NotFound is raised when the container doesn't exist."""
+        """LXDAPIException is raised when the container doesn't exist."""
         def not_found(request, context):
             context.status_code = 404
             return json.dumps({
@@ -40,7 +40,7 @@ class TestContainer(testing.PyLXDTestCase):
         name = 'an-missing-container'
 
         self.assertRaises(
-            exceptions.NotFound,
+            exceptions.LXDAPIException,
             container.Container.get, self.client, name)
 
     def test_get_error(self):
@@ -72,25 +72,6 @@ class TestContainer(testing.PyLXDTestCase):
 
         self.assertEqual(config['name'], an_new_container.name)
 
-    def test_create_failed(self):
-        """If the container creation fails, CreateFailed is raised."""
-        def create_fail(request, context):
-            context.status_code = 500
-            return json.dumps({
-                'type': 'error',
-                'error': 'An unknown error',
-                'error_code': 500})
-        self.add_rule({
-            'text': create_fail,
-            'method': 'POST',
-            'url': r'^http://pylxd.test/1.0/containers$',
-        })
-        config = {'name': 'an-new-container'}
-
-        self.assertRaises(
-            exceptions.CreateFailed,
-            container.Container.create, self.client, config)
-
     def test_fetch(self):
         """A sync updates the properties of a container."""
         an_container = container.Container(
@@ -101,7 +82,7 @@ class TestContainer(testing.PyLXDTestCase):
         self.assertTrue(an_container.ephemeral)
 
     def test_fetch_not_found(self):
-        """NotFound is raised on a 404 for updating container."""
+        """LXDAPIException is raised on a 404 for updating container."""
         def not_found(request, context):
             context.status_code = 404
             return json.dumps({
@@ -117,7 +98,7 @@ class TestContainer(testing.PyLXDTestCase):
         an_container = container.Container(
             self.client, name='an-missing-container')
 
-        self.assertRaises(exceptions.NotFound, an_container.sync)
+        self.assertRaises(exceptions.LXDAPIException, an_container.sync)
 
     def test_fetch_error(self):
         """LXDAPIException is raised on error."""
@@ -355,7 +336,7 @@ class TestFiles(testing.PyLXDTestCase):
         self.assertEqual(b'This is a getted file', data)
 
     def test_get_not_found(self):
-        """NotFound is raised on bogus filenames."""
+        """LXDAPIException is raised on bogus filenames."""
         def not_found(request, context):
             context.status_code = 500
         rule = {
@@ -366,7 +347,7 @@ class TestFiles(testing.PyLXDTestCase):
         self.add_rule(rule)
 
         self.assertRaises(
-            exceptions.NotFound, self.container.files.get, '/tmp/getted')
+            exceptions.LXDAPIException, self.container.files.get, '/tmp/getted')
 
     def test_get_error(self):
         """LXDAPIException is raised on error."""

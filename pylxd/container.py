@@ -18,7 +18,7 @@ from six.moves.urllib import parse
 from ws4py.client import WebSocketBaseClient
 from ws4py.manager import WebSocketManager
 
-from pylxd import exceptions, managers, model
+from pylxd import managers, model
 from pylxd.deprecation import deprecated
 from pylxd.operation import Operation
 
@@ -72,26 +72,15 @@ class Container(model.Model):
             return response.status_code == 200
 
         def get(self, filepath):
-            try:
-                response = self._client.api.containers[
-                    self._container.name].files.get(
-                    params={'path': filepath})
-            except exceptions.LXDAPIException as e:
-                # LXD 2.0.3+ return 404, not 500,
-                if e.response.status_code in (500, 404):
-                    raise exceptions.NotFound()
-                raise
+            response = self._client.api.containers[
+                self._container.name].files.get(
+                params={'path': filepath})
             return response.content
 
     @classmethod
     def get(cls, client, name):
         """Get a container by name."""
-        try:
-            response = client.api.containers[name].get()
-        except exceptions.LXDAPIException as e:
-            if e.response.status_code == 404:
-                raise exceptions.NotFound()
-            raise
+        response = client.api.containers[name].get()
 
         container = cls(client, **response.json()['metadata'])
         return container
@@ -116,10 +105,7 @@ class Container(model.Model):
     @classmethod
     def create(cls, client, config, wait=False):
         """Create a new container config."""
-        try:
-            response = client.api.containers.post(json=config)
-        except exceptions.LXDAPIException as e:
-            raise exceptions.CreateFailed(e.response)
+        response = client.api.containers.post(json=config)
 
         if wait:
             Operation.wait_for_operation(client, response.json()['operation'])
@@ -350,13 +336,8 @@ class Snapshot(model.Model):
 
     @classmethod
     def get(cls, client, container, name):
-        try:
-            response = client.api.containers[
-                container.name].snapshots[name].get()
-        except exceptions.LXDAPIException as e:
-            if e.response.status_code == 404:
-                raise exceptions.NotFound()
-            raise
+        response = client.api.containers[
+            container.name].snapshots[name].get()
 
         snapshot = cls(
             client, container=container,

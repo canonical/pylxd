@@ -11,7 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from pylxd import exceptions, model
+from pylxd import model
 
 
 class Profile(model.Model):
@@ -25,13 +25,7 @@ class Profile(model.Model):
     @classmethod
     def get(cls, client, name):
         """Get a profile."""
-        try:
-            response = client.api.profiles[name].get()
-        except exceptions.LXDAPIException as e:
-            if e.response.status_code == 404:
-                raise exceptions.NotFound()
-            raise
-
+        response = client.api.profiles[name].get()
         return cls(client, **response.json()['metadata'])
 
     @classmethod
@@ -53,11 +47,7 @@ class Profile(model.Model):
             profile['config'] = config
         if devices is not None:
             profile['devices'] = devices
-        try:
-            client.api.profiles.post(json=profile)
-        except exceptions.LXDAPIException as e:
-            raise exceptions.CreateFailed(e.response.json())
-
+        client.api.profiles.post(json=profile)
         return cls.get(client, name)
 
     @property
