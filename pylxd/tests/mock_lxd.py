@@ -376,11 +376,16 @@ RULES = [
     {
         'text': profile_GET,
         'method': 'GET',
-        'url': r'^http://pylxd.test/1.0/profiles/(an-profile|an-new-profile)$',
+        'url': r'^http://pylxd.test/1.0/profiles/(an-profile|an-new-profile|an-renamed-profile)$',  # NOQA
     },
     {
         'text': json.dumps({'type': 'sync'}),
         'method': 'PUT',
+        'url': r'^http://pylxd.test/1.0/profiles/(an-profile|an-new-profile)$',
+    },
+    {
+        'text': json.dumps({'type': 'sync'}),
+        'method': 'POST',
         'url': r'^http://pylxd.test/1.0/profiles/(an-profile|an-new-profile)$',
     },
     {

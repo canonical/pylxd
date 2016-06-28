@@ -21,7 +21,7 @@ class Profile(mixin.Marshallable):
     __slots__ = [
         '_client',
         'config', 'devices', 'name'
-        ]
+    ]
 
     @classmethod
     def get(cls, client, name):
@@ -77,10 +77,12 @@ class Profile(mixin.Marshallable):
 
         self._client.api.profiles[self.name].put(json=marshalled)
 
-    def rename(self, new):
+    def rename(self, new_name):
         """Rename the profile."""
-        raise NotImplementedError(
-            'LXD does not currently support renaming profiles')
+        self._client.api.profiles[
+            self.name].post(json={'name': new_name})
+
+        return Profile.get(self._client, new_name)
 
     def delete(self):
         """Delete a profile."""
