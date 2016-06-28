@@ -23,7 +23,7 @@ class Attribute(object):
 
     def __init__(self, validator=None, readonly=False):
         self.validator = validator
-        self.readonly = False
+        self.readonly = readonly
 
 
 class Manager(object):
@@ -148,6 +148,8 @@ class Model(object):
         for key, val in response.json()['metadata'].items():
             if key not in self.__dirty__ or rollback:
                 setattr(self, key, val)
+        if rollback:
+            del self.__dirty__[:]
     fetch = deprecated("fetch is deprecated; please use sync")(sync)
 
     def rollback(self):
@@ -177,6 +179,7 @@ class Model(object):
         if response.json()['type'] == 'async' and wait:
             Operation.wait_for_operation(
                 self.client, response.json()['operation'])
+        self.client = None
 
     def marshall(self):
         """Marshall the object in preparation for updating to the server."""

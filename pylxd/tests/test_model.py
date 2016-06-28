@@ -17,7 +17,7 @@ from pylxd.tests import testing
 
 class Item(model.Model):
     """A fake model."""
-    name = model.Attribute()
+    name = model.Attribute(readonly=True)
     age = model.Attribute(int)
     data = model.Attribute()
 
@@ -42,6 +42,22 @@ class TestModel(testing.PyLXDTestCase):
                 }
             },
             'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/items/an-item',
+        })
+        self.add_rule({
+            'json': {
+                'type': 'sync',
+                'metadata': {}
+            },
+            'method': 'PUT',
+            'url': r'^http://pylxd.test/1.0/items/an-item',
+        })
+        self.add_rule({
+            'json': {
+                'type': 'sync',
+                'metadata': {}
+            },
+            'method': 'DELETE',
             'url': r'^http://pylxd.test/1.0/items/an-item',
         })
 
@@ -78,6 +94,23 @@ class TestModel(testing.PyLXDTestCase):
 
         self.assertEqual(1000, item.age)
 
+    def test_sync(self):
+        """A sync will update attributes from the server."""
+        item = Item(self.client, name='an-item')
+
+        item.sync()
+
+        self.assertEqual(1000, item.age)
+
+    def test_sync_dirty(self):
+        """Sync will not overwrite local attribute changes."""
+        item = Item(self.client, name='an-item')
+
+        item.age = 250
+        item.sync()
+
+        self.assertEqual(250, item.age)
+
     def test_rollback(self):
         """Rollback resets the object from the server."""
         item = Item(self.client, name='an-item', age=15, data={'key': 'val'})
@@ -86,6 +119,7 @@ class TestModel(testing.PyLXDTestCase):
         item.rollback()
 
         self.assertEqual(1000, item.age)
+        self.assertFalse(item.dirty)
 
     def test_int_attribute_validator(self):
         """Age is set properly to be an int."""
@@ -114,5 +148,30 @@ class TestModel(testing.PyLXDTestCase):
     def test_not_dirty(self):
         """Changes mark the object as dirty."""
         item = Item(self.client, name='an-item', age=15, data={'key': 'val'})
+
+        self.assertFalse(item.dirty)
+
+    def test_marshall(self):
+        """The object is marshalled into a dict."""
+        item = Item(self.client, name='an-item', age=15, data={'key': 'val'})
+
+        result = item.marshall()
+
+        self.assertEqual({'age': 15, 'data': {'key': 'val'}}, result)
+
+    def test_delete(self):
+        """The object is deleted, and client is unset."""
+        item = Item(self.client, name='an-item', age=15, data={'key': 'val'})
+
+        item.delete()
+
+        self.assertIsNone(item.client)
+
+    def test_save(self):
+        """Attributes are written to the server; object is marked clean."""
+        item = Item(self.client, name='an-item', age=15, data={'key': 'val'})
+
+        item.age = 69
+        item.save()
 
         self.assertFalse(item.dirty)
