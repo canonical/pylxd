@@ -197,6 +197,19 @@ class TestContainer(testing.PyLXDTestCase):
 
         self.assertRaises(TypeError, an_container.execute, 'apt-get update')
 
+    def test_migrate(self):
+        """A container is migrated."""
+        from pylxd.client import Client
+
+        client2 = Client(endpoint='http://pylxd2.test')
+        an_container = container.Container(
+            self.client, name='an-container')
+
+        an_migrated_container = an_container.migrate(client2)
+
+        self.assertEqual('an-container', an_migrated_container.name)
+        self.assertEqual(client2, an_migrated_container.client)
+
 
 class TestContainerState(testing.PyLXDTestCase):
     """Tests for pylxd.container.ContainerState."""

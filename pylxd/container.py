@@ -11,7 +11,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import socket
 import time
 
 import six
@@ -275,19 +274,17 @@ class Container(model.Model):
 
         Destination host information is contained in the client
         connection passed in.
-        """
-        self.fetch()  # Make sure the object isn't stale
-        response = self._client.api.containers[self.name].post(
-            json={'migration': True})
-        operation = self._client.operations.get(response.json()['operation'])
-        secrets = response.json()['metadata']['metadata']
 
-        # Translate the host name to an IP address. Otherwise, there could be
-        # certificate validation issues.
-        operation_url = self._client.api.operations[operation.id]._api_endpoint
-        parsed = parse.urlparse(operation_url)
-        host_ip = socket.gethostbyname(parsed.hostname)
-        operation_url = operation_url.replace(parsed.hostname, host_ip)
+        If the container is running, it either must be shut down
+        first or criu must be installed on the source and destination
+        machines.
+        """
+        self.sync()  # Make sure the object isn't stale
+        response = self.api.post(json={'migration': True})
+        operation = self.client.operations.get(response.json()['operation'])
+        operation_url = self.client.api.operations[operation.id]._api_endpoint
+        secrets = response.json()['metadata']['metadata']
+        cert = self.client.host_info['environment']['certificate']
 
         config = {
             'name': self.name,
@@ -300,10 +297,11 @@ class Container(model.Model):
                 'type': 'migration',
                 'operation': operation_url,
                 'mode': 'pull',
+                'certificate': cert,
                 'secrets': secrets,
             }
         }
-        new_client.containers.create(config, wait=wait)
+        return new_client.containers.create(config, wait=wait)
 
 
 class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover

@@ -8,6 +8,26 @@ def containers_POST(request, context):
         'operation': 'operation-abc'})
 
 
+def container_POST(request, context):
+    context.status_code = 202
+    if not request.json().get('migration', False):
+        return {
+            'type': 'async',
+            'operation': 'operation-abc'}
+    else:
+        return {
+            'type': 'async',
+            'operation': 'operation-abc',
+            'metadata': {
+                'metadata': {
+                    '0': 'abc',
+                    '1': 'def',
+                    'control': 'ghi',
+                }
+            }
+        }
+
+
 def container_DELETE(request, context):
     context.status_code = 202
     return json.dumps({
@@ -69,10 +89,21 @@ RULES = [
         'text': json.dumps({
             'type': 'sync',
             'metadata': {'auth': 'trusted',
-                         'environment': {}}}),
+                         'environment': {
+                             'certificate': 'an-pem-cert',
+                             }}}),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0$',
     },
+    {
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': {'auth': 'trusted',
+                         'environment': {}}}),
+        'method': 'GET',
+        'url': r'^http://pylxd2.test/1.0$',
+    },
+
 
 
     # Certificates
@@ -131,6 +162,11 @@ RULES = [
             ]}),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/containers$',
+    },
+    {
+        'text': containers_POST,
+        'method': 'POST',
+        'url': r'^http://pylxd2.test/1.0/containers$',
     },
     {
         'text': containers_POST,
@@ -222,10 +258,7 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/containers/an-container/state$',  # NOQA
     },
     {
-        'text': json.dumps({
-            'type': 'async',
-            'operation': 'operation-abc'}),
-        'status_code': 202,
+        'json': container_POST,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container$',
     },
