@@ -18,7 +18,7 @@ from six.moves.urllib import parse
 from ws4py.client import WebSocketBaseClient
 from ws4py.manager import WebSocketManager
 
-from pylxd import exceptions, managers, mixin
+from pylxd import exceptions, managers, model
 from pylxd.deprecation import deprecated
 from pylxd.operation import Operation
 
@@ -31,12 +31,32 @@ class ContainerState(object):
             setattr(self, key, value)
 
 
-class Container(mixin.Marshallable):
+class Container(model.Model):
     """An LXD Container.
 
     This class is not intended to be used directly, but rather to be used
     via `Client.containers.create`.
     """
+    architecture = model.Attribute()
+    config = model.Attribute()
+    created_at = model.Attribute()
+    devices = model.Attribute()
+    ephemeral = model.Attribute()
+    expanded_config = model.Attribute()
+    expanded_devices = model.Attribute()
+    name = model.Attribute(readonly=True)
+    profiles = model.Attribute()
+    status = model.Attribute(readonly=True)
+
+    status_code = model.Attribute(readonly=True)
+    stateful = model.Attribute(readonly=True)
+
+    snapshots = model.Manager()
+    files = model.Manager()
+
+    @property
+    def api(self):
+        return self.client.api.containers[self.name]
 
     class FilesManager(object):
         """A pseudo-manager for namespacing file operations."""
@@ -63,12 +83,6 @@ class Container(mixin.Marshallable):
                 raise
             return response.content
 
-    __slots__ = [
-        '_client',
-        'architecture', 'config', 'created_at', 'devices', 'ephemeral',
-        'expanded_config', 'expanded_devices', 'name', 'profiles', 'status'
-    ]
-
     @classmethod
     def get(cls, client, name):
         """Get a container by name."""
@@ -79,7 +93,7 @@ class Container(mixin.Marshallable):
                 raise exceptions.NotFound()
             raise
 
-        container = cls(_client=client, **response.json()['metadata'])
+        container = cls(client, **response.json()['metadata'])
         return container
 
     @classmethod
@@ -88,7 +102,7 @@ class Container(mixin.Marshallable):
 
         Containers returned from this method will only have the name
         set, as that is the only property returned from LXD. If more
-        information is needed, `Container.fetch` is the method call
+        information is needed, `Container.sync` is the method call
         that should be used.
         """
         response = client.api.containers.get()
@@ -96,7 +110,7 @@ class Container(mixin.Marshallable):
         containers = []
         for url in response.json()['metadata']:
             name = url.split('/')[-1]
-            containers.append(cls(_client=client, name=name))
+            containers.append(cls(client, name=name))
         return containers
 
     @classmethod
@@ -109,80 +123,42 @@ class Container(mixin.Marshallable):
 
         if wait:
             Operation.wait_for_operation(client, response.json()['operation'])
-        return cls(name=config['name'], _client=client)
+        return cls(client, name=config['name'])
 
-    def __init__(self, **kwargs):
-        super(Container, self).__init__()
-        for key, value in six.iteritems(kwargs):
-            setattr(self, key, value)
+    def __init__(self, *args, **kwargs):
+        super(Container, self).__init__(*args, **kwargs)
 
-        self.snapshots = managers.SnapshotManager(self._client, self)
-        self.files = self.FilesManager(self._client, self)
+        self.snapshots = managers.SnapshotManager(self.client, self)
+        self.files = self.FilesManager(self.client, self)
 
-    def fetch(self):
-        """Reload the container information."""
-        try:
-            response = self._client.api.containers[self.name].get()
-        except exceptions.LXDAPIException as e:
-            if e.response.status_code == 404:
-                raise exceptions.NotFound()
-            raise
-        for key, value in six.iteritems(response.json()['metadata']):
-            setattr(self, key, value)
     # XXX: rockstar (28 Mar 2016) - This method was named improperly
     # originally. It's being kept here for backwards compatibility.
     reload = deprecated(
-        "Container.reload is deprecated. Please use Container.fetch")(
-        fetch)
-
-    def update(self, wait=False):
-        """Update the container in lxd from local changes."""
-        try:
-            marshalled = self.marshall()
-        except AttributeError:
-            raise exceptions.ObjectIncomplete()
-        # These two properties are explicitly not allowed.
-        del marshalled['name']
-        del marshalled['status']
-
-        response = self._client.api.containers[self.name].put(
-            json=marshalled)
-
-        if wait:
-            Operation.wait_for_operation(
-                self._client, response.json()['operation'])
+        "Container.reload is deprecated. Please use Container.sync")(
+        model.Model.sync)
 
     def rename(self, name, wait=False):
         """Rename a container."""
-        response = self._client.api.containers[
-            self.name].post(json={'name': name})
+        response = self.api.post(json={'name': name})
 
         if wait:
             Operation.wait_for_operation(
-                self._client, response.json()['operation'])
+                self.client, response.json()['operation'])
         self.name = name
 
-    def delete(self, wait=False):
-        """Delete the container."""
-        response = self._client.api.containers[self.name].delete()
-
-        if wait:
-            Operation.wait_for_operation(
-                self._client, response.json()['operation'])
-
     def _set_state(self, state, timeout=30, force=True, wait=False):
-        response = self._client.api.containers[self.name].state.put(json={
+        response = self.api.state.put(json={
             'action': state,
             'timeout': timeout,
             'force': force
         })
         if wait:
             Operation.wait_for_operation(
-                self._client, response.json()['operation'])
-            self.fetch()
+                self.client, response.json()['operation'])
+            self.sync()
 
     def state(self):
-        response = self._client.api.containers[self.name].state.get()
+        response = self.api.state.get()
         state = ContainerState(**response.json()['metadata'])
         return state
 
@@ -257,7 +233,7 @@ class Container(mixin.Marshallable):
         """Execute a command on the container."""
         if isinstance(commands, six.string_types):
             raise TypeError("First argument must be a list.")
-        response = self._client.api.containers[self.name]['exec'].post(json={
+        response = self.api['exec'].post(json={
             'command': commands,
             'environment': environment,
             'wait-for-websocket': True,
@@ -267,17 +243,17 @@ class Container(mixin.Marshallable):
         fds = response.json()['metadata']['metadata']['fds']
         operation_id = response.json()['operation'].split('/')[-1]
         parsed = parse.urlparse(
-            self._client.api.operations[operation_id].websocket._api_endpoint)
+            self.client.api.operations[operation_id].websocket._api_endpoint)
 
         manager = WebSocketManager()
 
-        stdin = _StdinWebsocket(manager, self._client.websocket_url)
+        stdin = _StdinWebsocket(manager, self.client.websocket_url)
         stdin.resource = '{}?secret={}'.format(parsed.path, fds['0'])
         stdin.connect()
-        stdout = _CommandWebsocketClient(manager, self._client.websocket_url)
+        stdout = _CommandWebsocketClient(manager, self.client.websocket_url)
         stdout.resource = '{}?secret={}'.format(parsed.path, fds['1'])
         stdout.connect()
-        stderr = _CommandWebsocketClient(manager, self._client.websocket_url)
+        stderr = _CommandWebsocketClient(manager, self.client.websocket_url)
         stderr.resource = '{}?secret={}'.format(parsed.path, fds['2'])
         stderr.connect()
 
@@ -325,8 +301,17 @@ class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
         self.close()
 
 
-class Snapshot(mixin.Marshallable):
+class Snapshot(model.Model):
     """A container snapshot."""
+    name = model.Attribute()
+    stateful = model.Attribute()
+
+    container = model.Parent()
+
+    @property
+    def api(self):
+        return self.client.api.containers[
+            self.container.name].snapshots[self.name]
 
     @classmethod
     def get(cls, client, container, name):
@@ -339,7 +324,7 @@ class Snapshot(mixin.Marshallable):
             raise
 
         snapshot = cls(
-            _client=client, _container=container,
+            client, container=container,
             **response.json()['metadata'])
         # Snapshot names are namespaced in LXD, as
         # container-name/snapshot-name. We hide that implementation
@@ -352,8 +337,8 @@ class Snapshot(mixin.Marshallable):
         response = client.api.containers[container.name].snapshots.get()
 
         return [cls(
-                name=snapshot.split('/')[-1], _client=client,
-                _container=container)
+                client, name=snapshot.split('/')[-1],
+                container=container)
                 for snapshot in response.json()['metadata']]
 
     @classmethod
@@ -361,31 +346,15 @@ class Snapshot(mixin.Marshallable):
         response = client.api.containers[container.name].snapshots.post(json={
             'name': name, 'stateful': stateful})
 
-        snapshot = cls(_client=client, _container=container, name=name)
+        snapshot = cls(client, container=container, name=name)
         if wait:
             Operation.wait_for_operation(client, response.json()['operation'])
         return snapshot
 
-    def __init__(self, **kwargs):
-        super(Snapshot, self).__init__()
-        for key, value in six.iteritems(kwargs):
-            setattr(self, key, value)
-
     def rename(self, new_name, wait=False):
         """Rename a snapshot."""
-        response = self._client.api.containers[
-            self._container.name].snapshots[self.name].post(
-            json={'name': new_name})
+        response = self.api.post(json={'name': new_name})
         if wait:
             Operation.wait_for_operation(
-                self._client, response.json()['operation'])
+                self.client, response.json()['operation'])
         self.name = new_name
-
-    def delete(self, wait=False):
-        """Delete a snapshot."""
-        response = self._client.api.containers[
-            self._container.name].snapshots[self.name].delete()
-
-        if wait:
-            Operation.wait_for_operation(
-                self._client, response.json()['operation'])

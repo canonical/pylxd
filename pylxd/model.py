@@ -13,12 +13,32 @@
 #    under the License.
 import six
 
+from pylxd import exceptions
+from pylxd.deprecation import deprecated
+from pylxd.operation import Operation
+
 
 class Attribute(object):
     """A metadata class for model attributes."""
 
-    def __init__(self, validator=None):
+    def __init__(self, validator=None, readonly=False):
         self.validator = validator
+        self.readonly = False
+
+
+class Manager(object):
+    """A manager declaration.
+
+    This class signals to the model that it will have a Manager
+    attribute.
+    """
+
+
+class Parent(object):
+    """A parent declaration.
+
+    Child managers must keep a reference to their parent.
+    """
 
 
 class ModelType(type):
@@ -33,10 +53,14 @@ class ModelType(type):
             raise TypeError('__slots__ should not be specified.')
         attributes = {}
         for_removal = []
+        managers = []
 
         for key, val in attrs.items():
             if type(val) == Attribute:
                 attributes[key] = val
+                for_removal.append(key)
+            if type(val) in (Manager, Parent):
+                managers.append(key)
                 for_removal.append(key)
         for key in for_removal:
             del attrs[key]
@@ -47,6 +71,8 @@ class ModelType(type):
         for base in bases:
             if '__slots__' in dir(base):
                 slots = slots + base.__slots__
+        if len(managers) > 0:
+            slots = slots + managers
         attrs['__slots__'] = slots
         attrs['__attributes__'] = attributes
 
@@ -112,19 +138,43 @@ class Model(object):
         """
         # XXX: rockstar (25 Jun 2016) - This has the potential to step
         # on existing attributes.
-        response = self.api.get()
+        try:
+            response = self.api.get()
+        except exceptions.LXDAPIException as e:
+            if e.response.status_code == 404:
+                raise exceptions.NotFound()
+            raise
         for key, val in response.json()['metadata'].items():
             setattr(self, key, val)
+    fetch = deprecated("fetch is deprecated; please use sync")(sync)
 
-    def save(self):
+    def save(self, wait=False):
         """Save data to the server.
 
         This method should write the new data to the server via marshalling.
         It should be a no-op when the object is not dirty, to prevent needless
         I/O.
         """
-        raise NotImplementedError('save is not implemented')
+        marshalled = self.marshall()
+        response = self.api.put(json=marshalled)
 
-    def delete(self):
+        if response.json()['type'] == 'async' and wait:
+            Operation.wait_for_operation(
+                self.client, response.json()['operation'])
+    update = deprecated('update is deprecated; please use save')(save)
+
+    def delete(self, wait=False):
         """Delete an object from the server."""
-        raise NotImplementedError('delete is not implemented')
+        response = self.api.delete()
+
+        if response.json()['type'] == 'async' and wait:
+            Operation.wait_for_operation(
+                self.client, response.json()['operation'])
+
+    def marshall(self):
+        """Marshall the object in preparation for updating to the server."""
+        marshalled = {}
+        for key, val in self.__attributes__.items():
+            if not val.readonly:
+                marshalled[key] = getattr(self, key)
+        return marshalled
