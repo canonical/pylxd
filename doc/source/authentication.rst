@@ -1,6 +1,6 @@
-==============
-Authentication
-==============
+=====================
+Client Authentication
+=====================
 
 When using LXD over https, LXD uses an asymmetric keypair for authentication.
 The keypairs are added to the authentication database after entering the LXD

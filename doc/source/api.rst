@@ -8,6 +8,12 @@ Client
 .. autoclass:: pylxd.client.Client
    :members:
 
+Certificate
+-----------
+
+.. autoclass:: pylxd.certificate.Certificate
+   :members:
+
 Container
 ---------
 
@@ -21,6 +27,12 @@ Image
 -----
 
 .. autoclass:: pylxd.image.Image
+   :members:
+
+Network
+-------
+
+.. autoclass:: pylxd.network.Network
    :members:
 
 Operation

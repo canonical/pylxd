@@ -11,10 +11,18 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   readme
    installation
    usage
    authentication
+
+   events
+   certificates
+   containers
+   images
+   networks
+   profiles
+
+
    contributing
    api
 
