@@ -55,6 +55,13 @@ class TestImage(testing.PyLXDTestCase):
             exceptions.LXDAPIException,
             image.Image.get, self.client, fingerprint)
 
+    def test_get_by_alias(self):
+        fingerprint = hashlib.sha256(b'').hexdigest()
+
+        a_image = image.Image.get_by_alias(self.client, 'an-alias')
+
+        self.assertEqual(fingerprint, a_image.fingerprint)
+
     def test_all(self):
         """A list of all images is returned."""
         images = image.Image.all(self.client)
