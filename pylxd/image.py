@@ -46,6 +46,14 @@ class Image(model.Model):
         return image
 
     @classmethod
+    def get_by_alias(cls, client, alias):
+        """Get an image by its alias."""
+        response = client.api.images.aliases[alias].get()
+
+        fingerprint = response.json()['metadata']['target']
+        return cls.get(client, fingerprint)
+
+    @classmethod
     def all(cls, client):
         """Get all images."""
         response = client.api.images.get()
