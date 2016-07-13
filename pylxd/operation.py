@@ -11,7 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import six
+from pylxd import exceptions
 
 
 class Operation(object):
@@ -27,7 +27,7 @@ class Operation(object):
         """Get an operation and wait for it to complete."""
         operation = cls.get(client, operation_id)
         operation.wait()
-        return operation
+        return cls.get(client, operation.id)
 
     @classmethod
     def get(cls, client, operation_id):
@@ -39,9 +39,16 @@ class Operation(object):
 
     def __init__(self, **kwargs):
         super(Operation, self).__init__()
-        for key, value in six.iteritems(kwargs):
+        for key, value in kwargs.items():
             setattr(self, key, value)
 
     def wait(self):
         """Wait for the operation to complete and return."""
-        self._client.api.operations[self.id].wait.get()
+        response = self._client.api.operations[self.id].wait.get()
+
+        try:
+            if response.json()['metadata']['status'] == 'Failure':
+                raise exceptions.LXDAPIException(response)
+        except KeyError:
+            # Support for legacy LXD
+            pass

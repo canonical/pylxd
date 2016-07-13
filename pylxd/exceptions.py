@@ -15,6 +15,9 @@ class LXDAPIException(Exception):
         self.response = response
 
     def __str__(self):
+        if self.response.status_code == 200:  # Operation failure
+            return self.response.json()['metadata']['err']
+
         try:
             data = self.response.json()
             return data['error']

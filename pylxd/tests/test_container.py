@@ -191,6 +191,31 @@ class TestContainer(testing.PyLXDTestCase):
         self.assertEqual('an-container', an_migrated_container.name)
         self.assertEqual(client2, an_migrated_container.client)
 
+    def test_publish(self):
+        """Containers can be published."""
+        self.add_rule({
+            'text': json.dumps({
+                'type': 'sync',
+                'metadata': {
+                    'id': 'operation-abc',
+                    'metadata': {
+                        'fingerprint': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'  # NOQA
+                        }
+                    }
+                }),
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/operations/operation-abc$',
+        })
+
+        an_container = container.Container(
+            self.client, name='an-container')
+
+        image = an_container.publish(wait=True)
+
+        self.assertEqual(
+            'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            image.fingerprint)
+
 
 class TestContainerState(testing.PyLXDTestCase):
     """Tests for pylxd.container.ContainerState."""
@@ -312,6 +337,32 @@ class TestSnapshot(testing.PyLXDTestCase):
             name='an-snapshot')
 
         self.assertRaises(exceptions.LXDAPIException, snapshot.delete)
+
+    def test_publish(self):
+        """Snapshots can be published."""
+        self.add_rule({
+            'text': json.dumps({
+                'type': 'sync',
+                'metadata': {
+                    'id': 'operation-abc',
+                    'metadata': {
+                        'fingerprint': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'  # NOQA
+                        }
+                    }
+                }),
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/operations/operation-abc$',
+        })
+
+        snapshot = container.Snapshot(
+            self.client, container=self.container,
+            name='an-snapshot')
+
+        image = snapshot.publish(wait=True)
+
+        self.assertEqual(
+            'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            image.fingerprint)
 
 
 class TestFiles(testing.PyLXDTestCase):
