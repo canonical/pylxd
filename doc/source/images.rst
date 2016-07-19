@@ -23,7 +23,7 @@ Image attributes
 ----------------
 
 For more information about the specifics of these attributes, please see
-the LXD documentation.
+the `LXD documentation`_.
 
   - `aliases` - A list of aliases for this image
   - `auto_update` - Whether the image should auto-update
@@ -39,7 +39,9 @@ the LXD documentation.
   - `public` - Whether the image is public or not
   - `size` - The size of the image
   - `uploaded_at` - The date and time the image was uploaded
+  - `update_source` - A dict of update informations
 
+.. _LXD documentation: https://github.com/lxc/lxd/blob/3207c2c67d02b3c7504c118f9af6262747103d65/doc/rest-api.md#10imagesfingerprint
 
 Image methods
 -------------

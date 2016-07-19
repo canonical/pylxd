@@ -32,6 +32,7 @@ class Image(model.Model):
     public = model.Attribute()
     size = model.Attribute()
     uploaded_at = model.Attribute()
+    update_source = model.Attribute(readonly=True)
 
     @property
     def api(self):
