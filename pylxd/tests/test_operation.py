@@ -40,8 +40,10 @@ class TestOperation(testing.PyLXDTestCase):
         def error(request, context):
             context.status_code = 200
             return {
+                'type': 'sync',
                 'metadata': {
                     'status': 'Failure',
+                    'err': 'Keep your foot off the blasted samoflange.',
                 }}
         self.add_rule({
             'json': error,
