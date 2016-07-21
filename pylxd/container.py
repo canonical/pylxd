@@ -37,6 +37,7 @@ class Container(model.Model):
     This class is not intended to be used directly, but rather to be used
     via `Client.containers.create`.
     """
+
     architecture = model.Attribute()
     config = model.Attribute()
     created_at = model.Attribute()
@@ -289,6 +290,30 @@ class Container(model.Model):
         }
         return new_client.containers.create(config, wait=wait)
 
+    def publish(self, public=False, wait=False):
+        """Publish a container as an image.
+
+        The container must be stopped in order publish it as an image. This
+        method does not enforce that constraint, so a LXDAPIException may be
+        raised if this method is called on a running container.
+
+        If wait=True, an Image is returned.
+        """
+        data = {
+            'public': public,
+            'source': {
+                'type': 'container',
+                'name': self.name,
+            }
+        }
+
+        response = self.client.api.images.post(json=data)
+        if wait:
+            operation = Operation.wait_for_operation(
+                self.client, response.json()['operation'])
+
+            return self.client.images.get(operation.metadata['fingerprint'])
+
 
 class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
     def __init__(self, manager, *args, **kwargs):
@@ -324,6 +349,7 @@ class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
 
 class Snapshot(model.Model):
     """A container snapshot."""
+
     name = model.Attribute()
     stateful = model.Attribute()
 
@@ -374,3 +400,27 @@ class Snapshot(model.Model):
             Operation.wait_for_operation(
                 self.client, response.json()['operation'])
         self.name = new_name
+
+    def publish(self, public=False, wait=False):
+        """Publish a snapshot as an image.
+
+        If wait=True, an Image is returned.
+
+        This functionality is currently broken in LXD. Please see
+        https://github.com/lxc/lxd/issues/2201 - The implementation
+        here is mostly a guess. Once that bug is fixed, we can verify
+        that this works, or file a bug to fix it appropriately.
+        """
+        data = {
+            'public': public,
+            'source': {
+                'type': 'snapshot',
+                'name': '{}/{}'.format(self.container.name, self.name),
+            }
+        }
+
+        response = self.client.api.images.post(json=data)
+        if wait:
+            operation = Operation.wait_for_operation(
+                self.client, response.json()['operation'])
+            return self.client.images.get(operation.metadata['fingerprint'])

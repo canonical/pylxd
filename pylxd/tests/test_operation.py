@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from pylxd import operation
+from pylxd import exceptions, operation
 from pylxd.tests import testing
 
 
@@ -34,3 +34,25 @@ class TestOperation(testing.PyLXDTestCase):
         an_operation = operation.Operation.get(self.client, name)
 
         self.assertEqual('operation-abc', an_operation.id)
+
+    def test_wait_with_error(self):
+        """If the operation errors, wait raises an exception."""
+        def error(request, context):
+            context.status_code = 200
+            return {
+                'type': 'sync',
+                'metadata': {
+                    'status': 'Failure',
+                    'err': 'Keep your foot off the blasted samoflange.',
+                }}
+        self.add_rule({
+            'json': error,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/operations/operation-abc/wait$',  # NOQA
+        })
+
+        name = '/1.0/operations/operation-abc'
+
+        an_operation = operation.Operation.get(self.client, name)
+
+        self.assertRaises(exceptions.LXDAPIException, an_operation.wait)
