@@ -37,6 +37,7 @@ class Container(model.Model):
     This class is not intended to be used directly, but rather to be used
     via `Client.containers.create`.
     """
+
     architecture = model.Attribute()
     config = model.Attribute()
     created_at = model.Attribute()
@@ -348,6 +349,7 @@ class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
 
 class Snapshot(model.Model):
     """A container snapshot."""
+
     name = model.Attribute()
     stateful = model.Attribute()
 
@@ -414,7 +416,6 @@ class Snapshot(model.Model):
             'source': {
                 'type': 'snapshot',
                 'name': '{}/{}'.format(self.container.name, self.name),
-                'alias': 'lololol',
             }
         }
 
