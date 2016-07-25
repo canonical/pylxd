@@ -13,6 +13,7 @@
 #    under the License.
 import json
 import os
+import os.path
 
 import requests
 import requests_unixsocket
@@ -163,7 +164,11 @@ class Client(object):
     def __init__(self, endpoint=None, version='1.0', cert=None, verify=True):
         self.cert = cert
         if endpoint is not None:
-            self.api = _APINode(endpoint, cert=cert, verify=verify)
+            if endpoint.startswith('/') and os.path.isfile(endpoint):
+                self.api = _APINode('http+unix://{}'.format(
+                    parse.quote(endpoint, safe='')))
+            else:
+                self.api = _APINode(endpoint, cert=cert, verify=verify)
         else:
             if 'LXD_DIR' in os.environ:
                 path = os.path.join(

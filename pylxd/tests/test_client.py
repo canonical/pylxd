@@ -13,6 +13,7 @@
 #    under the License.
 import json
 import os
+import os.path
 import unittest
 
 import mock
@@ -69,6 +70,18 @@ class TestClient(unittest.TestCase):
         expected = 'http://lxd/1.0'
 
         an_client = client.Client(endpoint=endpoint)
+
+        self.assertEqual(expected, an_client.api._api_endpoint)
+
+    def test_create_endpoint_unixsocket(self):
+        """Test with unix socket endpoint."""
+        endpoint = '/tmp/unix.socket'
+        expected = 'http+unix://%2Ftmp%2Funix.socket/1.0'
+
+        real_isfile = os.path.isfile
+        os.path.isfile = lambda x: True
+        an_client = client.Client(endpoint)
+        os.path.isfile = real_isfile
 
         self.assertEqual(expected, an_client.api._api_endpoint)
 
