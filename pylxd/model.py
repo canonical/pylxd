@@ -182,3 +182,11 @@ class Model(object):
             if not val.readonly:
                 marshalled[key] = getattr(self, key)
         return marshalled
+
+    def dict(self):
+        """ Same as marshall but includes readonly attributes."""
+        marshalled = {}
+        for key, val in self.__attributes__.items():
+            if hasattr(self, key):
+                marshalled[key] = getattr(self, key)
+        return marshalled

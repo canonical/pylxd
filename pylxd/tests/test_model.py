@@ -159,6 +159,17 @@ class TestModel(testing.PyLXDTestCase):
 
         self.assertEqual({'age': 15, 'data': {'key': 'val'}}, result)
 
+    def test_dict(self):
+        """ The object marshalled as dict with readonly attributes."""
+        item = Item(self.client, name='an-item', age=15, data={'key': 'val'})
+
+        result = item.dict()
+
+        self.assertEqual(
+            {'name': 'an-item', 'age': 15, 'data': {'key': 'val'}},
+            result
+        )
+
     def test_delete(self):
         """The object is deleted, and client is unset."""
         item = Item(self.client, name='an-item', age=15, data={'key': 'val'})
