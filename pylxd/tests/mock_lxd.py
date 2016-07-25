@@ -366,6 +366,25 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/images$',
     },
     {
+        'text': images_POST,
+        'method': 'POST',
+        'url': r'^http://pylxd2.test/1.0/images$',
+    },
+    {
+        'json': {
+            'type': 'sync',
+            'status': 'Success',
+            'status_code': 200,
+            'metadata': {
+                'name': 'an-alias',
+                'description': 'an-alias',
+                'target': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',  # NOQA
+            }
+        },
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/images/aliases/an-alias$',
+    },
+    {
         'text': json.dumps({
             'type': 'sync',
             'metadata': {
@@ -392,6 +411,34 @@ RULES = [
         }),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
+    },
+    {
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': {
+                'aliases': [
+                    {
+                        'name': 'an-alias',  # NOQA
+                        'fingerprint': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',  # NOQA
+                    }
+                ],
+                'architecture': 'x86_64',
+                'cached': False,
+                'filename': 'a_image.tar.bz2',
+                'fingerprint': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',  # NOQA
+                'public': False,
+                'properties': {},
+                'size': 1,
+                'auto_update': False,
+                'created_at': '1983-06-16T02:42:00Z',
+                'expires_at': '1983-06-16T02:42:00Z',
+                'last_used_at': '1983-06-16T02:42:00Z',
+                'uploaded_at': '1983-06-16T02:42:00Z',
+
+            },
+        }),
+        'method': 'GET',
+        'url': r'^http://pylxd2.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
     },
     {
         'text': json.dumps({'type': 'async', 'operation': 'operation-abc'}),
@@ -453,6 +500,22 @@ RULES = [
         },
         'method': 'DELETE',
         'url': r'^http://pylxd.test/1.0/images/aliases/b-alias$'
+    },
+
+    # Images secret
+    {
+        'json': {
+            'type': 'sync',
+            'status': 'Success',
+            'status_code': 200,
+            'metadata': {
+                'metadata': {
+                    'secret': 'abcdefg'
+                }
+            }
+        },
+        'method': 'POST',
+        'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855/secret$',  # NOQA
     },
 
     # Networks
@@ -531,4 +594,19 @@ RULES = [
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/operations/operation-abc/wait$',
     },
+    {
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': {'id': 'operation-abc'},
+            }),
+        'method': 'GET',
+        'url': r'^http://pylxd2.test/1.0/operations/operation-abc$',
+    },
+    {
+        'text': json.dumps({
+            'type': 'sync',
+            }),
+        'method': 'GET',
+        'url': r'^http://pylxd2.test/1.0/operations/operation-abc/wait$',
+    }
 ]

@@ -18,7 +18,6 @@ methods:
     argument is the binary data of the image itself. If the image is public,
     set `public` to `True`.
 
-
 Image attributes
 ----------------
 
@@ -52,6 +51,8 @@ Image methods
   - `add_alias` - Add an alias to the image.
 
   - `delete_alias` - Remove an alias.
+
+  - `copy` - Copy the image to another LXD client.
 
 Examples
 --------
