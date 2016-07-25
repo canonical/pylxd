@@ -366,26 +366,12 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/images$',
     },
     {
-        'json': {
-            'type': 'sync',
-            'status': 'Success',
-            'status_code': 200,
-            'metadata': {
-                'name': 'an-alias',
-                'description': 'an-alias',
-                'target': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',  # NOQA
-            }
-        },
-        'method': 'GET',
-        'url': r'^http://pylxd.test/1.0/images/aliases/an-alias$',
-    },
-    {
         'text': json.dumps({
             'type': 'sync',
             'metadata': {
                 'aliases': [
                     {
-                        'name': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',  # NOQA
+                        'name': 'an-alias',  # NOQA
                         'fingerprint': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',  # NOQA
                     }
                 ],
@@ -424,6 +410,40 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
     },
 
+    # Image Aliases
+    {
+        'json': {
+            'type': 'sync',
+            'status': 'Success',
+            'status_code': 200,
+            'metadata': {
+                'name': 'an-alias',
+                'description': 'an-alias',
+                'target': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',  # NOQA
+            }
+        },
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/images/aliases/an-alias$',
+    },
+    {
+        'json': {
+            'type': 'sync',
+            'status': 'Success',
+            'metadata': None
+        },
+        'method': 'POST',
+        'url': r'^http://pylxd.test/1.0/images/aliases$'
+    },
+    {
+        'json': {
+            'type': 'sync',
+            'status': 'Success',
+            'status_code': 200,
+            'metadata': None
+        },
+        'method': 'DELETE',
+        'url': r'^http://pylxd.test/1.0/images/aliases/an-alias$'
+    },
 
     # Networks
     {
