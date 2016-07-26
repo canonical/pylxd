@@ -144,6 +144,10 @@ class Container(model.Model):
                 self.client, response.json()['operation'])
             self.sync()
 
+            return self
+
+        return response
+
     def state(self):
         response = self.api.state.get()
         state = ContainerState(**response.json()['metadata'])
