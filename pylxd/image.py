@@ -100,8 +100,6 @@ class Image(model.Model):
             'name': name
         })
 
-        return self
-
     def delete_alias(self, name):
         """Delete an alias from the image."""
         self.client.api.images.aliases[name].delete()
@@ -112,5 +110,3 @@ class Image(model.Model):
             del self.aliases[la.index(name)]
         except ValueError:
             pass
-
-        return self
