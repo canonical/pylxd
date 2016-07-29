@@ -17,6 +17,22 @@ from pylxd import model
 from pylxd.operation import Operation
 
 
+def _image_create_from_config(client, config, wait=False):
+    """ Create an image from the given configuration.
+
+    See: https://github.com/lxc/lxd/blob/master/doc/rest-api.md#post-6
+    """
+    if 'source' not in config or 'fingerprint' not in config['source']:
+        raise KeyError(
+            'You need to provide a fingerprint '
+            'in the config[\'source\'] argument'
+        )
+
+    response = client.api.images.post(json=config)
+    if wait:
+        Operation.wait_for_operation(client, response.json()['operation'])
+
+
 class Image(model.Model):
     """A LXD Image."""
     aliases = model.Attribute(readonly=True)
@@ -110,3 +126,46 @@ class Image(model.Model):
             del self.aliases[la.index(name)]
         except ValueError:
             pass
+
+    def copy(self, new_client, public=None, auto_update=None, wait=False):
+        """ Copy an image to a another LXD.
+
+        Destination host information is contained in the client
+        connection passed in.
+        """
+        self.sync()  # Make sure the object isn't stale
+
+        url = '/'.join(self.client.api._api_endpoint.split('/')[:-1])
+
+        if public is None:
+            public = self.public
+
+        if auto_update is None:
+            auto_update = self.auto_update
+
+        config = {
+            'filename': self.filename,
+            'public': public,
+            'auto_update': auto_update,
+            'properties': self.properties,
+
+            'source': {
+                'type': 'image',
+                'mode': 'pull',
+                'server': url,
+                'protocol': 'lxd',
+                'fingerprint': self.fingerprint
+            }
+        }
+
+        if self.public is not True:
+            response = self.api.secret.post(json={})
+            secret = response.json()['metadata']['metadata']['secret']
+            config['source']['secret'] = secret
+            cert = self.client.host_info['environment']['certificate']
+            config['source']['certificate'] = cert
+
+        _image_create_from_config(new_client, config, wait)
+
+        if wait:
+            return new_client.images.get(self.fingerprint)

@@ -243,3 +243,71 @@ class TestImage(testing.PyLXDTestCase):
         """Try to remove an alias which is not in the current image."""
         a_image = self.client.images.all()[0]
         a_image.delete_alias('b-alias')
+
+    def test_copy(self):
+        """Try to copy an image to another LXD instance."""
+        from pylxd.client import Client
+
+        a_image = self.client.images.all()[0]
+
+        client2 = Client(endpoint='http://pylxd2.test')
+        copied_image = a_image.copy(client2, wait=True)
+        self.assertEqual(a_image.fingerprint, copied_image.fingerprint)
+
+    def test_copy_public(self):
+        """Try to copy a public image."""
+        from pylxd.client import Client
+
+        def image_get(request, context):
+            context.status_code = 200
+            return json.dumps({
+                'type': 'sync',
+                'metadata': {
+                    'aliases': [
+                        {
+                            'name': 'an-alias',  # NOQA
+                            'fingerprint': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',  # NOQA
+                        }
+                    ],
+                    'architecture': 'x86_64',
+                    'cached': False,
+                    'filename': 'a_image.tar.bz2',
+                    'fingerprint': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',  # NOQA
+                    'public': True,
+                    'properties': {},
+                    'size': 1,
+                    'auto_update': False,
+                    'created_at': '1983-06-16T02:42:00Z',
+                    'expires_at': '1983-06-16T02:42:00Z',
+                    'last_used_at': '1983-06-16T02:42:00Z',
+                    'uploaded_at': '1983-06-16T02:42:00Z',
+
+                },
+            })
+        self.add_rule({
+            'text': image_get,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
+        })
+
+        a_image = self.client.images.all()[0]
+        self.assertTrue(a_image.public)
+
+        client2 = Client(endpoint='http://pylxd2.test')
+        copied_image = a_image.copy(client2, wait=True)
+        self.assertEqual(a_image.fingerprint, copied_image.fingerprint)
+
+    def test_copy_no_wait(self):
+        """Try to copy and don't wait."""
+        from pylxd.client import Client
+
+        a_image = self.client.images.all()[0]
+
+        client2 = Client(endpoint='http://pylxd2.test')
+        a_image.copy(client2, public=False, auto_update=False)
+
+    def test_image_create_error(self):
+        """We raise a KeyError when we receive invalid data."""
+        from pylxd.image import _image_create_from_config
+
+        self.assertRaises(KeyError, _image_create_from_config, self.client, {})
