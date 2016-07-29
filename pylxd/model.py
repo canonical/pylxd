@@ -20,9 +20,10 @@ from pylxd.operation import Operation
 class Attribute(object):
     """A metadata class for model attributes."""
 
-    def __init__(self, validator=None, readonly=False):
+    def __init__(self, validator=None, readonly=False, optional=False):
         self.validator = validator
         self.readonly = readonly
+        self.optional = optional
 
 
 class Manager(object):
@@ -179,6 +180,7 @@ class Model(object):
         """Marshall the object in preparation for updating to the server."""
         marshalled = {}
         for key, val in self.__attributes__.items():
-            if not val.readonly:
+            if ((not val.readonly and not val.optional) or
+                    (val.optional and hasattr(self, key))):
                 marshalled[key] = getattr(self, key)
         return marshalled

@@ -36,18 +36,18 @@ def _image_create_from_config(client, config, wait=False):
 class Image(model.Model):
     """A LXD Image."""
     aliases = model.Attribute(readonly=True)
-    auto_update = model.Attribute()
-    architecture = model.Attribute()
-    cached = model.Attribute()
-    created_at = model.Attribute()
-    expires_at = model.Attribute()
-    filename = model.Attribute()
-    fingerprint = model.Attribute()
-    last_used_at = model.Attribute()
+    auto_update = model.Attribute(optional=True)
+    architecture = model.Attribute(readonly=True)
+    cached = model.Attribute(readonly=True)
+    created_at = model.Attribute(readonly=True)
+    expires_at = model.Attribute(readonly=True)
+    filename = model.Attribute(readonly=True)
+    fingerprint = model.Attribute(readonly=True)
+    last_used_at = model.Attribute(readonly=True)
     properties = model.Attribute()
     public = model.Attribute()
-    size = model.Attribute()
-    uploaded_at = model.Attribute()
+    size = model.Attribute(readonly=True)
+    uploaded_at = model.Attribute(readonly=True)
     update_source = model.Attribute(readonly=True)
 
     @property
