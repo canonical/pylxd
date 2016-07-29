@@ -19,7 +19,7 @@ from pylxd.operation import Operation
 
 class Image(model.Model):
     """A LXD Image."""
-    aliases = model.Attribute()
+    aliases = model.Attribute(readonly=True)
     auto_update = model.Attribute()
     architecture = model.Attribute()
     cached = model.Attribute()
@@ -84,3 +84,29 @@ class Image(model.Model):
         """Export the image."""
         response = self.api.export.get()
         return response.content
+
+    def add_alias(self, name, description):
+        """Add an alias to the image."""
+        self.client.api.images.aliases.post(json={
+            'description': description,
+            'target': self.fingerprint,
+            'name': name
+        })
+
+        # Update current aliases list
+        self.aliases.append({
+            'description': description,
+            'target': self.fingerprint,
+            'name': name
+        })
+
+    def delete_alias(self, name):
+        """Delete an alias from the image."""
+        self.client.api.images.aliases[name].delete()
+
+        # Update current aliases list
+        la = [a['name'] for a in self.aliases]
+        try:
+            del self.aliases[la.index(name)]
+        except ValueError:
+            pass

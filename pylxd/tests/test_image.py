@@ -180,3 +180,66 @@ class TestImage(testing.PyLXDTestCase):
         a_image = self.client.images.all()[0]
 
         self.assertRaises(exceptions.LXDAPIException, a_image.export)
+
+    def test_add_alias(self):
+        """Try to add an alias."""
+        a_image = self.client.images.all()[0]
+        a_image.add_alias('lol', 'Just LOL')
+
+        aliases = [a['name'] for a in a_image.aliases]
+        self.assertTrue('lol' in aliases, "Image didn't get updated.")
+
+    def test_add_alias_duplicate(self):
+        """Adding a alias twice should raise an LXDAPIException."""
+        def error(request, context):
+            context.status_code = 409
+            return json.dumps({
+                'type': 'error',
+                'error': 'already exists',
+                'error_code': 409})
+        self.add_rule({
+            'text': error,
+            'method': 'POST',
+            'url': r'^http://pylxd.test/1.0/images/aliases$',  # NOQA
+        })
+
+        a_image = self.client.images.all()[0]
+
+        self.assertRaises(
+            exceptions.LXDAPIException,
+            a_image.add_alias,
+            'lol', 'Just LOL'
+        )
+
+    def test_remove_alias(self):
+        """Try to remove an-alias."""
+        a_image = self.client.images.all()[0]
+        a_image.delete_alias('an-alias')
+
+        self.assertEqual(0, len(a_image.aliases), "Alias didn't get deleted.")
+
+    def test_remove_alias_error(self):
+        """Try to remove an non existant alias."""
+        def error(request, context):
+            context.status_code = 404
+            return json.dumps({
+                'type': 'error',
+                'error': 'not found',
+                'error_code': 404})
+        self.add_rule({
+            'text': error,
+            'method': 'DELETE',
+            'url': r'^http://pylxd.test/1.0/images/aliases/lol$',  # NOQA
+        })
+
+        a_image = self.client.images.all()[0]
+        self.assertRaises(
+            exceptions.LXDAPIException,
+            a_image.delete_alias,
+            'lol'
+        )
+
+    def test_remove_alias_not_in_image(self):
+        """Try to remove an alias which is not in the current image."""
+        a_image = self.client.images.all()[0]
+        a_image.delete_alias('b-alias')

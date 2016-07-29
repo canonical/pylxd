@@ -49,6 +49,9 @@ Image methods
   - `export` - Export the image. Returns binary data that is the
     image itself.
 
+  - `add_alias` - Add an alias to the image.
+
+  - `delete_alias` - Remove an alias.
 
 Examples
 --------
