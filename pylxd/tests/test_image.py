@@ -238,3 +238,8 @@ class TestImage(testing.PyLXDTestCase):
             a_image.delete_alias,
             'lol'
         )
+
+    def test_remove_alias_not_in_image(self):
+        """Try to remove an alias which is not in the current image."""
+        a_image = self.client.images.all()[0]
+        a_image.delete_alias('b-alias')

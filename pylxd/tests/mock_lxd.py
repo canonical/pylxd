@@ -444,6 +444,16 @@ RULES = [
         'method': 'DELETE',
         'url': r'^http://pylxd.test/1.0/images/aliases/an-alias$'
     },
+    {
+        'json': {
+            'type': 'sync',
+            'status': 'Success',
+            'status_code': 200,
+            'metadata': None
+        },
+        'method': 'DELETE',
+        'url': r'^http://pylxd.test/1.0/images/aliases/b-alias$'
+    },
 
     # Networks
     {
