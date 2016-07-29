@@ -305,9 +305,3 @@ class TestImage(testing.PyLXDTestCase):
 
         client2 = Client(endpoint='http://pylxd2.test')
         a_image.copy(client2, public=False, auto_update=False)
-
-    def test_image_create_error(self):
-        """We raise a KeyError when we receive invalid data."""
-        from pylxd.image import _image_create_from_config
-
-        self.assertRaises(KeyError, _image_create_from_config, self.client, {})
