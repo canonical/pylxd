@@ -305,3 +305,24 @@ class TestImage(testing.PyLXDTestCase):
 
         client2 = Client(endpoint='http://pylxd2.test')
         a_image.copy(client2, public=False, auto_update=False)
+
+    def test_create_from_simplestreams(self):
+        """Try to create an image from simplestreams."""
+        image = self.client.images.create_from_simplestreams(
+            'https://cloud-images.ubuntu.com/releases',
+            'trusty/amd64'
+        )
+        self.assertEqual(
+            'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            image.fingerprint
+        )
+
+    def test_create_from_url(self):
+        """Try to create an image from an URL."""
+        image = self.client.images.create_from_url(
+            'https://dl.stgraber.org/lxd'
+        )
+        self.assertEqual(
+            'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            image.fingerprint
+        )
