@@ -39,7 +39,7 @@ def images_POST(request, context):
     context.status_code = 202
     return json.dumps({
         'type': 'async',
-        'operation': 'operation-abc'})
+        'operation': 'images-create-operation'})
 
 
 def image_DELETE(request, context):
@@ -608,5 +608,40 @@ RULES = [
             }),
         'method': 'GET',
         'url': r'^http://pylxd2.test/1.0/operations/operation-abc/wait$',
+    },
+    {
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': {
+                'id': 'images-create-operation',
+                'metadata': {
+                    'fingerprint': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'  # NOQA
+                }
+            }
+        }),
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/operations/images-create-operation$',
+    },
+    {
+        'text': json.dumps({
+            'type': 'sync',
+            }),
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/operations/images-create-operation/wait$',  # NOQA
+    },
+    {
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': {'id': 'operation-abc'},
+            }),
+        'method': 'GET',
+        'url': r'^http://pylxd2.test/1.0/operations/images-create-operation$',
+    },
+    {
+        'text': json.dumps({
+            'type': 'sync',
+            }),
+        'method': 'GET',
+        'url': r'^http://pylxd2.test/1.0/operations/images-create-operation/wait$',  # NOQA
     }
 ]

@@ -22,15 +22,13 @@ def _image_create_from_config(client, config, wait=False):
 
     See: https://github.com/lxc/lxd/blob/master/doc/rest-api.md#post-6
     """
-    if 'source' not in config or 'fingerprint' not in config['source']:
-        raise KeyError(
-            'You need to provide a fingerprint '
-            'in the config[\'source\'] argument'
-        )
-
     response = client.api.images.post(json=config)
     if wait:
         Operation.wait_for_operation(client, response.json()['operation'])
+
+        return Operation.get(client, response.json()['operation'])
+
+    return response.json()['operation']
 
 
 class Image(model.Model):
@@ -95,6 +93,48 @@ class Image(model.Model):
         if wait:
             Operation.wait_for_operation(client, response.json()['operation'])
         return cls(client, fingerprint=fingerprint)
+
+    @classmethod
+    def create_from_simplestreams(cls, client, server, alias,
+                                  public=False, auto_update=False):
+        """ Copy an image from simplestreams.
+        """
+        config = {
+            'public': public,
+            'auto_update': auto_update,
+
+            'source': {
+                'type': 'image',
+                'mode': 'pull',
+                'server': server,
+                'protocol': 'simplestreams',
+                'fingerprint': alias
+            }
+        }
+
+        op = _image_create_from_config(client, config, wait=True)
+
+        return client.images.get(op.metadata['fingerprint'])
+
+    @classmethod
+    def create_from_url(cls, client, url,
+                        public=False, auto_update=False):
+        """ Copy an image from an url.
+        """
+        config = {
+            'public': public,
+            'auto_update': auto_update,
+
+            'source': {
+                'type': 'url',
+                'mode': 'pull',
+                'url': url
+            }
+        }
+
+        op = _image_create_from_config(client, config, wait=True)
+
+        return client.images.get(op.metadata['fingerprint'])
 
     def export(self):
         """Export the image."""
