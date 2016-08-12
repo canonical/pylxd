@@ -133,6 +133,14 @@ class Container(model.Model):
                 self.client, response.json()['operation'])
         self.name = name
 
+    def config_set(self, params, wait=False):
+        """Setting up container configuration"""
+        response = self.api.put(json=params)
+
+        if wait:
+            Operation.wait_for_operation(
+                self.client, response.json()['operation'])
+
     def _set_state(self, state, timeout=30, force=True, wait=False):
         response = self.api.state.put(json={
             'action': state,
