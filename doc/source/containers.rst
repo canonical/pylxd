@@ -56,6 +56,7 @@ Container methods
   - `restart` - Restart the container
   - `freeze` - Suspend the container
   - `unfreeze` - Resume the container
+  - `config_set` - Update container's configuration
   - `execute` - Execute a command on the container. The first argument is
     a list, in the form of `subprocess.Popen` with each item of the command
     as a separate item in the list. Returns a two part tuple of
@@ -98,6 +99,16 @@ you'll pass `wait=True` as well.
     >>> container = client.containers.create(config, wait=False)
     >>> container
     <container.Container at 0x7f95d8af72b0>
+
+
+An example how to change configuration of any container or server.
+This method requires a first argument that is the config dict where
+properties should be specified.
+
+.. code-block:: python
+
+   >>> container = client.containers.get('my-container')
+   >>> container.config_set( { "devices": { "root": { "path": "/", "size": "9GB", "type": "disk", } } } )
 
 
 If you were to use an actual image source, you would be able to operate
