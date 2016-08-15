@@ -50,6 +50,7 @@ Container methods
     renamed by simply changing the name of the container as an attribute
     and calling `save`. The new name is the first argument and, as the method
     is asynchronous, you may pass `wait=True` as well.
+  - `save` - Update container's configuration
   - `state` - Get the expanded state of the container.
   - `start` - Start the container
   - `stop` - Stop the container
@@ -107,6 +108,15 @@ container.
     >>> container.start()
     >>> container.freeze()
     >>> container.delete()
+
+
+To modify container's configuration method `save` should be called after
+:class:`~container.Container` attributes changes.
+
+    >>> container = client.containers.get('my-container')
+    >>> container.ephemeral = False
+    >>> container.devices = { 'root': { 'path': '/', 'type': 'disk', 'size': '7GB'} }
+    >>> container.save
 
 
 Container Snapshots
