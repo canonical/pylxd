@@ -184,7 +184,6 @@ RULES = [
                     'security.privileged': "true",
                 },
                 'created_at': "1983-06-16T00:00:00-00:00",
-                'last_used_at': "1983-06-16T00:00:00-00:00",
                 'devices': {
                     'root': {
                         'path': "/",
