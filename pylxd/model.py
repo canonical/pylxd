@@ -11,6 +11,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import warnings
+
 import six
 
 from pylxd.deprecation import deprecated
@@ -102,7 +104,14 @@ class Model(object):
         self.client = client
 
         for key, val in kwargs.items():
-            setattr(self, key, val)
+            try:
+                setattr(self, key, val)
+            except AttributeError:
+                warnings.warn(
+                    'Attempted to set unknown attribute "{}" '
+                    'on instance of "{}"'.format(
+                        key, self.__class__.__name__
+                    ))
         del self.__dirty__[:]
 
     def __getattribute__(self, name):

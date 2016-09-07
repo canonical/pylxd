@@ -69,10 +69,14 @@ class TestModel(testing.PyLXDTestCase):
         self.assertEqual('an-item', item.name)
 
     def test_init_unknown_attribute(self):
-        """Unknown attributes raise an exception."""
-        self.assertRaises(
-            AttributeError,
-            Item, self.client, name='an-item', nonexistent='SRSLY')
+        """Unknown attributes aren't set."""
+        item = Item(self.client, name='an-item', nonexistent='SRSLY')
+
+        try:
+            item.nonexistent
+            self.fail('item.nonexistent did not raise AttributeError')
+        except AttributeError:
+            pass
 
     def test_unknown_attribute(self):
         """Setting unknown attributes raise an exception."""
