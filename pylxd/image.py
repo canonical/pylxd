@@ -13,7 +13,7 @@
 #    under the License.
 import hashlib
 
-from pylxd import model
+from pylxd.models import _model as model
 from pylxd.operation import Operation
 
 

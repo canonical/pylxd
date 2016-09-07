@@ -18,7 +18,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
 
-from pylxd import model
+from pylxd.models import _model as model
 
 
 class Certificate(model.Model):

@@ -18,8 +18,9 @@ from six.moves.urllib import parse
 from ws4py.client import WebSocketBaseClient
 from ws4py.manager import WebSocketManager
 
-from pylxd import managers, model
+from pylxd import managers
 from pylxd.deprecation import deprecated
+from pylxd.models import _model as model
 from pylxd.operation import Operation
 
 
