@@ -100,7 +100,7 @@ class Model(object):
     __slots__ = ['client', '__dirty__']
 
     def __init__(self, client, **kwargs):
-        self.__dirty__ = []
+        self.__dirty__ = set()
         self.client = client
 
         for key, val in kwargs.items():
@@ -112,7 +112,7 @@ class Model(object):
                     'on instance of "{}"'.format(
                         key, self.__class__.__name__
                     ))
-        del self.__dirty__[:]
+        self.__dirty__.clear()
 
     def __getattribute__(self, name):
         try:
@@ -131,7 +131,7 @@ class Model(object):
             if attribute.validator is not None:
                 if attribute.validator is not type(value):
                     value = attribute.validator(value)
-            self.__dirty__.append(name)
+            self.__dirty__.add(name)
         return super(Model, self).__setattr__(name, value)
 
     @property
@@ -152,9 +152,9 @@ class Model(object):
         for key, val in response.json()['metadata'].items():
             if key not in self.__dirty__ or rollback:
                 setattr(self, key, val)
-                del self.__dirty__[self.__dirty__.index(key)]
+                self.__dirty__.remove(key)
         if rollback:
-            del self.__dirty__[:]
+            self.__dirty__.clear()
     fetch = deprecated("fetch is deprecated; please use sync")(sync)
 
     def rollback(self):
@@ -174,7 +174,7 @@ class Model(object):
         if response.json()['type'] == 'async' and wait:
             Operation.wait_for_operation(
                 self.client, response.json()['operation'])
-        del self.__dirty__[:]
+        self.__dirty__.clear()
     update = deprecated('update is deprecated; please use save')(save)
 
     def delete(self, wait=False):
