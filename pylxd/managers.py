@@ -38,7 +38,7 @@ class ImageManager(BaseManager):
 
 
 class NetworkManager(BaseManager):
-    manager_for = 'pylxd.network.Network'
+    manager_for = 'pylxd.models.Network'
 
 
 class OperationManager(BaseManager):
