@@ -144,6 +144,8 @@ class Container(model.Model):
         if wait:
             Operation.wait_for_operation(
                 self.client, response.json()['operation'])
+            if 'status' in self.__dirty__:
+                del self.__dirty__[self.__dirty__.index('status')]
             self.sync()
 
     def state(self):
