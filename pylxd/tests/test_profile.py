@@ -1,16 +1,16 @@
 import json
 
-from pylxd import exceptions, profile
+from pylxd import exceptions, models
 from pylxd.tests import testing
 
 
 class TestProfile(testing.PyLXDTestCase):
-    """Tests for pylxd.profile.Profile."""
+    """Tests for pylxd.models.Profile."""
 
     def test_get(self):
         """A profile is fetched."""
         name = 'an-profile'
-        an_profile = profile.Profile.get(self.client, name)
+        an_profile = models.Profile.get(self.client, name)
 
         self.assertEqual(name, an_profile.name)
 
@@ -30,7 +30,7 @@ class TestProfile(testing.PyLXDTestCase):
 
         self.assertRaises(
             exceptions.LXDAPIException,
-            profile.Profile.get, self.client, 'an-profile')
+            models.Profile.get, self.client, 'an-profile')
 
     def test_get_error(self):
         """LXDAPIException is raised on get error."""
@@ -48,25 +48,25 @@ class TestProfile(testing.PyLXDTestCase):
 
         self.assertRaises(
             exceptions.LXDAPIException,
-            profile.Profile.get, self.client, 'an-profile')
+            models.Profile.get, self.client, 'an-profile')
 
     def test_all(self):
         """A list of all profiles is returned."""
-        profiles = profile.Profile.all(self.client)
+        profiles = models.Profile.all(self.client)
 
         self.assertEqual(1, len(profiles))
 
     def test_create(self):
         """A new profile is created."""
-        an_profile = profile.Profile.create(
+        an_profile = models.Profile.create(
             self.client, name='an-new-profile', config={}, devices={})
 
-        self.assertIsInstance(an_profile, profile.Profile)
+        self.assertIsInstance(an_profile, models.Profile)
         self.assertEqual('an-new-profile', an_profile.name)
 
     def test_rename(self):
         """A profile is renamed."""
-        an_profile = profile.Profile.get(self.client, 'an-profile')
+        an_profile = models.Profile.get(self.client, 'an-profile')
 
         an_renamed_profile = an_profile.rename('an-renamed-profile')
 
@@ -77,7 +77,7 @@ class TestProfile(testing.PyLXDTestCase):
         # XXX: rockstar (03 Jun 2016) - This just executes
         # a code path. There should be an assertion here, but
         # it's not clear how to assert that, just yet.
-        an_profile = profile.Profile.get(self.client, 'an-profile')
+        an_profile = models.Profile.get(self.client, 'an-profile')
 
         an_profile.save()
 
@@ -105,7 +105,7 @@ class TestProfile(testing.PyLXDTestCase):
             'url': r'^http://pylxd.test/1.0/profiles/an-profile$',
         })
 
-        an_profile = profile.Profile(self.client, name='an-profile')
+        an_profile = models.Profile(self.client, name='an-profile')
 
         self.assertRaises(exceptions.LXDAPIException, an_profile.sync)
 
@@ -123,7 +123,7 @@ class TestProfile(testing.PyLXDTestCase):
             'url': r'^http://pylxd.test/1.0/profiles/an-profile$',
         })
 
-        an_profile = profile.Profile(self.client, name='an-profile')
+        an_profile = models.Profile(self.client, name='an-profile')
 
         self.assertRaises(exceptions.LXDAPIException, an_profile.sync)
 

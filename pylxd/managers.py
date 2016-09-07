@@ -46,7 +46,7 @@ class OperationManager(BaseManager):
 
 
 class ProfileManager(BaseManager):
-    manager_for = 'pylxd.profile.Profile'
+    manager_for = 'pylxd.models.Profile'
 
 
 class SnapshotManager(BaseManager):
