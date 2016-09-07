@@ -26,7 +26,7 @@ class BaseManager(object):
 
 
 class CertificateManager(BaseManager):
-    manager_for = 'pylxd.certificate.Certificate'
+    manager_for = 'pylxd.models.Certificate'
 
 
 class ContainerManager(BaseManager):

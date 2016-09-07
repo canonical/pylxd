@@ -13,12 +13,12 @@
 #    under the License.
 import os
 
-from pylxd import certificate
+from pylxd import models
 from pylxd.tests import testing
 
 
 class TestCertificate(testing.PyLXDTestCase):
-    """Tests for pylxd.certificate.Certificate."""
+    """Tests for pylxd.models.Certificate."""
 
     def test_get(self):
         """A certificate is retrieved."""
@@ -45,7 +45,7 @@ class TestCertificate(testing.PyLXDTestCase):
 
     def test_fetch(self):
         """A partial object is fully fetched."""
-        an_certificate = certificate.Certificate(
+        an_certificate = models.Certificate(
             self.client, fingerprint='an-certificate')
 
         an_certificate.sync()
@@ -56,7 +56,7 @@ class TestCertificate(testing.PyLXDTestCase):
         """A certificate is deleted."""
         # XXX: rockstar (08 Jun 2016) - This just executes a code path. An
         # assertion should be added.
-        an_certificate = certificate.Certificate(
+        an_certificate = models.Certificate(
             self.client, fingerprint='an-certificate')
 
         an_certificate.delete()
