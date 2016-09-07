@@ -30,7 +30,7 @@ class CertificateManager(BaseManager):
 
 
 class ContainerManager(BaseManager):
-    manager_for = 'pylxd.container.Container'
+    manager_for = 'pylxd.models.Container'
 
 
 class ImageManager(BaseManager):
@@ -50,4 +50,4 @@ class ProfileManager(BaseManager):
 
 
 class SnapshotManager(BaseManager):
-    manager_for = 'pylxd.container.Snapshot'
+    manager_for = 'pylxd.models.Snapshot'

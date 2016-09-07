@@ -2,16 +2,16 @@ import json
 
 import mock
 
-from pylxd import container, exceptions
+from pylxd import exceptions, models
 from pylxd.tests import testing
 
 
 class TestContainer(testing.PyLXDTestCase):
-    """Tests for pylxd.container.Container."""
+    """Tests for pylxd.models.Container."""
 
     def test_all(self):
         """A list of all containers are returned."""
-        containers = container.Container.all(self.client)
+        containers = models.Container.all(self.client)
 
         self.assertEqual(1, len(containers))
 
@@ -19,7 +19,7 @@ class TestContainer(testing.PyLXDTestCase):
         """Return a container."""
         name = 'an-container'
 
-        an_container = container.Container.get(self.client, name)
+        an_container = models.Container.get(self.client, name)
 
         self.assertEqual(name, an_container.name)
 
@@ -41,7 +41,7 @@ class TestContainer(testing.PyLXDTestCase):
 
         self.assertRaises(
             exceptions.LXDAPIException,
-            container.Container.get, self.client, name)
+            models.Container.get, self.client, name)
 
     def test_get_error(self):
         """LXDAPIException is raised when the LXD API errors."""
@@ -61,20 +61,20 @@ class TestContainer(testing.PyLXDTestCase):
 
         self.assertRaises(
             exceptions.LXDAPIException,
-            container.Container.get, self.client, name)
+            models.Container.get, self.client, name)
 
     def test_create(self):
         """A new container is created."""
         config = {'name': 'an-new-container'}
 
-        an_new_container = container.Container.create(
+        an_new_container = models.Container.create(
             self.client, config, wait=True)
 
         self.assertEqual(config['name'], an_new_container.name)
 
     def test_fetch(self):
         """A sync updates the properties of a container."""
-        an_container = container.Container(
+        an_container = models.Container(
             self.client, name='an-container')
 
         an_container.sync()
@@ -95,7 +95,7 @@ class TestContainer(testing.PyLXDTestCase):
             'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',  # NOQA
         })
 
-        an_container = container.Container(
+        an_container = models.Container(
             self.client, name='an-missing-container')
 
         self.assertRaises(exceptions.LXDAPIException, an_container.sync)
@@ -114,14 +114,14 @@ class TestContainer(testing.PyLXDTestCase):
             'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',  # NOQA
         })
 
-        an_container = container.Container(
+        an_container = models.Container(
             self.client, name='an-missing-container')
 
         self.assertRaises(exceptions.LXDAPIException, an_container.sync)
 
     def test_update(self):
         """A container is updated."""
-        an_container = container.Container(
+        an_container = models.Container(
             self.client, name='an-container')
         an_container.architecture = 1
         an_container.config = {}
@@ -138,7 +138,7 @@ class TestContainer(testing.PyLXDTestCase):
         self.assertTrue(an_container.ephemeral)
 
     def test_rename(self):
-        an_container = container.Container(
+        an_container = models.Container(
             self.client, name='an-container')
 
         an_container.rename('an-renamed-container', wait=True)
@@ -150,13 +150,13 @@ class TestContainer(testing.PyLXDTestCase):
         # XXX: rockstar (21 May 2016) - This just executes
         # a code path. There should be an assertion here, but
         # it's not clear how to assert that, just yet.
-        an_container = container.Container(
+        an_container = models.Container(
             self.client, name='an-container')
 
         an_container.delete(wait=True)
 
-    @mock.patch('pylxd.container._StdinWebsocket')
-    @mock.patch('pylxd.container._CommandWebsocketClient')
+    @mock.patch('pylxd.models.container._StdinWebsocket')
+    @mock.patch('pylxd.models.container._CommandWebsocketClient')
     def test_execute(self, _CommandWebsocketClient, _StdinWebsocket):
         """A command is executed on a container."""
         fake_websocket = mock.Mock()
@@ -164,7 +164,7 @@ class TestContainer(testing.PyLXDTestCase):
         _StdinWebsocket.return_value = fake_websocket
         _CommandWebsocketClient.return_value = fake_websocket
 
-        an_container = container.Container(
+        an_container = models.Container(
             self.client, name='an-container')
 
         stdout, _ = an_container.execute(['echo', 'test'])
@@ -173,7 +173,7 @@ class TestContainer(testing.PyLXDTestCase):
 
     def test_execute_string(self):
         """A command passed as string raises a TypeError."""
-        an_container = container.Container(
+        an_container = models.Container(
             self.client, name='an-container')
 
         self.assertRaises(TypeError, an_container.execute, 'apt-get update')
@@ -183,7 +183,7 @@ class TestContainer(testing.PyLXDTestCase):
         from pylxd.client import Client
 
         client2 = Client(endpoint='http://pylxd2.test')
-        an_container = container.Container(
+        an_container = models.Container(
             self.client, name='an-container')
 
         an_migrated_container = an_container.migrate(client2)
@@ -207,7 +207,7 @@ class TestContainer(testing.PyLXDTestCase):
             'url': r'^http://pylxd.test/1.0/operations/operation-abc$',
         })
 
-        an_container = container.Container(
+        an_container = models.Container(
             self.client, name='an-container')
 
         image = an_container.publish(wait=True)
@@ -218,13 +218,13 @@ class TestContainer(testing.PyLXDTestCase):
 
 
 class TestContainerState(testing.PyLXDTestCase):
-    """Tests for pylxd.container.ContainerState."""
+    """Tests for pylxd.models.ContainerState."""
 
     def test_get(self):
         """Return a container."""
         name = 'an-container'
 
-        an_container = container.Container.get(self.client, name)
+        an_container = models.Container.get(self.client, name)
         state = an_container.state()
 
         self.assertEqual('Running', state.status)
@@ -232,41 +232,41 @@ class TestContainerState(testing.PyLXDTestCase):
 
     def test_start(self):
         """A container is started."""
-        an_container = container.Container.get(self.client, 'an-container')
+        an_container = models.Container.get(self.client, 'an-container')
 
         an_container.start(wait=True)
 
     def test_stop(self):
         """A container is stopped."""
-        an_container = container.Container.get(self.client, 'an-container')
+        an_container = models.Container.get(self.client, 'an-container')
 
         an_container.stop()
 
     def test_restart(self):
         """A container is restarted."""
-        an_container = container.Container.get(self.client, 'an-container')
+        an_container = models.Container.get(self.client, 'an-container')
 
         an_container.restart()
 
     def test_freeze(self):
         """A container is suspended."""
-        an_container = container.Container.get(self.client, 'an-container')
+        an_container = models.Container.get(self.client, 'an-container')
 
         an_container.freeze()
 
     def test_unfreeze(self):
         """A container is resumed."""
-        an_container = container.Container.get(self.client, 'an-container')
+        an_container = models.Container.get(self.client, 'an-container')
 
         an_container.unfreeze()
 
 
 class TestContainerSnapshots(testing.PyLXDTestCase):
-    """Tests for pylxd.container.Container.snapshots."""
+    """Tests for pylxd.models.Container.snapshots."""
 
     def setUp(self):
         super(TestContainerSnapshots, self).setUp()
-        self.container = container.Container.get(self.client, 'an-container')
+        self.container = models.Container.get(self.client, 'an-container')
 
     def test_get(self):
         """Return a specific snapshot."""
@@ -292,15 +292,15 @@ class TestContainerSnapshots(testing.PyLXDTestCase):
 
 
 class TestSnapshot(testing.PyLXDTestCase):
-    """Tests for pylxd.container.Snapshot."""
+    """Tests for pylxd.models.Snapshot."""
 
     def setUp(self):
         super(TestSnapshot, self).setUp()
-        self.container = container.Container.get(self.client, 'an-container')
+        self.container = models.Container.get(self.client, 'an-container')
 
     def test_rename(self):
         """A snapshot is renamed."""
-        snapshot = container.Snapshot(
+        snapshot = models.Snapshot(
             self.client, container=self.container,
             name='an-snapshot')
 
@@ -310,7 +310,7 @@ class TestSnapshot(testing.PyLXDTestCase):
 
     def test_delete(self):
         """A snapshot is deleted."""
-        snapshot = container.Snapshot(
+        snapshot = models.Snapshot(
             self.client, container=self.container,
             name='an-snapshot')
 
@@ -332,7 +332,7 @@ class TestSnapshot(testing.PyLXDTestCase):
             'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots/an-snapshot$',  # NOQA
         })
 
-        snapshot = container.Snapshot(
+        snapshot = models.Snapshot(
             self.client, container=self.container,
             name='an-snapshot')
 
@@ -354,7 +354,7 @@ class TestSnapshot(testing.PyLXDTestCase):
             'url': r'^http://pylxd.test/1.0/operations/operation-abc$',
         })
 
-        snapshot = container.Snapshot(
+        snapshot = models.Snapshot(
             self.client, container=self.container,
             name='an-snapshot')
 
@@ -366,11 +366,11 @@ class TestSnapshot(testing.PyLXDTestCase):
 
 
 class TestFiles(testing.PyLXDTestCase):
-    """Tests for pylxd.container.Container.files."""
+    """Tests for pylxd.models.Container.files."""
 
     def setUp(self):
         super(TestFiles, self).setUp()
-        self.container = container.Container.get(self.client, 'an-container')
+        self.container = models.Container.get(self.client, 'an-container')
 
     def test_put(self):
         """A file is put on the container."""
