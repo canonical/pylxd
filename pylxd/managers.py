@@ -34,7 +34,7 @@ class ContainerManager(BaseManager):
 
 
 class ImageManager(BaseManager):
-    manager_for = 'pylxd.image.Image'
+    manager_for = 'pylxd.models.Image'
 
 
 class NetworkManager(BaseManager):
