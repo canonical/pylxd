@@ -81,7 +81,7 @@ class TestImage(IntegrationTestCase):
         self.image.delete(wait=True)
 
         self.assertRaises(
-            exceptions.NotFound,
+            exceptions.LXDAPIException,
             self.client.images.get, self.image.fingerprint)
 
     def test_export(self):

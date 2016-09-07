@@ -86,4 +86,5 @@ class TestProfile(IntegrationTestCase):
         self.profile.delete()
 
         self.assertRaises(
-            exceptions.NotFound, self.client.profiles.get, self.profile.name)
+            exceptions.LXDAPIException,
+            self.client.profiles.get, self.profile.name)
