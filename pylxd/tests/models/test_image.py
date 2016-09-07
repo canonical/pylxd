@@ -1,17 +1,17 @@
 import hashlib
 import json
 
-from pylxd import exceptions, image
+from pylxd import exceptions, models
 from pylxd.tests import testing
 
 
 class TestImage(testing.PyLXDTestCase):
-    """Tests for pylxd.image.Image."""
+    """Tests for pylxd.models.Image."""
 
     def test_get(self):
         """An image is fetched."""
         fingerprint = hashlib.sha256(b'').hexdigest()
-        a_image = image.Image.get(self.client, fingerprint)
+        a_image = models.Image.get(self.client, fingerprint)
 
         self.assertEqual(fingerprint, a_image.fingerprint)
 
@@ -33,7 +33,7 @@ class TestImage(testing.PyLXDTestCase):
 
         self.assertRaises(
             exceptions.LXDAPIException,
-            image.Image.get, self.client, fingerprint)
+            models.Image.get, self.client, fingerprint)
 
     def test_get_error(self):
         """LXDAPIException is raised on error."""
@@ -53,27 +53,27 @@ class TestImage(testing.PyLXDTestCase):
 
         self.assertRaises(
             exceptions.LXDAPIException,
-            image.Image.get, self.client, fingerprint)
+            models.Image.get, self.client, fingerprint)
 
     def test_get_by_alias(self):
         fingerprint = hashlib.sha256(b'').hexdigest()
 
-        a_image = image.Image.get_by_alias(self.client, 'an-alias')
+        a_image = models.Image.get_by_alias(self.client, 'an-alias')
 
         self.assertEqual(fingerprint, a_image.fingerprint)
 
     def test_all(self):
         """A list of all images is returned."""
-        images = image.Image.all(self.client)
+        images = models.Image.all(self.client)
 
         self.assertEqual(1, len(images))
 
     def test_create(self):
         """An image is created."""
         fingerprint = hashlib.sha256(b'').hexdigest()
-        a_image = image.Image.create(self.client, b'', public=True, wait=True)
+        a_image = models.Image.create(self.client, b'', public=True, wait=True)
 
-        self.assertIsInstance(a_image, image.Image)
+        self.assertIsInstance(a_image, models.Image)
         self.assertEqual(fingerprint, a_image.fingerprint)
 
     def test_update(self):
@@ -106,7 +106,7 @@ class TestImage(testing.PyLXDTestCase):
         })
         fingerprint = hashlib.sha256(b'').hexdigest()
 
-        a_image = image.Image(self.client, fingerprint=fingerprint)
+        a_image = models.Image(self.client, fingerprint=fingerprint)
 
         self.assertRaises(exceptions.LXDAPIException, a_image.sync)
 
@@ -125,7 +125,7 @@ class TestImage(testing.PyLXDTestCase):
         })
         fingerprint = hashlib.sha256(b'').hexdigest()
 
-        a_image = image.Image(self.client, fingerprint=fingerprint)
+        a_image = models.Image(self.client, fingerprint=fingerprint)
 
         self.assertRaises(exceptions.LXDAPIException, a_image.sync)
 

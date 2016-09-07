@@ -13,8 +13,8 @@
 #    under the License.
 import hashlib
 
-from pylxd import model
-from pylxd.operation import Operation
+from pylxd.models import _model as model
+from pylxd.models.operation import Operation
 
 
 def _image_create_from_config(client, config, wait=False):

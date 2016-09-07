@@ -26,28 +26,28 @@ class BaseManager(object):
 
 
 class CertificateManager(BaseManager):
-    manager_for = 'pylxd.certificate.Certificate'
+    manager_for = 'pylxd.models.Certificate'
 
 
 class ContainerManager(BaseManager):
-    manager_for = 'pylxd.container.Container'
+    manager_for = 'pylxd.models.Container'
 
 
 class ImageManager(BaseManager):
-    manager_for = 'pylxd.image.Image'
+    manager_for = 'pylxd.models.Image'
 
 
 class NetworkManager(BaseManager):
-    manager_for = 'pylxd.network.Network'
+    manager_for = 'pylxd.models.Network'
 
 
 class OperationManager(BaseManager):
-    manager_for = 'pylxd.operation.Operation'
+    manager_for = 'pylxd.models.Operation'
 
 
 class ProfileManager(BaseManager):
-    manager_for = 'pylxd.profile.Profile'
+    manager_for = 'pylxd.models.Profile'
 
 
 class SnapshotManager(BaseManager):
-    manager_for = 'pylxd.container.Snapshot'
+    manager_for = 'pylxd.models.Snapshot'
