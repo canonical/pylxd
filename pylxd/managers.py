@@ -42,7 +42,7 @@ class NetworkManager(BaseManager):
 
 
 class OperationManager(BaseManager):
-    manager_for = 'pylxd.operation.Operation'
+    manager_for = 'pylxd.models.Operation'
 
 
 class ProfileManager(BaseManager):

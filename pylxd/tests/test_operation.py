@@ -12,18 +12,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from pylxd import exceptions, operation
+from pylxd import exceptions, models
 from pylxd.tests import testing
 
 
 class TestOperation(testing.PyLXDTestCase):
-    """Tests for pylxd.operation.Operation."""
+    """Tests for pylxd.models.Operation."""
 
     def test_get(self):
         """Return an operation."""
         name = 'operation-abc'
 
-        an_operation = operation.Operation.get(self.client, name)
+        an_operation = models.Operation.get(self.client, name)
 
         self.assertEqual(name, an_operation.id)
 
@@ -31,7 +31,7 @@ class TestOperation(testing.PyLXDTestCase):
         """Return an operation even if the full path is specified."""
         name = '/1.0/operations/operation-abc'
 
-        an_operation = operation.Operation.get(self.client, name)
+        an_operation = models.Operation.get(self.client, name)
 
         self.assertEqual('operation-abc', an_operation.id)
 
@@ -53,6 +53,6 @@ class TestOperation(testing.PyLXDTestCase):
 
         name = '/1.0/operations/operation-abc'
 
-        an_operation = operation.Operation.get(self.client, name)
+        an_operation = models.Operation.get(self.client, name)
 
         self.assertRaises(exceptions.LXDAPIException, an_operation.wait)

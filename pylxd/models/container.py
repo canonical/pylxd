@@ -21,7 +21,7 @@ from ws4py.manager import WebSocketManager
 from pylxd import managers
 from pylxd.deprecation import deprecated
 from pylxd.models import _model as model
-from pylxd.operation import Operation
+from pylxd.models.operation import Operation
 
 
 class ContainerState(object):

@@ -16,7 +16,7 @@ import warnings
 import six
 
 from pylxd.deprecation import deprecated
-from pylxd.operation import Operation
+from pylxd.models.operation import Operation
 
 
 class Attribute(object):
