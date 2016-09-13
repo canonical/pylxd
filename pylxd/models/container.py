@@ -19,7 +19,6 @@ from ws4py.client import WebSocketBaseClient
 from ws4py.manager import WebSocketManager
 
 from pylxd import managers
-from pylxd.deprecation import deprecated
 from pylxd.models import _model as model
 from pylxd.models.operation import Operation
 
@@ -120,12 +119,6 @@ class Container(model.Model):
         self.snapshots = managers.SnapshotManager(self.client, self)
         self.files = self.FilesManager(self.client, self)
 
-    # XXX: rockstar (28 Mar 2016) - This method was named improperly
-    # originally. It's being kept here for backwards compatibility.
-    reload = deprecated(
-        "Container.reload is deprecated. Please use Container.sync")(
-        model.Model.sync)
-
     def rename(self, name, wait=False):
         """Rename a container."""
         response = self.api.post(json={'name': name})
@@ -187,38 +180,6 @@ class Container(model.Model):
                                timeout=timeout,
                                force=force,
                                wait=wait)
-
-    @deprecated('Container.snapshot is deprecated. Please use Container.snapshots.create')  # NOQA
-    def snapshot(self, name, stateful=False, wait=False):  # pragma: no cover
-        """Take a snapshot of the container."""
-        self.snapshots.create(name, stateful, wait)
-
-    @deprecated('Container.list_snapshots is deprecated. Please use Container.snapshots.all')  # NOQA
-    def list_snapshots(self):  # pragma: no cover
-        """List all container snapshots."""
-        return [s.name for s in self.snapshots.all()]
-
-    @deprecated('Container.rename_snapshot is deprecated. Please use Snapshot.rename')  # NOQA
-    def rename_snapshot(self, old, new, wait=False):  # pragma: no cover
-        """Rename a snapshot."""
-        snapshot = self.snapshots.get(old)
-        snapshot.rename(new, wait=wait)
-
-    @deprecated('Container.delete_snapshot is deprecated. Please use Snapshot.delete')  # NOQA
-    def delete_snapshot(self, name, wait=False):  # pragma: no cover
-        """Delete a snapshot."""
-        snapshot = self.snapshots.get(name)
-        snapshot.delete(wait=wait)
-
-    @deprecated('Container.get_file is deprecated. Please use Container.files.get')  # NOQA
-    def get_file(self, filepath):  # pragma: no cover
-        """Get a file from the container."""
-        return self.files.get(filepath)
-
-    @deprecated('Container.put_file is deprecated. Please use Container.files.put')  # NOQA
-    def put_file(self, filepath, data):  # pragma: no cover
-        """Put a file on the container."""
-        return self.files.put(filepath, data)
 
     def execute(self, commands, environment={}):
         """Execute a command on the container."""

@@ -15,7 +15,6 @@ import warnings
 
 import six
 
-from pylxd.deprecation import deprecated
 from pylxd.models.operation import Operation
 
 
@@ -155,7 +154,6 @@ class Model(object):
                 self.__dirty__.remove(key)
         if rollback:
             self.__dirty__.clear()
-    fetch = deprecated("fetch is deprecated; please use sync")(sync)
 
     def rollback(self):
         """Reset the object from the server."""
@@ -175,7 +173,6 @@ class Model(object):
             Operation.wait_for_operation(
                 self.client, response.json()['operation'])
         self.__dirty__.clear()
-    update = deprecated('update is deprecated; please use save')(save)
 
     def delete(self, wait=False):
         """Delete an object from the server."""
