@@ -62,10 +62,10 @@ class TestProfile(IntegrationTestCase):
         super(TestProfile, self).tearDown()
         self.delete_profile(self.profile.name)
 
-    def test_update(self):
+    def test_save(self):
         """A profile is updated."""
         self.profile.config['limits.memory'] = '16GB'
-        self.profile.update()
+        self.profile.save()
 
         profile = self.client.profiles.get(self.profile.name)
         self.assertEqual('16GB', profile.config['limits.memory'])

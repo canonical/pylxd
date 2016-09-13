@@ -68,10 +68,10 @@ class TestContainer(IntegrationTestCase):
         super(TestContainer, self).tearDown()
         self.delete_container(self.container.name)
 
-    def test_update(self):
+    def test_save(self):
         """The container is updated to a new config."""
         self.container.config['limits.cpu'] = '1'
-        self.container.update(wait=True)
+        self.container.save(wait=True)
 
         self.assertEqual('1', self.container.config['limits.cpu'])
         container = self.client.containers.get(self.container.name)

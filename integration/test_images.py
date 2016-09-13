@@ -67,11 +67,11 @@ class TestImage(IntegrationTestCase):
         super(TestImage, self).tearDown()
         self.delete_image(self.image.fingerprint)
 
-    def test_update(self):
+    def test_save(self):
         """The image properties are updated."""
         description = 'an description'
         self.image.properties['description'] = description
-        self.image.update()
+        self.image.save()
 
         image = self.client.images.get(self.image.fingerprint)
         self.assertEqual(description, image.properties['description'])
