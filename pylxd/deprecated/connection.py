@@ -24,7 +24,10 @@ import threading
 
 from six.moves import http_client
 from six.moves import queue
-from ws4py import client as websocket
+try:
+    from ws4py import client as websocket
+except ImportError:
+    websocket = None
 
 from pylxd.deprecated import exceptions
 from pylxd.deprecated import utils
@@ -88,43 +91,45 @@ class HTTPSConnection(http_client.HTTPConnection):
 _LXDResponse = namedtuple('LXDResponse', ['status', 'body', 'json'])
 
 
-class WebSocketClient(websocket.WebSocketBaseClient):
-    def __init__(self, url, protocols=None, extensions=None, ssl_options=None,
-                 headers=None):
-        """WebSocket client that executes into a eventlet green thread."""
-        websocket.WebSocketBaseClient.__init__(self, url, protocols,
-                                               extensions,
-                                               ssl_options=ssl_options,
-                                               headers=headers)
-        self._th = threading.Thread(target=self.run, name='WebSocketClient')
-        self._th.daemon = True
+if websocket is not None:
+    class WebSocketClient(websocket.WebSocketBaseClient):
+        def __init__(self, url, protocols=None, extensions=None,
+                     ssl_options=None, headers=None):
+            """WebSocket client that executes into a eventlet green thread."""
+            websocket.WebSocketBaseClient.__init__(self, url, protocols,
+                                                   extensions,
+                                                   ssl_options=ssl_options,
+                                                   headers=headers)
+            self._th = threading.Thread(
+                target=self.run, name='WebSocketClient')
+            self._th.daemon = True
 
-        self.messages = queue.Queue()
+            self.messages = queue.Queue()
 
-    def handshake_ok(self):
-        """Starts the client's thread."""
-        self._th.start()
+        def handshake_ok(self):
+            """Starts the client's thread."""
+            self._th.start()
 
-    def received_message(self, message):
-        """Override the base class to store the incoming message."""
-        self.messages.put(copy.deepcopy(message))
+        def received_message(self, message):
+            """Override the base class to store the incoming message."""
+            self.messages.put(copy.deepcopy(message))
 
-    def closed(self, code, reason=None):
-        # When the connection is closed, put a StopIteration
-        # on the message queue to signal there's nothing left
-        # to wait for
-        self.messages.put(StopIteration)
+        def closed(self, code, reason=None):
+            # When the connection is closed, put a StopIteration
+            # on the message queue to signal there's nothing left
+            # to wait for
+            self.messages.put(StopIteration)
 
-    def receive(self):
-        # If the websocket was terminated and there are no messages
-        # left in the queue, return None immediately otherwise the client
-        # will block forever
-        if self.terminated and self.messages.empty():
-            return None
-        message = self.messages.get()
-        if message is StopIteration:
-            return None
-        return message
+        def receive(self):
+            # If the websocket was terminated and there are no messages
+            # left in the queue, return None immediately otherwise the client
+            # will block forever
+            if self.terminated and self.messages.empty():
+                return None
+            message = self.messages.get()
+            if message is StopIteration:
+                return None
+            return message
 
 
 class LXDConnection(object):
@@ -202,6 +207,9 @@ class LXDConnection(object):
             raise exceptions.PyLXDException('Failed to get raw response')
 
     def get_ws(self, path):
+        if websocket is None:
+            raise ValueError(
+                'This feature requires the optional ws4py library.')
         if self.unix_socket:
             connection_string = 'ws+unix://%s' % self.unix_socket
         else:

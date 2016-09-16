@@ -155,6 +155,7 @@ class TestContainer(testing.PyLXDTestCase):
 
         an_container.delete(wait=True)
 
+    @testing.requires_ws4py
     @mock.patch('pylxd.container._StdinWebsocket')
     @mock.patch('pylxd.container._CommandWebsocketClient')
     def test_execute(self, _CommandWebsocketClient, _StdinWebsocket):
@@ -171,6 +172,22 @@ class TestContainer(testing.PyLXDTestCase):
 
         self.assertEqual('test\n', stdout)
 
+    def test_execute_no_ws4py(self):
+        """If ws4py is not installed, ValueError is raised."""
+        from pylxd import container
+        old_installed = container._ws4py_installed
+        container._ws4py_installed = False
+
+        def cleanup():
+            container._ws4py_installed = old_installed
+        self.addCleanup(cleanup)
+
+        an_container = container.Container(
+            self.client, name='an-container')
+
+        self.assertRaises(ValueError, an_container.execute, ['echo', 'test'])
+
+    @testing.requires_ws4py
     def test_execute_string(self):
         """A command passed as string raises a TypeError."""
         an_container = container.Container(
