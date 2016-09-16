@@ -231,7 +231,7 @@ class Container(model.Model):
         first or criu must be installed on the source and destination
         machines.
         """
-        if self.api._api_endpoint.startswith('http+unix'):
+        if self.api.scheme in ('http+unix',):
             raise ValueError('Cannot migrate from a local client connection')
 
         self.sync()  # Make sure the object isn't stale
