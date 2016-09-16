@@ -191,6 +191,23 @@ class TestContainer(testing.PyLXDTestCase):
         self.assertEqual('an-container', an_migrated_container.name)
         self.assertEqual(client2, an_migrated_container.client)
 
+    @mock.patch('pylxd.client._APINode.get')
+    def test_migrate_local_client(self, get):
+        """Migration from local clients is not supported."""
+        # Mock out the _APINode for the local instance.
+        response = mock.Mock()
+        response.json.return_value = {'metadata': {'fake': 'response'}}
+        response.status_code = 200
+        get.return_value = response
+
+        from pylxd.client import Client
+
+        client2 = Client(endpoint='http+unix://pylxd2.test')
+        an_container = models.Container(
+            client2, name='an-container')
+
+        self.assertRaises(ValueError, an_container.migrate, self.client)
+
     def test_publish(self):
         """Containers can be published."""
         self.add_rule({
