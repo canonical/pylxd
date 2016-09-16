@@ -75,6 +75,14 @@ class _APINode(object):
                 # Missing 'type' in response
                 raise exceptions.LXDAPIException(response)
 
+    @property
+    def scheme(self):
+        return parse.urlparse(self.api._api_endpoint).scheme
+
+    @property
+    def netloc(self):
+        return parse.urlparse(self.api._api_endpoint).netloc
+
     def get(self, *args, **kwargs):
         """Perform an HTTP GET."""
         response = self.session.get(self._api_endpoint, *args, **kwargs)
@@ -213,16 +221,15 @@ class Client(object):
 
     @property
     def websocket_url(self):
-        parsed = parse.urlparse(self.api._api_endpoint)
-        if parsed.scheme in ('http', 'https'):
-            host = parsed.netloc
-            if parsed.scheme == 'http':
+        if self.api.scheme in ('http', 'https'):
+            host = self.api.netloc
+            if self.api.scheme == 'http':
                 scheme = 'ws'
             else:
                 scheme = 'wss'
         else:
             scheme = 'ws+unix'
-            host = parse.unquote(parsed.netloc)
+            host = parse.unquote(self.api.netloc)
         url = parse.urlunparse((scheme, host, '', '', '', ''))
         return url
 
