@@ -21,6 +21,7 @@ import requests
 import requests_unixsocket
 
 from pylxd import client, exceptions
+from pylxd.tests.testing import requires_ws4py
 
 
 class TestClient(unittest.TestCase):
@@ -164,6 +165,7 @@ class TestClient(unittest.TestCase):
         an_client = client.Client()
         self.assertEqual('zfs', an_client.host_info['environment']['storage'])
 
+    @requires_ws4py
     def test_events(self):
         """The default websocket client is returned."""
         an_client = client.Client()
@@ -172,6 +174,22 @@ class TestClient(unittest.TestCase):
 
         self.assertEqual('/1.0/events', ws_client.resource)
 
+    def test_events_no_ws4py(self):
+        """No ws4py will result in a ValueError."""
+        from pylxd import client
+        old_installed = client._ws4py_installed
+        client._ws4py_installed = False
+
+        def cleanup():
+            client._ws4py_installed = old_installed
+        self.addCleanup(cleanup)
+
+        an_client = client.Client()
+
+        self.assertRaises(ValueError, an_client.events)
+        client._ws4py_installed
+
+    @requires_ws4py
     def test_events_unix_socket(self):
         """A unix socket compatible websocket client is returned."""
         websocket_client = mock.Mock(resource=None)
@@ -183,6 +201,7 @@ class TestClient(unittest.TestCase):
 
         WebsocketClient.assert_called_once_with('ws+unix:///lxd/unix.socket')
 
+    @requires_ws4py
     def test_events_htt(self):
         """An http compatible websocket client is returned."""
         websocket_client = mock.Mock(resource=None)
@@ -194,6 +213,7 @@ class TestClient(unittest.TestCase):
 
         WebsocketClient.assert_called_once_with('ws://lxd.local')
 
+    @requires_ws4py
     def test_events_https(self):
         """An https compatible websocket client is returned."""
         websocket_client = mock.Mock(resource=None)
@@ -339,6 +359,7 @@ class TestAPINode(unittest.TestCase):
 class TestWebsocketClient(unittest.TestCase):
     """Tests for pylxd.client.WebsocketClient."""
 
+    @requires_ws4py
     def test_handshake_ok(self):
         """A `message` attribute of an empty list is created."""
         ws_client = client._WebsocketClient('ws://an/fake/path')
@@ -347,6 +368,7 @@ class TestWebsocketClient(unittest.TestCase):
 
         self.assertEqual([], ws_client.messages)
 
+    @requires_ws4py
     def test_received_message(self):
         """A json dict is added to the messages attribute."""
         message = mock.Mock(data=json.dumps({'test': 'data'}).encode('utf-8'))

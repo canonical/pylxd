@@ -15,8 +15,13 @@ import time
 
 import six
 from six.moves.urllib import parse
-from ws4py.client import WebSocketBaseClient
-from ws4py.manager import WebSocketManager
+try:
+    from ws4py.client import WebSocketBaseClient
+    from ws4py.manager import WebSocketManager
+    _ws4py_installed = True
+except ImportError:  # pragma: no cover
+    WebSocketBaseClient = object
+    _ws4py_installed = False
 
 from pylxd import managers
 from pylxd.models import _model as model
@@ -183,6 +188,9 @@ class Container(model.Model):
 
     def execute(self, commands, environment={}):
         """Execute a command on the container."""
+        if not _ws4py_installed:
+            raise ValueError(
+                'This feature requires the optional ws4py library.')
         if isinstance(commands, six.string_types):
             raise TypeError("First argument must be a list.")
         response = self.api['exec'].post(json={

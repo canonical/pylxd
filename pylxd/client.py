@@ -18,7 +18,12 @@ import os.path
 import requests
 import requests_unixsocket
 from six.moves.urllib import parse
-from ws4py.client import WebSocketBaseClient
+try:
+    from ws4py.client import WebSocketBaseClient
+    _ws4py_installed = True
+except ImportError:  # pragma: no cover
+    WebSocketBaseClient = object
+    _ws4py_installed = False
 
 from pylxd import exceptions, managers
 
@@ -245,6 +250,9 @@ class Client(object):
         specified for implementation-specific handling
         of events as they occur.
         """
+        if not _ws4py_installed:
+            raise ValueError(
+                'This feature requires the optional ws4py library.')
         if websocket_client is None:
             websocket_client = _WebsocketClient
 
