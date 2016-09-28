@@ -85,8 +85,8 @@ class TestImage(IntegrationTestCase):
             self.client.images.get, self.image.fingerprint)
 
     def test_export(self):
-        """The imerage is successfully exported."""
-        data = self.image.export()
+        """The image is successfully exported."""
+        data = self.image.export().read()
         data_sha = hashlib.sha256(data).hexdigest()
 
         self.assertEqual(self.image.fingerprint, data_sha)

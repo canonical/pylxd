@@ -91,7 +91,11 @@ class _APINode(object):
     def get(self, *args, **kwargs):
         """Perform an HTTP GET."""
         response = self.session.get(self._api_endpoint, *args, **kwargs)
-        self._assert_response(response)
+
+        # In the case of streaming, we can't validate the json the way we
+        # would with normal HTTP responses, so just ignore that entirely.
+        if not kwargs.get('stream', False):
+            self._assert_response(response)
         return response
 
     def post(self, *args, **kwargs):
