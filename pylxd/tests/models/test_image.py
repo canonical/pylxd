@@ -143,7 +143,7 @@ class TestImage(testing.PyLXDTestCase):
         a_image = self.client.images.all()[0]
 
         data = a_image.export()
-        data_sha = hashlib.sha256(data).hexdigest()
+        data_sha = hashlib.sha256(data.read()).hexdigest()
 
         self.assertEqual(a_image.fingerprint, data_sha)
 
