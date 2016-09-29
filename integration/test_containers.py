@@ -152,3 +152,11 @@ class TestContainer(IntegrationTestCase):
         stdout, stderr = self.container.execute(['echo', 'test'])
 
         self.assertEqual('test\n', stdout)
+
+    def test_publish(self):
+        """A container is published."""
+        image = self.container.publish(wait=True)
+
+        self.assertIn(
+            image.fingerprint,
+            [i.fingerprint for i in self.client.images.all()])

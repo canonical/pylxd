@@ -8,6 +8,7 @@ CONTAINER_NAME=pylxd-`uuidgen | cut -d"-" -f1`
 # a bug in LXD).
 lxc launch $CONTAINER_IMAGE $CONTAINER_NAME -c security.nesting=true -c security.privileged=true
 sleep 5  # Wait for the network to come up
+lxc exec $CONTAINER_NAME -- apt-get update
 lxc exec $CONTAINER_NAME -- apt-get install -y tox python3-dev libssl-dev libffi-dev build-essential
 
 lxc exec $CONTAINER_NAME -- mkdir -p /opt/pylxd

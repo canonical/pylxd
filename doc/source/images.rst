@@ -53,8 +53,10 @@ the `LXD documentation`_.
 Image methods
 -------------
 
-  - `export` - Export the image. Returns binary data that is the
-    image itself.
+  - `export` - Export the image. Returns a file object with the contents
+    of the image. *Note: Prior to pylxd 2.1.1, this method returned a
+    bytestring with data; as it was not unbuffered, the API was severely
+    limited.*
 
   - `add_alias` - Add an alias to the image.
 

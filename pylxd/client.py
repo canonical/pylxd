@@ -53,7 +53,8 @@ class _APINode(object):
             '{}/{}'.format(self._api_endpoint, item),
             cert=self.session.cert, verify=self.session.verify)
 
-    def _assert_response(self, response, allowed_status_codes=(200,)):
+    def _assert_response(
+            self, response, allowed_status_codes=(200,), stream=False):
         """Assert properties of the response.
 
         LXD's API clearly defines specific responses. If the API
@@ -64,6 +65,11 @@ class _APINode(object):
         """
         if response.status_code not in allowed_status_codes:
             raise exceptions.LXDAPIException(response)
+
+        # In the case of streaming, we can't validate the json the way we
+        # would with normal HTTP responses, so just ignore that entirely.
+        if stream:
+            return
 
         try:
             data = response.json()
@@ -90,8 +96,9 @@ class _APINode(object):
 
     def get(self, *args, **kwargs):
         """Perform an HTTP GET."""
-        response = self.session.get(self._api_endpoint, *args, **kwargs)
-        self._assert_response(response)
+        response = self.session.get(
+            self._api_endpoint, *args, **kwargs)
+        self._assert_response(response, stream=kwargs.get('stream', False))
         return response
 
     def post(self, *args, **kwargs):

@@ -140,12 +140,13 @@ class TestImage(testing.PyLXDTestCase):
 
     def test_export(self):
         """An image is exported."""
+        expected = 'e2943f8d0b0e7d5835f9533722a6e25f669acb8980daee378b4edb44da212f51'  # NOQA
         a_image = self.client.images.all()[0]
 
         data = a_image.export()
-        data_sha = hashlib.sha256(data).hexdigest()
+        data_sha = hashlib.sha256(data.read()).hexdigest()
 
-        self.assertEqual(a_image.fingerprint, data_sha)
+        self.assertEqual(expected, data_sha)
 
     def test_export_not_found(self):
         """LXDAPIException is raised on export of bogus image."""

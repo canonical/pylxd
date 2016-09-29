@@ -11,7 +11,9 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import contextlib
 import hashlib
+import tempfile
 
 from pylxd.models import _model as model
 from pylxd.models.operation import Operation
@@ -97,8 +99,7 @@ class Image(model.Model):
     @classmethod
     def create_from_simplestreams(cls, client, server, alias,
                                   public=False, auto_update=False):
-        """ Copy an image from simplestreams.
-        """
+        """Copy an image from simplestreams."""
         config = {
             'public': public,
             'auto_update': auto_update,
@@ -119,8 +120,7 @@ class Image(model.Model):
     @classmethod
     def create_from_url(cls, client, url,
                         public=False, auto_update=False):
-        """ Copy an image from an url.
-        """
+        """Copy an image from an url."""
         config = {
             'public': public,
             'auto_update': auto_update,
@@ -137,9 +137,18 @@ class Image(model.Model):
         return client.images.get(op.metadata['fingerprint'])
 
     def export(self):
-        """Export the image."""
-        response = self.api.export.get()
-        return response.content
+        """Export the image.
+
+        Because the image itself may be quite large, we stream the download
+        in 1kb chunks, and write it to a temporary file on disk. Once that
+        file is closed, it is deleted from the disk.
+        """
+        on_disk = tempfile.TemporaryFile()
+        with contextlib.closing(self.api.export.get(stream=True)) as response:
+            for chunk in response.iter_content(chunk_size=1024):
+                on_disk.write(chunk)
+        on_disk.seek(0)
+        return on_disk
 
     def add_alias(self, name, description):
         """Add an alias to the image."""
@@ -168,7 +177,7 @@ class Image(model.Model):
             pass
 
     def copy(self, new_client, public=None, auto_update=None, wait=False):
-        """ Copy an image to a another LXD.
+        """Copy an image to a another LXD.
 
         Destination host information is contained in the client
         connection passed in.
