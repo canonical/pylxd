@@ -105,6 +105,10 @@ If you were to use an actual image source, you would be able to operate
 on the container, starting, stopping, snapshotting, and deleting the
 container.
 
+.. code-block:: python
+
+    >>> config = {'name': 'my-container', 'source': {'type': 'image', 'image': 'ubuntu/trusty'}}
+    >>> container = client.containers.create(config, wait=True)
     >>> container.start()
     >>> container.freeze()
     >>> container.delete()
