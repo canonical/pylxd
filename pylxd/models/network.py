@@ -19,6 +19,8 @@ class Network(model.Model):
     name = model.Attribute()
     type = model.Attribute()
     used_by = model.Attribute()
+    config = model.Attribute()
+    managed = model.Attribute()
 
     @classmethod
     def get(cls, client, name):
