@@ -242,6 +242,16 @@ class Container(model.Model):
         if self.api.scheme in ('http+unix',):
             raise ValueError('Cannot migrate from a local client connection')
 
+        return new_client.containers.create(
+            self.generate_migration_data(), wait=wait)
+
+    def generate_migration_data(self):
+        """Generate the migration data.
+
+        This method can be used to handle migrations where the client
+        connection uses the local unix socket. For more information on
+        migration, see `Container.migrate`.
+        """
         self.sync()  # Make sure the object isn't stale
         response = self.api.post(json={'migration': True})
         operation = self.client.operations.get(response.json()['operation'])
@@ -249,7 +259,7 @@ class Container(model.Model):
         secrets = response.json()['metadata']['metadata']
         cert = self.client.host_info['environment']['certificate']
 
-        config = {
+        return {
             'name': self.name,
             'architecture': self.architecture,
             'config': self.config,
@@ -264,7 +274,6 @@ class Container(model.Model):
                 'secrets': secrets,
             }
         }
-        return new_client.containers.create(config, wait=wait)
 
     def publish(self, public=False, wait=False):
         """Publish a container as an image.
