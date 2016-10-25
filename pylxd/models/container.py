@@ -207,7 +207,7 @@ class Container(model.Model):
 
         manager = WebSocketManager()
 
-        stdin = _StdinWebsocket(manager, self.client.websocket_url)
+        stdin = _StdinWebsocket(self.client.websocket_url)
         stdin.resource = '{}?secret={}'.format(parsed.path, fds['0'])
         stdin.connect()
         stdout = _CommandWebsocketClient(manager, self.client.websocket_url)
@@ -219,13 +219,8 @@ class Container(model.Model):
 
         manager.start()
 
-        while True:  # pragma: no cover
-            for websocket in manager.websockets.values():
-                if not websocket.terminated:
-                    break
-            else:
-                break
-            time.sleep(1)
+        while len(manager.websockets.values()) > 0:
+            time.sleep(.1)
 
         return stdout.data, stderr.data
 
@@ -310,10 +305,16 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         self.buffer = []
 
     def received_message(self, message):
+        if len(message.data) == 0:
+            self.close()
+            self.manager.remove(self)
         if message.encoding:
             self.buffer.append(message.data.decode(message.encoding))
         else:
             self.buffer.append(message.data.decode('utf-8'))
+
+    def closed(self, code, reason=None):
+        print("Connection closed with code {} and reason {}".format(code, reason))
 
     @property
     def data(self):
@@ -321,14 +322,14 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
 
 
 class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
-    """A websocket client for handling stdin."""
+    """A websocket client for handling stdin.
 
-    def __init__(self, manager, *args, **kwargs):
-        self.manager = manager
-        super(_StdinWebsocket, self).__init__(*args, **kwargs)
+    The nature of stdin in Container.execute means that we don't
+    ever use this connection. It is closed as soon as it completes
+    the handshake.
+    """
 
     def handshake_ok(self):
-        self.manager.add(self)
         self.close()
 
 
