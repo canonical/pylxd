@@ -313,9 +313,6 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         else:
             self.buffer.append(message.data.decode('utf-8'))
 
-    def closed(self, code, reason=None):
-        print("Connection closed with code {} and reason {}".format(code, reason))
-
     @property
     def data(self):
         return ''.join(self.buffer)
