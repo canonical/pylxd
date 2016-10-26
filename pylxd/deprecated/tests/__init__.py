@@ -16,7 +16,7 @@ from ddt import data
 from ddt import unpack
 import unittest
 
-from pylxd import api
+from pylxd.deprecated import api
 
 
 class LXDAPITestBase(unittest.TestCase):

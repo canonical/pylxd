@@ -16,5 +16,4 @@ import pbr.version
 
 __version__ = pbr.version.VersionInfo('pylxd').version_string()
 
-from pylxd.deprecated import api  # NOQA
 from pylxd.client import Client  # NOQA
