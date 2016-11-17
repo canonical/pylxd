@@ -131,7 +131,7 @@ class TestClient(unittest.TestCase):
         certs = (
             os.path.join(os.path.dirname(__file__), 'lxd.crt'),
             os.path.join(os.path.dirname(__file__), 'lxd.key'))
-        an_client = client.Client(cert=certs)
+        an_client = client.Client('https://lxd', cert=certs)
 
         get_count = []
 
