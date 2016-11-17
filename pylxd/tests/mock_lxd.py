@@ -583,7 +583,7 @@ RULES = [
     {
         'text': json.dumps({
             'type': 'sync',
-            'metadata': {'id': 'operation-abc'},
+            'metadata': {'id': 'operation-abc', 'metadata': {'return': 0}},
             }),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/operations/operation-abc$',

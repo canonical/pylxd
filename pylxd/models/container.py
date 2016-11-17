@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import collections
 import time
 
 import six
@@ -24,6 +25,7 @@ except ImportError:  # pragma: no cover
     _ws4py_installed = False
 
 from pylxd import managers
+from pylxd.deprecation import deprecated
 from pylxd.models import _model as model
 from pylxd.models.operation import Operation
 
@@ -34,6 +36,11 @@ class ContainerState(object):
     def __init__(self, **kwargs):
         for key, value in six.iteritems(kwargs):
             setattr(self, key, value)
+
+
+_ContainerExecuteResult = collections.namedtuple(
+    'ContainerExecuteResult',
+    ['exit_code', 'stdout', 'stderr'])
 
 
 class Container(model.Model):
@@ -186,8 +193,18 @@ class Container(model.Model):
                                force=force,
                                wait=wait)
 
+    @deprecated('execute will return a ContainerExecuteResult in pylxd 2.2')
     def execute(self, commands, environment={}):
         """Execute a command on the container."""
+        result = self.execute_with_result(commands, environment)
+        return result.stdout, result.stderr
+
+    def execute_with_result(self, commands, environment={}):
+        """Execute a command on the container.
+
+        In pylxd 2.2, this method will be renamed `execute` and the existing
+        `execute` method removed.
+        """
         if not _ws4py_installed:
             raise ValueError(
                 'This feature requires the optional ws4py library.')
@@ -222,7 +239,9 @@ class Container(model.Model):
         while len(manager.websockets.values()) > 0:
             time.sleep(.1)
 
-        return stdout.data, stderr.data
+        operation = self.client.operations.get(operation_id)
+        return _ContainerExecuteResult(
+            operation.metadata['return'], stdout.data, stderr.data)
 
     def migrate(self, new_client, wait=False):
         """Migrate a container.
