@@ -193,6 +193,7 @@ class Client(object):
                     parse.quote(endpoint, safe='')))
             else:
                 # Extra trailing slashes cause LXD to 301
+                endpoint = endpoint.rstrip('/')
                 if cert is None and (
                         os.path.exists(self.DEFAULT_CERTS[0]) and
                         os.path.exists(self.DEFAULT_CERTS[1])):
