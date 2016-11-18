@@ -25,7 +25,6 @@ except ImportError:  # pragma: no cover
     _ws4py_installed = False
 
 from pylxd import managers
-from pylxd.deprecation import deprecated
 from pylxd.models import _model as model
 from pylxd.models.operation import Operation
 
@@ -193,13 +192,7 @@ class Container(model.Model):
                                force=force,
                                wait=wait)
 
-    @deprecated('execute will return a ContainerExecuteResult in pylxd 2.2')
     def execute(self, commands, environment={}):
-        """Execute a command on the container."""
-        result = self.execute_with_result(commands, environment)
-        return result.stdout, result.stderr
-
-    def execute_with_result(self, commands, environment={}):
         """Execute a command on the container.
 
         In pylxd 2.2, this method will be renamed `execute` and the existing
