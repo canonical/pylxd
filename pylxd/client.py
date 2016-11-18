@@ -181,6 +181,10 @@ class Client(object):
 
     """
 
+    DEFAULT_CERTS = (
+        os.path.expanduser('~/.config/lxc/client.crt'),
+        os.path.expanduser('~/.config/lxc/client.key'))
+
     def __init__(self, endpoint=None, version='1.0', cert=None, verify=True):
         self.cert = cert
         if endpoint is not None:
@@ -188,6 +192,12 @@ class Client(object):
                 self.api = _APINode('http+unix://{}'.format(
                     parse.quote(endpoint, safe='')))
             else:
+                # Extra trailing slashes cause LXD to 301
+                endpoint = endpoint.rstrip('/')
+                if cert is None and (
+                        os.path.exists(self.DEFAULT_CERTS[0]) and
+                        os.path.exists(self.DEFAULT_CERTS[1])):
+                    cert = self.DEFAULT_CERTS
                 self.api = _APINode(endpoint, cert=cert, verify=verify)
         else:
             if 'LXD_DIR' in os.environ:
@@ -224,7 +234,7 @@ class Client(object):
     def authenticate(self, password):
         if self.trusted:
             return
-        cert = open(self.cert[0]).read().encode('utf-8')
+        cert = open(self.api.session.cert[0]).read().encode('utf-8')
         self.certificates.create(password, cert)
 
         # Refresh the host info
