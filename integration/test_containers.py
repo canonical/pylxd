@@ -149,9 +149,11 @@ class TestContainer(IntegrationTestCase):
         self.container.start(wait=True)
         self.addCleanup(self.container.stop, wait=True)
 
-        stdout, stderr = self.container.execute(['echo', 'test'])
+        result = self.container.execute(['echo', 'test'])
 
-        self.assertEqual('test\n', stdout)
+        self.assertEqual(0, result.exit_code)
+        self.assertEqual('test\n', result.stdout)
+        self.assertEqual('', result.stderr)
 
     def test_publish(self):
         """A container is published."""
