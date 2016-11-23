@@ -12,8 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import contextlib
-import hashlib
 import tempfile
+import uuid
+import warnings
+
+import six
 
 from pylxd.models import _model as model
 from pylxd.models.operation import Operation
@@ -82,19 +85,54 @@ class Image(model.Model):
         return images
 
     @classmethod
-    def create(cls, client, image_data, public=False, wait=False):
-        """Create an image."""
-        fingerprint = hashlib.sha256(image_data).hexdigest()
+    def create(
+            cls, client, image_data, metadata=None, public=False, wait=True):
+        """Create an image.
+
+        If metadata is provided, a multipart form data request is formed to
+        push metadata and image together in a single request. The metadata must
+        be a tar achive.
+
+        `wait` parameter is now ignored, as the image fingerprint cannot be
+        reliably determined consistently until after the image is indexed.
+        """
+
+        if wait is False:
+            warnings.warn(
+                'Image.create wait parameter ignored and will be removed in '
+                '2.3', DeprecationWarning)
 
         headers = {}
         if public:
             headers['X-LXD-Public'] = '1'
-        response = client.api.images.post(
-            data=image_data, headers=headers)
 
-        if wait:
-            Operation.wait_for_operation(client, response.json()['operation'])
-        return cls(client, fingerprint=fingerprint)
+        if metadata is not None:
+            boundary = str(uuid.uuid1())
+
+            data = b''
+            for name, contents in (
+                    ('metadata', metadata), ('rootfs', image_data)):
+                data += b'\r\n'.join([
+                    six.b('--{}'.format(boundary)),
+                    six.b(
+                        'Content-Disposition:form-data;'
+                        'name={};filename={}'.format(name, name)),
+                    b'Content-Type: application/octet-stream',
+                    b'',
+                    contents,
+                    b'',
+                ])
+            data += six.b('--{}--\r\n\r\n'.format(boundary))
+
+            headers['Content-Type'] = "multipart/form-data;boundary={}".format(
+                boundary)
+        else:
+            data = image_data
+
+        response = client.api.images.post(data=data, headers=headers)
+        operation = client.operations.wait_for_operation(
+            response.json()['operation'])
+        return cls(client, fingerprint=operation.metadata['fingerprint'])
 
     @classmethod
     def create_from_simplestreams(cls, client, server, alias,

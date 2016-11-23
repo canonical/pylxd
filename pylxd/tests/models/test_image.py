@@ -71,7 +71,8 @@ class TestImage(testing.PyLXDTestCase):
     def test_create(self):
         """An image is created."""
         fingerprint = hashlib.sha256(b'').hexdigest()
-        a_image = models.Image.create(self.client, b'', public=True, wait=True)
+        a_image = models.Image.create(
+            self.client, b'', metadata=b'', public=True, wait=True)
 
         self.assertIsInstance(a_image, models.Image)
         self.assertEqual(fingerprint, a_image.fingerprint)
