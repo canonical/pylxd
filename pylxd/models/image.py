@@ -97,7 +97,7 @@ class Image(model.Model):
         reliably determined consistently until after the image is indexed.
         """
 
-        if wait is False:
+        if wait is False:  # pragma: no cover
             warnings.warn(
                 'Image.create wait parameter ignored and will be removed in '
                 '2.3', DeprecationWarning)
