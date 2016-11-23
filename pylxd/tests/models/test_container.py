@@ -168,9 +168,10 @@ class TestContainer(testing.PyLXDTestCase):
         an_container = models.Container(
             self.client, name='an-container')
 
-        stdout, _ = an_container.execute(['echo', 'test'])
+        result = an_container.execute(['echo', 'test'])
 
-        self.assertEqual('test\n', stdout)
+        self.assertEqual(0, result.exit_code)
+        self.assertEqual('test\n', result.stdout)
 
     def test_execute_no_ws4py(self):
         """If ws4py is not installed, ValueError is raised."""
