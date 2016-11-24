@@ -62,6 +62,35 @@ class TestImage(testing.PyLXDTestCase):
 
         self.assertEqual(fingerprint, a_image.fingerprint)
 
+    def test_exists(self):
+        """An image is fetched."""
+        fingerprint = hashlib.sha256(b'').hexdigest()
+
+        self.assertTrue(models.Image.exists(self.client, fingerprint))
+
+    def test_exists_by_alias(self):
+        """An image is fetched."""
+        self.assertTrue(models.Image.exists(
+            self.client, 'an-alias', alias=True))
+
+    def test_not_exists(self):
+        """LXDAPIException is raised when the image isn't found."""
+        def not_found(request, context):
+            context.status_code = 404
+            return json.dumps({
+                'type': 'error',
+                'error': 'Not found',
+                'error_code': 404})
+        self.add_rule({
+            'text': not_found,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
+        })
+
+        fingerprint = hashlib.sha256(b'').hexdigest()
+
+        self.assertFalse(models.Image.exists(self.client, fingerprint))
+
     def test_all(self):
         """A list of all images is returned."""
         images = models.Image.all(self.client)
