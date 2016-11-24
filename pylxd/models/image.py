@@ -19,7 +19,6 @@ import warnings
 import six
 
 from pylxd.models import _model as model
-from pylxd.models.operation import Operation
 
 
 def _image_create_from_config(client, config, wait=False):
@@ -29,10 +28,8 @@ def _image_create_from_config(client, config, wait=False):
     """
     response = client.api.images.post(json=config)
     if wait:
-        Operation.wait_for_operation(client, response.json()['operation'])
-
-        return Operation.get(client, response.json()['operation'])
-
+        return client.operations.wait_for_operation(
+            response.json()['operation'])
     return response.json()['operation']
 
 

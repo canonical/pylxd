@@ -26,7 +26,6 @@ except ImportError:  # pragma: no cover
 
 from pylxd import managers
 from pylxd.models import _model as model
-from pylxd.models.operation import Operation
 
 
 class ContainerState(object):
@@ -130,7 +129,7 @@ class Container(model.Model):
         response = client.api.containers.post(json=config)
 
         if wait:
-            Operation.wait_for_operation(client, response.json()['operation'])
+            client.operations.wait_for_operation(response.json()['operation'])
         return cls(client, name=config['name'])
 
     def __init__(self, *args, **kwargs):
@@ -144,8 +143,8 @@ class Container(model.Model):
         response = self.api.post(json={'name': name})
 
         if wait:
-            Operation.wait_for_operation(
-                self.client, response.json()['operation'])
+            self.client.operations.wait_for_operation(
+                response.json()['operation'])
         self.name = name
 
     def _set_state(self, state, timeout=30, force=True, wait=False):
@@ -155,8 +154,8 @@ class Container(model.Model):
             'force': force
         })
         if wait:
-            Operation.wait_for_operation(
-                self.client, response.json()['operation'])
+            self.client.operations.wait_for_operation(
+                response.json()['operation'])
             if 'status' in self.__dirty__:
                 del self.__dirty__[self.__dirty__.index('status')]
             self.sync()
@@ -310,8 +309,8 @@ class Container(model.Model):
 
         response = self.client.api.images.post(json=data)
         if wait:
-            operation = Operation.wait_for_operation(
-                self.client, response.json()['operation'])
+            operation = self.client.operations.wait_for_operation(
+                response.json()['operation'])
 
             return self.client.images.get(operation.metadata['fingerprint'])
 
@@ -394,15 +393,15 @@ class Snapshot(model.Model):
 
         snapshot = cls(client, container=container, name=name)
         if wait:
-            Operation.wait_for_operation(client, response.json()['operation'])
+            client.operations.wait_for_operation(response.json()['operation'])
         return snapshot
 
     def rename(self, new_name, wait=False):
         """Rename a snapshot."""
         response = self.api.post(json={'name': new_name})
         if wait:
-            Operation.wait_for_operation(
-                self.client, response.json()['operation'])
+            self.client.operations.wait_for_operation(
+                response.json()['operation'])
         self.name = new_name
 
     def publish(self, public=False, wait=False):
@@ -425,6 +424,6 @@ class Snapshot(model.Model):
 
         response = self.client.api.images.post(json=data)
         if wait:
-            operation = Operation.wait_for_operation(
-                self.client, response.json()['operation'])
+            operation = self.client.operations.wait_for_operation(
+                response.json()['operation'])
             return self.client.images.get(operation.metadata['fingerprint'])
