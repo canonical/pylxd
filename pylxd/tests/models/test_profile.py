@@ -50,6 +50,28 @@ class TestProfile(testing.PyLXDTestCase):
             exceptions.LXDAPIException,
             models.Profile.get, self.client, 'an-profile')
 
+    def test_exists(self):
+        name = 'an-profile'
+
+        self.assertTrue(models.Profile.exists(self.client, name))
+
+    def test_not_exists(self):
+        def not_found(request, context):
+            context.status_code = 404
+            return json.dumps({
+                'type': 'error',
+                'error': 'Not found',
+                'error_code': 404})
+        self.add_rule({
+            'text': not_found,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/profiles/an-profile$',
+        })
+
+        name = 'an-profile'
+
+        self.assertFalse(models.Profile.exists(self.client, name))
+
     def test_all(self):
         """A list of all profiles is returned."""
         profiles = models.Profile.all(self.client)

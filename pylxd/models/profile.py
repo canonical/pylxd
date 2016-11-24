@@ -23,6 +23,15 @@ class Profile(model.Model):
     devices = model.Attribute()
 
     @classmethod
+    def exists(cls, client, name):
+        """Determine whether a profile exists."""
+        try:
+            client.profiles.get(name)
+            return True
+        except cls.NotFound:
+            return False
+
+    @classmethod
     def get(cls, client, name):
         """Get a profile."""
         response = client.api.profiles[name].get()

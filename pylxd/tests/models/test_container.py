@@ -72,6 +72,30 @@ class TestContainer(testing.PyLXDTestCase):
 
         self.assertEqual(config['name'], an_new_container.name)
 
+    def test_exists(self):
+        """A container exists."""
+        name = 'an-container'
+
+        self.assertTrue(models.Container.exists(self.client, name))
+
+    def test_not_exists(self):
+        """A container exists."""
+        def not_found(request, context):
+            context.status_code = 404
+            return json.dumps({
+                'type': 'error',
+                'error': 'Not found',
+                'error_code': 404})
+        self.add_rule({
+            'text': not_found,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',  # NOQA
+        })
+
+        name = 'an-missing-container'
+
+        self.assertFalse(models.Container.exists(self.client, name))
+
     def test_fetch(self):
         """A sync updates the properties of a container."""
         an_container = models.Container(
