@@ -15,8 +15,6 @@ import warnings
 
 import six
 
-from pylxd.models.operation import Operation
-
 
 class Attribute(object):
     """A metadata class for model attributes."""
@@ -170,8 +168,8 @@ class Model(object):
         response = self.api.put(json=marshalled)
 
         if response.json()['type'] == 'async' and wait:
-            Operation.wait_for_operation(
-                self.client, response.json()['operation'])
+            self.client.operations.wait_for_operation(
+                response.json()['operation'])
         self.__dirty__.clear()
 
     def delete(self, wait=False):
@@ -179,8 +177,8 @@ class Model(object):
         response = self.api.delete()
 
         if response.json()['type'] == 'async' and wait:
-            Operation.wait_for_operation(
-                self.client, response.json()['operation'])
+            self.client.operations.wait_for_operation(
+                response.json()['operation'])
         self.client = None
 
     def marshall(self):
