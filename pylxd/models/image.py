@@ -55,6 +55,22 @@ class Image(model.Model):
         return self.client.api.images[self.fingerprint]
 
     @classmethod
+    def exists(cls, client, fingerprint, alias=False):
+        """Determine whether an image exists.
+
+        If `alias` is True, look up the image by its alias,
+        rather than its fingerprint.
+        """
+        try:
+            if alias:
+                client.images.get_by_alias(fingerprint)
+            else:
+                client.images.get(fingerprint)
+            return True
+        except cls.NotFound:
+            return False
+
+    @classmethod
     def get(cls, client, fingerprint):
         """Get an image."""
         response = client.api.images[fingerprint].get()

@@ -90,6 +90,15 @@ class Container(model.Model):
             return response.content
 
     @classmethod
+    def exists(cls, client, name):
+        """Determine whether a container exists."""
+        try:
+            client.containers.get(name)
+            return True
+        except cls.NotFound:
+            return False
+
+    @classmethod
     def get(cls, client, name):
         """Get a container by name."""
         response = client.api.containers[name].get()

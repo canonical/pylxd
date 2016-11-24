@@ -26,5 +26,9 @@ class LXDAPIException(Exception):
         return self.response.content.decode('utf-8')
 
 
+class NotFound(LXDAPIException):
+    """An exception raised when an object is not found."""
+
+
 class ClientConnectionFailed(Exception):
     """An exception raised when the Client connection fails."""

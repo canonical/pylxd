@@ -64,6 +64,8 @@ class _APINode(object):
         user.
         """
         if response.status_code not in allowed_status_codes:
+            if response.status_code == 404:
+                raise exceptions.NotFound(response)
             raise exceptions.LXDAPIException(response)
 
         # In the case of streaming, we can't validate the json the way we

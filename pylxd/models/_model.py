@@ -15,6 +15,8 @@ import warnings
 
 import six
 
+from pylxd import exceptions
+
 
 class Attribute(object):
     """A metadata class for model attributes."""
@@ -94,6 +96,7 @@ class Model(object):
     the instance is marked as dirty. `save` will save the changes
     to the server.
     """
+    NotFound = exceptions.NotFound
     __slots__ = ['client', '__dirty__']
 
     def __init__(self, client, **kwargs):
