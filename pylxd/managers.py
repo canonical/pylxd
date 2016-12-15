@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 import functools
 import importlib
 import inspect
@@ -51,3 +53,11 @@ class ProfileManager(BaseManager):
 
 class SnapshotManager(BaseManager):
     manager_for = 'pylxd.models.Snapshot'
+
+
+@contextmanager
+def web_socket_manager(manager):
+    try:
+        yield manager
+    finally:
+        manager.stop()
