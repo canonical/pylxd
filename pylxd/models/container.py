@@ -200,7 +200,6 @@ class Container(model.Model):
                                force=force,
                                wait=wait)
 
-
     def execute(self, commands, environment={}):
         """Execute a command on the container.
 
@@ -228,10 +227,12 @@ class Container(model.Model):
             stdin = _StdinWebsocket(self.client.websocket_url)
             stdin.resource = '{}?secret={}'.format(parsed.path, fds['0'])
             stdin.connect()
-            stdout = _CommandWebsocketClient(manager, self.client.websocket_url)
+            stdout = _CommandWebsocketClient(
+                manager, self.client.websocket_url)
             stdout.resource = '{}?secret={}'.format(parsed.path, fds['1'])
             stdout.connect()
-            stderr = _CommandWebsocketClient(manager, self.client.websocket_url)
+            stderr = _CommandWebsocketClient(
+                manager, self.client.websocket_url)
             stderr.resource = '{}?secret={}'.format(parsed.path, fds['2'])
             stderr.connect()
 
@@ -244,7 +245,6 @@ class Container(model.Model):
 
             return _ContainerExecuteResult(
                 operation.metadata['return'], stdout.data, stderr.data)
-
 
     def migrate(self, new_client, wait=False):
         """Migrate a container.
