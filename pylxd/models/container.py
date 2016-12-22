@@ -77,7 +77,20 @@ class Container(model.Model):
             self._client = client
             self._container = container
 
-        def put(self, filepath, data):
+        def put(self, filepath, data, mode=None, uid=None, gid=None):
+
+            if isinstance(mode, int):
+                mode = oct(mode)
+            elif not mode.startswith('0'):
+                mode = '0{0}'.format(mode)
+            headers = {}
+            if mode is not None:
+                headers['X-LXD-mode'] = mode
+            if uid is not None:
+                headers['X-LXD-uid'] = str(uid)
+            if gid is not None:
+                headers['X-LXD-gid'] = str(gid)
+
             response = self._client.api.containers[
                 self._container.name].files.post(
                 params={'path': filepath}, data=data)
