@@ -201,6 +201,9 @@ class Client(object):
             ):
                 self.api = _APINode('http+unix://{}'.format(
                     parse.quote(endpoint, safe='')))
+            elif endpoint.startswith('http+unix://') and '/' in endpoint[12:]:
+                self.api = _APINode('http+unix://{}'.format(
+                    parse.quote(endpoint[12:], safe='')))
             else:
                 # Extra trailing slashes cause LXD to 301
                 endpoint = endpoint.rstrip('/')
