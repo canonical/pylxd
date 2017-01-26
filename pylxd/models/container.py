@@ -223,26 +223,28 @@ class Container(model.Model):
         parsed = parse.urlparse(
             self.client.api.operations[operation_id].websocket._api_endpoint)
 
-        manager = WebSocketManager()
+        with managers.web_socket_manager(WebSocketManager()) as manager:
+            stdin = _StdinWebsocket(self.client.websocket_url)
+            stdin.resource = '{}?secret={}'.format(parsed.path, fds['0'])
+            stdin.connect()
+            stdout = _CommandWebsocketClient(
+                manager, self.client.websocket_url)
+            stdout.resource = '{}?secret={}'.format(parsed.path, fds['1'])
+            stdout.connect()
+            stderr = _CommandWebsocketClient(
+                manager, self.client.websocket_url)
+            stderr.resource = '{}?secret={}'.format(parsed.path, fds['2'])
+            stderr.connect()
 
-        stdin = _StdinWebsocket(self.client.websocket_url)
-        stdin.resource = '{}?secret={}'.format(parsed.path, fds['0'])
-        stdin.connect()
-        stdout = _CommandWebsocketClient(manager, self.client.websocket_url)
-        stdout.resource = '{}?secret={}'.format(parsed.path, fds['1'])
-        stdout.connect()
-        stderr = _CommandWebsocketClient(manager, self.client.websocket_url)
-        stderr.resource = '{}?secret={}'.format(parsed.path, fds['2'])
-        stderr.connect()
+            manager.start()
 
-        manager.start()
+            while len(manager.websockets.values()) > 0:
+                time.sleep(.1)
 
-        while len(manager.websockets.values()) > 0:
-            time.sleep(.1)
+            operation = self.client.operations.get(operation_id)
 
-        operation = self.client.operations.get(operation_id)
-        return _ContainerExecuteResult(
-            operation.metadata['return'], stdout.data, stderr.data)
+            return _ContainerExecuteResult(
+                operation.metadata['return'], stdout.data, stderr.data)
 
     def migrate(self, new_client, wait=False):
         """Migrate a container.
