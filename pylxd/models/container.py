@@ -79,12 +79,12 @@ class Container(model.Model):
 
         def put(self, filepath, data, mode=None, uid=None, gid=None):
 
-            if isinstance(mode, int):
-                mode = oct(mode)
-            elif not mode.startswith('0'):
-                mode = '0{0}'.format(mode)
             headers = {}
             if mode is not None:
+                if isinstance(mode, int):
+                    mode = oct(mode)
+                elif not mode.startswith('0'):
+                    mode = '0{0}'.format(mode)
                 headers['X-LXD-mode'] = mode
             if uid is not None:
                 headers['X-LXD-uid'] = str(uid)
