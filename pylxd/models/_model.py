@@ -152,7 +152,8 @@ class Model(object):
         for key, val in response.json()['metadata'].items():
             if key not in self.__dirty__ or rollback:
                 setattr(self, key, val)
-                self.__dirty__.remove(key)
+                if key in self.__dirty__:
+                    self.__dirty__.remove(key)
         if rollback:
             self.__dirty__.clear()
 
