@@ -158,7 +158,10 @@ class Container(model.Model):
                 response.json()['operation'])
             if 'status' in self.__dirty__:
                 del self.__dirty__[self.__dirty__.index('status')]
-            self.sync()
+            if self.ephemeral and state == 'stop':
+                self.client = None
+            else:
+                self.sync()
 
     def state(self):
         response = self.api.state.get()
