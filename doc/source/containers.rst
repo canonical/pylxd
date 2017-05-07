@@ -15,8 +15,8 @@ methods:
 
   - `all()` - Retrieve all containers.
   - `get()` - Get a specific container, by its name.
-  - `create(wait=False)` - Create a new container. This method requires
-    a first argument that is the container name, followed by a config.
+  - `create(config, wait=False)` - Create a new container. This method 
+    requires the container config as the first parameter.
     The config itself is beyond the scope of this documentation. Please
     refer to the LXD documentation for more information. This method
     will also return immediately, unless `wait` is `True`.
