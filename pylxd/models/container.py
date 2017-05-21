@@ -56,6 +56,7 @@ class Container(model.Model):
     expanded_config = model.Attribute()
     expanded_devices = model.Attribute()
     name = model.Attribute(readonly=True)
+    description = model.Attribute()
     profiles = model.Attribute()
     status = model.Attribute(readonly=True)
     last_used_at = model.Attribute(readonly=True)
