@@ -16,7 +16,6 @@ script:
   - test -d .tox/$TOXENV/log && cat .tox/$TOXENV/log/*.log || true
 cache:
   directories:
-    - .tox/$TOXENV
     - $HOME/.cache/pip
 after_success:
   - codecov
