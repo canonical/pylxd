@@ -3,5 +3,7 @@ nose>=1.3.7
 mock>=1.3.0
 flake8>=2.5.0
 coverage>=4.1
-# See https://github.com/novafloss/mock-services/pull/15
--e git://github.com/rockstar/mock-services.git@aba3977d1a3f43afd77d99f241ee1111c20deeed#egg=mock-services
+mock-services>=0.3
+# mock-services is old and unmaintained. Doesn't work with newer versions of
+# requests-mock. Thus, we have to pin it down.
+requests-mock<1.2
