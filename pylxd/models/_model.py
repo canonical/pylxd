@@ -155,8 +155,9 @@ class Model(object):
                     setattr(self, key, val)
                     self.__dirty__.remove(key)
                 except AttributeError:
-                    # We have received an attribute from the server that we don't support
-                    # in our model. Ignore this error, it doesn't hurt us.
+                    # We have received an attribute from the server that we
+                    # don't support in our model. Ignore this error, it
+                    # doesn't hurt us.
                     pass
         if rollback:
             self.__dirty__.clear()
