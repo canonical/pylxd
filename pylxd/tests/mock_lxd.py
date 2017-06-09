@@ -185,6 +185,7 @@ RULES = [
                 },
                 'created_at': "1983-06-16T00:00:00-00:00",
                 'last_used_at': "1983-06-16T00:00:00-00:00",
+                'description': "Some description",
                 'devices': {
                     'root': {
                         'path': "/",
