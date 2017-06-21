@@ -89,9 +89,6 @@ class _APINode(object):
                 # Missing 'type' in response
                 raise exceptions.LXDAPIException(response)
 
-    def _req_timeout(self, req_timeout):
-        return req_timeout if req_timeout is not None else self._timeout
-
     @property
     def scheme(self):
         return parse.urlparse(self.api._api_endpoint).scheme
@@ -102,7 +99,10 @@ class _APINode(object):
 
     def get(self, *args, **kwargs):
         """Perform an HTTP GET."""
-        _timeout=self._req_timeout(kwargs.get('timeout'))
+        try:
+            _timeout = kwargs.pop('timeout')
+        except KeyError:
+            _timeout = self._timeout
         response = self.session.get(
             self._api_endpoint, *args, timeout=_timeout, **kwargs)
         self._assert_response(response, stream=kwargs.get('stream', False))
@@ -110,7 +110,10 @@ class _APINode(object):
 
     def post(self, *args, **kwargs):
         """Perform an HTTP POST."""
-        _timeout=self._req_timeout(kwargs.get('timeout'))
+        try:
+            _timeout = kwargs.pop('timeout')
+        except KeyError:
+            _timeout = self._timeout
         response = self.session.post(self._api_endpoint, *args, timeout=_timeout, **kwargs)
         # Prior to LXD 2.0.3, successful synchronous requests returned 200,
         # rather than 201.
@@ -119,14 +122,20 @@ class _APINode(object):
 
     def put(self, *args, **kwargs):
         """Perform an HTTP PUT."""
-        _timeout=self._req_timeout(kwargs.get('timeout'))
+        try:
+            _timeout = kwargs.pop('timeout')
+        except KeyError:
+            _timeout = self._timeout
         response = self.session.put(self._api_endpoint, *args, timeout=_timeout, **kwargs)
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
 
     def delete(self, *args, **kwargs):
         """Perform an HTTP delete."""
-        _timeout=self._req_timeout(kwargs.get('timeout'))
+        try:
+            _timeout = kwargs.pop('timeout')
+        except KeyError:
+            _timeout = self._timeout
         response = self.session.delete(self._api_endpoint, *args, timeout=_timeout, **kwargs)
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
