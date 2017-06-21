@@ -52,7 +52,9 @@ class _APINode(object):
     def __getitem__(self, item):
         return self.__class__(
             '{}/{}'.format(self._api_endpoint, item),
-            cert=self.session.cert, verify=self.session.verify, timeout=self._timeout)
+            cert=self.session.cert,
+            verify=self.session.verify,
+            timeout=self._timeout)
 
     def _assert_response(
             self, response, allowed_status_codes=(200,), stream=False):
@@ -114,7 +116,8 @@ class _APINode(object):
             _timeout = kwargs.pop('timeout')
         except KeyError:
             _timeout = self._timeout
-        response = self.session.post(self._api_endpoint, *args, timeout=_timeout, **kwargs)
+        response = self.session.post(
+            self._api_endpoint, *args, timeout=_timeout, **kwargs)
         # Prior to LXD 2.0.3, successful synchronous requests returned 200,
         # rather than 201.
         self._assert_response(response, allowed_status_codes=(200, 201, 202))
@@ -126,7 +129,8 @@ class _APINode(object):
             _timeout = kwargs.pop('timeout')
         except KeyError:
             _timeout = self._timeout
-        response = self.session.put(self._api_endpoint, *args, timeout=_timeout, **kwargs)
+        response = self.session.put(
+            self._api_endpoint, *args, timeout=_timeout, **kwargs)
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
 
@@ -136,7 +140,8 @@ class _APINode(object):
             _timeout = kwargs.pop('timeout')
         except KeyError:
             _timeout = self._timeout
-        response = self.session.delete(self._api_endpoint, *args, timeout=_timeout, **kwargs)
+        response = self.session.delete(
+            self._api_endpoint, *args, timeout=_timeout, **kwargs)
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
 
@@ -204,7 +209,9 @@ class Client(object):
         os.path.expanduser('~/.config/lxc/client.crt'),
         os.path.expanduser('~/.config/lxc/client.key'))
 
-    def __init__(self, endpoint=None, version='1.0', cert=None, verify=True, timeout=None):
+    def __init__(
+            self, endpoint=None, version='1.0', cert=None, verify=True,
+            timeout=None):
         self.cert = cert
         if endpoint is not None:
             if endpoint.startswith('/') and os.path.isfile(endpoint):
@@ -217,7 +224,8 @@ class Client(object):
                         os.path.exists(self.DEFAULT_CERTS[0]) and
                         os.path.exists(self.DEFAULT_CERTS[1])):
                     cert = self.DEFAULT_CERTS
-                self.api = _APINode(endpoint, cert=cert, verify=verify, timeout=timeout)
+                self.api = _APINode(
+                    endpoint, cert=cert, verify=verify, timeout=timeout)
         else:
             if 'LXD_DIR' in os.environ:
                 path = os.path.join(
