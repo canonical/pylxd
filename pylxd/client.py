@@ -33,8 +33,9 @@ requests_unixsocket.monkeypatch()
 class _APINode(object):
     """An api node object."""
 
-    def __init__(self, api_endpoint, cert=None, verify=True):
+    def __init__(self, api_endpoint, cert=None, verify=True, timeout=None):
         self._api_endpoint = api_endpoint
+        self._timeout = timeout
 
         if self._api_endpoint.startswith('http+unix://'):
             self.session = requests_unixsocket.Session()
@@ -51,7 +52,7 @@ class _APINode(object):
     def __getitem__(self, item):
         return self.__class__(
             '{}/{}'.format(self._api_endpoint, item),
-            cert=self.session.cert, verify=self.session.verify)
+            cert=self.session.cert, verify=self.session.verify, timeout=self._timeout)
 
     def _assert_response(
             self, response, allowed_status_codes=(200,), stream=False):
@@ -88,6 +89,9 @@ class _APINode(object):
                 # Missing 'type' in response
                 raise exceptions.LXDAPIException(response)
 
+    def _req_timeout(self, req_timeout):
+        return req_timeout if req_timeout is not None else self._timeout
+
     @property
     def scheme(self):
         return parse.urlparse(self.api._api_endpoint).scheme
@@ -98,14 +102,16 @@ class _APINode(object):
 
     def get(self, *args, **kwargs):
         """Perform an HTTP GET."""
+        _timeout=self._req_timeout(kwargs.get('timeout'))
         response = self.session.get(
-            self._api_endpoint, *args, **kwargs)
+            self._api_endpoint, *args, timeout=_timeout, **kwargs)
         self._assert_response(response, stream=kwargs.get('stream', False))
         return response
 
     def post(self, *args, **kwargs):
         """Perform an HTTP POST."""
-        response = self.session.post(self._api_endpoint, *args, **kwargs)
+        _timeout=self._req_timeout(kwargs.get('timeout'))
+        response = self.session.post(self._api_endpoint, *args, timeout=_timeout, **kwargs)
         # Prior to LXD 2.0.3, successful synchronous requests returned 200,
         # rather than 201.
         self._assert_response(response, allowed_status_codes=(200, 201, 202))
@@ -113,13 +119,15 @@ class _APINode(object):
 
     def put(self, *args, **kwargs):
         """Perform an HTTP PUT."""
-        response = self.session.put(self._api_endpoint, *args, **kwargs)
+        _timeout=self._req_timeout(kwargs.get('timeout'))
+        response = self.session.put(self._api_endpoint, *args, timeout=_timeout, **kwargs)
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
 
     def delete(self, *args, **kwargs):
         """Perform an HTTP delete."""
-        response = self.session.delete(self._api_endpoint, *args, **kwargs)
+        _timeout=self._req_timeout(kwargs.get('timeout'))
+        response = self.session.delete(self._api_endpoint, *args, timeout=_timeout, **kwargs)
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
 
@@ -187,12 +195,12 @@ class Client(object):
         os.path.expanduser('~/.config/lxc/client.crt'),
         os.path.expanduser('~/.config/lxc/client.key'))
 
-    def __init__(self, endpoint=None, version='1.0', cert=None, verify=True):
+    def __init__(self, endpoint=None, version='1.0', cert=None, verify=True, timeout=None):
         self.cert = cert
         if endpoint is not None:
             if endpoint.startswith('/') and os.path.isfile(endpoint):
                 self.api = _APINode('http+unix://{}'.format(
-                    parse.quote(endpoint, safe='')))
+                    parse.quote(endpoint, safe='')), timeout=timeout)
             else:
                 # Extra trailing slashes cause LXD to 301
                 endpoint = endpoint.rstrip('/')
@@ -200,7 +208,7 @@ class Client(object):
                         os.path.exists(self.DEFAULT_CERTS[0]) and
                         os.path.exists(self.DEFAULT_CERTS[1])):
                     cert = self.DEFAULT_CERTS
-                self.api = _APINode(endpoint, cert=cert, verify=verify)
+                self.api = _APINode(endpoint, cert=cert, verify=verify, timeout=timeout)
         else:
             if 'LXD_DIR' in os.environ:
                 path = os.path.join(
@@ -208,7 +216,7 @@ class Client(object):
             else:
                 path = '/var/lib/lxd/unix.socket'
             self.api = _APINode('http+unix://{}'.format(
-                parse.quote(path, safe='')))
+                parse.quote(path, safe='')), timeout=timeout)
         self.api = self.api[version]
 
         # Verify the connection is valid.
