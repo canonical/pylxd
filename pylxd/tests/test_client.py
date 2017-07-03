@@ -199,7 +199,7 @@ class TestClient(unittest.TestCase):
 
         an_client.events(websocket_client=WebsocketClient)
 
-        WebsocketClient.assert_called_once_with('ws+unix:///lxd/unix.socket')
+        WebsocketClient.assert_called_once_with('ws+unix:///lxd/unix.socket', timeout=None)
 
     @requires_ws4py
     def test_events_htt(self):
@@ -211,7 +211,7 @@ class TestClient(unittest.TestCase):
 
         an_client.events(websocket_client=WebsocketClient)
 
-        WebsocketClient.assert_called_once_with('ws://lxd.local')
+        WebsocketClient.assert_called_once_with('ws://lxd.local', timeout=None)
 
     @requires_ws4py
     def test_events_https(self):
@@ -223,7 +223,7 @@ class TestClient(unittest.TestCase):
 
         an_client.events(websocket_client=WebsocketClient)
 
-        WebsocketClient.assert_called_once_with('wss://lxd.local')
+        WebsocketClient.assert_called_once_with('wss://lxd.local', timeout=None)
 
 
 class TestAPINode(unittest.TestCase):
@@ -273,7 +273,7 @@ class TestAPINode(unittest.TestCase):
 
         node.get()
 
-        session.get.assert_called_once_with('http://test.com')
+        session.get.assert_called_once_with('http://test.com', timeout=None)
 
     @mock.patch('pylxd.client.requests.Session')
     def test_post(self, Session):
@@ -289,7 +289,7 @@ class TestAPINode(unittest.TestCase):
 
         node.post()
 
-        session.post.assert_called_once_with('http://test.com')
+        session.post.assert_called_once_with('http://test.com', timeout=None)
 
     @mock.patch('pylxd.client.requests.Session')
     def test_post_200_not_sync(self, Session):
@@ -337,7 +337,7 @@ class TestAPINode(unittest.TestCase):
 
         node.put()
 
-        session.put.assert_called_once_with('http://test.com')
+        session.put.assert_called_once_with('http://test.com', timeout=None)
 
     @mock.patch('pylxd.client.requests.Session')
     def test_delete(self, Session):
@@ -353,7 +353,7 @@ class TestAPINode(unittest.TestCase):
 
         node.delete()
 
-        session.delete.assert_called_once_with('http://test.com')
+        session.delete.assert_called_once_with('http://test.com', timeout=None)
 
 
 class TestWebsocketClient(unittest.TestCase):
