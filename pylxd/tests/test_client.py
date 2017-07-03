@@ -199,7 +199,7 @@ class TestClient(unittest.TestCase):
 
         an_client.events(websocket_client=WebsocketClient)
 
-        WebsocketClient.assert_called_once_with('ws+unix:///lxd/unix.socket', timeout=None)
+        WebsocketClient.assert_called_once_with('ws+unix:///lxd/unix.socket')
 
     @requires_ws4py
     def test_events_htt(self):
@@ -211,7 +211,7 @@ class TestClient(unittest.TestCase):
 
         an_client.events(websocket_client=WebsocketClient)
 
-        WebsocketClient.assert_called_once_with('ws://lxd.local', timeout=None)
+        WebsocketClient.assert_called_once_with('ws://lxd.local')
 
     @requires_ws4py
     def test_events_https(self):
@@ -223,7 +223,7 @@ class TestClient(unittest.TestCase):
 
         an_client.events(websocket_client=WebsocketClient)
 
-        WebsocketClient.assert_called_once_with('wss://lxd.local', timeout=None)
+        WebsocketClient.assert_called_once_with('wss://lxd.local')
 
 
 class TestAPINode(unittest.TestCase):
