@@ -18,6 +18,9 @@ import six
 from pylxd import exceptions
 
 
+MISSING = object()
+
+
 class Attribute(object):
     """A metadata class for model attributes."""
 
@@ -149,10 +152,23 @@ class Model(object):
         # XXX: rockstar (25 Jun 2016) - This has the potential to step
         # on existing attributes.
         response = self.api.get()
-        for key, val in response.json()['metadata'].items():
+        payload = response.json()['metadata']
+        for key, val in payload.items():
             if key not in self.__dirty__ or rollback:
-                setattr(self, key, val)
-                self.__dirty__.remove(key)
+                try:
+                    setattr(self, key, val)
+                    self.__dirty__.remove(key)
+                except AttributeError:
+                    # We have received an attribute from the server that we
+                    # don't support in our model. Ignore this error, it
+                    # doesn't hurt us.
+                    pass
+
+        # Make sure that *all* supported attributes are set, even those that
+        # aren't supported by the server.
+        missing_attrs = set(self.__attributes__.keys()) - set(payload.keys())
+        for missing_attr in missing_attrs:
+            setattr(self, missing_attr, MISSING)
         if rollback:
             self.__dirty__.clear()
 
@@ -187,8 +203,12 @@ class Model(object):
     def marshall(self):
         """Marshall the object in preparation for updating to the server."""
         marshalled = {}
-        for key, val in self.__attributes__.items():
-            if ((not val.readonly and not val.optional) or
-                    (val.optional and hasattr(self, key))):
-                marshalled[key] = getattr(self, key)
+        for key, attr in self.__attributes__.items():
+            if ((not attr.readonly and not attr.optional) or
+                    (attr.optional and hasattr(self, key))):
+                val = getattr(self, key)
+                # Don't send back to the server an attribute it doesn't
+                # support.
+                if val is not MISSING:
+                    marshalled[key] = val
         return marshalled
