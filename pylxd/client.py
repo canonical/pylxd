@@ -14,6 +14,7 @@
 import json
 import os
 import os.path
+import stat
 
 import requests
 import requests_unixsocket
@@ -190,9 +191,19 @@ class Client(object):
     def __init__(self, endpoint=None, version='1.0', cert=None, verify=True):
         self.cert = cert
         if endpoint is not None:
-            if endpoint.startswith('/') and os.path.isfile(endpoint):
+            if (
+                endpoint.startswith('/') and (
+                    os.path.isfile(endpoint) or (
+                        os.path.exists(endpoint) and
+                        stat.S_ISSOCK(os.stat(endpoint).st_mode)
+                    )
+                )
+            ):
                 self.api = _APINode('http+unix://{}'.format(
                     parse.quote(endpoint, safe='')))
+            elif endpoint.startswith('http+unix://') and '/' in endpoint[12:]:
+                self.api = _APINode('http+unix://{}'.format(
+                    parse.quote(endpoint[12:], safe='')))
             else:
                 # Extra trailing slashes cause LXD to 301
                 endpoint = endpoint.rstrip('/')
