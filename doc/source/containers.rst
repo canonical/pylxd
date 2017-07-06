@@ -107,7 +107,7 @@ container.
 
 .. code-block:: python
 
-    >>> config = {'name': 'my-container', 'source': {'type': 'image', 'image': 'ubuntu/trusty'}}
+    >>> config = {'name': 'my-container', 'source': {'type': 'image', 'alias': 'ubuntu/trusty'}}
     >>> container = client.containers.create(config, wait=True)
     >>> container.start()
     >>> container.freeze()
