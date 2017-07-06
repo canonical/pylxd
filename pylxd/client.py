@@ -101,23 +101,17 @@ class _APINode(object):
 
     def get(self, *args, **kwargs):
         """Perform an HTTP GET."""
-        try:
-            _timeout = kwargs.pop('timeout')
-        except KeyError:
-            _timeout = self._timeout
+        kwargs['timeout'] = kwargs.get('timeout', self._timeout)
         response = self.session.get(
-            self._api_endpoint, *args, timeout=_timeout, **kwargs)
+            self._api_endpoint, *args, **kwargs)
         self._assert_response(response, stream=kwargs.get('stream', False))
         return response
 
     def post(self, *args, **kwargs):
         """Perform an HTTP POST."""
-        try:
-            _timeout = kwargs.pop('timeout')
-        except KeyError:
-            _timeout = self._timeout
+        kwargs['timeout'] = kwargs.get('timeout', self._timeout)
         response = self.session.post(
-            self._api_endpoint, *args, timeout=_timeout, **kwargs)
+            self._api_endpoint, *args, **kwargs)
         # Prior to LXD 2.0.3, successful synchronous requests returned 200,
         # rather than 201.
         self._assert_response(response, allowed_status_codes=(200, 201, 202))
@@ -125,23 +119,17 @@ class _APINode(object):
 
     def put(self, *args, **kwargs):
         """Perform an HTTP PUT."""
-        try:
-            _timeout = kwargs.pop('timeout')
-        except KeyError:
-            _timeout = self._timeout
+        kwargs['timeout'] = kwargs.get('timeout', self._timeout)
         response = self.session.put(
-            self._api_endpoint, *args, timeout=_timeout, **kwargs)
+            self._api_endpoint, *args, **kwargs)
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
 
     def delete(self, *args, **kwargs):
         """Perform an HTTP delete."""
-        try:
-            _timeout = kwargs.pop('timeout')
-        except KeyError:
-            _timeout = self._timeout
+        kwargs['timeout'] = kwargs.get('timeout', self._timeout)
         response = self.session.delete(
-            self._api_endpoint, *args, timeout=_timeout, **kwargs)
+            self._api_endpoint, *args, **kwargs)
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
 
