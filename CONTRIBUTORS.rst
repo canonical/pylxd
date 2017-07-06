@@ -8,6 +8,7 @@ These are the contributors to pylxd according to the Github repository.
  GH username      Name
  =============== ==================================
  rockstar        Paul Hummer
+ zulcss          Chuck Short
  saviq           Michał Sawicz
  javacruft       James Page (Canonical)
  pcdummy         Rene Jochum
