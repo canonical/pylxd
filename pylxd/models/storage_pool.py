@@ -17,7 +17,7 @@ from pylxd.models import _model as model
 class StoragePool(model.Model):
     """A LXD storage_pool.
 
-    This corresponds to the LXD endpoint at 
+    This corresponds to the LXD endpoint at
     /1.0/storage-pools
     """
     name = model.Attribute()

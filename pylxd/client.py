@@ -46,14 +46,14 @@ class _APINode(object):
 
     def __getattr__(self, name):
         # name here correspoinds to the model name in the LXD API
-        # and, as such, mujsh have underscores replaced with hyphens
+        # and, as such, must have underscores replaced with hyphens
         return self.__class__(
             '{}/{}'.format(self._api_endpoint, name.replace('_', '-')),
             cert=self.session.cert, verify=self.session.verify)
 
     def __getitem__(self, item):
         # item here correspoinds to the model name in the LXD API
-        # and, as such, mujsh have underscores replaced with hyphens
+        # and, as such, must have underscores replaced with hyphens
         return self.__class__(
             '{}/{}'.format(self._api_endpoint, item.replace('_', '-')),
             cert=self.session.cert,
