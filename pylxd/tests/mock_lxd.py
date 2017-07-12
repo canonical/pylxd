@@ -545,6 +545,32 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/networks/lo$',
     },
 
+    # Storage Pools
+    {
+        'json': {
+            'type': 'sync',
+            'metadata': [
+                'http://pylxd.test/1.0/storage-pools/lxd',
+            ]},
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/storage-pools$',
+    },
+    {
+        'json': {
+            'type': 'sync',
+            'metadata': {
+                'config': {
+                    'size': '0',
+                    'source': '/var/lib/lxd/disks/lxd.img'
+                },
+                'description': '',
+                'name': 'lxd',
+                'driver': 'zfs',
+                'used_by': [],
+            }},
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/storage-pools/lxd$',
+    },
 
     # Profiles
     {

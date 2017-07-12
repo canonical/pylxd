@@ -46,12 +46,12 @@ class _APINode(object):
 
     def __getattr__(self, name):
         return self.__class__(
-            '{}/{}'.format(self._api_endpoint, name),
+            '{}/{}'.format(self._api_endpoint, name.replace('_', '-')),
             cert=self.session.cert, verify=self.session.verify)
 
     def __getitem__(self, item):
         return self.__class__(
-            '{}/{}'.format(self._api_endpoint, item),
+            '{}/{}'.format(self._api_endpoint, item.replace('_', '-')),
             cert=self.session.cert,
             verify=self.session.verify,
             timeout=self._timeout)
@@ -237,6 +237,7 @@ class Client(object):
         self.networks = managers.NetworkManager(self)
         self.operations = managers.OperationManager(self)
         self.profiles = managers.ProfileManager(self)
+        self.storage_pools = managers.StoragePoolManager(self)
 
     @property
     def trusted(self):
