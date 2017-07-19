@@ -12,12 +12,22 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import collections
+import fcntl
+import json
+import os
+import platform
+import termios
 import time
+import tty
+import signal
+import struct
+import sys
 
 import six
 from six.moves.urllib import parse
 try:
     from ws4py.client import WebSocketBaseClient
+    from ws4py.client.threadedclient import WebSocketClient
     from ws4py.manager import WebSocketManager
     _ws4py_installed = True
 except ImportError:  # pragma: no cover
@@ -250,6 +260,61 @@ class Container(model.Model):
             return _ContainerExecuteResult(
                 operation.metadata['return'], stdout.data, stderr.data)
 
+    def execute_interactive(self, commands, environment={}):
+        """ Execute a command on the container in an interactive shell. """
+        if not _ws4py_installed:
+            raise ValueError(
+                'This feature requires the optional ws4py library.')
+        if isinstance(commands, six.string_types):
+            raise TypeError("First argument must be a list.")
+
+        if 'TERM' not in environment and 'TERM' in os.environ:
+            # Use current terminal color settings.
+            environment['TERM'] = os.environ['TERM']
+        rows, cols = _pty_size()
+        response = self.api['exec'].post(json={
+            'command': commands,
+            'environment': environment,
+            'wait-for-websocket': True,
+            'interactive': True,
+            'width': cols,
+            'height': rows,
+        })
+
+        fds = response.json()['metadata']['metadata']['fds']
+        operation_id = response.json()['operation'].split('/')[-1]
+        parsed = parse.urlparse(
+            self.client.api.operations[operation_id].websocket._api_endpoint)
+
+        pts = _InteractiveWebsocket(self.client.websocket_url)
+        pts.resource = '{}?secret={}'.format(parsed.path, fds['0'])
+        pts.connect()
+
+        ctl = WebSocketClient(self.client.websocket_url)
+        ctl.resource = '{}?secret={}'.format(parsed.path, fds['control'])
+        ctl.connect()
+
+        old_handler = signal.getsignal(signal.SIGWINCH)
+
+        def on_term_resize(signum, frame):
+            rows, cols = _pty_size()
+            # Refs:
+            # https://github.com/lxc/lxd/blob/master/lxd/container_exec.go#L190
+            # https://github.com/lxc/lxd/blob/master/shared/api/container_exec.go
+            ctl.send(json.dumps({
+                'command': 'window-resize',
+                'args': {
+                    'width': str(cols),
+                    'height': str(rows)
+                }
+            }))
+        signal.signal(signal.SIGWINCH, on_term_resize)
+        pts.run_forever()
+        signal.signal(signal.SIGWINCH, old_handler)
+
+        operation = self.client.operations.get(operation_id)
+        return _ContainerExecuteResult(operation.metadata['return'], '', '')
+
     def migrate(self, new_client, wait=False):
         """Migrate a container.
 
@@ -354,6 +419,78 @@ class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
 
     def handshake_ok(self):
         self.close()
+
+
+class _InteractiveWebsocket(WebSocketClient):  # pragma: no cover
+    def received_message(self, message):
+        if len(message.data) == 0:
+            self.close()
+        if message.encoding:
+            m = message.data.decode(message.encoding)
+        else:
+            m = message.data.decode('utf-8')
+        sys.stdout.write(m)
+        sys.stdout.flush()
+
+    def run_forever(self):
+        # Refs: http://ballingt.com/nonblocking-stdin-in-python-3/
+        class raw(object):
+            def __init__(self, stream):
+                self.stream = stream
+
+            def __enter__(self):
+                self.oldtty = termios.tcgetattr(self.stream)
+                tty.setraw(self.stream.fileno())
+                tty.setcbreak(self.stream.fileno())
+
+            def __exit__(self, type, value, traceback):
+                termios.tcsetattr(self.stream, termios.TCSADRAIN,
+                                  self.oldtty)
+
+        class nonblocking(object):
+            def __init__(self, stream):
+                self.stream = stream
+
+            def __enter__(self):
+                self.oldfl = fcntl.fcntl(self.stream.fileno(), fcntl.F_GETFL)
+                fcntl.fcntl(self.stream.fileno(), fcntl.F_SETFL,
+                            self.oldfl | os.O_NONBLOCK)
+
+            def __exit__(self, *args):
+                fcntl.fcntl(self.stream.fileno(), fcntl.F_SETFL, self.oldfl)
+
+        with raw(sys.stdin):
+            with nonblocking(sys.stdin):
+                stdin = sys.stdin.buffer if six.PY3 else sys.stdin
+                while not self.terminated:
+                    xs = b''
+                    while True:
+                        # Read a block from stdin
+                        try:
+                            x = stdin.read(1)
+                        except IOError:
+                            x = None
+                        if x:
+                            xs += x
+                        else:
+                            break
+                    if xs:
+                        self.send(xs, binary=True)
+                    self._th.join(timeout=0.01)
+
+
+def _pty_size():
+    """ From wssh.client._pty_size """
+    rows, cols = 24, 80
+    # Can't do much for Windows
+    if platform.system() == 'Windows':
+        return rows, cols
+    fmt = 'HH'
+    buffer = struct.pack(fmt, 0, 0)
+    result = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ,
+                         buffer)
+    rows, cols = struct.unpack(fmt, result)
+    return rows, cols
 
 
 class Snapshot(model.Model):
