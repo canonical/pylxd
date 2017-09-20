@@ -123,8 +123,9 @@ class Image(model.Model):
             headers['X-LXD-Public'] = '1'
 
         if from_streams is not None:
-            # Image uploaded as streamed (metadata, rootfs) multipart message
-            # order is important metadata should be passed first
+            # Image uploaded as chunked/stream (metadata, rootfs)
+            # multipart message.
+            # Order of parts is important metadata should be passed first
             files = collections.OrderedDict(
                 metadata=('metadata', metadata, 'application/octet-stream'),
                 rootfs=('rootfs', image_data, 'application/octet-stream'))
