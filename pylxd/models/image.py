@@ -11,10 +11,12 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import collections
 import contextlib
 import tempfile
 import uuid
 import warnings
+from requests_toolbelt import MultipartEncoder
 
 import six
 
@@ -99,7 +101,8 @@ class Image(model.Model):
 
     @classmethod
     def create(
-            cls, client, image_data, metadata=None, public=False, wait=True):
+            cls, client, image_data,
+            metadata=None, public=False, wait=True, from_streams=False):
         """Create an image.
 
         If metadata is provided, a multipart form data request is formed to
@@ -119,7 +122,16 @@ class Image(model.Model):
         if public:
             headers['X-LXD-Public'] = '1'
 
-        if metadata is not None:
+        if from_streams is not None:
+            # Image uploaded as streamed (metadata, rootfs) multipart message
+            # order is important metadata should be passed first
+            files = collections.OrderedDict(
+                metadata=('metadata', metadata, 'application/octet-stream'),
+                rootfs=('rootfs', image_data, 'application/octet-stream'))
+            data = MultipartEncoder(files)
+            headers.update({"Content-Type": data.content_type})
+        elif metadata is not None:
+            # in-memory file upload for clients backward compatibility
             boundary = str(uuid.uuid1())
 
             data = b''
@@ -142,7 +154,8 @@ class Image(model.Model):
         else:
             data = image_data
 
-        response = client.api.images.post(data=data, headers=headers)
+        response = client.api.images.post(
+            data=data, files=None, headers=headers)
         operation = client.operations.wait_for_operation(
             response.json()['operation'])
         return cls(client, fingerprint=operation.metadata['fingerprint'])
