@@ -155,7 +155,8 @@ class Image(model.Model):
         else:
             data = image_data
 
-        response = client.api.images.post(data=data, headers=headers)
+        response = client.api.images.post(
+            data=data, files=None, headers=headers)
         operation = client.operations.wait_for_operation(
             response.json()['operation'])
         return cls(client, fingerprint=operation.metadata['fingerprint'])
