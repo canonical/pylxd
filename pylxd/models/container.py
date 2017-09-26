@@ -384,13 +384,18 @@ class Snapshot(model.Model):
         return snapshot
 
     @classmethod
-    def all(cls, client, container):
-        response = client.api.containers[container.name].snapshots.get()
 
-        return [cls(
-                client, name=snapshot.split('/')[-1],
-                container=container)
-                for snapshot in response.json()['metadata']]
+    def all(cls, client):
+        response = client.api.containers.get()
+        containers = []
+        for url in response.json()['metadata']:
+            name = url.split('/')[3]
+            name = client.api.containers[name].snapshots.get().json()['metadata']
+            if [] != name:
+                name = name[0].split('/')[-1]
+                containers.append(cls(client, name=name))
+
+        return containers
 
     @classmethod
     def create(cls, client, container, name, stateful=False, wait=False):
