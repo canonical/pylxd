@@ -58,6 +58,19 @@ class TestClient(unittest.TestCase):
 
         self.assertEqual(expected, an_client.api._api_endpoint)
 
+    @mock.patch('os.path.exists')
+    @mock.patch('os.environ')
+    def test_create_with_snap_lxd(self, _environ, _path_exists):
+        # """Client creation sets default API endpoint."""
+        _path_exists.return_value = True
+        expected = ('http+unix://%2Fvar%2Fsnap%2Flxd%2F'
+                    'common%2Flxd%2Funix.socket/1.0')
+
+        an_client = client.Client()
+        print("path exists: {}".format(os.path.exists('stuff')))
+        print("env: {}".format(os.environ))
+        self.assertEqual(expected, an_client.api._api_endpoint)
+
     def test_create_LXD_DIR(self):
         """When LXD_DIR is set, use it in the client."""
         os.environ['LXD_DIR'] = '/lxd'
@@ -197,6 +210,7 @@ class TestClient(unittest.TestCase):
         websocket_client = mock.Mock(resource=None)
         WebsocketClient = mock.Mock()
         WebsocketClient.return_value = websocket_client
+        os.environ['LXD_DIR'] = '/lxd'
         an_client = client.Client()
 
         an_client.events(websocket_client=WebsocketClient)
