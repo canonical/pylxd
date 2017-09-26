@@ -48,8 +48,10 @@ class TestClient(unittest.TestCase):
         self.get_patcher.stop()
         self.post_patcher.stop()
 
-    def test_create(self):
+    @mock.patch('os.path.exists')
+    def test_create(self, _path_exists):
         """Client creation sets default API endpoint."""
+        _path_exists.return_value = False
         expected = 'http+unix://%2Fvar%2Flib%2Flxd%2Funix.socket/1.0'
 
         an_client = client.Client()
