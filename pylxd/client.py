@@ -237,6 +237,7 @@ class Client(object):
         self.networks = managers.NetworkManager(self)
         self.operations = managers.OperationManager(self)
         self.profiles = managers.ProfileManager(self)
+        self.snapshot = managers.SnapshotManager(self)
 
     @property
     def trusted(self):
