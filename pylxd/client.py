@@ -45,13 +45,17 @@ class _APINode(object):
             self.session.verify = verify
 
     def __getattr__(self, name):
+        # name here correspoinds to the model name in the LXD API
+        # and, as such, must have underscores replaced with hyphens
         return self.__class__(
-            '{}/{}'.format(self._api_endpoint, name),
+            '{}/{}'.format(self._api_endpoint, name.replace('_', '-')),
             cert=self.session.cert, verify=self.session.verify)
 
     def __getitem__(self, item):
+        # item here correspoinds to the model name in the LXD API
+        # and, as such, must have underscores replaced with hyphens
         return self.__class__(
-            '{}/{}'.format(self._api_endpoint, item),
+            '{}/{}'.format(self._api_endpoint, item.replace('_', '-')),
             cert=self.session.cert,
             verify=self.session.verify,
             timeout=self._timeout)
@@ -237,6 +241,7 @@ class Client(object):
         self.networks = managers.NetworkManager(self)
         self.operations = managers.OperationManager(self)
         self.profiles = managers.ProfileManager(self)
+        self.storage_pools = managers.StoragePoolManager(self)
 
     @property
     def trusted(self):

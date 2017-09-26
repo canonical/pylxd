@@ -55,6 +55,10 @@ class SnapshotManager(BaseManager):
     manager_for = 'pylxd.models.Snapshot'
 
 
+class StoragePoolManager(BaseManager):
+    manager_for = 'pylxd.models.StoragePool'
+
+
 @contextmanager
 def web_socket_manager(manager):
     try:

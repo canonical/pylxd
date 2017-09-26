@@ -4,3 +4,4 @@ from pylxd.models.image import Image  # NOQA
 from pylxd.models.network import Network  # NOQA
 from pylxd.models.operation import Operation  # NOQA
 from pylxd.models.profile import Profile  # NOQA
+from pylxd.models.storage_pool import StoragePool  # NOQA
