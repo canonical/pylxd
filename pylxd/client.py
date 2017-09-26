@@ -219,7 +219,10 @@ class Client(object):
                 path = os.path.join(
                     os.environ.get('LXD_DIR'), 'unix.socket')
             else:
-                path = '/var/lib/lxd/unix.socket'
+                if os.path.exists('/var/snap/lxd/common/lxd/unix.socket'):
+                    path = '/var/snap/lxd/common/lxd/unix.socket'
+                else:
+                    path = '/var/lib/lxd/unix.socket'
             self.api = _APINode('http+unix://{}'.format(
                 parse.quote(path, safe='')), timeout=timeout)
         self.api = self.api[version]
