@@ -67,8 +67,6 @@ class TestClient(unittest.TestCase):
                     'common%2Flxd%2Funix.socket/1.0')
 
         an_client = client.Client()
-        print("path exists: {}".format(os.path.exists('stuff')))
-        print("env: {}".format(os.environ))
         self.assertEqual(expected, an_client.api._api_endpoint)
 
     def test_create_LXD_DIR(self):
