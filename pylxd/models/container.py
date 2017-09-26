@@ -360,6 +360,7 @@ class Snapshot(model.Model):
     """A container snapshot."""
 
     name = model.Attribute()
+    created_at = model.Attribute()
     stateful = model.Attribute()
 
     container = model.Parent()
