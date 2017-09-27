@@ -14,6 +14,7 @@
 import json
 import os
 import os.path
+from collections import namedtuple
 
 import requests
 import requests_unixsocket
@@ -28,6 +29,20 @@ except ImportError:  # pragma: no cover
 from pylxd import exceptions, managers
 
 requests_unixsocket.monkeypatch()
+
+LXD_PATH = '.config/lxc/'
+SNAP_ROOT = '~/snap/lxd/current/'
+APT_ROOT = '~/'
+if os.path.exists(os.path.expanduser(SNAP_ROOT)):  # pragma: no cover
+    CERTS_PATH = os.path.join(SNAP_ROOT, LXD_PATH)  # pragma: no cover
+else:  # pragma: no cover
+    CERTS_PATH = os.path.join(APT_ROOT, LXD_PATH)  # pragma: no cover
+
+Cert = namedtuple('Cert', ['cert', 'key'])  # pragma: no cover
+DEFAULT_CERTS = Cert(
+    cert=os.path.expanduser(os.path.join(CERTS_PATH, 'client.crt')),
+    key=os.path.expanduser(os.path.join(CERTS_PATH, 'client.key'))
+)  # pragma: no cover
 
 
 class _APINode(object):
@@ -193,13 +208,26 @@ class Client(object):
 
     """
 
-    DEFAULT_CERTS = (
-        os.path.expanduser('~/.config/lxc/client.crt'),
-        os.path.expanduser('~/.config/lxc/client.key'))
-
     def __init__(
             self, endpoint=None, version='1.0', cert=None, verify=True,
             timeout=None):
+        """Constructs a LXD client
+
+        :param endpoint: (optional): endpoint can be an http endpoint or
+            a path to a unix socket.
+        :param version: (optional): API version string to use with LXD
+        :param cert: (optional): A tuple of (cert, key) to use with
+            the http socket for client authentication
+        :param verify: (optional): Either a boolean, in which case it controls
+            whether we verify the server's TLS certificate, or a string, in
+            which case it must be a path to a CA bundle to use.
+            Defaults to ``True``.
+        :param timeout: (optional) How long to wait for the server to send
+            data before giving up, as a float, or a :ref:`(connect timeout,
+            read timeout) <timeouts>` tuple.
+
+        """
+
         self.cert = cert
         if endpoint is not None:
             if endpoint.startswith('/') and os.path.isfile(endpoint):
@@ -209,9 +237,9 @@ class Client(object):
                 # Extra trailing slashes cause LXD to 301
                 endpoint = endpoint.rstrip('/')
                 if cert is None and (
-                        os.path.exists(self.DEFAULT_CERTS[0]) and
-                        os.path.exists(self.DEFAULT_CERTS[1])):
-                    cert = self.DEFAULT_CERTS
+                        os.path.exists(DEFAULT_CERTS.cert) and
+                        os.path.exists(DEFAULT_CERTS.key)):
+                    cert = DEFAULT_CERTS
                 self.api = _APINode(
                     endpoint, cert=cert, verify=verify, timeout=timeout)
         else:
