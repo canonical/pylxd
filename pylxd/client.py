@@ -210,6 +210,23 @@ class Client(object):
     def __init__(
             self, endpoint=None, version='1.0', cert=None, verify=True,
             timeout=None):
+        """Constructs a LXD client
+
+        :param endpoint: (optional): adnpoint can be an http endpoint or
+            a path to a unix socket.
+        :param version: (optional): API version string to use with LXD
+        :param cert: (optional): A tuple of (cert, key) to use with
+            the http socket for client authentication
+        :param verify: (optional): Either a boolean, in which case it controls
+            whether we verify the server's TLS certificate, or a string, in
+            which case it must be a path to a CA bundle to use.
+            Defaults to ``True``.
+        :param timeout: (optional) How long to wait for the server to send
+            data before giving up, as a float, or a :ref:`(connect timeout,
+            read timeout) <timeouts>` tuple.
+
+        """
+
         self.cert = cert
         if endpoint is not None:
             if endpoint.startswith('/') and os.path.isfile(endpoint):
