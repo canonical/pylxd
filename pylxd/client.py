@@ -14,6 +14,7 @@
 import json
 import os
 import os.path
+from collections import namedtuple
 
 import requests
 import requests_unixsocket
@@ -33,12 +34,14 @@ LXD_PATH = '.config/lxc/'
 SNAP_ROOT = '~/snap/lxd/current/'
 APT_ROOT = '~/'
 if os.path.exists(os.path.expanduser(SNAP_ROOT)):
-    CERTS_PATH = "{}{}".format(SNAP_ROOT, LXD_PATH)
+    CERTS_PATH = os.path.join(SNAP_ROOT, LXD_PATH)
 else:
-    CERTS_PATH = "{}{}".format(APT_ROOT, LXD_PATH)
-DEFAULT_CERTS = (
-    os.path.expanduser('{}client.crt'.format(CERTS_PATH)),
-    os.path.expanduser('{}client.key'.format(CERTS_PATH)))
+    CERTS_PATH = os.path.join(APT_ROOT, LXD_PATH)
+
+Cert = namedtuple('Cert', ['cert', 'key'])
+DEFAULT_CERTS = Cert(
+    cert=os.path.expanduser(os.path.join(CERTS_PATH, 'client.crt')),
+    key=os.path.expanduser(os.path.join(CERTS_PATH, 'client.key')))
 
 
 class _APINode(object):
@@ -216,8 +219,8 @@ class Client(object):
                 # Extra trailing slashes cause LXD to 301
                 endpoint = endpoint.rstrip('/')
                 if cert is None and (
-                        os.path.exists(DEFAULT_CERTS[0]) and
-                        os.path.exists(DEFAULT_CERTS[1])):
+                        os.path.exists(DEFAULT_CERTS.cert) and
+                        os.path.exists(DEFAULT_CERTS.key)):
                     cert = DEFAULT_CERTS
                 self.api = _APINode(
                     endpoint, cert=cert, verify=verify, timeout=timeout)
