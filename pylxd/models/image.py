@@ -122,7 +122,7 @@ class Image(model.Model):
         if public:
             headers['X-LXD-Public'] = '1'
 
-        if from_streams is not None:
+        if from_streams:
             # Image uploaded as chunked/stream (metadata, rootfs)
             # multipart message.
             # Order of parts is important metadata should be passed first
