@@ -29,6 +29,17 @@ from pylxd import exceptions, managers
 
 requests_unixsocket.monkeypatch()
 
+LXD_PATH = '.config/lxc/'
+SNAP_ROOT = '~/snap/lxd/current/'
+APT_ROOT = '~/'
+if os.path.exists(os.path.expanduser(SNAP_ROOT)):
+    CERTS_PATH = "{}{}".format(SNAP_ROOT, LXD_PATH)
+else:
+    CERTS_PATH = "{}{}".format(APT_ROOT, LXD_PATH)
+DEFAULT_CERTS = (
+    os.path.expanduser('{}client.crt'.format(CERTS_PATH)),
+    os.path.expanduser('{}client.key'.format(CERTS_PATH)))
+
 
 class _APINode(object):
     """An api node object."""
@@ -192,15 +203,6 @@ class Client(object):
             >>> print api.containers['test'].get().json()
 
     """
-    if os.path.exists(
-            os.path.expanduser('~/snap/lxd/current/.config/lxc/client.crt')):
-        DEFAULT_CERTS = (
-            os.path.expanduser('~/snap/lxd/current/.config/lxc/client.crt'),
-            os.path.expanduser('~/snap/lxd/current/.config/lxc/client.key'))
-    else:
-        DEFAULT_CERTS = (
-            os.path.expanduser('~/.config/lxc/client.crt'),
-            os.path.expanduser('~/.config/lxc/client.key'))
 
     def __init__(
             self, endpoint=None, version='1.0', cert=None, verify=True,
@@ -214,9 +216,9 @@ class Client(object):
                 # Extra trailing slashes cause LXD to 301
                 endpoint = endpoint.rstrip('/')
                 if cert is None and (
-                        os.path.exists(self.DEFAULT_CERTS[0]) and
-                        os.path.exists(self.DEFAULT_CERTS[1])):
-                    cert = self.DEFAULT_CERTS
+                        os.path.exists(DEFAULT_CERTS[0]) and
+                        os.path.exists(DEFAULT_CERTS[1])):
+                    cert = DEFAULT_CERTS
                 self.api = _APINode(
                     endpoint, cert=cert, verify=verify, timeout=timeout)
         else:
