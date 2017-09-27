@@ -192,10 +192,15 @@ class Client(object):
             >>> print api.containers['test'].get().json()
 
     """
-
-    DEFAULT_CERTS = (
-        os.path.expanduser('~/.config/lxc/client.crt'),
-        os.path.expanduser('~/.config/lxc/client.key'))
+    if os.path.exists(
+            os.path.expanduser('~/snap/lxd/current/.config/lxc/client.crt')):
+        DEFAULT_CERTS = (
+            os.path.expanduser('~/snap/lxd/current/.config/lxc/client.crt'),
+            os.path.expanduser('~/snap/lxd/current/.config/lxc/client.key'))
+    else:
+        DEFAULT_CERTS = (
+            os.path.expanduser('~/.config/lxc/client.crt'),
+            os.path.expanduser('~/.config/lxc/client.key'))
 
     def __init__(
             self, endpoint=None, version='1.0', cert=None, verify=True,
