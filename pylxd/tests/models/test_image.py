@@ -1,6 +1,7 @@
 import hashlib
 import json
 
+from io import StringIO
 from pylxd import exceptions, models
 from pylxd.tests import testing
 
@@ -111,6 +112,16 @@ class TestImage(testing.PyLXDTestCase):
         fingerprint = hashlib.sha256(b'').hexdigest()
         a_image = models.Image.create(
             self.client, b'', metadata=b'', public=True, wait=True)
+
+        self.assertIsInstance(a_image, models.Image)
+        self.assertEqual(fingerprint, a_image.fingerprint)
+
+    def test_create_with_metadata_from_streams(self):
+        """An image with metadata is created."""
+        fingerprint = hashlib.sha256(b'').hexdigest()
+        a_image = models.Image.create(
+            self.client, StringIO(u''), metadata=StringIO(u''),
+            public=True, wait=True, from_streams=True)
 
         self.assertIsInstance(a_image, models.Image)
         self.assertEqual(fingerprint, a_image.fingerprint)
