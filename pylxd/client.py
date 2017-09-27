@@ -212,7 +212,7 @@ class Client(object):
             timeout=None):
         """Constructs a LXD client
 
-        :param endpoint: (optional): adnpoint can be an http endpoint or
+        :param endpoint: (optional): endpoint can be an http endpoint or
             a path to a unix socket.
         :param version: (optional): API version string to use with LXD
         :param cert: (optional): A tuple of (cert, key) to use with
