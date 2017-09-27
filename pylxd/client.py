@@ -33,15 +33,16 @@ requests_unixsocket.monkeypatch()
 LXD_PATH = '.config/lxc/'
 SNAP_ROOT = '~/snap/lxd/current/'
 APT_ROOT = '~/'
-if os.path.exists(os.path.expanduser(SNAP_ROOT)):
-    CERTS_PATH = os.path.join(SNAP_ROOT, LXD_PATH)
-else:
-    CERTS_PATH = os.path.join(APT_ROOT, LXD_PATH)
+if os.path.exists(os.path.expanduser(SNAP_ROOT)):  # pragma: no cover
+    CERTS_PATH = os.path.join(SNAP_ROOT, LXD_PATH)  # pragma: no cover
+else:  # pragma: no cover
+    CERTS_PATH = os.path.join(APT_ROOT, LXD_PATH)  # pragma: no cover
 
-Cert = namedtuple('Cert', ['cert', 'key'])
+Cert = namedtuple('Cert', ['cert', 'key'])  # pragma: no cover
 DEFAULT_CERTS = Cert(
     cert=os.path.expanduser(os.path.join(CERTS_PATH, 'client.crt')),
-    key=os.path.expanduser(os.path.join(CERTS_PATH, 'client.key')))
+    key=os.path.expanduser(os.path.join(CERTS_PATH, 'client.key'))
+)  # pragma: no cover
 
 
 class _APINode(object):
