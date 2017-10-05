@@ -11,12 +11,11 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import collections
 import contextlib
 import tempfile
-import uuid
 import warnings
-
-import six
+from requests_toolbelt import MultipartEncoder
 
 from pylxd.models import _model as model
 
@@ -120,25 +119,14 @@ class Image(model.Model):
             headers['X-LXD-Public'] = '1'
 
         if metadata is not None:
-            boundary = str(uuid.uuid1())
-
-            data = b''
-            for name, contents in (
-                    ('metadata', metadata), ('rootfs', image_data)):
-                data += b'\r\n'.join([
-                    six.b('--{}'.format(boundary)),
-                    six.b(
-                        'Content-Disposition:form-data;'
-                        'name={};filename={}'.format(name, name)),
-                    b'Content-Type: application/octet-stream',
-                    b'',
-                    contents,
-                    b'',
-                ])
-            data += six.b('--{}--\r\n\r\n'.format(boundary))
-
-            headers['Content-Type'] = "multipart/form-data;boundary={}".format(
-                boundary)
+            # Image uploaded as chunked/stream (metadata, rootfs)
+            # multipart message.
+            # Order of parts is important metadata should be passed first
+            files = collections.OrderedDict(
+                metadata=('metadata', metadata, 'application/octet-stream'),
+                rootfs=('rootfs', image_data, 'application/octet-stream'))
+            data = MultipartEncoder(files)
+            headers.update({"Content-Type": data.content_type})
         else:
             data = image_data
 
