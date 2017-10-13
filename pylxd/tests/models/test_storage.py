@@ -38,6 +38,14 @@ class TestStoragePool(testing.PyLXDTestCase):
 
         self.assertEqual('zfs', an_storage_pool.driver)
 
+    def test_create(self):
+        """A new storage pool is created."""
+        config = {"config": {}, "driver": "zfs", "name": "lxd"}
+
+        an_storage_pool = models.StoragePool.create(self.client, config)
+
+        self.assertEqual(config['name'], an_storage_pool.name)
+
     def test_delete(self):
         """delete is not implemented in storage_pools."""
         an_storage_pool = models.StoragePool(self.client, name='lxd')
