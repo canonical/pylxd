@@ -54,6 +54,15 @@ class StoragePool(model.Model):
         storage_pool = cls.get(client, config['name'])
         return storage_pool
 
+    @classmethod
+    def exists(cls, client, name):
+        """Determine whether a storage pool exists."""
+        try:
+            client.storage_pools.get(name)
+            return True
+        except cls.NotFound:
+            return False
+
     @property
     def api(self):
         return self.client.api.storage_pools[self.name]
