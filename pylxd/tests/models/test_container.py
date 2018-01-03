@@ -431,13 +431,38 @@ class TestFiles(testing.PyLXDTestCase):
         super(TestFiles, self).setUp()
         self.container = models.Container.get(self.client, 'an-container')
 
-    def test_put(self):
-        """A file is put on the container."""
+    def test_put_delete(self):
+        """A file is put on the container and then deleted"""
         data = 'The quick brown fox'
 
-        self.container.files.put('/tmp/putted', data)
+        res = self.container.files.put('/tmp/putted', data)
+        self.assertEqual(True, res, msg='Failed to put file, result: {}'.format(res)) # NOQA
 
-        # TODO: Add an assertion here
+        # we are mocked, so delete should initially not be available
+        self.assertEqual(False, self.container.files.delete_available())
+        self.assertRaises(ValueError,
+                          self.container.files.delete, '/tmp/putted')
+        # Now insert delete
+        rule = {
+            'text': json.dumps({
+                'type': 'sync',
+                'metadata': {'auth': 'trusted',
+                             'environment': {
+                                 'certificate': 'an-pem-cert',
+                                 },
+                             'api_extensions': ['file_delete']
+                             }}),
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0$',
+        }
+        self.add_rule(rule)
+        # Update hostinfo
+        self.client.host_info = self.client.api.get().json()['metadata']
+
+        self.assertEqual(True, self.container.files.delete_available())
+
+        res = self.container.files.delete('/tmp/putted')
+        self.assertEqual(True, res, msg='Failed to delete file, result: {}'.format(res)) # NOQA
 
     def test_get(self):
         """A file is retrieved from the container."""

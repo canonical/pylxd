@@ -84,6 +84,22 @@ class Container(model.Model):
                 params={'path': filepath}, data=data)
             return response.status_code == 200
 
+        def delete_available(self):
+            """File deletion is an extension API and may not be available.
+            https://github.com/lxc/lxd/blob/master/doc/api-extensions.md#file_delete
+            """
+            return u'file_delete' in self._client.host_info['api_extensions']
+
+        def delete(self, filepath):
+            if self.delete_available():
+                response = self._client.api.containers[
+                    self._container.name].files.delete(
+                    params={'path': filepath})
+                return response.status_code == 200
+            else:
+                raise ValueError(
+                    'File Deletion is not available for this host')
+
         def get(self, filepath):
             response = self._client.api.containers[
                 self._container.name].files.get(
