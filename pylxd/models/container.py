@@ -13,6 +13,7 @@
 #    under the License.
 import collections
 import time
+import os
 
 import six
 from six.moves.urllib import parse
@@ -140,6 +141,27 @@ class Container(model.Model):
             response = (self._client.api.containers[self._container.name]
                         .files.get(params={'path': filepath}, is_api=False))
             return response.content
+
+        def recursive_put(self, src, dst):
+            if os.path.isdir(src):
+                idx = len(os.path.dirname(src))
+                dst_dirs = []
+                for path, dirname, files in os.walk(src):
+                    dst_dir = os.path.join(dst, path[idx:].lstrip(os.path.sep))
+                    dst_dirs.append(dst_dir)
+
+                self._container.execute(['mkdir', '-p'] + dst_dirs)
+                # Copy files
+                responses = []
+                for path, dirname, files in os.walk(src):
+                    dst_dir = os.path.join(dst, path[idx:].lstrip(os.path.sep))
+                    for name in files:
+                        src_name = os.path.join(path, name)
+                        dst_name = os.path.join(dst_dir, name)
+                        response = self._container.files.put(
+                            dst_name, data=open(src_name, 'rb').read())
+                        responses.append(response)
+                return all(responses)
 
     @classmethod
     def exists(cls, client, name):
