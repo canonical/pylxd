@@ -11,6 +11,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import json
+
 from pylxd import models
 from pylxd.tests import testing
 
@@ -37,6 +39,38 @@ class TestStoragePool(testing.PyLXDTestCase):
         an_storage_pool = models.StoragePool(self.client, name='lxd')
 
         self.assertEqual('zfs', an_storage_pool.driver)
+
+    def test_create(self):
+        """A new storage pool is created."""
+        config = {"config": {}, "driver": "zfs", "name": "lxd"}
+
+        an_storage_pool = models.StoragePool.create(self.client, config)
+
+        self.assertEqual(config['name'], an_storage_pool.name)
+
+    def test_exists(self):
+        """A storage pool exists."""
+        name = 'lxd'
+
+        self.assertTrue(models.StoragePool.exists(self.client, name))
+
+    def test_not_exists(self):
+        """A storage pool exists."""
+        def not_found(request, context):
+            context.status_code = 404
+            return json.dumps({
+                'type': 'error',
+                'error': 'Not found',
+                'error_code': 404})
+        self.add_rule({
+            'text': not_found,
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/storage-pools/an-missing-storage-pool$',  # NOQA
+        })
+
+        name = 'an-missing-storage-pool'
+
+        self.assertFalse(models.StoragePool.exists(self.client, name))
 
     def test_delete(self):
         """delete is not implemented in storage_pools."""

@@ -571,6 +571,11 @@ RULES = [
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/storage-pools/lxd$',
     },
+    {
+        'json': {'type': 'sync'},
+        'method': 'POST',
+        'url': r'^http://pylxd.test/1.0/storage-pools$',
+    },
 
     # Profiles
     {
