@@ -91,7 +91,9 @@ RULES = [
             'metadata': {'auth': 'trusted',
                          'environment': {
                              'certificate': 'an-pem-cert',
-                             }}}),
+                             },
+                         'api_extensions': []
+                         }}),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0$',
     },
@@ -99,7 +101,9 @@ RULES = [
         'text': json.dumps({
             'type': 'sync',
             'metadata': {'auth': 'trusted',
-                         'environment': {}}}),
+                         'environment': {},
+                         'api_extensions': []
+                         }}),
         'method': 'GET',
         'url': r'^http://pylxd2.test/1.0$',
     },
@@ -350,6 +354,10 @@ RULES = [
     },
     {
         'method': 'POST',
+        'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Fputted$',  # NOQA
+    },
+    {
+        'method': 'DELETE',
         'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Fputted$',  # NOQA
     },
 
