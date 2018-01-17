@@ -31,3 +31,8 @@ We use the `LXC mailing-lists for developer and user discussions
 If you prefer live discussions, some of us also hang out in
 `#lxcontainers
 <http://webchat.freenode.net/?channels=#lxcontainers>`_ on irc.freenode.net.
+
+What is LXD? `LXD: Introduction <https://linuxcontainers.org/lxd/>`_
+
+PyLXD API Documentation: `http://pylxd.readthedocs.io/en/latest/
+<http://pylxd.readthedocs.io/en/latest/>`_
