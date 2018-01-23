@@ -17,10 +17,11 @@ from pylxd.models import _model as model
 class Profile(model.Model):
     """A LXD profile."""
 
-    name = model.Attribute(readonly=True)
-    description = model.Attribute()
     config = model.Attribute()
+    description = model.Attribute()
     devices = model.Attribute()
+    name = model.Attribute(readonly=True)
+    used_by = model.Attribute(readonly=True)
 
     @classmethod
     def exists(cls, client, name):
