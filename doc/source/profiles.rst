@@ -10,8 +10,8 @@ Manager methods
 Profiles can be queried through the following client manager
 methods:
 
-  - `all()` - Retrieve all networks
-  - `get()` - Get a specific network, by its name.
+  - `all()` - Retrieve all profiles
+  - `get()` - Get a specific profile, by its name.
   - `create(name, config, devices)` - Create a new profile. The name of the
     profile is required. `config` and `devices` dictionaries are optional,
     and the scope of their contents is documented in the LXD documentation.
@@ -20,9 +20,11 @@ methods:
 Profile attributes
 ------------------
 
-  - `name` - The name of the network
-  - `type` - The type of the network
-  - `used_by` - A list of containers using this network
+  - `config` - config options for containers
+  - `description` - The description of the profile
+  - `devices` - device options for containers
+  - `name` - The name of the profile
+  - `used_by` - A list of containers using this profile
 
 
 Profile methods
