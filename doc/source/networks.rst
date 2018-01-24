@@ -21,3 +21,5 @@ Network attributes
   - `name` - The name of the network
   - `type` - The type of the network
   - `used_by` - A list of containers using this network
+  - `config` - The configuration associated with the network.
+  - `managed` - Boolean; whether LXD manages the network
