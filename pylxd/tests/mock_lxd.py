@@ -79,6 +79,7 @@ def profile_GET(request, context):
             'description': 'An description',
             'config': {},
             'devices': {},
+            'used_by': [],
         },
     })
 
