@@ -1,5 +1,5 @@
 Operations
-========
+==========
 
 `Operation` objects detail the status of an asynchronous operation that is
 taking place in the background.  Some operations (e.g. image related actions)

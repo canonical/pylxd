@@ -146,6 +146,7 @@ A container object (returned by `get` or `all`) has the following methods:
     is to increase the `storage.lvm_volume_size` parameter in lxc.
 
 .. code-block:: python
+
     >>> snapshot = container.snapshots.get('an-snapshot')
     >>> snapshot.created_at
     '1983-06-16T2:38:00'
@@ -158,6 +159,7 @@ to capture the contents of RAM in the snapshot, you can use `stateful=True`.
 .. note:: Your LXD requires a relatively recent version of CRIU for this.
 
 .. code-block:: python
+
     >>> snapshot = container.snapshots.create(
     ...     'my-backup', stateful=True, wait=True)
     >>> snapshot.name
@@ -179,6 +181,7 @@ container.  The following methods are available on the `files` manager:
 .. note:: All file operations use `uid` and `gid` of 0 in the container.  i.e. root.
 
 .. code-block:: python
+
     >>> filedata = open('my-script').read()
     >>> container.files.put('/tmp/my-script', filedata)
     >>> newfiledata = container.files.get('/tmp/my-script2')

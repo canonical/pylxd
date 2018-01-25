@@ -16,7 +16,7 @@ methods:
 
 
 Network attributes
-----------------
+------------------
 
   - `name` - The name of the network
   - `type` - The type of the network

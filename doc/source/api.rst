@@ -8,41 +8,57 @@ Client
 .. autoclass:: pylxd.client.Client
    :members:
 
+
+Exceptions
+----------
+
+.. autoclass:: pylxd.exceptions.LXDAPIException
+
+.. autoclass:: pylxd.exceptions.NotFound
+
+.. autoclass:: pylxd.exceptions.ClientConnectionFailed
+
 Certificate
 -----------
 
-.. autoclass:: pylxd.certificate.Certificate
+.. autoclass:: pylxd.models.Certificate
    :members:
 
 Container
 ---------
 
-.. autoclass:: pylxd.container.Container
+.. autoclass:: pylxd.models.Container
    :members:
 
-.. autoclass:: pylxd.container.Snapshot
+.. autoclass:: pylxd.models.Snapshot
    :members:
 
 Image
 -----
 
-.. autoclass:: pylxd.image.Image
+.. autoclass:: pylxd.models.Image
    :members:
 
 Network
 -------
 
-.. autoclass:: pylxd.network.Network
+.. autoclass:: pylxd.models.Network
    :members:
 
 Operation
 ---------
 
-.. autoclass:: pylxd.operation.Operation
+.. autoclass:: pylxd.models.Operation
    :members:
 
 Profile
 -------
 
-.. autoclass:: pylxd.profile.Profile
+.. autoclass:: pylxd.models.Profile
+   :members:
+
+Storage Pool
+------------
+
+.. autoclass:: pylxd.models.StoragePool
    :members:
