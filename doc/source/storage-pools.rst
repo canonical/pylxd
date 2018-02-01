@@ -6,7 +6,7 @@ keys are top-level. Driver specific keys are namespaced by driver name. Volume
 keys apply to any volume created in the pool unless the value is overridden on
 a per-volume basis.
 
-`Storage Pool` objects represent the json object that is return from
+`Storage Pool` objects represent the json object that is returned from
 `GET /1.0/storage-pools/<name>` and then the associated methods that are then
 available at the same endpoint.
 
