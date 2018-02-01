@@ -11,6 +11,7 @@ Profiles can be queried through the following client manager
 methods:
 
   - `all()` - Retrieve all profiles
+  - `exists()` - See if a profile with a name exists.  Returns `boolean`.
   - `get()` - Get a specific profile, by its name.
   - `create(name, config, devices)` - Create a new profile. The name of the
     profile is required. `config` and `devices` dictionaries are optional,
@@ -31,6 +32,8 @@ Profile methods
 ---------------
 
   - `rename` - Rename the profile.
+  - `save` - save a profile.  This uses the PUT HTTP method and not the PATCH.
+  - `delete` - deletes a profile.
 
 
 Examples
