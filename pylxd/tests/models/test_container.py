@@ -503,6 +503,13 @@ class TestFiles(testing.PyLXDTestCase):
                               .format(res)))  # NOQA
         headers = _capture['headers']
         self.assertEqual(headers['X-LXD-mode'], '0456')
+        # check that mode='0644' also works (i.e. already has 0 prefix)
+        res = self.container.files.put('/tmp/putted', data, mode='0644')
+        self.assertEqual(True, res,
+                         msg=('Failed to put file, result: {}'
+                              .format(res)))  # NOQA
+        headers = _capture['headers']
+        self.assertEqual(headers['X-LXD-mode'], '0644')
         # check that assertion is raised
         with self.assertRaises(ValueError):
             res = self.container.files.put('/tmp/putted', data, mode=object)
