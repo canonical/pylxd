@@ -214,7 +214,9 @@ RULES = [
                 'stateful': False,
                 'status': "Running",
                 'status_code': 103,
-                'unsupportedbypylxd': "This attribute is not supported by pylxd. We want to test whether the mere presence of it makes it crash."
+                'unsupportedbypylxd': ("This attribute is not supported by "
+                                       "pylxd. We want to test whether the "
+                                       "mere presence of it makes it crash.")
             }},
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/containers/an-container$',
