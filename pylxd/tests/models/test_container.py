@@ -436,7 +436,9 @@ class TestFiles(testing.PyLXDTestCase):
         data = 'The quick brown fox'
 
         res = self.container.files.put('/tmp/putted', data)
-        self.assertEqual(True, res, msg='Failed to put file, result: {}'.format(res)) # NOQA
+        self.assertEqual(True, res,
+                         msg=('Failed to put file, result: {}'
+                              .format(res)))  # NOQA
 
         # we are mocked, so delete should initially not be available
         self.assertEqual(False, self.container.files.delete_available())
@@ -462,7 +464,55 @@ class TestFiles(testing.PyLXDTestCase):
         self.assertEqual(True, self.container.files.delete_available())
 
         res = self.container.files.delete('/tmp/putted')
-        self.assertEqual(True, res, msg='Failed to delete file, result: {}'.format(res)) # NOQA
+        self.assertEqual(True, res,
+                         msg=('Failed to delete file, result: {}'
+                              .format(res)))  # NOQA
+
+    def test_put_mode_uid_gid(self):
+        """Should be able to set the mode, uid and gid of a file"""
+        # fix up the default POST rule to allow us to see the posted vars
+        _capture = {}
+
+        def capture(request, context):
+            _capture['headers'] = getattr(request._request, 'headers')
+            context.status_code = 200
+
+        rule = {
+            'text': capture,
+            'method': 'POST',
+            'url': (r'^http://pylxd.test/1.0/containers/an-container/files'
+                    '\?path=%2Ftmp%2Fputted$'),  # NOQA
+        }
+        self.add_rule(rule)
+
+        data = 'The quick brown fox'
+        # start with an octal mode
+        res = self.container.files.put('/tmp/putted', data, mode=0o123,
+                                       uid=1, gid=2)
+        self.assertEqual(True, res,
+                         msg=('Failed to put file, result: {}'
+                              .format(res)))  # NOQA
+        headers = _capture['headers']
+        self.assertEqual(headers['X-LXD-mode'], '0123')
+        self.assertEqual(headers['X-LXD-uid'], '1')
+        self.assertEqual(headers['X-LXD-gid'], '2')
+        # use a str mode this type
+        res = self.container.files.put('/tmp/putted', data, mode='456')
+        self.assertEqual(True, res,
+                         msg=('Failed to put file, result: {}'
+                              .format(res)))  # NOQA
+        headers = _capture['headers']
+        self.assertEqual(headers['X-LXD-mode'], '0456')
+        # check that mode='0644' also works (i.e. already has 0 prefix)
+        res = self.container.files.put('/tmp/putted', data, mode='0644')
+        self.assertEqual(True, res,
+                         msg=('Failed to put file, result: {}'
+                              .format(res)))  # NOQA
+        headers = _capture['headers']
+        self.assertEqual(headers['X-LXD-mode'], '0644')
+        # check that assertion is raised
+        with self.assertRaises(ValueError):
+            res = self.container.files.put('/tmp/putted', data, mode=object)
 
     def test_get(self):
         """A file is retrieved from the container."""
@@ -477,7 +527,8 @@ class TestFiles(testing.PyLXDTestCase):
         rule = {
             'text': not_found,
             'method': 'GET',
-            'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Fgetted$',  # NOQA
+            'url': (r'^http://pylxd.test/1.0/containers/an-container/files'
+                    '\?path=%2Ftmp%2Fgetted$'),  # NOQA
         }
         self.add_rule(rule)
 
@@ -492,7 +543,8 @@ class TestFiles(testing.PyLXDTestCase):
         rule = {
             'text': not_found,
             'method': 'GET',
-            'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Fgetted$',  # NOQA
+            'url': (r'^http://pylxd.test/1.0/containers/an-container/files'
+                    '\?path=%2Ftmp%2Fgetted$'),  # NOQA
         }
         self.add_rule(rule)
 
