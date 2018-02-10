@@ -39,6 +39,7 @@ itself. This includes `certificates`, `containers`, `images`, `networks`,
 LXD instance. For example, to get all containers in a LXD instance
 
 .. code-block:: python
+
     >>> client.containers.all()
     [<container.Container at 0x7f95d8af72b0>,]
 
@@ -54,6 +55,7 @@ Each LXD object has an analagous pylxd object. Returning to the previous
 such:
 
 .. code-block:: python
+
     >>> container = client.containers.all()[0]
     >>> container.name
     'lxd-container'
@@ -77,6 +79,7 @@ methods and attributes:
 Returning again to the `Container` example
 
 .. code-block:: python
+
     >>> container.config
     { 'security.privileged': True }
     >>> container.config.update({'security.nesting': True})

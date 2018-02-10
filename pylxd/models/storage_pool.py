@@ -46,6 +46,23 @@ class StoragePool(model.Model):
             storage_pools.append(cls(client, name=name))
         return storage_pools
 
+    @classmethod
+    def create(cls, client, config):
+        """Create a storage_pool from config."""
+        client.api.storage_pools.post(json=config)
+
+        storage_pool = cls.get(client, config['name'])
+        return storage_pool
+
+    @classmethod
+    def exists(cls, client, name):
+        """Determine whether a storage pool exists."""
+        try:
+            client.storage_pools.get(name)
+            return True
+        except cls.NotFound:
+            return False
+
     @property
     def api(self):
         return self.client.api.storage_pools[self.name]

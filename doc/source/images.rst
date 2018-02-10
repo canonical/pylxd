@@ -14,9 +14,10 @@ methods:
 
   - `all()` - Retrieve all images.
   - `get()` - Get a specific image, by its fingerprint.
+  - `get_by_alias()` - Ger a specific image using its alias.
 
-And create through the following methods,
-theres also a copy method on an image:
+And create through the following methods, there's also a copy method on an
+image:
 
   - `create(data, public=False, wait=False)` - Create a new image. The first
     argument is the binary data of the image itself. If the image is public,
@@ -48,7 +49,7 @@ the `LXD documentation`_.
   - `uploaded_at` - The date and time the image was uploaded
   - `update_source` - A dict of update informations
 
-.. _LXD documentation: https://github.com/lxc/lxd/blob/3207c2c67d02b3c7504c118f9af6262747103d65/doc/rest-api.md#10imagesfingerprint
+.. _LXD documentation: https://github.com/lxc/lxd/blob/master/doc/rest-api.md#10imagesfingerprint
 
 Image methods
 -------------
@@ -57,11 +58,8 @@ Image methods
     of the image. *Note: Prior to pylxd 2.1.1, this method returned a
     bytestring with data; as it was not unbuffered, the API was severely
     limited.*
-
   - `add_alias` - Add an alias to the image.
-
   - `delete_alias` - Remove an alias.
-
   - `copy` - Copy the image to another LXD client.
 
 Examples

@@ -21,7 +21,8 @@ Contents:
    images
    networks
    profiles
-
+   operations
+   storage-pools
 
    contributing
    api

@@ -79,16 +79,67 @@ class Container(model.Model):
             self._client = client
             self._container = container
 
-        def put(self, filepath, data):
-            response = self._client.api.containers[
-                self._container.name].files.post(
-                params={'path': filepath}, data=data)
+        def put(self, filepath, data, mode=None, uid=None, gid=None):
+            """Push a file to the container.
+
+            This pushes a single file to the containers file system named by
+            the `filepath`.
+
+            :param filepath: The path in the container to to store the data in.
+            :type filepath: str
+            :param data: The data to store in the file.
+            :type data: bytes or str
+            :param mode: The unit mode to store the file with.  The default of
+                None stores the file with the current mask of 0700, which is
+                the lxd default.
+            :type mode: oct | int | str
+            :param uid: The uid to use inside the container. Default of None
+                results in 0 (root).
+            :type uid: int
+            :param gid: The gid to use inside the container.  Default of None
+                results in 0 (root).
+            :type gid: int
+            :returns: True if the file store succeeded otherwise False.
+            :rtype: Bool
+            """
+            headers = {}
+            if mode is not None:
+                if isinstance(mode, int):
+                    mode = format(mode, 'o')
+                if not isinstance(mode, six.string_types):
+                    raise ValueError("'mode' parameter must be int or string")
+                if not mode.startswith('0'):
+                    mode = '0{}'.format(mode)
+                headers['X-LXD-mode'] = mode
+            if uid is not None:
+                headers['X-LXD-uid'] = str(uid)
+            if gid is not None:
+                headers['X-LXD-gid'] = str(gid)
+            response = (self._client.api.containers[self._container.name]
+                        .files.post(params={'path': filepath},
+                                    data=data,
+                                    headers=headers or None))
             return response.status_code == 200
 
+        def delete_available(self):
+            """File deletion is an extension API and may not be available.
+            https://github.com/lxc/lxd/blob/master/doc/api-extensions.md#file_delete
+            """
+            return u'file_delete' in self._client.host_info['api_extensions']
+
+        def delete(self, filepath):
+            if self.delete_available():
+                response = self._client.api.containers[
+                    self._container.name].files.delete(
+                    params={'path': filepath})
+                return response.status_code == 200
+            else:
+                raise ValueError(
+                    'File Deletion is not available for this host')
+
         def get(self, filepath):
-            response = self._client.api.containers[
-                self._container.name].files.get(
-                params={'path': filepath})
+            response = (self._client.api.containers[self._container.name]
+                        .files.get(params={'path': filepath}))
             return response.content
 
         def recursive_put(self, src, dst):

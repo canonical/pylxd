@@ -13,9 +13,10 @@ Manager methods
 Containers can be queried through the following client manager
 methods:
 
+  - `exists(name)` - Returns `boolean` indicating if the container exists.
   - `all()` - Retrieve all containers.
   - `get()` - Get a specific container, by its name.
-  - `create(config, wait=False)` - Create a new container. This method 
+  - `create(config, wait=False)` - Create a new container. This method
     requires the container config as the first parameter.
     The config itself is beyond the scope of this documentation. Please
     refer to the LXD documentation for more information. This method
@@ -35,12 +36,14 @@ the LXD documentation.
   - `ephemeral` - Whether the container is ephemeral
   - `expanded_config` - An expanded version of the config
   - `expanded_devices` - An expanded version of devices
-  - `name` - The name of the container. This attribute serves as the
-    primary identifier of a container.
+  - `name` - (Read only) The name of the container. This attribute serves as the
+    primary identifier of a container
+  - `description` - A description given to the container
   - `profiles` - A list of profiles applied to the container
-  - `status` - A string representing the status of the container
-  - `status_code` - A LXD status code of the container
-  - `stateful` - Whether the container is stateful
+  - `status` - (Read only) A string representing the status of the container
+  - `last_used_at` - (Read only) when the container was last used
+  - `status_code` - (Read only) A LXD status code of the container
+  - `stateful` - (Read only) Whether the container is stateful
 
 
 Container methods
@@ -64,7 +67,8 @@ Container methods
   - `migrate` - Migrate the container. The first argument is a client
     connection to the destination server. This call is asynchronous, so
     `wait=True` is optional. The container on the new client is returned.
-
+  - `publish` - Publish the container as an image.  Note the container must be stopped
+    in order to use this method.  If `wait=True` is passed, then the image is returned.
 
 
 Examples
@@ -133,7 +137,16 @@ Snapshots are keyed by their name (and only their name, in pylxd; LXD
 keys them by <container-name>/<snapshot-name>, but the manager allows
 us to use our own namespacing).
 
+A container object (returned by `get` or `all`) has the following methods:
+
+  - `rename` - rename a snapshot
+  - `publish` - create an image from a snapshot.  However, this may fail if the
+    image from the snapshot is bigger than the logical volume that is allocated
+    by lxc.  See https://github.com/lxc/lxd/issues/2201 for more details.  The solution
+    is to increase the `storage.lvm_volume_size` parameter in lxc.
+
 .. code-block:: python
+
     >>> snapshot = container.snapshots.get('an-snapshot')
     >>> snapshot.created_at
     '1983-06-16T2:38:00'
@@ -143,9 +156,10 @@ us to use our own namespacing).
 
 To create a new snapshot, use `create` with a `name` argument. If you want
 to capture the contents of RAM in the snapshot, you can use `stateful=True`.
-**Note: Your LXD requires a relatively recent version of CRIU for this.**
+.. note:: Your LXD requires a relatively recent version of CRIU for this.
 
 .. code-block:: python
+
     >>> snapshot = container.snapshots.create(
     ...     'my-backup', stateful=True, wait=True)
     >>> snapshot.name
@@ -156,9 +170,18 @@ Container files
 ---------------
 
 Containers also have a `files` manager for getting and putting files on the
-container.
+container.  The following methods are available on the `files` manager:
+
+  - `put` - push a file into the container.
+  - `get` - get a file from the container.
+  - `delete_available` - If the `file_delete` extension is available on the lxc
+    host, then this method returns `True` and the `delete` method is available.
+  - `delete` - delete a file on the container.
+
+.. note:: All file operations use `uid` and `gid` of 0 in the container.  i.e. root.
 
 .. code-block:: python
+
     >>> filedata = open('my-script').read()
     >>> container.files.put('/tmp/my-script', filedata)
     >>> newfiledata = container.files.get('/tmp/my-script2')

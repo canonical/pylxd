@@ -79,6 +79,7 @@ def profile_GET(request, context):
             'description': 'An description',
             'config': {},
             'devices': {},
+            'used_by': [],
         },
     })
 
@@ -91,7 +92,9 @@ RULES = [
             'metadata': {'auth': 'trusted',
                          'environment': {
                              'certificate': 'an-pem-cert',
-                             }}}),
+                             },
+                         'api_extensions': []
+                         }}),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0$',
     },
@@ -99,7 +102,9 @@ RULES = [
         'text': json.dumps({
             'type': 'sync',
             'metadata': {'auth': 'trusted',
-                         'environment': {}}}),
+                         'environment': {},
+                         'api_extensions': []
+                         }}),
         'method': 'GET',
         'url': r'^http://pylxd2.test/1.0$',
     },
@@ -352,6 +357,10 @@ RULES = [
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Fputted$',  # NOQA
     },
+    {
+        'method': 'DELETE',
+        'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Fputted$',  # NOQA
+    },
 
 
 
@@ -570,6 +579,11 @@ RULES = [
             }},
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/storage-pools/lxd$',
+    },
+    {
+        'json': {'type': 'sync'},
+        'method': 'POST',
+        'url': r'^http://pylxd.test/1.0/storage-pools$',
     },
 
     # Profiles
