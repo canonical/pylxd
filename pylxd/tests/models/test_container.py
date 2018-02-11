@@ -1,4 +1,6 @@
 import json
+import shutil
+import os
 
 import mock
 
@@ -431,6 +433,16 @@ class TestFiles(testing.PyLXDTestCase):
         super(TestFiles, self).setUp()
         self.container = models.Container.get(self.client, 'an-container')
 
+    @classmethod
+    def setUpClass(TestFiles):
+        os.makedirs('./tmp/dir')
+        open('./tmp/file1', 'w').write("This is file1")
+        open('./tmp/dir/file2', 'w').write("This is file2")
+
+    @classmethod
+    def tearDownClass(TestFiles):
+        shutil.rmtree('./tmp')
+
     def test_put_delete(self):
         """A file is put on the container and then deleted"""
         data = 'The quick brown fox'
@@ -513,6 +525,35 @@ class TestFiles(testing.PyLXDTestCase):
         # check that assertion is raised
         with self.assertRaises(ValueError):
             res = self.container.files.put('/tmp/putted', data, mode=object)
+
+    def test_recursive_put(self):
+        """ Recursive put directory to the container """
+        rule = {
+            'method': 'POST',
+            'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Ftmp$',  # NOQA
+        }
+        rule2 = {
+            'method': 'POST',
+            'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Ftmp%2Fdir$',  # NOQA
+        }
+        rule3 = {
+            'method': 'POST',
+            'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Ftmp%2Ffile1$',  # NOQA
+        }
+        rule4 = {
+            'method': 'POST',
+            'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Ftmp%2Fdir%2Ffile2$',  # NOQA
+        }
+
+        self.add_rule(rule)
+        self.add_rule(rule2)
+        self.add_rule(rule3)
+        self.add_rule(rule4)
+
+        res = self.container.files.recursive_put('./tmp', '/tmp/')
+        self.assertEqual(True, res,
+                         msg=('Failed to recursive put directory, result: {}'
+                              .format(res)))  # NOQA
 
     def test_get(self):
         """A file is retrieved from the container."""
