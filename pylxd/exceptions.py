@@ -32,3 +32,7 @@ class NotFound(LXDAPIException):
 
 class ClientConnectionFailed(Exception):
     """An exception raised when the Client connection fails."""
+
+
+class NotADirectoryError(Exception):
+    """ An exception raised when not a directory for python2 """
