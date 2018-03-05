@@ -27,6 +27,7 @@ except ImportError:  # pragma: no cover
 
 from pylxd import managers
 from pylxd.models import _model as model
+from pylxd.exceptions import NotADirectoryError
 
 
 class ContainerState(object):
