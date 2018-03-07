@@ -161,10 +161,6 @@ class Container(model.Model):
                     "'src' parameter must be a directory "
                 )
 
-            headers = {
-                'X-LXD-type': 'directory'
-            }
-
             idx = len(os.path.dirname(norm_src))
             dst_items = collections.defaultdict(dict)
 
