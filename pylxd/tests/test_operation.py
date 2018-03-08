@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
+
 from pylxd import exceptions, operation
 from pylxd.tests import testing
 
@@ -56,3 +58,17 @@ class TestOperation(testing.PyLXDTestCase):
         an_operation = operation.Operation.get(self.client, name)
 
         self.assertRaises(exceptions.LXDAPIException, an_operation.wait)
+
+    def test_unknown_attribute(self):
+        self.add_rule({
+            'text': json.dumps({
+                'type': 'sync',
+                'metadata': {'id': 'operation-unknown',
+                             'metadata': {'return': 0},
+                             'unknown': False},
+                }),
+            'method': 'GET',
+            'url': r'^http://pylxd.test/1.0/operations/operation-unknown$',
+        })
+        url = '/1.0/operations/operation-unknown'
+        operation.Operation.get(self.client, url)
