@@ -36,8 +36,8 @@ purpose of the library.
 
 2. The attribute system only tries to do a single level of JSON loading, and
    doesn't load the whole tree of metadata returned in an API call.  Thus you
-   get the (slightly) perverse situation of some attributes container JSON
-   encoded strings, rather than a dictionary/list object.  See `#214
+   get the (slightly) perverse situation of some attributes container contain
+   JSON encoded strings, rather than a dictionary/list object.  See `#214
    <https://github.com/lxc/pylxd/issues/214>`_ for example.
 
 3. Each ``object`` returned has hard-coded methods for ``.api``, ``.client``
@@ -164,10 +164,12 @@ key, and the test container as a value. e.g.
 
 .. code-block:: python
 
-   container = c.profiles['default'].used_by
+   container_manager = c.profiles['default'].used_by
    <... Manager for containers ...>
 
-i.e. the ``used_by`` property would return a manager to access profiles.
+i.e. the ``used_by`` property would return a manager to access containers.
+This might represents 0 to *n* containers as a profile can be used by more than
+one container.
 
 **5. Make the manager classes 'smarter' and self documenting**
 
