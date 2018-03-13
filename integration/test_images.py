@@ -71,7 +71,7 @@ class TestImage(IntegrationTestCase):
         """The image properties are updated."""
         description = 'an description'
         self.image.properties['description'] = description
-        self.image.update()
+        self.image.save()
 
         image = self.client.images.get(self.image.fingerprint)
         self.assertEqual(description, image.properties['description'])
@@ -80,9 +80,8 @@ class TestImage(IntegrationTestCase):
         """The image is deleted."""
         self.image.delete(wait=True)
 
-        self.assertRaises(
-            exceptions.NotFound,
-            self.client.images.get, self.image.fingerprint)
+        with self.assertRaises(exceptions.LXDAPIException):
+            self.client.images.get(self.image.fingerprint)
 
     def test_export(self):
         """The imerage is successfully exported."""

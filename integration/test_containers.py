@@ -71,7 +71,7 @@ class TestContainer(IntegrationTestCase):
     def test_update(self):
         """The container is updated to a new config."""
         self.container.config['limits.cpu'] = '1'
-        self.container.update(wait=True)
+        self.container.save(wait=True)
 
         self.assertEqual('1', self.container.config['limits.cpu'])
         container = self.client.containers.get(self.container.name)
@@ -90,9 +90,8 @@ class TestContainer(IntegrationTestCase):
         """The container is deleted."""
         self.container.delete(wait=True)
 
-        self.assertRaises(
-            exceptions.NotFound,
-            self.client.containers.get, self.container.name)
+        with self.assertRaises(exceptions.LXDAPIException):
+            self.client.containers.get(self.container.name)
 
     def test_start_stop(self):
         """The container is started and then stopped."""
