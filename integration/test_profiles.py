@@ -70,7 +70,6 @@ class TestProfile(IntegrationTestCase):
         profile = self.client.profiles.get(self.profile.name)
         self.assertEqual('16GB', profile.config['limits.memory'])
 
-    @unittest.skip('Not implemented in LXD')
     def test_rename(self):
         """A profile is renamed."""
         name = 'a-other-profile'
