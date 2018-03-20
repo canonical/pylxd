@@ -138,7 +138,7 @@ class Container(model.Model):
 
         def get(self, filepath):
             response = (self._client.api.containers[self._container.name]
-                        .files.get(params={'path': filepath}))
+                        .files.get(params={'path': filepath}, is_api=False))
             return response.content
 
     @classmethod
