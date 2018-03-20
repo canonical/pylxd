@@ -551,3 +551,9 @@ class TestFiles(testing.PyLXDTestCase):
         self.assertRaises(
             exceptions.LXDAPIException,
             self.container.files.get, '/tmp/getted')
+
+    # for bug/281 -- getting an empty json file is interpreted as an API
+    # get rather than a raw get.
+    def test_get_json_file(self):
+        data = self.container.files.get('/tmp/json-get')
+        self.assertEqual(b'{"some": "value"}', data)

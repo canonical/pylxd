@@ -354,6 +354,11 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Fgetted$',  # NOQA
     },
     {
+        'text': '{"some": "value"}',
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Fjson-get$',  # NOQA
+    },
+    {
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Fputted$',  # NOQA
     },
