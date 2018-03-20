@@ -298,10 +298,10 @@ class Container(model.Model):
                 operation = self.client.operations.get(operation_id)
                 if 'return' in operation.metadata:
                     break
-                time.sleep(.5)
+                time.sleep(.5)  # pragma: no cover
 
             while len(manager.websockets.values()) > 0:
-                time.sleep(.1)
+                time.sleep(.1)  # pragma: no cover
 
             stdout.close()
             stderr.close()
