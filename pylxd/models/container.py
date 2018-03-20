@@ -293,10 +293,20 @@ class Container(model.Model):
 
             manager.start()
 
-            while len(manager.websockets.values()) > 0:
-                time.sleep(.1)
+            # watch for the end of the command:
+            while True:
+                operation = self.client.operations.get(operation_id)
+                if 'return' in operation.metadata:
+                    break
+                time.sleep(.5)  # pragma: no cover
 
-            operation = self.client.operations.get(operation_id)
+            while len(manager.websockets.values()) > 0:
+                time.sleep(.1)  # pragma: no cover
+
+            stdout.close()
+            stderr.close()
+            manager.stop()
+            manager.join()
 
             return _ContainerExecuteResult(
                 operation.metadata['return'], stdout.data, stderr.data)
@@ -382,9 +392,6 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         self.buffer = []
 
     def received_message(self, message):
-        if len(message.data) == 0:
-            self.close()
-            self.manager.remove(self)
         if message.encoding:
             self.buffer.append(message.data.decode(message.encoding))
         else:
