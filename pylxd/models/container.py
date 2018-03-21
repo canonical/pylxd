@@ -255,11 +255,26 @@ class Container(model.Model):
                                force=force,
                                wait=wait)
 
-    def execute(self, commands, environment={}):
+    def execute(self, commands, environment={}, encoding=None, decode=True):
         """Execute a command on the container.
 
         In pylxd 2.2, this method will be renamed `execute` and the existing
         `execute` method removed.
+
+        :param commands: The command and arguments as a list of strings
+        :type commands: [str]
+        :param environment: The environment variables to pass with the command
+        :type environment: {str: str}
+        :param encoding: The encoding to use for stdout/stderr if the param
+            decode is True.  If encoding is None, then no override is
+            performed and whatever the existing encoding from LXD is used.
+        :type encoding: str
+        :param decode: Whether to decode the stdout/stderr or just return the
+            raw buffers.
+        :type decode: bool
+        :raises ValueError: if the ws4py library is not installed.
+        :returns: The return value, stdout and stdin
+        :rtype: _ContainerExecuteResult() namedtuple
         """
         if not _ws4py_installed:
             raise ValueError(
@@ -283,11 +298,13 @@ class Container(model.Model):
             stdin.resource = '{}?secret={}'.format(parsed.path, fds['0'])
             stdin.connect()
             stdout = _CommandWebsocketClient(
-                manager, self.client.websocket_url)
+                manager, self.client.websocket_url,
+                encoding=encoding, decode=decode)
             stdout.resource = '{}?secret={}'.format(parsed.path, fds['1'])
             stdout.connect()
             stderr = _CommandWebsocketClient(
-                manager, self.client.websocket_url)
+                manager, self.client.websocket_url,
+                encoding=encoding, decode=decode)
             stderr.resource = '{}?secret={}'.format(parsed.path, fds['2'])
             stderr.connect()
 
@@ -383,8 +400,15 @@ class Container(model.Model):
 
 
 class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
+    """Handle a websocket for container.execute(...) and manage decoding of the
+    returned values depending on 'decode' and 'encoding' parameters.
+    """
+
     def __init__(self, manager, *args, **kwargs):
         self.manager = manager
+        self.decode = kwargs.pop('decode', True)
+        self.encoding = kwargs.pop('encoding', None)
+        self.message_encoding = None
         super(_CommandWebsocketClient, self).__init__(*args, **kwargs)
 
     def handshake_ok(self):
@@ -392,14 +416,21 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         self.buffer = []
 
     def received_message(self, message):
-        if message.encoding:
-            self.buffer.append(message.data.decode(message.encoding))
-        else:
-            self.buffer.append(message.data.decode('utf-8'))
+        if message.encoding and self.message_encoding is None:
+            self.message_encoding = message.encoding
+        self.buffer.append(message.data)
 
     @property
     def data(self):
-        return ''.join(self.buffer)
+        buffer = b''.join(self.buffer)
+        if self.decode:
+            if self.encoding:
+                return buffer.decode(self.encoding)
+            if self.message_encoding:
+                return buffer.decode(self.message_encoding)
+            # This is the backwards compatible "always decode to utf-8"
+            return buffer.decode('utf-8')
+        return buffer
 
 
 class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
