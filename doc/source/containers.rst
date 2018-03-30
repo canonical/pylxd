@@ -116,6 +116,15 @@ container.
     >>> container.start()
     >>> container.freeze()
     >>> container.delete()
+   
+   
+Config line with a specific image source and a profile.
+
+.. code-block:: python
+
+    >>> config = {'name': 'my-container', 'source': {'type': 'image', "mode": "pull", "server":
+        "https://cloud-images.ubuntu.com/daily", "protocol": "simplestreams", 'alias': 'bionic/amd64'},
+	'profiles': ['profilename'] }
 
 
 To modify container's configuration method `save` should be called after
@@ -125,6 +134,14 @@ To modify container's configuration method `save` should be called after
     >>> container.ephemeral = False
     >>> container.devices = { 'root': { 'path': '/', 'type': 'disk', 'size': '7GB'} }
     >>> container.save
+    
+To get state information such as a network address.
+
+.. code-block:: python
+
+    >>> addresses = container.state().network['eth0']['addresses']
+    >>> addresses[0]
+    {'family': 'inet', 'address': '10.251.77.182', 'netmask': '24', 'scope': 'global'}
 
 
 Container Snapshots
