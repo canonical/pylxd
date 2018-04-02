@@ -107,24 +107,25 @@ you'll pass `wait=True` as well.
 
 If you were to use an actual image source, you would be able to operate
 on the container, starting, stopping, snapshotting, and deleting the
-container.
+container. You can also modify container config (limits and etc)
 
 .. code-block:: python
 
-    >>> config = {'name': 'my-container', 'source': {'type': 'image', 'alias': 'ubuntu/trusty'}}
+    >>> config = {'name': 'my-container', 'source': {'type': 'image', 'alias': 'ubuntu/trusty'} 'config': {'limits.cpu': '2'}}
     >>> container = client.containers.create(config, wait=True)
     >>> container.start()
     >>> container.freeze()
     >>> container.delete()
 
 
-To modify container's configuration method `save` should be called after
+To modify container's configuration method `
+` should be called after
 :class:`~container.Container` attributes changes.
 
     >>> container = client.containers.get('my-container')
     >>> container.ephemeral = False
     >>> container.devices = { 'root': { 'path': '/', 'type': 'disk', 'size': '7GB'} }
-    >>> container.save
+    >>> container.save()
 
 
 Container Snapshots
