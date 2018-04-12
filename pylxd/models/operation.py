@@ -40,8 +40,28 @@ class Operation(object):
         response = client.api.operations[operation_id].get()
         return cls(_client=client, **response.json()['metadata'])
 
-    def __init__(self, **kwargs):
+    @classmethod
+    def all(cls, client):
+        """List of operations"""
+        response = client.api.operations.get()
+
+        operations = []
+        for op_id in response.json()['metadata']['running']:
+            operations.append(cls.get(client, op_id))
+        return operations
+
+    @property
+    def api(self):
+        return self._client.api.operations[self.id]
+
+    @property
+    def class_(self):
+        """ Avoid class as reserved keyworkds """
+        return getattr(self, "class")
+
+    def __init__(self, client=None, **kwargs):
         super(Operation, self).__init__()
+        self._client = client
         for key, value in kwargs.items():
             try:
                 setattr(self, key, value)
@@ -64,3 +84,15 @@ class Operation(object):
         except KeyError:
             # Support for legacy LXD
             pass
+
+    def cancel(self):
+        """
+        Cancel an operation. If may_cancel is False do nothing.
+
+        Calling this will change the state to "cancelling" rather than
+        actually removing the entry.
+        """
+        if not self.may_cancel:
+            return
+        self.api.delete()
+        self.status = "cancelling"

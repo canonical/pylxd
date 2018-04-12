@@ -84,6 +84,13 @@ def profile_GET(request, context):
     })
 
 
+def operation_DELETE(request, context):
+    context.status_code = 200
+    return json.dumps({
+        'type': 'sync'
+    })
+
+
 RULES = [
     # General service endpoints
     {
@@ -632,6 +639,17 @@ RULES = [
     {
         'text': json.dumps({
             'type': 'sync',
+            'metadata': {
+                'running': [
+                    '/1.0/operations/operation-abc'
+                ]},
+            }),
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/operations$',
+    },
+    {
+        'text': json.dumps({
+            'type': 'sync',
             'metadata': {'id': 'operation-abc', 'metadata': {'return': 0}},
             }),
         'method': 'GET',
@@ -693,5 +711,10 @@ RULES = [
             }),
         'method': 'GET',
         'url': r'^http://pylxd2.test/1.0/operations/images-create-operation/wait$',  # NOQA
+    },
+    {
+        'text': operation_DELETE,
+        'method': 'DELETE',
+        'url': r'http://pylxd.test/1.0/operations/cancel-test$'
     }
 ]

@@ -72,3 +72,22 @@ class TestOperation(testing.PyLXDTestCase):
         })
         url = '/1.0/operations/operation-unknown'
         models.Operation.get(self.client, url)
+
+    def test_all(self):
+        operations = models.Operation.all(self.client)
+
+        self.assertEqual(1, len(operations))
+
+    def test_cancel(self):
+        non_cancellable = {
+            "id": "cancel-test",
+            "may_cancel": False,
+            "status": "Running"
+        }
+        operation = models.Operation(client=self.client, **non_cancellable)
+        operation.cancel()
+        self.assertEqual(operation.status, "Running")
+
+        operation.may_cancel = True
+        operation.cancel()
+        self.assertEqual(operation.status, "cancelling")

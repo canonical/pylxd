@@ -13,6 +13,7 @@ Manager methods
 
 Operations can be queried through the following client manager methods:
 
+  - `all()` - List operations
   - `get()` - Get a specific network, by its name.
   - `wait_for_operation()` - get an operation, but wait until it is complete
     before returning the operation object.
@@ -23,4 +24,4 @@ Operation object methods
 
   - `wait()` - Wait for the operation to complete and return.  Note that this
     can raise a `LXDAPIExceptiion` if the operations fails.
-
+  - `cancel()` - Cancel an operation
