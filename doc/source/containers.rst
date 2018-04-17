@@ -62,8 +62,8 @@ Container methods
   - `unfreeze` - Resume the container
   - `execute` - Execute a command on the container. The first argument is
     a list, in the form of `subprocess.Popen` with each item of the command
-    as a separate item in the list. Returns a two part tuple of
-    `(stdout, stderr)`. This method will block while the command is executed.
+    as a separate item in the list. Returns a tuple of `(exit_code, stdout, stderr)`.
+    This method will block while the command is executed.
   - `migrate` - Migrate the container. The first argument is a client
     connection to the destination server. This call is asynchronous, so
     `wait=True` is optional. The container on the new client is returned.
