@@ -246,31 +246,45 @@ class TestAPINode(unittest.TestCase):
     def test_getattr(self):
         """API Nodes can use object notation for nesting."""
         node = client._APINode('http://test.com')
-
         new_node = node.test
-
         self.assertEqual(
             'http://test.com/test', new_node._api_endpoint)
+
+    def test_getattr_storage_pools(self):
+        """API node with storage_pool should be storage-pool"""
+        node = client._APINode('http://test.com')
+        new_node = node.test.storage_pools
+        self.assertEqual(
+            'http://test.com/test/storage-pools', new_node._api_endpoint)
+        # other _ should stay as they were.
+        new_node = node.test.some_thing
+        self.assertEqual(
+            'http://test.com/test/some_thing', new_node._api_endpoint)
 
     def test_getitem(self):
         """API Nodes can use dict notation for nesting."""
         node = client._APINode('http://test.com')
-
         new_node = node['test']
-
         self.assertEqual(
             'http://test.com/test', new_node._api_endpoint)
+
+    def test_getitem_leave_underscores_alone(self):
+        """Bug 295 erronously changed underscores to '-' -- let's make sure
+        it doens't happend again
+        """
+        node = client._APINode('http://test.com')
+        new_node = node.thing['my_snapshot']
+        self.assertEqual(
+            'http://test.com/thing/my_snapshot', new_node._api_endpoint)
 
     def test_session_http(self):
         """HTTP nodes return the default requests session."""
         node = client._APINode('http://test.com')
-
         self.assertIsInstance(node.session, requests.Session)
 
     def test_session_unix_socket(self):
         """HTTP nodes return a requests_unixsocket session."""
         node = client._APINode('http+unix://test.com')
-
         self.assertIsInstance(node.session, requests_unixsocket.Session)
 
     @mock.patch('pylxd.client.requests.Session')
@@ -284,9 +298,7 @@ class TestAPINode(unittest.TestCase):
         Session.return_value = session
 
         node = client._APINode('http://test.com')
-
         node.get()
-
         session.get.assert_called_once_with('http://test.com', timeout=None)
 
     @mock.patch('pylxd.client.requests.Session')
@@ -298,11 +310,8 @@ class TestAPINode(unittest.TestCase):
         })
         session = mock.Mock(**{'post.return_value': response})
         Session.return_value = session
-
         node = client._APINode('http://test.com')
-
         node.post()
-
         session.post.assert_called_once_with('http://test.com', timeout=None)
 
     @mock.patch('pylxd.client.requests.Session')
@@ -314,9 +323,7 @@ class TestAPINode(unittest.TestCase):
         })
         session = mock.Mock(**{'post.return_value': response})
         Session.return_value = session
-
         node = client._APINode('http://test.com')
-
         self.assertRaises(
             exceptions.LXDAPIException,
             node.post)
@@ -330,9 +337,7 @@ class TestAPINode(unittest.TestCase):
         })
         session = mock.Mock(**{'post.return_value': response})
         Session.return_value = session
-
         node = client._APINode('http://test.com')
-
         self.assertRaises(
             exceptions.LXDAPIException,
             node.post)
@@ -346,11 +351,8 @@ class TestAPINode(unittest.TestCase):
         })
         session = mock.Mock(**{'put.return_value': response})
         Session.return_value = session
-
         node = client._APINode('http://test.com')
-
         node.put()
-
         session.put.assert_called_once_with('http://test.com', timeout=None)
 
     @mock.patch('pylxd.client.requests.Session')
@@ -362,11 +364,8 @@ class TestAPINode(unittest.TestCase):
         })
         session = mock.Mock(**{'delete.return_value': response})
         Session.return_value = session
-
         node = client._APINode('http://test.com')
-
         node.delete()
-
         session.delete.assert_called_once_with('http://test.com', timeout=None)
 
 
@@ -377,9 +376,7 @@ class TestWebsocketClient(unittest.TestCase):
     def test_handshake_ok(self):
         """A `message` attribute of an empty list is created."""
         ws_client = client._WebsocketClient('ws://an/fake/path')
-
         ws_client.handshake_ok()
-
         self.assertEqual([], ws_client.messages)
 
     @requires_ws4py
@@ -388,7 +385,5 @@ class TestWebsocketClient(unittest.TestCase):
         message = mock.Mock(data=json.dumps({'test': 'data'}).encode('utf-8'))
         ws_client = client._WebsocketClient('ws://an/fake/path')
         ws_client.handshake_ok()
-
         ws_client.received_message(message)
-
         self.assertEqual({'test': 'data'}, ws_client.messages[0])

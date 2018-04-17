@@ -60,20 +60,33 @@ class _APINode(object):
             self.session.verify = verify
 
     def __getattr__(self, name):
-        # name here correspoinds to the model name in the LXD API
-        # and, as such, must have underscores replaced with hyphens
-        return self.__class__(
-            '{}/{}'.format(self._api_endpoint, name.replace('_', '-')),
-            cert=self.session.cert, verify=self.session.verify)
+        """Converts attribute lookup into the next /<segment> of an api
+        url.
+
+        :param name: the next segment
+        :type name: str
+        :returns: new _APINode with /<name> on the end
+        :rtype: _APINode
+        """
+        # Special case for storage_pools which needs to become 'storage-pools'
+        if name == 'storage_pools':
+            name = 'storage-pools'
+        return self.__class__('{}/{}'.format(self._api_endpoint, name),
+                              cert=self.session.cert,
+                              verify=self.session.verify)
 
     def __getitem__(self, item):
-        # item here correspoinds to the model name in the LXD API
-        # and, as such, must have underscores replaced with hyphens
-        return self.__class__(
-            '{}/{}'.format(self._api_endpoint, item.replace('_', '-')),
-            cert=self.session.cert,
-            verify=self.session.verify,
-            timeout=self._timeout)
+        """This converts python api.thing[name] -> ".../thing/name"
+
+        :param item: the 'thing' in the square-braces in a python expr.
+        :type item: str
+        :returns: A new _APINode(with the new item tagged on as /<item>
+        :rtype: _APINode
+        """
+        return self.__class__('{}/{}'.format(self._api_endpoint, item),
+                              cert=self.session.cert,
+                              verify=self.session.verify,
+                              timeout=self._timeout)
 
     def _assert_response(self, response, allowed_status_codes=(200,),
                          stream=False, is_api=True):
