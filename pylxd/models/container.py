@@ -12,8 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import collections
-import time
 import os
+import stat
+import time
 
 import six
 from six.moves.urllib import parse
@@ -26,8 +27,12 @@ except ImportError:  # pragma: no cover
     _ws4py_installed = False
 
 from pylxd import managers
+from pylxd.exceptions import LXDAPIException
 from pylxd.models import _model as model
-from pylxd.exceptions import NotADirectoryError
+
+if six.PY2:
+    # Python2.7 doesn't have this natively
+    from pylxd.exceptions import NotADirectoryError
 
 
 class ContainerState(object):
@@ -93,17 +98,28 @@ class Container(model.Model):
             :param mode: The unit mode to store the file with.  The default of
                 None stores the file with the current mask of 0700, which is
                 the lxd default.
-            :type mode: oct | int | str
+            :type mode: Union[oct, int, str]
             :param uid: The uid to use inside the container. Default of None
                 results in 0 (root).
             :type uid: int
             :param gid: The gid to use inside the container.  Default of None
                 results in 0 (root).
             :type gid: int
-            :returns: True if the file store succeeded otherwise False.
-            :rtype: Bool
+            :raises: LXDAPIException if something goes wrong
             """
-            headers = {}
+            headers = self._resolve_headers(mode=mode, uid=uid, gid=gid)
+            response = (self._client.api.containers[self._container.name]
+                        .files.post(params={'path': filepath},
+                                    data=data,
+                                    headers=headers or None))
+            if response.status_code == 200:
+                return
+            raise LXDAPIException(response)
+
+        @staticmethod
+        def _resolve_headers(headers=None, mode=None, uid=None, gid=None):
+            if headers is None:
+                headers = {}
             if mode is not None:
                 if isinstance(mode, int):
                     mode = format(mode, 'o')
@@ -116,11 +132,7 @@ class Container(model.Model):
                 headers['X-LXD-uid'] = str(uid)
             if gid is not None:
                 headers['X-LXD-gid'] = str(gid)
-            response = (self._client.api.containers[self._container.name]
-                        .files.post(params={'path': filepath},
-                                    data=data,
-                                    headers=headers or None))
-            return response.status_code == 200
+            return headers
 
         def delete_available(self):
             """File deletion is an extension API and may not be available.
@@ -129,31 +141,43 @@ class Container(model.Model):
             return u'file_delete' in self._client.host_info['api_extensions']
 
         def delete(self, filepath):
-            if self.delete_available():
-                response = self._client.api.containers[
-                    self._container.name].files.delete(
-                    params={'path': filepath})
-                return response.status_code == 200
-            else:
+            if not self.delete_available():
                 raise ValueError(
                     'File Deletion is not available for this host')
+            response = self._client.api.containers[
+                self._container.name].files.delete(
+                params={'path': filepath})
+            if response.status_code != 200:
+                raise LXDAPIException(response)
 
         def get(self, filepath):
             response = (self._client.api.containers[self._container.name]
-                        .files.get(params={'path': filepath}))
+                        .files.get(params={'path': filepath}, is_api=False))
             return response.content
 
-        def recursive_put(self, src, dst):
+        def recursive_put(self, src, dst, mode=None, uid=None, gid=None):
             """Recursively push directory to the container.
 
             Recursively pushes directory to the containers
             named by the `dst`
 
             :param src: The source path of directory to copy.
-            :type filepath: str
+            :type src: str
             :param dst: The destination path in the container
                     of directory to copy
-            :type filepath: str
+            :type dst: str
+            :param mode: The unit mode to store the file with.  The default of
+                None stores the file with the current mask of 0700, which is
+                the lxd default.
+            :type mode: Union[oct, int, str]
+            :param uid: The uid to use inside the container. Default of None
+                results in 0 (root).
+            :type uid: int
+            :param gid: The gid to use inside the container.  Default of None
+                results in 0 (root).
+            :type gid: int
+            :raises: NotADirectoryError if src is not a directory
+            :raises: LXDAPIException if an error occurs
             """
             norm_src = os.path.normpath(src)
             if not os.path.isdir(norm_src):
@@ -161,31 +185,42 @@ class Container(model.Model):
                     "'src' parameter must be a directory "
                 )
 
-            idx = len(os.path.dirname(norm_src))
-            dst_items = collections.defaultdict(dict)
+            idx = len(norm_src)
+            dst_items = set()
 
             for path, dirname, files in os.walk(norm_src):
-                dst_path = os.path.normpath(os.path.join(
-                    dst, path[idx:].lstrip(os.path.sep)))
-                # create directory
+                dst_path = os.path.normpath(
+                    os.path.join(dst, path[idx:].lstrip(os.path.sep)))
+                # create directory or symlink (depending on what's there)
                 if path not in dst_items:
-                    headers = {
-                        'X-LXD-type': 'directory'
-                    }
+                    dst_items.add(path)
+                    headers = self._resolve_headers(mode=mode,
+                                                    uid=uid, gid=gid)
+                    # determine what the file is: a directory or a symlink
+                    fmode = os.stat(path).st_mode
+                    if stat.S_ISLNK(fmode):
+                        headers['X-LXD-type'] = 'symlink'
+                    else:
+                        headers['X-LXD-type'] = 'directory'
                     (self._client.api.containers[self._container.name]
                      .files.post(params={'path': dst_path},
                                  headers=headers))
 
                 # copy files
-                responses = []
                 for f in files:
                     src_file = os.path.join(path, f)
-                    response = self._container.files.put(
-                        os.path.join(dst_path, f),
-                        data=open(src_file, 'rb').read()
-                    )
-                    responses.append(response)
-            return all(responses)
+                    with open(src_file, 'rb') as fp:
+                        filepath = os.path.join(dst_path, f)
+                        headers = self._resolve_headers(mode=mode,
+                                                        uid=uid,
+                                                        gid=gid)
+                        response = (
+                            self._client.api.containers[self._container.name]
+                            .files.post(params={'path': filepath},
+                                        data=fp.read(),
+                                        headers=headers or None))
+                        if response.status_code != 200:
+                            raise LXDAPIException(response)
 
     @classmethod
     def exists(cls, client, name):
@@ -301,11 +336,26 @@ class Container(model.Model):
                                force=force,
                                wait=wait)
 
-    def execute(self, commands, environment={}):
+    def execute(self, commands, environment={}, encoding=None, decode=True):
         """Execute a command on the container.
 
         In pylxd 2.2, this method will be renamed `execute` and the existing
         `execute` method removed.
+
+        :param commands: The command and arguments as a list of strings
+        :type commands: [str]
+        :param environment: The environment variables to pass with the command
+        :type environment: {str: str}
+        :param encoding: The encoding to use for stdout/stderr if the param
+            decode is True.  If encoding is None, then no override is
+            performed and whatever the existing encoding from LXD is used.
+        :type encoding: str
+        :param decode: Whether to decode the stdout/stderr or just return the
+            raw buffers.
+        :type decode: bool
+        :raises ValueError: if the ws4py library is not installed.
+        :returns: The return value, stdout and stdin
+        :rtype: _ContainerExecuteResult() namedtuple
         """
         if not _ws4py_installed:
             raise ValueError(
@@ -329,20 +379,32 @@ class Container(model.Model):
             stdin.resource = '{}?secret={}'.format(parsed.path, fds['0'])
             stdin.connect()
             stdout = _CommandWebsocketClient(
-                manager, self.client.websocket_url)
+                manager, self.client.websocket_url,
+                encoding=encoding, decode=decode)
             stdout.resource = '{}?secret={}'.format(parsed.path, fds['1'])
             stdout.connect()
             stderr = _CommandWebsocketClient(
-                manager, self.client.websocket_url)
+                manager, self.client.websocket_url,
+                encoding=encoding, decode=decode)
             stderr.resource = '{}?secret={}'.format(parsed.path, fds['2'])
             stderr.connect()
 
             manager.start()
 
-            while len(manager.websockets.values()) > 0:
-                time.sleep(.1)
+            # watch for the end of the command:
+            while True:
+                operation = self.client.operations.get(operation_id)
+                if 'return' in operation.metadata:
+                    break
+                time.sleep(.5)  # pragma: no cover
 
-            operation = self.client.operations.get(operation_id)
+            while len(manager.websockets.values()) > 0:
+                time.sleep(.1)  # pragma: no cover
+
+            stdout.close()
+            stderr.close()
+            manager.stop()
+            manager.join()
 
             return _ContainerExecuteResult(
                 operation.metadata['return'], stdout.data, stderr.data)
@@ -419,8 +481,15 @@ class Container(model.Model):
 
 
 class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
+    """Handle a websocket for container.execute(...) and manage decoding of the
+    returned values depending on 'decode' and 'encoding' parameters.
+    """
+
     def __init__(self, manager, *args, **kwargs):
         self.manager = manager
+        self.decode = kwargs.pop('decode', True)
+        self.encoding = kwargs.pop('encoding', None)
+        self.message_encoding = None
         super(_CommandWebsocketClient, self).__init__(*args, **kwargs)
 
     def handshake_ok(self):
@@ -428,17 +497,21 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         self.buffer = []
 
     def received_message(self, message):
-        if len(message.data) == 0:
-            self.close()
-            self.manager.remove(self)
-        if message.encoding:
-            self.buffer.append(message.data.decode(message.encoding))
-        else:
-            self.buffer.append(message.data.decode('utf-8'))
+        if message.encoding and self.message_encoding is None:
+            self.message_encoding = message.encoding
+        self.buffer.append(message.data)
 
     @property
     def data(self):
-        return ''.join(self.buffer)
+        buffer = b''.join(self.buffer)
+        if self.decode:
+            if self.encoding:
+                return buffer.decode(self.encoding)
+            if self.message_encoding:
+                return buffer.decode(self.message_encoding)
+            # This is the backwards compatible "always decode to utf-8"
+            return buffer.decode('utf-8')
+        return buffer
 
 
 class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover

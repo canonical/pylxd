@@ -75,8 +75,8 @@ class _APINode(object):
             verify=self.session.verify,
             timeout=self._timeout)
 
-    def _assert_response(
-            self, response, allowed_status_codes=(200,), stream=False):
+    def _assert_response(self, response, allowed_status_codes=(200,),
+                         stream=False, is_api=True):
         """Assert properties of the response.
 
         LXD's API clearly defines specific responses. If the API
@@ -92,7 +92,9 @@ class _APINode(object):
 
         # In the case of streaming, we can't validate the json the way we
         # would with normal HTTP responses, so just ignore that entirely.
-        if stream:
+        # Likewize, we can ignore NON api calls as the contents don't need to
+        # be validated.
+        if stream or not is_api:
             return
 
         try:
@@ -119,10 +121,18 @@ class _APINode(object):
         return parse.urlparse(self.api._api_endpoint).netloc
 
     def get(self, *args, **kwargs):
-        """Perform an HTTP GET."""
+        """Perform an HTTP GET.
+
+        Note if 'is_api' is passed in the kwargs then it is popped and used to
+        determine whether the get is an API call or a raw call.
+        This is for py27 compatibility.
+        """
+        is_api = kwargs.pop('is_api', True)
         kwargs['timeout'] = kwargs.get('timeout', self._timeout)
         response = self.session.get(self._api_endpoint, *args, **kwargs)
-        self._assert_response(response, stream=kwargs.get('stream', False))
+        self._assert_response(response,
+                              stream=kwargs.get('stream', False),
+                              is_api=is_api)
         return response
 
     def post(self, *args, **kwargs):

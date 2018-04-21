@@ -11,8 +11,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import unittest
-
 from pylxd import exceptions
 
 from integration.testing import IntegrationTestCase
@@ -70,7 +68,6 @@ class TestProfile(IntegrationTestCase):
         profile = self.client.profiles.get(self.profile.name)
         self.assertEqual('16GB', profile.config['limits.memory'])
 
-    @unittest.skip('Not implemented in LXD')
     def test_rename(self):
         """A profile is renamed."""
         name = 'a-other-profile'

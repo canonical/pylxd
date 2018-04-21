@@ -155,6 +155,30 @@ class TestContainer(IntegrationTestCase):
         self.assertEqual('test\n', result.stdout)
         self.assertEqual('', result.stderr)
 
+    def test_execute_no_decode(self):
+        """A command is executed on the container that isn't utf-8 decodable
+        """
+        self.container.start(wait=True)
+        self.addCleanup(self.container.stop, wait=True)
+
+        result = self.container.execute(['printf', '\\xff'], decode=None)
+
+        self.assertEqual(0, result.exit_code)
+        self.assertEqual(b'\xff', result.stdout)
+        self.assertEqual(b'', result.stderr)
+
+    def test_execute_force_decode(self):
+        """A command is executed and force output to ascii"""
+        self.container.start(wait=True)
+        self.addCleanup(self.container.stop, wait=True)
+
+        result = self.container.execute(['printf', 'qu\\xe9'], decode=True,
+                                        encoding='latin1')
+
+        self.assertEqual(0, result.exit_code)
+        self.assertEqual('qué', result.stdout)
+        self.assertEqual('', result.stderr)
+
     def test_publish(self):
         """A container is published."""
         image = self.container.publish(wait=True)

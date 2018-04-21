@@ -11,6 +11,9 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
+import warnings
+
 from pylxd import exceptions
 
 
@@ -19,8 +22,8 @@ class Operation(object):
 
     __slots__ = [
         '_client',
-        'class', 'created_at', 'err', 'id', 'may_cancel', 'metadata',
-        'resources', 'status', 'status_code', 'updated_at']
+        'class', 'created_at', 'description', 'err', 'id', 'may_cancel',
+        'metadata', 'resources', 'status', 'status_code', 'updated_at']
 
     @classmethod
     def wait_for_operation(cls, client, operation_id):
@@ -40,7 +43,16 @@ class Operation(object):
     def __init__(self, **kwargs):
         super(Operation, self).__init__()
         for key, value in kwargs.items():
-            setattr(self, key, value)
+            try:
+                setattr(self, key, value)
+            except AttributeError:
+                # ignore attributes we don't know about -- prevent breakage
+                # in the future if new attributes are added.
+                warnings.warn(
+                    'Attempted to set unknown attribute "{}" '
+                    'on instance of "{}"'
+                    .format(key, self.__class__.__name__))
+                pass
 
     def wait(self):
         """Wait for the operation to complete and return."""
