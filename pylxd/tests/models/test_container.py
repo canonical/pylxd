@@ -588,61 +588,6 @@ class TestFiles(testing.PyLXDTestCase):
                              'directory')
             self.assertEqual(_captures[3]['body'], b"This is file2")
 
-    def test_recursive_put(self):
-        """ Recursive put directory to the container """
-
-        def create_file():
-            print("recursive put setup")
-            os.makedirs('./tmp/dir')
-            open('./tmp/file1', 'w').write("This is file1")
-            open('./tmp/dir/file2', 'w').write("This is file2")
-
-        def remove_file():
-            print("recursive put teardown")
-            shutil.rmtree('./tmp')
-
-        _capture = {}
-
-        def capture(request, context):
-            if 'headers' not in _capture:
-                _capture['headers'] = []
-            _capture['headers'].append(getattr(request._request, 'headers'))
-            context.status_code = 200
-
-        rule = {
-            'text': capture,
-            'method': 'POST',
-            'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Ftmp$',  # NOQA
-        }
-        rule2 = {
-            'text': capture,
-            'method': 'POST',
-            'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Ftmp%2Fdir$',  # NOQA
-        }
-        rule3 = {
-            'method': 'POST',
-            'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Ftmp%2Ffile1$',  # NOQA
-        }
-        rule4 = {
-            'method': 'POST',
-            'url': r'^http://pylxd.test/1.0/containers/an-container/files\?path=%2Ftmp%2Ftmp%2Fdir%2Ffile2$',  # NOQA
-        }
-
-        self.add_rule(rule)
-        self.add_rule(rule2)
-        self.add_rule(rule3)
-        self.add_rule(rule4)
-
-        create_file()
-        res = self.container.files.recursive_put('./tmp', '/tmp/')
-        self.assertEqual(True, res,
-                         msg=('Failed to recursive put directory, result: {}'
-                              .format(res)))  # NOQA
-        for headers in _capture['headers']:
-            self.assertEqual(headers['X-LXD-type'], 'directory')
-
-        remove_file()
-
     def test_get(self):
         """A file is retrieved from the container."""
         data = self.container.files.get('/tmp/getted')
