@@ -49,6 +49,54 @@ def image_DELETE(request, context):
         'operation': 'operation-abc'})
 
 
+def networks_GET(request, _):
+    name = request.path.split('/')[-1]
+    return json.dumps({
+        'type': 'sync',
+        'metadata': {
+            'config': {
+                'ipv4.address': '10.80.100.1/24',
+                'ipv4.nat': 'true',
+                'ipv6.address': 'none',
+                'ipv6.nat': 'false',
+            },
+            'name': name,
+            'description': 'Network description',
+            'type': 'bridge',
+            'managed': True,
+            'used_by': [],
+        },
+    })
+
+
+def networks_POST(_, context):
+    context.status_code = 200
+    return json.dumps({
+        'type': 'sync',
+        'metadata': {}})
+
+
+def networks_DELETE(_, context):
+    context.status_code = 202
+    return json.dumps({
+        'type': 'sync',
+        'operation': 'operation-abc'})
+
+
+def profile_GET(request, context):
+    name = request.path.split('/')[-1]
+    return json.dumps({
+        'type': 'sync',
+        'metadata': {
+            'name': name,
+            'description': 'An description',
+            'config': {},
+            'devices': {},
+            'used_by': [],
+        },
+    })
+
+
 def profiles_POST(request, context):
     context.status_code = 200
     return json.dumps({
@@ -68,20 +116,6 @@ def snapshot_DELETE(request, context):
     return json.dumps({
         'type': 'async',
         'operation': 'operation-abc'})
-
-
-def profile_GET(request, context):
-    name = request.path.split('/')[-1]
-    return json.dumps({
-        'type': 'sync',
-        'metadata': {
-            'name': name,
-            'description': 'An description',
-            'config': {},
-            'devices': {},
-            'used_by': [],
-        },
-    })
 
 
 RULES = [
@@ -543,8 +577,14 @@ RULES = [
             'type': 'sync',
             'metadata': [
                 'http://pylxd.test/1.0/networks/lo',
+                'http://pylxd.test/1.0/networks/eth0',
             ]},
         'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/networks$',
+    },
+    {
+        'text': networks_POST,
+        'method': 'POST',
         'url': r'^http://pylxd.test/1.0/networks$',
     },
     {
@@ -557,6 +597,21 @@ RULES = [
             }},
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/networks/lo$',
+    },
+    {
+        'text': networks_GET,
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/networks/eth(0|1|2)$',
+    },
+    {
+        'text': json.dumps({'type': 'sync'}),
+        'method': 'PUT',
+        'url': r'^http://pylxd.test/1.0/networks/eth0$',
+    },
+    {
+        'text': networks_DELETE,
+        'method': 'DELETE',
+        'url': r'^http://pylxd.test/1.0/networks/eth0$',
     },
 
     # Storage Pools

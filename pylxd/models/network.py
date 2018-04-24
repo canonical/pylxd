@@ -17,18 +17,27 @@ from pylxd.models import _model as model
 class Network(model.Model):
     """A LXD network."""
     name = model.Attribute()
+    description = model.Attribute()
     type = model.Attribute()
-    used_by = model.Attribute()
     config = model.Attribute()
-    managed = model.Attribute()
+    managed = model.Attribute(readonly=True)
+    used_by = model.Attribute(readonly=True)
+
+    @classmethod
+    def exists(cls, client, name):
+        """Determine whether a network exists."""
+        try:
+            client.networks.get(name)
+            return True
+        except cls.NotFound:
+            return False
 
     @classmethod
     def get(cls, client, name):
         """Get a network by name."""
         response = client.api.networks[name].get()
 
-        network = cls(client, **response.json()['metadata'])
-        return network
+        return cls(client, **response.json()['metadata'])
 
     @classmethod
     def all(cls, client):
@@ -41,14 +50,25 @@ class Network(model.Model):
             networks.append(cls(client, name=name))
         return networks
 
+    @classmethod
+    def create(cls, client, name, description=None, type_=None,
+               config=None):
+        """Create a network"""
+        network = {'name': name}
+        if description is not None:
+            network['description'] = description
+        if type_ is not None:
+            network['type'] = type_
+        if config is not None:
+            network['config'] = config
+        client.api.networks.post(json=network)
+        return cls.get(client, name)
+
+    def rename(self, new_name):
+        """Rename network."""
+        self.client.api.networks.post(json={'name': new_name})
+        return Network.get(self.client, new_name)
+
     @property
     def api(self):
         return self.client.api.networks[self.name]
-
-    def save(self, wait=False):
-        """Save is not available for networks."""
-        raise NotImplementedError('save is not implemented')
-
-    def delete(self):
-        """Delete is not available for networks."""
-        raise NotImplementedError('delete is not implemented')
