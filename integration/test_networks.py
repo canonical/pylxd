@@ -11,11 +11,22 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
 from integration.testing import IntegrationTestCase
 from pylxd import exceptions
+from pylxd.models import Network
 
 
-class TestNetworks(IntegrationTestCase):
+class NetworkTestCase(IntegrationTestCase):
+
+    def setUp(self):
+        super(NetworkTestCase, self).setUp()
+
+        if not Network.network_extension_available(self.client):
+            self.skipTest('Required LXD API extension not available!')
+
+
+class TestNetworks(NetworkTestCase):
     """Tests for `Client.networks.`"""
 
     def test_get(self):
@@ -58,7 +69,7 @@ class TestNetworks(IntegrationTestCase):
                 'ipv6.address': 'none',
                 'ipv6.nat': 'false',
             },
-            'type_': 'bridge',
+            'type': 'bridge',
             'description': 'network description',
         }
 
@@ -67,12 +78,12 @@ class TestNetworks(IntegrationTestCase):
 
         self.assertEqual(kwargs['name'], network.name)
         self.assertEqual(kwargs['config'], network.config)
-        self.assertEqual(kwargs['type_'], network.type)
+        self.assertEqual(kwargs['type'], network.type)
         self.assertTrue(network.managed)
         self.assertEqual(kwargs['description'], network.description)
 
 
-class TestNetwork(IntegrationTestCase):
+class TestNetwork(NetworkTestCase):
     """Tests for `Network`."""
 
     def setUp(self):

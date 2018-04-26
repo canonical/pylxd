@@ -30,5 +30,10 @@ class NotFound(LXDAPIException):
     """An exception raised when an object is not found."""
 
 
+class LXDAPIExtensionNotAvailable(Exception):
+    """An exception raised when requested LXD API Extension is not present
+    on current host."""
+
+
 class ClientConnectionFailed(Exception):
     """An exception raised when the Client connection fails."""
