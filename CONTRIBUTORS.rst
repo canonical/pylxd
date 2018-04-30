@@ -32,5 +32,6 @@ These are the contributors to pylxd according to the Github repository.
  Synforge         Paul Oyston
  overquota        ???
  chrismacnaughton Chris MacNaughton
+ ppkt             Karol Werner
  ===============  ==================================
 

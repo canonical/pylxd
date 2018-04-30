@@ -200,12 +200,14 @@ class Model(object):
                 response.json()['operation'])
         self.client = None
 
-    def marshall(self):
+    def marshall(self, skip_readonly=True):
         """Marshall the object in preparation for updating to the server."""
         marshalled = {}
         for key, attr in self.__attributes__.items():
-            if ((not attr.readonly and not attr.optional) or
-                    (attr.optional and hasattr(self, key))):
+            if attr.readonly and skip_readonly:
+                continue
+            if (not attr.optional) or (  # pragma: no branch
+                    attr.optional and hasattr(self, key)):
                 val = getattr(self, key)
                 # Don't send back to the server an attribute it doesn't
                 # support.

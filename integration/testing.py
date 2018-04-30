@@ -11,12 +11,14 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import random
+import string
 import unittest
 import uuid
 
+from integration.busybox import create_busybox_image
 from pylxd import exceptions
 from pylxd.client import Client
-from integration.busybox import create_busybox_image
 
 
 class IntegrationTestCase(unittest.TestCase):
@@ -128,6 +130,21 @@ class IntegrationTestCase(unittest.TestCase):
             if e.response.status_code == 404:
                 return
             raise
+
+    def create_network(self):
+        # get interface name in format xxx0
+        name = ''.join(random.sample(string.ascii_lowercase, 3)) + '0'
+        self.lxd.networks.post(json={
+            'name': name,
+            'config': {},
+        })
+        return name
+
+    def delete_network(self, name):
+        try:
+            self.lxd.networks[name].delete()
+        except exceptions.NotFound:
+            pass
 
     def assertCommon(self, response):
         """Assert common LXD responses.

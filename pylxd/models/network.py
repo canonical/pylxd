@@ -11,28 +11,65 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import json
+
+from pylxd.exceptions import LXDAPIExtensionNotAvailable
 from pylxd.models import _model as model
 
 
 class Network(model.Model):
-    """A LXD network."""
+    """Model representing a LXD network."""
     name = model.Attribute()
+    description = model.Attribute()
     type = model.Attribute()
-    used_by = model.Attribute()
     config = model.Attribute()
-    managed = model.Attribute()
+    managed = model.Attribute(readonly=True)
+    used_by = model.Attribute(readonly=True)
+
+    @classmethod
+    def exists(cls, client, name):
+        """
+        Determine whether network with provided name exists.
+
+        :param client: client instance
+        :type client: :class:`~pylxd.client.Client`
+        :param name: name of the network
+        :type name: str
+        :returns: `True` if network exists, `False` otherwise
+        :rtype: bool
+        """
+        try:
+            client.networks.get(name)
+            return True
+        except cls.NotFound:
+            return False
 
     @classmethod
     def get(cls, client, name):
-        """Get a network by name."""
+        """
+        Get a network by name.
+
+        :param client: client instance
+        :type client: :class:`~pylxd.client.Client`
+        :param name: name of the network
+        :type name: str
+        :returns: network instance (if exists)
+        :rtype: :class:`Network`
+        :raises: :class:`~pylxd.exceptions.NotFound` if network does not exist
+        """
         response = client.api.networks[name].get()
 
-        network = cls(client, **response.json()['metadata'])
-        return network
+        return cls(client, **response.json()['metadata'])
 
     @classmethod
     def all(cls, client):
-        """Get all networks."""
+        """
+        Get all networks.
+
+        :param client: client instance
+        :type client: :class:`~pylxd.client.Client`
+        :rtype: list[:class:`Network`]
+        """
         response = client.api.networks.get()
 
         networks = []
@@ -41,14 +78,93 @@ class Network(model.Model):
             networks.append(cls(client, name=name))
         return networks
 
+    @classmethod
+    def create(cls, client, name, description=None, type=None, config=None):
+        """
+        Create a network.
+
+        :param client: client instance
+        :type client: :class:`~pylxd.client.Client`
+        :param name: name of the network
+        :type name: str
+        :param description: description of the network
+        :type description: str
+        :param type: type of the network
+        :type type: str
+        :param config: additional configuration
+        :type config: dict
+        """
+
+        cls._check_network_api_extension(client)
+
+        network = {'name': name}
+        if description is not None:
+            network['description'] = description
+        if type is not None:
+            network['type'] = type
+        if config is not None:
+            network['config'] = config
+        client.api.networks.post(json=network)
+        return cls.get(client, name)
+
+    def rename(self, new_name):
+        """
+        Rename a network.
+
+        :param new_name: new name of the network
+        :type new_name: str
+        :return: Renamed network instance
+        :rtype: :class:`Network`
+        """
+
+        self._check_network_api_extension(self.client)
+
+        self.client.api.networks.post(json={'name': new_name})
+        return Network.get(self.client, new_name)
+
+    def save(self, *args, **kwargs):
+        self._check_network_api_extension(self.client)
+        super(Network, self).save(*args, **kwargs)
+
     @property
     def api(self):
         return self.client.api.networks[self.name]
 
-    def save(self, wait=False):
-        """Save is not available for networks."""
-        raise NotImplementedError('save is not implemented')
+    @staticmethod
+    def network_extension_available(client):
+        """
+        Network operations is an extension API and may not be available.
 
-    def delete(self):
-        """Delete is not available for networks."""
-        raise NotImplementedError('delete is not implemented')
+        https://github.com/lxc/lxd/blob/master/doc/api-extensions.md#network
+
+        :param client: client instance
+        :type client: :class:`~pylxd.client.Client`
+        :returns: `True` if network API extension is available, `False`
+         otherwise.
+        :rtype: `bool`
+        """
+        return u'network' in client.host_info['api_extensions']
+
+    def __str__(self):
+        return json.dumps(self.marshall(skip_readonly=False), indent=2)
+
+    def __repr__(self):
+        attrs = []
+        for attribute, value in self.marshall().items():
+            attrs.append('{}={}'.format(attribute,
+                                        json.dumps(value, sort_keys=True)))
+
+        return '{}({})'.format(self.__class__.__name__,
+                               ', '.join(sorted(attrs)))
+
+    @staticmethod
+    def _check_network_api_extension(client):
+        """
+        :param client: client instance
+        :type client: :class:`~pylxd.client.Client`
+        :raises: `exceptions.LXDAPIExtensionNotAvailable` when network
+         operations API extension is not available.
+        """
+        if not Network.network_extension_available(client):
+            raise LXDAPIExtensionNotAvailable(
+                'Network creation is not available for this host')
