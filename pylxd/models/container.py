@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import collections
+import os
+import stat
 import time
 
 import six
@@ -25,7 +27,12 @@ except ImportError:  # pragma: no cover
     _ws4py_installed = False
 
 from pylxd import managers
+from pylxd.exceptions import LXDAPIException
 from pylxd.models import _model as model
+
+if six.PY2:
+    # Python2.7 doesn't have this natively
+    from pylxd.exceptions import NotADirectoryError
 
 
 class ContainerState(object):
@@ -91,17 +98,28 @@ class Container(model.Model):
             :param mode: The unit mode to store the file with.  The default of
                 None stores the file with the current mask of 0700, which is
                 the lxd default.
-            :type mode: oct | int | str
+            :type mode: Union[oct, int, str]
             :param uid: The uid to use inside the container. Default of None
                 results in 0 (root).
             :type uid: int
             :param gid: The gid to use inside the container.  Default of None
                 results in 0 (root).
             :type gid: int
-            :returns: True if the file store succeeded otherwise False.
-            :rtype: Bool
+            :raises: LXDAPIException if something goes wrong
             """
-            headers = {}
+            headers = self._resolve_headers(mode=mode, uid=uid, gid=gid)
+            response = (self._client.api.containers[self._container.name]
+                        .files.post(params={'path': filepath},
+                                    data=data,
+                                    headers=headers or None))
+            if response.status_code == 200:
+                return
+            raise LXDAPIException(response)
+
+        @staticmethod
+        def _resolve_headers(headers=None, mode=None, uid=None, gid=None):
+            if headers is None:
+                headers = {}
             if mode is not None:
                 if isinstance(mode, int):
                     mode = format(mode, 'o')
@@ -114,11 +132,7 @@ class Container(model.Model):
                 headers['X-LXD-uid'] = str(uid)
             if gid is not None:
                 headers['X-LXD-gid'] = str(gid)
-            response = (self._client.api.containers[self._container.name]
-                        .files.post(params={'path': filepath},
-                                    data=data,
-                                    headers=headers or None))
-            return response.status_code == 200
+            return headers
 
         def delete_available(self):
             """File deletion is an extension API and may not be available.
@@ -127,19 +141,86 @@ class Container(model.Model):
             return u'file_delete' in self._client.host_info['api_extensions']
 
         def delete(self, filepath):
-            if self.delete_available():
-                response = self._client.api.containers[
-                    self._container.name].files.delete(
-                    params={'path': filepath})
-                return response.status_code == 200
-            else:
+            if not self.delete_available():
                 raise ValueError(
                     'File Deletion is not available for this host')
+            response = self._client.api.containers[
+                self._container.name].files.delete(
+                params={'path': filepath})
+            if response.status_code != 200:
+                raise LXDAPIException(response)
 
         def get(self, filepath):
             response = (self._client.api.containers[self._container.name]
                         .files.get(params={'path': filepath}, is_api=False))
             return response.content
+
+        def recursive_put(self, src, dst, mode=None, uid=None, gid=None):
+            """Recursively push directory to the container.
+
+            Recursively pushes directory to the containers
+            named by the `dst`
+
+            :param src: The source path of directory to copy.
+            :type src: str
+            :param dst: The destination path in the container
+                    of directory to copy
+            :type dst: str
+            :param mode: The unit mode to store the file with.  The default of
+                None stores the file with the current mask of 0700, which is
+                the lxd default.
+            :type mode: Union[oct, int, str]
+            :param uid: The uid to use inside the container. Default of None
+                results in 0 (root).
+            :type uid: int
+            :param gid: The gid to use inside the container.  Default of None
+                results in 0 (root).
+            :type gid: int
+            :raises: NotADirectoryError if src is not a directory
+            :raises: LXDAPIException if an error occurs
+            """
+            norm_src = os.path.normpath(src)
+            if not os.path.isdir(norm_src):
+                raise NotADirectoryError(
+                    "'src' parameter must be a directory "
+                )
+
+            idx = len(norm_src)
+            dst_items = set()
+
+            for path, dirname, files in os.walk(norm_src):
+                dst_path = os.path.normpath(
+                    os.path.join(dst, path[idx:].lstrip(os.path.sep)))
+                # create directory or symlink (depending on what's there)
+                if path not in dst_items:
+                    dst_items.add(path)
+                    headers = self._resolve_headers(mode=mode,
+                                                    uid=uid, gid=gid)
+                    # determine what the file is: a directory or a symlink
+                    fmode = os.stat(path).st_mode
+                    if stat.S_ISLNK(fmode):
+                        headers['X-LXD-type'] = 'symlink'
+                    else:
+                        headers['X-LXD-type'] = 'directory'
+                    (self._client.api.containers[self._container.name]
+                     .files.post(params={'path': dst_path},
+                                 headers=headers))
+
+                # copy files
+                for f in files:
+                    src_file = os.path.join(path, f)
+                    with open(src_file, 'rb') as fp:
+                        filepath = os.path.join(dst_path, f)
+                        headers = self._resolve_headers(mode=mode,
+                                                        uid=uid,
+                                                        gid=gid)
+                        response = (
+                            self._client.api.containers[self._container.name]
+                            .files.post(params={'path': filepath},
+                                        data=fp.read(),
+                                        headers=headers or None))
+                        if response.status_code != 200:
+                            raise LXDAPIException(response)
 
     @classmethod
     def exists(cls, client, name):

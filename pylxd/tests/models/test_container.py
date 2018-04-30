@@ -1,6 +1,12 @@
+import contextlib
 import json
+import os
+import shutil
+import tempfile
 
 import mock
+
+from six.moves.urllib.parse import quote as url_quote
 
 from pylxd import exceptions, models
 from pylxd.tests import testing
@@ -34,7 +40,7 @@ class TestContainer(testing.PyLXDTestCase):
         self.add_rule({
             'text': not_found,
             'method': 'GET',
-            'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',  # NOQA
+            'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',
         })
 
         name = 'an-missing-container'
@@ -54,7 +60,7 @@ class TestContainer(testing.PyLXDTestCase):
         self.add_rule({
             'text': not_found,
             'method': 'GET',
-            'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',  # NOQA
+            'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',
         })
 
         name = 'an-missing-container'
@@ -89,7 +95,7 @@ class TestContainer(testing.PyLXDTestCase):
         self.add_rule({
             'text': not_found,
             'method': 'GET',
-            'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',  # NOQA
+            'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',
         })
 
         name = 'an-missing-container'
@@ -116,7 +122,7 @@ class TestContainer(testing.PyLXDTestCase):
         self.add_rule({
             'text': not_found,
             'method': 'GET',
-            'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',  # NOQA
+            'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',
         })
 
         an_container = models.Container(
@@ -135,7 +141,7 @@ class TestContainer(testing.PyLXDTestCase):
         self.add_rule({
             'text': not_found,
             'method': 'GET',
-            'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',  # NOQA
+            'url': r'^http://pylxd.test/1.0/containers/an-missing-container$',
         })
 
         an_container = models.Container(
@@ -258,7 +264,8 @@ class TestContainer(testing.PyLXDTestCase):
                 'metadata': {
                     'id': 'operation-abc',
                     'metadata': {
-                        'fingerprint': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'  # NOQA
+                        'fingerprint': ('e3b0c44298fc1c149afbf4c8996fb92427'
+                                        'ae41e4649b934ca495991b7852b855')
                         }
                     }
                 }),
@@ -388,7 +395,8 @@ class TestSnapshot(testing.PyLXDTestCase):
         self.add_rule({
             'text': not_found,
             'method': 'DELETE',
-            'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots/an-snapshot$',  # NOQA
+            'url': (r'^http://pylxd.test/1.0/containers/'
+                    'an-container/snapshots/an-snapshot$')
         })
 
         snapshot = models.Snapshot(
@@ -405,7 +413,8 @@ class TestSnapshot(testing.PyLXDTestCase):
                 'metadata': {
                     'id': 'operation-abc',
                     'metadata': {
-                        'fingerprint': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'  # NOQA
+                        'fingerprint': ('e3b0c44298fc1c149afbf4c8996fb92427'
+                                        'ae41e4649b934ca495991b7852b855')
                         }
                     }
                 }),
@@ -433,19 +442,12 @@ class TestFiles(testing.PyLXDTestCase):
 
     def test_put_delete(self):
         """A file is put on the container and then deleted"""
-        data = 'The quick brown fox'
-
-        res = self.container.files.put('/tmp/putted', data)
-        self.assertEqual(True, res,
-                         msg=('Failed to put file, result: {}'
-                              .format(res)))  # NOQA
-
         # we are mocked, so delete should initially not be available
         self.assertEqual(False, self.container.files.delete_available())
         self.assertRaises(ValueError,
-                          self.container.files.delete, '/tmp/putted')
+                          self.container.files.delete, '/some/file')
         # Now insert delete
-        rule = {
+        self.add_rule({
             'text': json.dumps({
                 'type': 'sync',
                 'metadata': {'auth': 'trusted',
@@ -456,17 +458,33 @@ class TestFiles(testing.PyLXDTestCase):
                              }}),
             'method': 'GET',
             'url': r'^http://pylxd.test/1.0$',
-        }
-        self.add_rule(rule)
+        })
+
         # Update hostinfo
         self.client.host_info = self.client.api.get().json()['metadata']
 
         self.assertEqual(True, self.container.files.delete_available())
 
-        res = self.container.files.delete('/tmp/putted')
-        self.assertEqual(True, res,
-                         msg=('Failed to delete file, result: {}'
-                              .format(res)))  # NOQA
+        # mock out the delete rule:
+        self.add_rule({
+            'method': 'DELETE',
+            'url': (r'^http://pylxd.test/1.0/containers/an-container/files'
+                    '\?path=%2Fsome%2Ffile$')
+        })
+        self.container.files.delete('/some/file')
+
+        # now check that an error (non 200) causes an exception
+        def responder(request, context):
+            context.status_code = 404
+
+        self.add_rule({
+            'text': responder,
+            'method': 'DELETE',
+            'url': (r'^http://pylxd.test/1.0/containers/an-container/files'
+                    '\?path=%2Fsome%2Ffile%2Fnot%2Ffound$')
+        })
+        with self.assertRaises(exceptions.LXDAPIException):
+            self.container.files.delete('/some/file/not/found')
 
     def test_put_mode_uid_gid(self):
         """Should be able to set the mode, uid and gid of a file"""
@@ -477,42 +495,98 @@ class TestFiles(testing.PyLXDTestCase):
             _capture['headers'] = getattr(request._request, 'headers')
             context.status_code = 200
 
-        rule = {
+        self.add_rule({
             'text': capture,
             'method': 'POST',
             'url': (r'^http://pylxd.test/1.0/containers/an-container/files'
-                    '\?path=%2Ftmp%2Fputted$'),  # NOQA
-        }
-        self.add_rule(rule)
+                    '\?path=%2Ftmp%2Fputted$'),
+        })
 
         data = 'The quick brown fox'
         # start with an octal mode
-        res = self.container.files.put('/tmp/putted', data, mode=0o123,
-                                       uid=1, gid=2)
-        self.assertEqual(True, res,
-                         msg=('Failed to put file, result: {}'
-                              .format(res)))  # NOQA
+        self.container.files.put('/tmp/putted', data, mode=0o123, uid=1, gid=2)
         headers = _capture['headers']
         self.assertEqual(headers['X-LXD-mode'], '0123')
         self.assertEqual(headers['X-LXD-uid'], '1')
         self.assertEqual(headers['X-LXD-gid'], '2')
         # use a str mode this type
-        res = self.container.files.put('/tmp/putted', data, mode='456')
-        self.assertEqual(True, res,
-                         msg=('Failed to put file, result: {}'
-                              .format(res)))  # NOQA
+        self.container.files.put('/tmp/putted', data, mode='456')
         headers = _capture['headers']
         self.assertEqual(headers['X-LXD-mode'], '0456')
         # check that mode='0644' also works (i.e. already has 0 prefix)
-        res = self.container.files.put('/tmp/putted', data, mode='0644')
-        self.assertEqual(True, res,
-                         msg=('Failed to put file, result: {}'
-                              .format(res)))  # NOQA
+        self.container.files.put('/tmp/putted', data, mode='0644')
         headers = _capture['headers']
         self.assertEqual(headers['X-LXD-mode'], '0644')
         # check that assertion is raised
         with self.assertRaises(ValueError):
-            res = self.container.files.put('/tmp/putted', data, mode=object)
+            self.container.files.put('/tmp/putted', data, mode=object)
+
+    def test_recursive_put(self):
+
+        @contextlib.contextmanager
+        def tempdir(prefix='tmp'):
+            tmpdir = tempfile.mkdtemp(prefix=prefix)
+            try:
+                yield tmpdir
+            finally:
+                shutil.rmtree(tmpdir)
+
+        def create_file(_dir, name, content):
+            path = os.path.join(_dir, name)
+            actual_dir = os.path.dirname(path)
+            if not os.path.exists(actual_dir):
+                os.makedirs(actual_dir)
+            with open(path, 'w') as f:
+                f.write(content)
+
+        _captures = []
+
+        def capture(request, context):
+            _captures.append({
+                'headers': getattr(request._request, 'headers'),
+                'body': request._request.body,
+            })
+            context.status_code = 200
+
+        with tempdir() as _dir:
+            base = (r'^http://pylxd.test/1.0/containers/'
+                    'an-container/files\?path=')
+            rules = [
+                {
+                    'text': capture,
+                    'method': 'POST',
+                    'url': base + url_quote('target', safe='') + '$'
+                },
+                {
+                    'text': capture,
+                    'method': 'POST',
+                    'url': base + url_quote('target/dir', safe='') + '$'
+                },
+                {
+                    'text': capture,
+                    'method': 'POST',
+                    'url': base + url_quote('target/file1', safe='') + '$'
+                },
+                {
+                    'text': capture,
+                    'method': 'POST',
+                    'url': base + url_quote('target/dir/file2',
+                                            safe='') + '$'
+                }
+            ]
+            self.add_rules(rules)
+
+            create_file(_dir, 'file1', "This is file1")
+            create_file(_dir, 'dir/file2', "This is file2")
+
+            self.container.files.recursive_put(_dir, './target/')
+
+            self.assertEqual(_captures[0]['headers']['X-LXD-type'],
+                             'directory')
+            self.assertEqual(_captures[1]['body'], b"This is file1")
+            self.assertEqual(_captures[2]['headers']['X-LXD-type'],
+                             'directory')
+            self.assertEqual(_captures[3]['body'], b"This is file2")
 
     def test_get(self):
         """A file is retrieved from the container."""
@@ -528,7 +602,7 @@ class TestFiles(testing.PyLXDTestCase):
             'text': not_found,
             'method': 'GET',
             'url': (r'^http://pylxd.test/1.0/containers/an-container/files'
-                    '\?path=%2Ftmp%2Fgetted$'),  # NOQA
+                    '\?path=%2Ftmp%2Fgetted$'),
         }
         self.add_rule(rule)
 
@@ -544,7 +618,7 @@ class TestFiles(testing.PyLXDTestCase):
             'text': not_found,
             'method': 'GET',
             'url': (r'^http://pylxd.test/1.0/containers/an-container/files'
-                    '\?path=%2Ftmp%2Fgetted$'),  # NOQA
+                    '\?path=%2Ftmp%2Fgetted$'),
         }
         self.add_rule(rule)
 

@@ -1,3 +1,6 @@
+import six
+
+
 class LXDAPIException(Exception):
     """A generic exception for representing unexpected LXD API responses.
 
@@ -37,3 +40,8 @@ class LXDAPIExtensionNotAvailable(Exception):
 
 class ClientConnectionFailed(Exception):
     """An exception raised when the Client connection fails."""
+
+
+if six.PY2:
+    class NotADirectoryError(Exception):
+        """ An exception raised when not a directory for python2 """

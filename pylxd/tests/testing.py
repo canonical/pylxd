@@ -35,3 +35,6 @@ class PyLXDTestCase(unittest.TestCase):
     def add_rule(self, rule):
         """Add a rule to the mock LXD service."""
         mock_services.update_http_rules([rule])
+
+    def add_rules(self, rules):
+        mock_services.update_http_rules(rules)
