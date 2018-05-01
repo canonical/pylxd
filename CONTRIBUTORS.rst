@@ -33,5 +33,6 @@ These are the contributors to pylxd according to the Github repository.
  overquota        ???
  chrismacnaughton Chris MacNaughton
  ppkt             Karol Werner
+ mrtc0            Kohei Morita
  ===============  ==================================
 
