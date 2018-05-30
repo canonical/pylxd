@@ -84,7 +84,7 @@ Once you have an image, you can operate on it as before:
     >>> image.public
     False
     >>> image.public = True
-    >>> image.update()
+    >>> image.save()
 
 
 To create a new Image, you'll open an image file, and pass that to `create`.
