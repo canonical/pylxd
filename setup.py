@@ -25,7 +25,7 @@ except ImportError:
     pass
 
 setuptools.setup(
-    setup_requires=[
+    install_requires=[
         'pbr>=1.8',
         'requests!=2.8.0,>=2.5.2',
         # >= 0.1.5 needed for HTTP_PROXY support
