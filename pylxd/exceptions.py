@@ -51,6 +51,7 @@ class LXDAPIExtensionNotAvailable(Exception):
             "LXD API extension '{}' is not available".format(name),
             *args, **kwargs)
 
+
 class ClientConnectionFailed(Exception):
     """An exception raised when the Client connection fails."""
 

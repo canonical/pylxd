@@ -14,7 +14,6 @@
 
 from integration.testing import IntegrationTestCase
 from pylxd import exceptions
-from pylxd.models import Network
 
 
 class NetworkTestCase(IntegrationTestCase):

@@ -175,7 +175,6 @@ class TestStorageResources(testing.PyLXDTestCase):
 class TestStorageVolume(testing.PyLXDTestCase):
     """Tests for pylxd.models.StorageVolume."""
 
-
     def test_all(self):
         an_storage_pool = models.StoragePool(self.client, name='lxd')
         # first assert that the lxd storage resource requires 'storage'
@@ -257,7 +256,7 @@ class TestStorageVolume(testing.PyLXDTestCase):
         put_object = {
             'config': {'size': 1}
         }
-        thing = a_volume.put(put_object)
+        a_volume.put(put_object)
 
     def test_patch(self):
         add_api_extension_helper(self, ['storage'])
@@ -280,4 +279,3 @@ class TestStorageVolume(testing.PyLXDTestCase):
         a_storage_pool = models.StoragePool(self.client, name='lxd')
         a_volume = a_storage_pool.volumes.get('custom', 'cu1')
         a_volume.delete()
-

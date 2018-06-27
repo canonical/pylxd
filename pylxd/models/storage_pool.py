@@ -298,7 +298,7 @@ class StorageVolume(model.Model):
     """
     name = model.Attribute(readonly=True)
     type = model.Attribute(readonly=True)
-    description= model.Attribute(readonly=True)
+    description = model.Attribute(readonly=True)
     config = model.Attribute()
     used_by = model.Attribute(readonly=True)
     location = model.Attribute(readonly=True)
@@ -457,7 +457,7 @@ class StorageVolume(model.Model):
         response = storage_pool.api.volumes.post(json=definition)
 
         if response.json()['type'] == 'async' and wait:
-            self.client.operations.wait_for_operation(
+            storage_pool.client.operations.wait_for_operation(
                 response.json()['operation'])
 
         volume = cls.get(storage_pool,
@@ -485,7 +485,8 @@ class StorageVolume(model.Model):
         method does not override any items in the input definition, although it
         does check that the 'name' and 'pool' parameters are set.
 
-        Please see: https://github.com/lxc/lxd/blob/master/doc/rest-api.md#10storage-poolspoolvolumestypename
+        Please see: https://github.com/lxc/lxd/blob/master/doc/rest-api.md
+        #10storage-poolspoolvolumestypename
         for more details.
 
         :param _input: The `input` specification for the rename.
