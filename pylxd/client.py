@@ -164,6 +164,16 @@ class _APINode(object):
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
 
+    def patch(self, *args, **kwargs):
+        """Perform an HTTP PATCH."""
+        kwargs['timeout'] = kwargs.get('timeout', self._timeout)
+        print(self._api_endpoint, args, kwargs)
+        response = self.session.patch(self._api_endpoint, *args, **kwargs)
+        # remove debug
+        print(response.json())
+        self._assert_response(response, allowed_status_codes=(200, 202))
+        return response
+
     def delete(self, *args, **kwargs):
         """Perform an HTTP delete."""
         kwargs['timeout'] = kwargs.get('timeout', self._timeout)
@@ -300,6 +310,28 @@ class Client(object):
     @property
     def trusted(self):
         return self.host_info['auth'] == 'trusted'
+
+    def has_api_extension(self, name):
+        """Return True if the `name` api extension exists.
+
+        :param name: the api_extension to look for.
+        :type name: str
+        :returns: True if extension exists
+        :rtype: bool
+        """
+        return name in self.host_info['api_extensions']
+
+    def assert_has_api_extension(self, name):
+        """Asserts that the `name` api_extension exists.
+        If not, then is raises the LXDAPIExtensionNotAvailable error.
+
+        :param name: the api_extension to test for
+        :type name: str
+        :returns: None
+        :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable`
+        """
+        if not self.has_api_extension(name):
+            raise exceptions.LXDAPIExtensionNotAvailable(name)
 
     def authenticate(self, password):
         if self.trusted:

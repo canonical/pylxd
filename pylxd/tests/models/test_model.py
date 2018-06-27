@@ -49,7 +49,15 @@ class TestModel(testing.PyLXDTestCase):
                 'type': 'sync',
                 'metadata': {}
             },
-            'method': 'PUT',
+            'method': 'put',
+            'url': r'^http://pylxd.test/1.0/items/an-item',
+        })
+        self.add_rule({
+            'json': {
+                'type': 'sync',
+                'metadata': {}
+            },
+            'method': 'patch',
             'url': r'^http://pylxd.test/1.0/items/an-item',
         })
         self.add_rule({
@@ -179,3 +187,95 @@ class TestModel(testing.PyLXDTestCase):
         item.save()
 
         self.assertFalse(item.dirty)
+
+    def test_put(self):
+        item = Item(self.client, name='an-item', age=15, data={'key': 'val'})
+
+        item.put({'age': 69})
+
+        # should sync back to 1000
+        self.assertEqual(item.age, 1000)
+
+    def test_raw_put(self):
+        item = Item(self.client, name='an-item', age=15, data={'key': 'val'})
+
+        item.age = 55
+        item.raw_put({'age': 69})
+
+        # should sync NOT back to 1000
+        self.assertEqual(item.age, 55)
+
+    def test_put_raw_async(self):
+        self.add_rule({
+            'json': {
+                'type': 'async',
+                'metadata': {},
+                'operation': "/1.0/items/123456789",
+            },
+            'status_code': 202,
+            'method': 'put',
+            'url': r'^http://pylxd.test/1.0/items/an-item$',
+        })
+        self.add_rule({
+            'json': {
+                'status': 'Running',
+                'status_code': 103,
+                'type': 'sync',
+                'metadata': {
+                    'id': '123456789',
+                    'secret': "some-long-string-of-digits",
+                },
+            },
+            'method': 'get',
+            'url': r'^http://pylxd.test/1.0/operations/123456789$',
+        })
+        self.add_rule({
+            'json': {
+                'type': 'sync',
+            },
+            'method': 'get',
+            'url': r'^http://pylxd.test/1.0/operations/123456789/wait$',
+        })
+        item = Item(self.client, name='an-item', age=15, data={'key': 'val'})
+        item.put({'age': 69}, wait=True)
+
+    def test_patch(self):
+        item = Item(self.client, name='an-item', age=15, data={'key': 'val'})
+
+        item.patch({'age': 69})
+        # should sync back to 1000
+        self.assertEqual(item.age, 1000)
+
+    def test_patch_raw_async(self):
+        self.add_rule({
+            'json': {
+                'type': 'async',
+                'metadata': {},
+                'operation': "/1.0/items/123456789",
+            },
+            'status_code': 202,
+            'method': 'put',
+            'url': r'^http://pylxd.test/1.0/items/an-item$',
+        })
+        self.add_rule({
+            'json': {
+                'status': 'Running',
+                'status_code': 103,
+                'type': 'sync',
+                'metadata': {
+                    'id': '123456789',
+                    'secret': "some-long-string-of-digits",
+                },
+            },
+            'method': 'get',
+            'url': r'^http://pylxd.test/1.0/operations/123456789$',
+        })
+        self.add_rule({
+            'json': {
+                'type': 'sync',
+            },
+            'method': 'get',
+            'url': r'^http://pylxd.test/1.0/operations/123456789/wait$',
+        })
+        item = Item(self.client, name='an-item', age=15, data={'key': 'val'})
+        item.patch({'age': 69}, wait=True)

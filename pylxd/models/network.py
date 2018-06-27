@@ -13,7 +13,6 @@
 #    under the License.
 import json
 
-from pylxd.exceptions import LXDAPIExtensionNotAvailable
 from pylxd.models import _model as model
 
 
@@ -94,8 +93,7 @@ class Network(model.Model):
         :param config: additional configuration
         :type config: dict
         """
-
-        cls._check_network_api_extension(client)
+        client.assert_has_api_extension('network')
 
         network = {'name': name}
         if description is not None:
@@ -116,34 +114,17 @@ class Network(model.Model):
         :return: Renamed network instance
         :rtype: :class:`Network`
         """
-
-        self._check_network_api_extension(self.client)
-
+        self.client.assert_has_api_extension('network')
         self.client.api.networks.post(json={'name': new_name})
         return Network.get(self.client, new_name)
 
     def save(self, *args, **kwargs):
-        self._check_network_api_extension(self.client)
+        self.client.assert_has_api_extension('network')
         super(Network, self).save(*args, **kwargs)
 
     @property
     def api(self):
         return self.client.api.networks[self.name]
-
-    @staticmethod
-    def network_extension_available(client):
-        """
-        Network operations is an extension API and may not be available.
-
-        https://github.com/lxc/lxd/blob/master/doc/api-extensions.md#network
-
-        :param client: client instance
-        :type client: :class:`~pylxd.client.Client`
-        :returns: `True` if network API extension is available, `False`
-         otherwise.
-        :rtype: `bool`
-        """
-        return u'network' in client.host_info['api_extensions']
 
     def __str__(self):
         return json.dumps(self.marshall(skip_readonly=False), indent=2)
@@ -156,15 +137,3 @@ class Network(model.Model):
 
         return '{}({})'.format(self.__class__.__name__,
                                ', '.join(sorted(attrs)))
-
-    @staticmethod
-    def _check_network_api_extension(client):
-        """
-        :param client: client instance
-        :type client: :class:`~pylxd.client.Client`
-        :raises: `exceptions.LXDAPIExtensionNotAvailable` when network
-         operations API extension is not available.
-        """
-        if not Network.network_extension_available(client):
-            raise LXDAPIExtensionNotAvailable(
-                'Network creation is not available for this host')

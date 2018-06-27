@@ -101,18 +101,15 @@ class TestNetwork(testing.PyLXDTestCase):
         self.assertFalse(models.Network.exists(self.client, name))
 
     def test_all(self):
-        """A list of all networks are returned."""
         networks = models.Network.all(self.client)
 
         self.assertEqual(2, len(networks))
 
-    @mock.patch('pylxd.models.Network.network_extension_available',
-                return_value=True)
-    def test_create_with_parameters(self, _):
-        """A new network is created."""
-        network = models.Network.create(
-            self.client, name='eth1', config={}, type='bridge',
-            description='Network description')
+    def test_create_with_parameters(self):
+        with mock.patch.object(self.client, 'assert_has_api_extension'):
+            network = models.Network.create(
+                self.client, name='eth1', config={}, type='bridge',
+                description='Network description')
 
         self.assertIsInstance(network, models.Network)
         self.assertEqual('eth1', network.name)
@@ -120,44 +117,35 @@ class TestNetwork(testing.PyLXDTestCase):
         self.assertEqual('bridge', network.type)
         self.assertTrue(network.managed)
 
-    @mock.patch('pylxd.models.Network.network_extension_available',
-                return_value=True)
-    def test_create_default(self, _):
-        """A new network is created with default parameters."""
-        network = models.Network.create(self.client, 'eth1')
+    def test_create_default(self):
+        with mock.patch.object(self.client, 'assert_has_api_extension'):
+            network = models.Network.create(self.client, 'eth1')
 
         self.assertIsInstance(network, models.Network)
         self.assertEqual('eth1', network.name)
         self.assertEqual('bridge', network.type)
         self.assertTrue(network.managed)
 
-    @mock.patch('pylxd.models.Network.network_extension_available',
-                return_value=False)
-    def test_create_api_not_available(self, _):
-        """A new network is not created because API extension is not
-        available."""
+    def test_create_api_not_available(self):
+        # Note, by default with the tests, no 'network' extension is available.
         with self.assertRaises(LXDAPIExtensionNotAvailable):
             models.Network.create(
                 self.client, name='eth1', config={}, type='bridge',
                 description='Network description')
 
-    @mock.patch('pylxd.models.Network.network_extension_available',
-                return_value=True)
-    def test_rename(self, _):
-        """A network is renamed."""
-        network = models.Network.get(self.client, 'eth0')
-
-        renamed_network = network.rename('eth2')
+    def test_rename(self):
+        with mock.patch.object(self.client, 'assert_has_api_extension'):
+            network = models.Network.get(self.client, 'eth0')
+            renamed_network = network.rename('eth2')
 
         self.assertEqual('eth2', renamed_network.name)
 
-    @mock.patch('pylxd.models.Network.network_extension_available',
-                return_value=True)
-    def test_update(self, _):
+    def test_update(self):
         """A network is updated."""
-        network = models.Network.get(self.client, 'eth0')
-        network.config = {}
-        network.save()
+        with mock.patch.object(self.client, 'assert_has_api_extension'):
+            network = models.Network.get(self.client, 'eth0')
+            network.config = {}
+            network.save()
         self.assertEqual({}, network.config)
 
     def test_fetch(self):
@@ -239,33 +227,3 @@ class TestNetwork(testing.PyLXDTestCase):
             'Network(config={"ipv4.address": "10.80.100.1/24", "ipv4.nat": '
             '"true", "ipv6.address": "none", "ipv6.nat": "false"}, '
             'description="Network description", name="eth0", type="bridge")')
-
-    def test_check_network_api_extension(self):
-        """`Network.network_extension_available` should return True or False
-        depending on presence of 'network' LXD API extension."""
-
-        # we are mocked, so this API extension should initially not be
-        # available
-        self.assertEqual(
-            False, models.Network.network_extension_available(self.client))
-
-        # Now insert extension
-        rule = {
-            'text': json.dumps({
-                'type': 'sync',
-                'metadata': {'auth': 'trusted',
-                             'environment': {
-                                 'certificate': 'an-pem-cert',
-                             },
-                             'api_extensions': ['network']
-                             }}),
-            'method': 'GET',
-            'url': r'^http://pylxd.test/1.0$',
-        }
-        self.add_rule(rule)
-
-        # Update hostinfo
-        self.client.host_info = self.client.api.get().json()['metadata']
-
-        self.assertEqual(
-            True, models.Network.network_extension_available(self.client))

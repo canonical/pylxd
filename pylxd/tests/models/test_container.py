@@ -444,7 +444,7 @@ class TestFiles(testing.PyLXDTestCase):
         """A file is put on the container and then deleted"""
         # we are mocked, so delete should initially not be available
         self.assertEqual(False, self.container.files.delete_available())
-        self.assertRaises(ValueError,
+        self.assertRaises(exceptions.LXDAPIExtensionNotAvailable,
                           self.container.files.delete, '/some/file')
         # Now insert delete
         self.add_rule({
