@@ -136,9 +136,8 @@ class TestContainer(IntegrationTestCase):
         filepath = '/tmp/an_file'
         data = b'abcdef'
 
+        # raises an exception if this fails.
         retval = self.container.files.put(filepath, data)
-
-        self.assertTrue(retval)
 
         contents = self.container.files.get(filepath)
 
