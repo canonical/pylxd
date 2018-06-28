@@ -25,7 +25,6 @@ class StoragePool(model.Model):
     """
     name = model.Attribute(readonly=True)
     driver = model.Attribute(readonly=True)
-    description = model.Attribute()
     used_by = model.Attribute(readonly=True)
     config = model.Attribute()
     managed = model.Attribute(readonly=True)

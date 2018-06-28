@@ -173,6 +173,7 @@ A container object (returned by `get` or `all`) has the following methods:
 
 To create a new snapshot, use `create` with a `name` argument. If you want
 to capture the contents of RAM in the snapshot, you can use `stateful=True`.
+
 .. note:: Your LXD requires a relatively recent version of CRIU for this.
 
 .. code-block:: python
