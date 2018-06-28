@@ -22,6 +22,8 @@ class Network(model.Model):
     description = model.Attribute()
     type = model.Attribute()
     config = model.Attribute()
+    status = model.Attribute(readonly=True)
+    locations = model.Attribute(readonly=True)
     managed = model.Attribute(readonly=True)
     used_by = model.Attribute(readonly=True)
 
