@@ -67,6 +67,7 @@ class Container(model.Model):
     profiles = model.Attribute()
     status = model.Attribute(readonly=True)
     last_used_at = model.Attribute(readonly=True)
+    location = model.Attribute(readonly=True)
 
     status_code = model.Attribute(readonly=True)
     stateful = model.Attribute(readonly=True)

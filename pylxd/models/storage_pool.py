@@ -28,6 +28,9 @@ class StoragePool(model.Model):
     used_by = model.Attribute(readonly=True)
     config = model.Attribute()
     managed = model.Attribute(readonly=True)
+    description = model.Attribute()
+    status = model.Attribute(readonly=True)
+    locations = model.Attribute(readonly=True)
 
     resources = model.Manager()
     volumes = model.Manager()
