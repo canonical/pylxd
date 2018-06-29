@@ -13,7 +13,7 @@ Manager methods
 
 Operations can be queried through the following client manager methods:
 
-  - `get()` - Get a specific network, by its name.
+  - `get()` - Get a specific operation, by its id.
   - `wait_for_operation()` - get an operation, but wait until it is complete
     before returning the operation object.
 
