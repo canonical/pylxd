@@ -137,7 +137,7 @@ class TestContainer(IntegrationTestCase):
         data = b'abcdef'
 
         # raises an exception if this fails.
-        retval = self.container.files.put(filepath, data)
+        self.container.files.put(filepath, data)
 
         contents = self.container.files.get(filepath)
 

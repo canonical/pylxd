@@ -265,7 +265,8 @@ class TestStorageVolume(testing.PyLXDTestCase):
         patch_object = {
             'config': {'size': 1}
         }
-        a_volume.patch(patch_object)
+        with mock.patch.object(self.client, 'assert_has_api_extension'):
+            a_volume.patch(patch_object)
 
     def test_save(self):
         add_api_extension_helper(self, ['storage'])

@@ -698,7 +698,7 @@ RULES = [
     {
         'json': {'type': 'sync'},
         'method': 'POST',
-        'url': r'^http://pylxd.test/1.0/storage-pools/lxd/volumes$',
+        'url': r'^http://pylxd.test/1.0/storage-pools/lxd/volumes/custom$',
     },
     {
         'json': {

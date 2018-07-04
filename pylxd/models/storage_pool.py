@@ -394,15 +394,16 @@ class StorageVolume(model.Model):
     @classmethod
     # def create(cls, storage_pool, definition, wait=True, *args):
     def create(cls, storage_pool, *args, **kwargs):
-        """Create a Storage Volume in the associated storage pool.
+        """Create a 'custom' Storage Volume in the associated storage pool.
 
-        Implements POST /1.0/storage-pools/<pool>/volumes
+        Implements POST /1.0/storage-pools/<pool>/volumes/custom
 
         See https://github.com/lxc/lxd/blob/master/doc/rest-api.md#post-19 for
         more details on what the `definition` parameter dictionary should
         contain for various volume creation.
 
-        Note, it's likely that the only type being created is 'custom'.
+        At the moment the only type of volume that can be created is 'custom',
+        and this is currently hardwired into the function.
 
         The function signature 'hides' that the first parameter to the function
         is the definition.  The function should be called as:
@@ -411,10 +412,6 @@ class StorageVolume(model.Model):
 
         where `definition_dict` is mandatory, and `wait` defaults to True,
         which makes the default a synchronous function call.
-
-        The definition parameter should contain the 'pool' and this will be
-        added automatically if it is missing.  If this behaviour is not desired
-        then use the `client.api..` directly.
 
         Note that **all** fields in the `definition` parameter are strings.
 
@@ -447,23 +444,19 @@ class StorageVolume(model.Model):
         # convenience of being able to call this 'naturally' off of a
         # storage_pool.  So we have to jump through some hurdles to get the
         # right positional parameters.
-
         storage_pool.client.assert_has_api_extension('storage')
         wait = kwargs.get('wait', True)
         definition = args[-1]
         assert isinstance(definition, dict)
-        assert 'type' in definition
         assert 'name' in definition
-        # override/configure the storage pool in the definition
-        definition['pool'] = storage_pool.name
-        response = storage_pool.api.volumes.post(json=definition)
+        response = storage_pool.api.volumes.custom.post(json=definition)
 
         if response.json()['type'] == 'async' and wait:
             storage_pool.client.operations.wait_for_operation(
                 response.json()['operation'])
 
         volume = cls.get(storage_pool,
-                         definition['type'],
+                         'custom',
                          definition['name'])
         return volume
 

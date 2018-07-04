@@ -167,10 +167,7 @@ class _APINode(object):
     def patch(self, *args, **kwargs):
         """Perform an HTTP PATCH."""
         kwargs['timeout'] = kwargs.get('timeout', self._timeout)
-        print(self._api_endpoint, args, kwargs)
         response = self.session.patch(self._api_endpoint, *args, **kwargs)
-        # remove debug
-        print(response.json())
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
 
