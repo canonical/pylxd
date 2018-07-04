@@ -694,7 +694,7 @@ RULES = [
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/storage-pools/lxd/volumes$',
     },
-
+    # create a sync storage volume
     {
         'json': {'type': 'sync'},
         'method': 'POST',
@@ -721,6 +721,37 @@ RULES = [
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/storage-pools/lxd/volumes/custom/cu1$',
     },
+    # create an async storage volume
+    {
+        'json': {'type': 'async', 'operation': 'operation-abc'},
+        'status_code': 202,
+        'method': 'POST',
+        'url': (r'^http://pylxd.test/1.0/storage-pools/'
+                'async-lxd/volumes/custom$'),
+    },
+    {
+        'json': {
+            "type": "sync",
+            "status": "Success",
+            "status_code": 200,
+            "error_code": 0,
+            "error": "",
+            "metadata": {
+                "type": "custom",
+                "used_by": [],
+                "name": "cu1",
+                "config": {
+                    "block.filesystem": "ext4",
+                    "block.mount_options": "discard",
+                    "size": "10737418240"
+                }
+            }
+        },
+        'method': 'GET',
+        'url': (r'^http://pylxd.test/1.0/storage-pools/'
+                'async-lxd/volumes/custom/cu1$'),
+    },
+    # rename a storage volume, sync
     {
         'json': {
             "type": "sync",
@@ -731,6 +762,21 @@ RULES = [
         },
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/storage-pools/lxd/volumes/custom/cu1$',
+    },
+    # rename a storage volume, async
+    {
+        'json': {
+            "type": "async",
+            "operation": "operation-abc",
+            "metadata": {
+                "control": "secret1",
+                "fs": "secret2"
+            },
+        },
+        'method': 'POST',
+        'status_code': 202,
+        'url': (r'^http://pylxd.test/1.0/storage-pools/'
+                'async-lxd/volumes/custom/cu1$'),
     },
     {
         'json': {'type': 'sync'},

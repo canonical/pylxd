@@ -254,7 +254,7 @@ class TestModel(testing.PyLXDTestCase):
                 'operation': "/1.0/items/123456789",
             },
             'status_code': 202,
-            'method': 'put',
+            'method': 'patch',
             'url': r'^http://pylxd.test/1.0/items/an-item$',
         })
         self.add_rule({
