@@ -2,7 +2,7 @@ Storage Pools
 =============
 
 LXD supports creating and managing storage pools and storage volumes. General
-keys are top-level. Driver specific keys are name spaced by driver name. Volume
+keys are top-level. Driver specific keys are namespaced by driver name. Volume
 keys apply to any volume created in the pool unless the value is overridden on
 a per-volume basis.
 
@@ -46,7 +46,7 @@ Storage-pools can be queried through the following client manager methods:
   - `create()` - Create a storage-pool.  **Note the config in the create class
     method is the WHOLE json object described as `input` in the API docs.**
     e.g. the 'config' key in the API docs would actually be `config.config` as
-    passed to this methods.
+    passed to this method.
 
 
 Storage-pool Object attributes

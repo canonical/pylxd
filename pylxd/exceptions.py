@@ -41,8 +41,8 @@ class LXDAPIExtensionNotAvailable(Exception):
     on current host."""
 
     def __init__(self, name, *args, **kwargs):
-        """Custom exception handling of the message is to convert the name in
-        to a friendly error string.
+        """Custom exception handling of the message is to convert the name into
+        a friendly error string.
 
         :param name: the api_extension that was needed.
         :type name: str
