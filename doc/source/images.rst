@@ -19,7 +19,7 @@ methods:
 And create through the following methods, there's also a copy method on an
 image:
 
-  - `create(data, public=False, wait=False)` - Create a new image. The first
+  - `create(data, public=False, wait=True)` - Create a new image. The first
     argument is the binary data of the image itself. If the image is public,
     set `public` to `True`.
   - `create_from_simplestreams(server, alias, public=False, auto_update=False, wait=False)` -
@@ -93,7 +93,7 @@ you may also want to `wait=True`.
 
 .. code-block:: python
 
-    >>> image_data = open('an_image.tar.gz').read()
+    >>> image_data = open('an_image.tar.gz', 'rb').read()
     >>> image = client.images.create(image_data, public=True, wait=True)
     >>> image.fingerprint
     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
