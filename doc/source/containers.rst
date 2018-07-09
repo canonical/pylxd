@@ -144,6 +144,25 @@ To get state information such as a network address.
     {'family': 'inet', 'address': '10.251.77.182', 'netmask': '24', 'scope': 'global'}
 
 
+To migrate a container between two servers, first you need to create a client certificate in order to connect to the remote server
+
+    openssl req -newkey rsa:2048 -nodes -keyout lxd.key -out lxd.csr
+    openssl x509 -signkey lxd.key -in lxd.csr -req -days 365 -out lxd.crt
+
+Then you need to connect to both the destination server and the source server,
+the source server has to be reachable by the destination server otherwise the migration will fail due to a websocket error
+
+.. code-block:: python
+
+    from pylxd import Client
+
+    client_source=Client(endpoint='https://192.168.1.104:8443',cert=('lxd.crt','lxd.key'),verify=False)
+    client_destination=Client(endpoint='https://192.168.1.106:8443',cert=('lxd.crt','lxd.key'),verify=False)
+    cont = client_source.containers.get('testm')
+    cont.migrate(client_destination,wait=True)
+
+This will migrate the container from source server to destination server
+
 Container Snapshots
 -------------------
 
