@@ -335,7 +335,11 @@ class Container(model.Model):
                                force=force,
                                wait=wait)
 
-    def execute(self, commands, environment={}, encoding=None, decode=True):
+    def execute(
+            self, commands, environment={}, encoding=None, decode=True,
+            stdin_payload=None, stdin_encoding="utf-8",
+            stdout_handler=None, stderr_handler=None
+    ):
         """Execute a command on the container.
 
         In pylxd 2.2, this method will be renamed `execute` and the existing
@@ -352,6 +356,16 @@ class Container(model.Model):
         :param decode: Whether to decode the stdout/stderr or just return the
             raw buffers.
         :type decode: bool
+        :param stdin_payload: Payload to pass via stdin
+        :type stdin_payload: Can be a file, string, bytearray, generator or
+            ws4py Message object
+        :param stdin_encoding: Encoding to pass text to stdin (default utf-8)
+        :param stdout_handler: Callable than receive as first parameter each
+            message recived via stdout
+        :type stdout_handler: Callable[[str], None]
+        :param stderr_handler: Callable than receive as first parameter each
+            message recived via stderr
+        :type stderr_handler: Callable[[str], None]
         :raises ValueError: if the ws4py library is not installed.
         :returns: The return value, stdout and stdin
         :rtype: _ContainerExecuteResult() namedtuple
@@ -374,17 +388,20 @@ class Container(model.Model):
             self.client.api.operations[operation_id].websocket._api_endpoint)
 
         with managers.web_socket_manager(WebSocketManager()) as manager:
-            stdin = _StdinWebsocket(self.client.websocket_url)
+            stdin = _StdinWebsocket(
+                self.client.websocket_url, payload=stdin_payload,
+                encoding=stdin_encoding
+            )
             stdin.resource = '{}?secret={}'.format(parsed.path, fds['0'])
             stdin.connect()
             stdout = _CommandWebsocketClient(
                 manager, self.client.websocket_url,
-                encoding=encoding, decode=decode)
+                encoding=encoding, decode=decode, handler=stdout_handler)
             stdout.resource = '{}?secret={}'.format(parsed.path, fds['1'])
             stdout.connect()
             stderr = _CommandWebsocketClient(
                 manager, self.client.websocket_url,
-                encoding=encoding, decode=decode)
+                encoding=encoding, decode=decode, handler=stderr_handler)
             stderr.resource = '{}?secret={}'.format(parsed.path, fds['2'])
             stderr.connect()
 
@@ -400,8 +417,6 @@ class Container(model.Model):
             while len(manager.websockets.values()) > 0:
                 time.sleep(.1)  # pragma: no cover
 
-            stdout.close()
-            stderr.close()
             manager.stop()
             manager.join()
 
@@ -488,6 +503,7 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         self.manager = manager
         self.decode = kwargs.pop('decode', True)
         self.encoding = kwargs.pop('encoding', None)
+        self.handler = kwargs.pop('handler', None)
         self.message_encoding = None
         super(_CommandWebsocketClient, self).__init__(*args, **kwargs)
 
@@ -496,14 +512,17 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         self.buffer = []
 
     def received_message(self, message):
+        if message.data is None or len(message.data) == 0:
+            self.manager.remove(self)
+            return
         if message.encoding and self.message_encoding is None:
             self.message_encoding = message.encoding
+        if self.handler:
+            self.handler(self._maybe_decode(message.data))
         self.buffer.append(message.data)
 
-    @property
-    def data(self):
-        buffer = b''.join(self.buffer)
-        if self.decode:
+    def _maybe_decode(self, buffer):
+        if self.decode and buffer is not None:
             if self.encoding:
                 return buffer.decode(self.encoding)
             if self.message_encoding:
@@ -512,17 +531,38 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
             return buffer.decode('utf-8')
         return buffer
 
+    @property
+    def data(self):
+        buffer = b''.join(self.buffer)
+        return self._maybe_decode(buffer)
+
 
 class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
     """A websocket client for handling stdin.
 
-    The nature of stdin in Container.execute means that we don't
-    ever use this connection. It is closed as soon as it completes
-    the handshake.
+    Allow comunicate with container commands via stdin
     """
 
+    def __init__(self, url, payload=None, **kwargs):
+        self.encoding = kwargs.pop('encoding', None)
+        self.payload = payload
+        super().__init__(url, **kwargs)
+
+    def _smart_encode(self, msg):
+        if type(msg) == six.text_type and self.encoding:
+            return msg.encode(self.encoding)
+        return msg
+
     def handshake_ok(self):
-        self.close()
+        if self.payload:
+            if hasattr(self.payload, "read"):
+                self.send(
+                    (self._smart_encode(line) for line in self.payload),
+                    binary=True
+                )
+            else:
+                self.send(self._smart_encode(self.payload), binary=True)
+        self.send(b"", binary=False)
 
 
 class Snapshot(model.Model):

@@ -178,6 +178,25 @@ class TestContainer(IntegrationTestCase):
         self.assertEqual('qué', result.stdout)
         self.assertEqual('', result.stderr)
 
+    def test_execute_pipes(self):
+        """A command receives data from stdin and write to stdout handler"""
+        self.container.start(wait=True)
+        self.addCleanup(self.container.stop, wait=True)
+        test_msg = "Hello world!\n"
+        stdout_msgs = []
+
+        def stdout_handler(msg):
+            stdout_msgs.append(msg)
+
+        result = self.container.execute(
+            ['cat', '-'], stdin_payload=test_msg, stdout_handler=stdout_handler
+        )
+
+        self.assertEqual(0, result.exit_code)
+        self.assertEqual(test_msg, result.stdout)
+        self.assertEqual('', result.stderr)
+        self.assertEqual(stdout_msgs, [test_msg])
+
     def test_publish(self):
         """A container is published."""
         image = self.container.publish(wait=True)
