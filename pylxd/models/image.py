@@ -137,7 +137,7 @@ class Image(model.Model):
 
     @classmethod
     def create_from_simplestreams(cls, client, server, alias,
-                                  public=False, auto_update=False):
+                                  public=False, auto_update=False, wait=True):
         """Copy an image from simplestreams."""
         config = {
             'public': public,
@@ -152,13 +152,14 @@ class Image(model.Model):
             }
         }
 
-        op = _image_create_from_config(client, config, wait=True)
+        op = _image_create_from_config(client, config, wait)
 
-        return client.images.get(op.metadata['fingerprint'])
+        if wait:
+            return client.images.get(op.metadata['fingerprint'])
 
     @classmethod
     def create_from_url(cls, client, url,
-                        public=False, auto_update=False):
+                        public=False, auto_update=False, wait=True):
         """Copy an image from an url."""
         config = {
             'public': public,
@@ -171,9 +172,10 @@ class Image(model.Model):
             }
         }
 
-        op = _image_create_from_config(client, config, wait=True)
+        op = _image_create_from_config(client, config, wait)
 
-        return client.images.get(op.metadata['fingerprint'])
+        if wait:
+            return client.images.get(op.metadata['fingerprint'])
 
     def export(self):
         """Export the image.

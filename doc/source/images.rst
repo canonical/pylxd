@@ -22,9 +22,9 @@ image:
   - `create(data, public=False, wait=True)` - Create a new image. The first
     argument is the binary data of the image itself. If the image is public,
     set `public` to `True`.
-  - `create_from_simplestreams(server, alias, public=False, auto_update=False, wait=False)` -
+  - `create_from_simplestreams(server, alias, public=False, auto_update=False, wait=True)` -
     Create an image from simplestreams.
-  - `create_from_url(url, public=False, auto_update=False, wait=False)` -
+  - `create_from_url(url, public=False, auto_update=False, wait=True)` -
     Create an image from a url.
 
 Image attributes
