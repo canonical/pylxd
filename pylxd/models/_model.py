@@ -214,3 +214,96 @@ class Model(object):
                 if val is not MISSING:
                     marshalled[key] = val
         return marshalled
+
+    def put(self, put_object, wait=False):
+        """Access the PUT method directly for the object.
+
+        This is to bypass the `save` method, and introduce a slightly saner
+        approach of thinking about immuatable objects coming *from* the lXD
+        server, and sending back PUTs and PATCHes.
+
+        This method allows arbitrary puts to be attempted on the object (thus
+        by passing the API attributes), but syncs the object overwriting any
+        changes that may have been made to it.For a raw object return, see
+        `raw_put`, which does not modify the object, and returns nothing.
+
+        The `put_object` is the dictionary keys in the json object that is sent
+        to the server for the API endpoint for the model.
+
+        :param wait: If wait is True, then wait here until the operation
+            completes.
+        :type wait: bool
+        :param put_object: jsonable dictionary to use as the PUT json object.
+        :type put_object: dict
+        :raises: :class:`pylxd.exception.LXDAPIException` on error
+        """
+        self.raw_put(put_object, wait)
+        self.sync(rollback=True)
+
+    def raw_put(self, put_object, wait=False):
+        """Access the PUT method on the object direct, but with NO sync back.
+
+        This accesses the PUT method for the object, but uses the `put_object`
+        param to send as the JSON object.  It does NOT update the object
+        afterwards, so it is effectively stale.  This is to allow a PUT when
+        the object is no longer needed as it avoids another GET on the object.
+
+        :param wait: If wait is True, then wait here until the operation
+            completes.
+        :type wait: bool
+        :param put_object: jsonable dictionary to use as the PUT json object.
+        :type put_object: dict
+        :raises: :class:`pylxd.exception.LXDAPIException` on error
+        """
+        response = self.api.put(json=put_object)
+
+        if response.json()['type'] == 'async' and wait:
+            self.client.operations.wait_for_operation(
+                response.json()['operation'])
+
+    def patch(self, patch_object, wait=False):
+        """Access the PATCH method directly for the object.
+
+        This is to bypass the `save` method, and introduce a slightly saner
+        approach of thinking about immuatable objects coming *from* the lXD
+        server, and sending back PUTs and PATCHes.
+
+        This method allows arbitrary patches to be attempted on the object
+        (thus by passing the API attributes), but syncs the object overwriting
+        any changes that may have been made to it.  For a raw object return,
+        see `raw_patch`, which does not modify the object, and returns nothing.
+
+        The `patch_object` is the dictionary keys in the json object that is
+        sent to the server for the API endpoint for the model.
+
+        :param wait: If wait is True, then wait here until the operation
+            completes.
+        :type wait: bool
+        :param patch_object: jsonable dictionary to use as the PUT json object.
+        :type patch_object: dict
+        :raises: :class:`pylxd.exception.LXDAPIException` on error
+        """
+        self.raw_patch(patch_object, wait)
+        self.sync(rollback=True)
+
+    def raw_patch(self, patch_object, wait=False):
+        """Access the PATCH method on the object direct, but with NO sync back.
+
+        This accesses the PATCH method for the object, but uses the
+        `patch_object` param to send as the JSON object.  It does NOT update
+        the object afterwards, so it is effectively stale.  This is to allow a
+        PATCH when the object is no longer needed as it avoids another GET on
+        the object.
+
+        :param wait: If wait is True, then wait here until the operation
+            completes.
+        :type wait: bool
+        :param patch_object: jsonable dictionary to use as the PUT json object.
+        :type patch_object: dict
+        :raises: :class:`pylxd.exception.LXDAPIException` on error
+        """
+        response = self.api.patch(json=patch_object)
+
+        if response.json()['type'] == 'async' and wait:
+            self.client.operations.wait_for_operation(
+                response.json()['operation'])

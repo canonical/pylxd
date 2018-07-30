@@ -645,6 +645,154 @@ RULES = [
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/storage-pools$',
     },
+    {
+        'json': {'type': 'sync'},
+        'method': 'DELETE',
+        'url': r'^http://pylxd.test/1.0/storage-pools/lxd$',
+    },
+    {
+        'json': {'type': 'sync'},
+        'method': 'PUT',
+        'url': r'^http://pylxd.test/1.0/storage-pools/lxd$',
+    },
+    {
+        'json': {'type': 'sync'},
+        'method': 'PATCH',
+        'url': r'^http://pylxd.test/1.0/storage-pools/lxd$',
+    },
+
+    # Storage Resources
+    {
+        'json': {
+            'type': 'sync',
+            'metadata': {
+                'space': {
+                    'used': 207111192576,
+                    'total': 306027577344
+                },
+                'inodes': {
+                    "used": 3275333,
+                    "total": 18989056
+                }
+            }},
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/storage-pools/lxd/resources$',
+    },
+
+    # Storage Volumes
+    {
+        'json': {
+            'type': 'sync',
+            'metadata': [
+                '/1.0/storage-pools/default/volumes/containers/c1',
+                '/1.0/storage-pools/default/volumes/containers/c2',
+                '/1.0/storage-pools/default/volumes/containers/c3',
+                '/1.0/storage-pools/default/volumes/images/i1',
+                '/1.0/storage-pools/default/volumes/images/i2',
+                '/1.0/storage-pools/default/volumes/custom/cu1',
+            ]},
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/storage-pools/lxd/volumes$',
+    },
+    # create a sync storage volume
+    {
+        'json': {'type': 'sync'},
+        'method': 'POST',
+        'url': r'^http://pylxd.test/1.0/storage-pools/lxd/volumes/custom$',
+    },
+    {
+        'json': {
+            "type": "sync",
+            "status": "Success",
+            "status_code": 200,
+            "error_code": 0,
+            "error": "",
+            "metadata": {
+                "type": "custom",
+                "used_by": [],
+                "name": "cu1",
+                "config": {
+                    "block.filesystem": "ext4",
+                    "block.mount_options": "discard",
+                    "size": "10737418240"
+                }
+            }
+        },
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/storage-pools/lxd/volumes/custom/cu1$',
+    },
+    # create an async storage volume
+    {
+        'json': {'type': 'async', 'operation': 'operation-abc'},
+        'status_code': 202,
+        'method': 'POST',
+        'url': (r'^http://pylxd.test/1.0/storage-pools/'
+                'async-lxd/volumes/custom$'),
+    },
+    {
+        'json': {
+            "type": "sync",
+            "status": "Success",
+            "status_code": 200,
+            "error_code": 0,
+            "error": "",
+            "metadata": {
+                "type": "custom",
+                "used_by": [],
+                "name": "cu1",
+                "config": {
+                    "block.filesystem": "ext4",
+                    "block.mount_options": "discard",
+                    "size": "10737418240"
+                }
+            }
+        },
+        'method': 'GET',
+        'url': (r'^http://pylxd.test/1.0/storage-pools/'
+                'async-lxd/volumes/custom/cu1$'),
+    },
+    # rename a storage volume, sync
+    {
+        'json': {
+            "type": "sync",
+            "metadata": {
+                "control": "secret1",
+                "fs": "secret2"
+            },
+        },
+        'method': 'POST',
+        'url': r'^http://pylxd.test/1.0/storage-pools/lxd/volumes/custom/cu1$',
+    },
+    # rename a storage volume, async
+    {
+        'json': {
+            "type": "async",
+            "operation": "operation-abc",
+            "metadata": {
+                "control": "secret1",
+                "fs": "secret2"
+            },
+        },
+        'method': 'POST',
+        'status_code': 202,
+        'url': (r'^http://pylxd.test/1.0/storage-pools/'
+                'async-lxd/volumes/custom/cu1$'),
+    },
+    {
+        'json': {'type': 'sync'},
+        'method': 'PUT',
+        'url': r'^http://pylxd.test/1.0/storage-pools/lxd/volumes/custom/cu1$',
+    },
+    {
+        'json': {'type': 'sync'},
+        'method': 'PATCH',
+        'url': r'^http://pylxd.test/1.0/storage-pools/lxd/volumes/custom/cu1$',
+    },
+    {
+        'json': {'type': 'sync'},
+        'method': 'DELETE',
+        'url': r'^http://pylxd.test/1.0/storage-pools/lxd/volumes/custom/cu1$',
+    },
 
     # Profiles
     {

@@ -1,0 +1,22 @@
+#!/bin/sh
+
+CONTAINER_IMAGE=ubuntu:16.04
+CONTAINER_NAME=pylxd-`uuidgen | cut -d"-" -f1`
+
+# This creates a privileged container, because I was bumping into situations where it
+# seemed that we had maxed out user namespaces (I haven't checked it out, but it's likely
+# a bug in LXD).
+lxc launch $CONTAINER_IMAGE $CONTAINER_NAME -c security.nesting=true -c security.privileged=true
+sleep 5  # Wait for the network to come up
+lxc exec $CONTAINER_NAME -- apt-get update
+lxc exec $CONTAINER_NAME -- apt-get install -y tox python3-dev libssl-dev libffi-dev build-essential
+
+lxc exec $CONTAINER_NAME -- lxc config set core.trust_password password
+lxc exec $CONTAINER_NAME -- lxc config set core.https_address [::]
+
+lxc exec $CONTAINER_NAME -- mkdir -p /opt/pylxd
+# NOTE: rockstar (13 Sep 2016) - --recursive is not supported in lxd <2.1, so
+# until we have pervasive support for that, we'll do this tar hack.
+tar cf - * .git | lxc exec $CONTAINER_NAME -- tar xf - -C /opt/pylxd
+lxc exec $CONTAINER_NAME -- /bin/sh -c "cd /opt/pylxd && tox -eintegration"
+lxc delete --force $CONTAINER_NAME

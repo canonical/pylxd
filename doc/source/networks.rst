@@ -5,7 +5,7 @@ Networks
 
 :class:`Network` objects show the current networks available to LXD. Creation
 and / or modification of networks is possible only if 'network' LXD API
-extension is present (see :func:`~Network.network_extension_available`)
+extension is present.
 
 
 Manager methods

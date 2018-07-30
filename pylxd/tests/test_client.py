@@ -239,6 +239,22 @@ class TestClient(unittest.TestCase):
 
         WebsocketClient.assert_called_once_with('wss://lxd.local')
 
+    def test_has_api_extension(self):
+        a_client = client.Client()
+        a_client.host_info = {'api_extensions': ["one", "two"]}
+        self.assertFalse(a_client.has_api_extension('three'))
+        self.assertTrue(a_client.has_api_extension('one'))
+        self.assertTrue(a_client.has_api_extension('two'))
+
+    def test_assert_has_api_extension(self):
+        a_client = client.Client()
+        a_client.host_info = {'api_extensions': ["one", "two"]}
+        with self.assertRaises(exceptions.LXDAPIExtensionNotAvailable) as c:
+            self.assertFalse(a_client.assert_has_api_extension('three'))
+        self.assertIn('three', str(c.exception))
+        a_client.assert_has_api_extension('one')
+        a_client.assert_has_api_extension('two')
+
 
 class TestAPINode(unittest.TestCase):
     """Tests for pylxd.client._APINode."""
@@ -354,6 +370,19 @@ class TestAPINode(unittest.TestCase):
         node = client._APINode('http://test.com')
         node.put()
         session.put.assert_called_once_with('http://test.com', timeout=None)
+
+    @mock.patch('pylxd.client.requests.Session')
+    def test_patch(self, Session):
+        """Perform a session patch."""
+        response = mock.Mock(**{
+            'status_code': 200,
+            'json.return_value': {'type': 'sync'},
+        })
+        session = mock.Mock(**{'patch.return_value': response})
+        Session.return_value = session
+        node = client._APINode('http://test.com')
+        node.patch()
+        session.patch.assert_called_once_with('http://test.com', timeout=None)
 
     @mock.patch('pylxd.client.requests.Session')
     def test_delete(self, Session):

@@ -19,7 +19,10 @@ class LXDAPIException(Exception):
 
     def __str__(self):
         if self.response.status_code == 200:  # Operation failure
-            return self.response.json()['metadata']['err']
+            try:
+                return self.response.json()['metadata']['err']
+            except (ValueError, KeyError):
+                pass
 
         try:
             data = self.response.json()
@@ -36,6 +39,17 @@ class NotFound(LXDAPIException):
 class LXDAPIExtensionNotAvailable(Exception):
     """An exception raised when requested LXD API Extension is not present
     on current host."""
+
+    def __init__(self, name, *args, **kwargs):
+        """Custom exception handling of the message is to convert the name into
+        a friendly error string.
+
+        :param name: the api_extension that was needed.
+        :type name: str
+        """
+        super(LXDAPIExtensionNotAvailable, self).__init__(
+            "LXD API extension '{}' is not available".format(name),
+            *args, **kwargs)
 
 
 class ClientConnectionFailed(Exception):

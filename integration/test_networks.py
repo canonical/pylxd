@@ -14,7 +14,6 @@
 
 from integration.testing import IntegrationTestCase
 from pylxd import exceptions
-from pylxd.models import Network
 
 
 class NetworkTestCase(IntegrationTestCase):
@@ -22,7 +21,7 @@ class NetworkTestCase(IntegrationTestCase):
     def setUp(self):
         super(NetworkTestCase, self).setUp()
 
-        if not Network.network_extension_available(self.client):
+        if not self.client.has_api_extension('network'):
             self.skipTest('Required LXD API extension not available!')
 
 

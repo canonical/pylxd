@@ -27,6 +27,7 @@ class Certificate(model.Model):
     certificate = model.Attribute()
     fingerprint = model.Attribute()
     type = model.Attribute()
+    name = model.Attribute()
 
     @classmethod
     def get(cls, client, fingerprint):
