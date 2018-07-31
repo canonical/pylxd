@@ -239,7 +239,6 @@ class TestContainer(testing.PyLXDTestCase):
         self.assertEqual('an-container', an_migrated_container.name)
         self.assertEqual(client2, an_migrated_container.client)
 
-
     @mock.patch('pylxd.client._APINode.get')
     def test_migrate_local_client(self, get):
         """Migration from local clients is not supported."""
