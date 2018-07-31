@@ -106,7 +106,7 @@ class TestContainer(IntegrationTestCase):
         self.assertEqual(client2, an_migrated_container.client)
 
     def test_migrate_stopped(self):
-        """A container is migrated."""
+        """A stopped container is migrated."""
         from pylxd.client import Client
 
         client2 = Client(endpoint='http://pylxd2.test')
