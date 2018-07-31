@@ -94,6 +94,28 @@ class TestContainer(IntegrationTestCase):
             exceptions.LXDAPIException,
             self.client.containers.get, self.container.name)
 
+    def test_migrate(self):
+        """A container is migrated."""
+        from pylxd.client import Client
+
+        client2 = Client(endpoint='http://pylxd2.test')
+
+        an_migrated_container = self.container.migrate(client2)
+
+        self.assertEqual('an-container', an_migrated_container.name)
+        self.assertEqual(client2, an_migrated_container.client)
+
+    def test_migrate_stopped(self):
+        """A container is migrated."""
+        from pylxd.client import Client
+
+        client2 = Client(endpoint='http://pylxd2.test')
+        self.container.stop(wait=True)
+        an_migrated_container = self.container.migrate(client2)
+
+        self.assertEqual('an-container', an_migrated_container.name)
+        self.assertEqual(client2, an_migrated_container.client)
+
     def test_start_stop(self):
         """The container is started and then stopped."""
         # NOTE: rockstar (15 Feb 2016) - I don't care for the

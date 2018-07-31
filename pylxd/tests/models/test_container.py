@@ -239,6 +239,20 @@ class TestContainer(testing.PyLXDTestCase):
         self.assertEqual('an-container', an_migrated_container.name)
         self.assertEqual(client2, an_migrated_container.client)
 
+    def test_migrate_stopped(self):
+        """A stopped container is migrated."""
+        from pylxd.client import Client
+
+        client2 = Client(endpoint='http://pylxd2.test')
+        an_container = models.Container(
+            self.client, name='an-container')
+        an_container.stop(wait=True)
+
+        an_migrated_container = an_container.migrate(client2)
+
+        self.assertEqual('an-container', an_migrated_container.name)
+        self.assertEqual(client2, an_migrated_container.client)
+
     @mock.patch('pylxd.client._APINode.get')
     def test_migrate_local_client(self, get):
         """Migration from local clients is not supported."""
