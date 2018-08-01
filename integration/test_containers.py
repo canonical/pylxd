@@ -105,6 +105,17 @@ class TestContainer(IntegrationTestCase):
         self.assertEqual('an-container', an_migrated_container.name)
         self.assertEqual(client2, an_migrated_container.client)
 
+    def test_migrate_start(self):
+        """A stopped container is migrated."""
+        from pylxd.client import Client
+
+        client2 = Client(endpoint='http://pylxd2.test')
+        self.container.start(wait=True)
+        an_migrated_container = self.container.migrate(client2)
+
+        self.assertEqual('an-container', an_migrated_container.name)
+        self.assertEqual(client2, an_migrated_container.client)
+
     def test_migrate_stopped(self):
         """A stopped container is migrated."""
         from pylxd.client import Client
@@ -115,6 +126,28 @@ class TestContainer(IntegrationTestCase):
 
         self.assertEqual('an-container', an_migrated_container.name)
         self.assertEqual(client2, an_migrated_container.client)
+
+    def test_migrate_exception(self):
+        """A container is migrated."""
+        from pylxd.client import Client
+        from pylxd.exceptions import LXDAPIException
+        config = {'name': 'an-container'}
+        client2 = Client(endpoint='http://pylxd2.test')
+
+        _, alias = self.create_image()
+        config = {
+            'name': 'an-container',
+            'architecture': '2',
+            'profiles': ['default'],
+            'ephemeral': True,
+            'config': {'limits.cpu': '2'},
+            'source': {'type': 'image',
+                       'alias': alias},
+        }
+
+        client2.containers.create(config, wait=True)
+        an_container = self.client.containers.create(config, wait=True)
+        self.assertRaises(LXDAPIException, an_container.migrate, client2)
 
     def test_start_stop(self):
         """The container is started and then stopped."""
