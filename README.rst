@@ -36,3 +36,10 @@ What is LXD? `LXD: Introduction <https://linuxcontainers.org/lxd/>`_
 
 PyLXD API Documentation: `http://pylxd.readthedocs.io/en/latest/
 <http://pylxd.readthedocs.io/en/latest/>`_
+
+Contributing to pyLXD
+=====================
+
+If you wish to contribute to pyLXD please read the `Contributing Guide
+<http://pylxd.readthedocs.io/en/latest/contributing.html>`_, particularly
+around unit tests, integration tests and signing commits.
