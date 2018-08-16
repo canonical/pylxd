@@ -21,6 +21,7 @@ The main steps are:
 2. The pyLXD repository must be forked on Github to the developer's own
    account.
 3. The developer should create a personal branch, with either:
+
    * feature/name-of-feature
    * bug/number/descriptive-name-of-bug
 
@@ -66,25 +67,25 @@ Code standards
 pyLXD follows `PEP 8`_ as closely as practical. To check your compliance, use
 the `pep8` tox target::
 
-    tox -epep8
+    tox -e pep8
 
-.. note: if this fails then the code will not be merged.  If there is a good
-         reason for a PEP8 non-conformance, then a ``# NOQA`` comment should be
-         added to the relevant line(s).
+.. note:: if this fails then the code will not be merged.  If there is a good
+          reason for a PEP8 non-conformance, then a ``# NOQA`` comment should be
+          added to the relevant line(s).
 
 Testing
 -------
 
 Testing pyLXD is in 3 parts:
 
-1. Conformance with `PEP 8`_, using the ``tox -epep8`` command.
-2. Unit tests using ``tox -epy27`` and ``tox -epy3``.
+1. Conformance with `PEP 8`_, using the ``tox -e pep8`` command.
+2. Unit tests using ``tox -e py27`` and ``tox -e py3``.
 3. Integration tests using the ``run_integration_tests`` script in the root of
    the repository.
 
-.. note: all of the tests can be run by just using the ``tox`` command on it's
-         own, with the exception of the integration tests.  These are not
-         automatically run as they require a working LXD environment.
+.. note:: all of the tests can be run by just using the ``tox`` command on it's
+          own, with the exception of the integration tests.  These are not
+          automatically run as they require a working LXD environment.
 
 All of the commands use the `Tox`_ automation project to run tests in a
 sandboxed environment.  On Ubuntu this is installed using::
@@ -119,7 +120,7 @@ The default is ``run_integration_tests-18-04``, which is symlinked to
 ``run_integration_tests``. This is because the default is to test on Ubuntu
 Bionic, with Ubuntu Xenial (16.04) for maintenance purposes.
 
-.. note: A script to automate running the integration tests needs to be added.
+.. note:: A script to automate running the integration tests needs to be added.
 
 Some hints on how to run the integration tests:
 
@@ -127,7 +128,7 @@ Some hints on how to run the integration tests:
 2. Launch an LTS instance using ``multipass launch -n foo``
 3. Shell into the instance: ``multipass exec foo -- bash``
 4. Install tox and python2.7: ``sudo apt install python-tox python-2.7``
-5. Close the branch from the PR (or otherwise copy the repo into the machine)
+5. Clone the branch from the PR (or otherwise copy the repo into the machine)
 6. Configure LXD using ``lxd init`` -- follow the prompts provided.
 7. Run the integration tests.
 
