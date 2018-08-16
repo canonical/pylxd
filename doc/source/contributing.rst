@@ -15,8 +15,8 @@ Adding a Feature or Fixing a Bug
 
 The main steps are:
 
-1. There needs to be a bug filed on `Github`_ repository.  This is also for a
-   feature, so it's clear what is being proposed prior to somebody starting
+1. There needs to be a bug filed on the `Github`_ repository.  This is also for
+   a feature, so it's clear what is being proposed prior to somebody starting
    work on it.
 2. The pyLXD repository must be forked on Github to the developer's own
    account.
