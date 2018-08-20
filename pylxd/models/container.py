@@ -441,7 +441,7 @@ class Container(model.Model):
                 res = new_client.containers.create(
                     self.generate_migration_data(), wait=wait)
             except LXDAPIException as e:
-                if '{}'.format(e) == "The container is already running":
+                if e.response.status_code == 103:
                     self.delete()
                     return new_client.containers.get(self.name)
                 else:
