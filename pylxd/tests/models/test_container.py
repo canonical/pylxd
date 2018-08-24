@@ -258,14 +258,15 @@ class TestContainer(testing.PyLXDTestCase):
         client2 = Client(endpoint='http://pylxd2.test')
         self.assertRaises(LXDAPIException, an_container.migrate, client2)
 
-    @mock.patch('pylxd.managers.ContainerManager')
-    def test_migrate_exception_running(self, create):
+    @mock.patch('pylxd.models.container.Container.generate_migration_data')
+    def test_migrate_exception_running(self, generate_migration_data):
         """Migrated container already running on destination"""
         from pylxd.client import Client
         from pylxd.exceptions import LXDAPIException
 
         client2 = Client(endpoint='http://pylxd2.test')
-        an_container = models.Container.get(self.client, name='an-container')
+        an_container = models.Container(
+            self.client, name='an-container')
         an_container.status_code = 103
 
         def generate_exception():
@@ -273,7 +274,7 @@ class TestContainer(testing.PyLXDTestCase):
             response.status_code = 103
             raise LXDAPIException(response)
 
-        create.side_effect = generate_exception
+        generate_migration_data.side_effect = generate_exception
 
         an_migrated_container = an_container.migrate(client2)
 
@@ -286,7 +287,7 @@ class TestContainer(testing.PyLXDTestCase):
 
         client2 = Client(endpoint='http://pylxd2.test')
         an_container = models.Container.get(self.client, name='an-container')
-        an_container.start()
+        an_container.status_code = 103
 
         an_migrated_container = an_container.migrate(client2)
 
@@ -299,7 +300,7 @@ class TestContainer(testing.PyLXDTestCase):
 
         client2 = Client(endpoint='http://pylxd2.test')
         an_container = models.Container.get(self.client, name='an-container')
-        an_container.stop()
+        an_container.status_code = 102
 
         an_migrated_container = an_container.migrate(client2)
 
