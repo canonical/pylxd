@@ -239,6 +239,25 @@ class TestContainer(testing.PyLXDTestCase):
         self.assertEqual('an-container', an_migrated_container.name)
         self.assertEqual(client2, an_migrated_container.client)
 
+    @mock.patch('pylxd.models.container.Container.generate_migration_data')
+    def test_migrate_exception_error(self, generate_migration_data):
+        """LXDAPIException is raised in case of migration failure"""
+        from pylxd.client import Client
+        from pylxd.exceptions import LXDAPIException
+
+        def generate_exception():
+            response = mock.Mock()
+            response.status_code = 400
+            raise LXDAPIException(response)
+
+        generate_migration_data.side_effect = generate_exception
+
+        an_container = models.Container(
+            self.client, name='an-container')
+
+        client2 = Client(endpoint='http://pylxd2.test')
+        self.assertRaises(LXDAPIException, an_container.migrate, client2)
+
     def test_migrate_started(self):
         """A container is migrated."""
         from pylxd.client import Client

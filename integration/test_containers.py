@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 from pylxd import exceptions
-
+import mock
 from integration.testing import IntegrationTestCase
 
 
@@ -104,6 +104,23 @@ class TestContainer(IntegrationTestCase):
 
         self.assertEqual('an-container', an_migrated_container.name)
         self.assertEqual(client2, an_migrated_container.client)
+
+    @mock.patch('pylxd.models.container.Container.generate_migration_data')
+    def test_migrate_exception_error(self, generate_migration_data):
+        """LXDAPIException is raised in case of migration failure"""
+        from pylxd.client import Client
+
+        def generate_exception():
+            response = mock.Mock()
+            response.status_code = 400
+            raise exceptions.LXDAPIException(response)
+
+        generate_migration_data.side_effect = generate_exception
+
+        client2 = Client(endpoint='http://pylxd2.test')
+
+        self.assertRaises(exceptions.LXDAPIException,
+                          self.container.migrate, client2)
 
     def test_migrate_start(self):
         """A stopped container is migrated."""
