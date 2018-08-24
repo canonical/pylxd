@@ -436,7 +436,7 @@ class Container(model.Model):
         if self.api.scheme in ('http+unix',):
             raise ValueError('Cannot migrate from a local client connection')
 
-        if self.state().status_code == 103:
+        if self.status_code == 103:
             try:
                 res = new_client.containers.create(
                     self.generate_migration_data(), wait=wait)
