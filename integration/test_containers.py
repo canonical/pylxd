@@ -59,6 +59,8 @@ class TestContainers(IntegrationTestCase):
 class TestContainer(IntegrationTestCase):
     """Tests for Client.Container."""
 
+
+
     def setUp(self):
         super(TestContainer, self).setUp()
         name = self.create_container()
@@ -94,77 +96,7 @@ class TestContainer(IntegrationTestCase):
             exceptions.LXDAPIException,
             self.client.containers.get, self.container.name)
 
-    def test_migrate(self):
-        """A container is migrated."""
-        from pylxd.client import Client
 
-        client2 = Client(endpoint='http://pylxd2.test')
-
-        an_migrated_container = self.container.migrate(client2)
-
-        self.assertEqual('an-container', an_migrated_container.name)
-        self.assertEqual(client2, an_migrated_container.client)
-
-    @mock.patch('pylxd.models.container.Container.generate_migration_data')
-    def test_migrate_exception_error(self, generate_migration_data):
-        """LXDAPIException is raised in case of migration failure"""
-        from pylxd.client import Client
-
-        def generate_exception():
-            response = mock.Mock()
-            response.status_code = 400
-            raise exceptions.LXDAPIException(response)
-
-        generate_migration_data.side_effect = generate_exception
-
-        client2 = Client(endpoint='http://pylxd2.test')
-
-        self.assertRaises(exceptions.LXDAPIException,
-                          self.container.migrate, client2)
-
-    def test_migrate_start(self):
-        """A stopped container is migrated."""
-        from pylxd.client import Client
-
-        client2 = Client(endpoint='http://pylxd2.test')
-        self.container.start(wait=True)
-        an_migrated_container = self.container.migrate(client2)
-
-        self.assertEqual('an-container', an_migrated_container.name)
-        self.assertEqual(client2, an_migrated_container.client)
-
-    def test_migrate_stopped(self):
-        """A stopped container is migrated."""
-        from pylxd.client import Client
-
-        client2 = Client(endpoint='http://pylxd2.test')
-        self.container.stop(wait=True)
-        an_migrated_container = self.container.migrate(client2)
-
-        self.assertEqual('an-container', an_migrated_container.name)
-        self.assertEqual(client2, an_migrated_container.client)
-
-    def test_migrate_exception(self):
-        """A container is migrated."""
-        from pylxd.client import Client
-        from pylxd.exceptions import LXDAPIException
-        config = {'name': 'an-container'}
-        client2 = Client(endpoint='http://pylxd2.test')
-
-        _, alias = self.create_image()
-        config = {
-            'name': 'an-container',
-            'architecture': '2',
-            'profiles': ['default'],
-            'ephemeral': True,
-            'config': {'limits.cpu': '2'},
-            'source': {'type': 'image',
-                       'alias': alias},
-        }
-
-        client2.containers.create(config, wait=True)
-        an_container = self.client.containers.create(config, wait=True)
-        self.assertRaises(LXDAPIException, an_container.migrate, client2)
 
     def test_start_stop(self):
         """The container is started and then stopped."""
@@ -276,3 +208,62 @@ class TestContainer(IntegrationTestCase):
         self.assertIn(
             image.fingerprint,
             [i.fingerprint for i in self.client.images.all()])
+
+    def test_migrate_running(self):
+        """A running container is migrated."""
+        from pylxd.client import Client
+        first_host = 'https://10.0.3.111:8443/'
+        second_host = 'https://10.0.3.222:8443/'
+
+        client1 = Client(endpoint=first_host, verify=False)
+        client1.authenticate('password')
+
+        client2 = Client(endpoint=second_host, verify=False)
+        client2.authenticate('password')
+        an_container = \
+            client1.containers.get(self.container.name)
+        an_container.start(wait=True)
+        an_container.sync()
+        an_migrated_container = \
+            an_container.migrate(client2, wait=True)
+
+        self.assertEqual(an_container.name,
+                         an_migrated_container.name)
+        self.assertEqual(client2,
+                         an_migrated_container.client)
+
+    def test_migrate_local_client(self):
+        """Raise ValueError, cannot migrate from local connection"""
+        from pylxd.client import Client
+
+        second_host = 'https://10.0.3.222:8443/'
+        client2 =\
+            Client(endpoint=second_host, verify=False)
+        client2.authenticate('password')
+
+        self.assertRaises(ValueError,
+                          self.container.migrate, client2)
+
+    def test_migrate_stopped(self):
+        """A stopped container is migrated."""
+        from pylxd.client import Client
+
+        first_host = 'https://10.0.3.111:8443/'
+        second_host = 'https://10.0.3.222:8443/'
+
+        client1 = \
+            Client(endpoint=first_host, verify=False)
+        client1.authenticate('password')
+
+        client2 = \
+            Client(endpoint=second_host, verify=False)
+        client2.authenticate('password')
+        an_container = \
+            client1.containers.get(self.container.name)
+        an_migrated_container = \
+            an_container.migrate(client2, wait=True)
+
+        self.assertEqual(an_container.name,
+                         an_migrated_container.name)
+        self.assertEqual(client2,
+                         an_migrated_container.client)
