@@ -546,7 +546,7 @@ class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
     def __init__(self, url, payload=None, **kwargs):
         self.encoding = kwargs.pop('encoding', None)
         self.payload = payload
-        super().__init__(url, **kwargs)
+        super(_StdinWebsocket, self).__init__(url, **kwargs)
 
     def _smart_encode(self, msg):
         if type(msg) == six.text_type and self.encoding:
