@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 from pylxd import exceptions
-import mock
 from integration.testing import IntegrationTestCase
 
 
@@ -59,8 +58,6 @@ class TestContainers(IntegrationTestCase):
 class TestContainer(IntegrationTestCase):
     """Tests for Client.Container."""
 
-
-
     def setUp(self):
         super(TestContainer, self).setUp()
         name = self.create_container()
@@ -95,8 +92,6 @@ class TestContainer(IntegrationTestCase):
         self.assertRaises(
             exceptions.LXDAPIException,
             self.client.containers.get, self.container.name)
-
-
 
     def test_start_stop(self):
         """The container is started and then stopped."""
