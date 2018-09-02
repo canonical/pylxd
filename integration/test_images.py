@@ -54,6 +54,31 @@ class TestImages(IntegrationTestCase):
 
         self.assertEqual(fingerprint, image.fingerprint)
 
+    def test_create_from_simplestreams(self):
+        """An image is created from simplestreams."""
+        image = self.client.images.create_from_simplestreams(
+            'https://cloud-images.ubuntu.com/releases',
+            'trusty/amd64'
+        )
+        self.addCleanup(self.delete_image, image.fingerprint)
+
+        self.assertEqual(
+            'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            image.fingerprint
+        )
+
+    def test_create_from_url(self):
+        """An image is created from an url."""
+        image = self.client.images.create_from_url(
+            'https://dl.stgraber.org/lxd'
+        )
+        self.addCleanup(self.delete_image, image.fingerprint)
+
+        self.assertEqual(
+            'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            image.fingerprint
+        )
+
 
 class TestImage(IntegrationTestCase):
     """Tests for Image."""
