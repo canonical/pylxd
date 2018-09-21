@@ -17,6 +17,6 @@ lxc exec $CONTAINER_NAME -- lxc config set core.https_address [::]
 lxc exec $CONTAINER_NAME -- mkdir -p /opt/pylxd
 # NOTE: rockstar (13 Sep 2016) - --recursive is not supported in lxd <2.1, so
 # until we have pervasive support for that, we'll do this tar hack.
-tar cf - * .git | lxc exec $CONTAINER_NAME -- tar xf - -C /opt/pylxd
+cd .. && tar cf - ../* ../.git | lxc exec $CONTAINER_NAME -- tar xf - -C /opt/pylxd
 lxc exec $CONTAINER_NAME -- /bin/sh -c "cd /opt/pylxd && tox -eintegration"
 lxc delete --force $CONTAINER_NAME
