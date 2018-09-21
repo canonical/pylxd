@@ -2,7 +2,7 @@
 set -ex
 
 _dir="$( cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd)"
-_release=$(lsb_release -c | cut -f 2)
+_release=$(lsb_release -cs)
 
 if [[ "${_release}" == "bionic" ]]; then
 	echo "Running Bionic (18:04) integration tests"
