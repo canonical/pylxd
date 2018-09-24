@@ -27,6 +27,9 @@ class BaseManager(object):
         return super(BaseManager, self).__init__()
 
 
+class NodeManager(BaseManager):
+    manager_for = 'pylxd.models.Node'
+
 class CertificateManager(BaseManager):
     manager_for = 'pylxd.models.Certificate'
 

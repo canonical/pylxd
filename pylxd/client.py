@@ -71,6 +71,8 @@ class _APINode(object):
         # Special case for storage_pools which needs to become 'storage-pools'
         if name == 'storage_pools':
             name = 'storage-pools'
+        if name == 'nodes':
+            name = 'cluster/members'
         return self.__class__('{}/{}'.format(self._api_endpoint, name),
                               cert=self.session.cert,
                               verify=self.session.verify)
@@ -296,6 +298,7 @@ class Client(object):
                 requests.exceptions.InvalidURL):
             raise exceptions.ClientConnectionFailed()
 
+        self.nodes = managers.NodeManager(self)
         self.certificates = managers.CertificateManager(self)
         self.containers = managers.ContainerManager(self)
         self.images = managers.ImageManager(self)
