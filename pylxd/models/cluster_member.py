@@ -11,17 +11,10 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import binascii
-
-from cryptography import x509
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.serialization import Encoding
-
 from pylxd.models import _model as model
 
 
-class Node(model.Model):
+class ClusterMember(model.Model):
     """A LXD certificate."""
 
     name = model.Attribute()
@@ -32,14 +25,14 @@ class Node(model.Model):
     @classmethod
     def get(cls, client, name):
         """Get a certificate by fingerprint."""
-        response = client.api.nodes[name].get()
+        response = client.api.cluster_members[name].get()
 
         return cls(client, **response.json()['metadata'])
 
     @classmethod
     def all(cls, client):
         """Get all certificates."""
-        response = client.api.nodes.get()
+        response = client.api.cluster_members.get()
 
         nodes = []
         for node in response.json()['metadata']:
@@ -49,4 +42,4 @@ class Node(model.Model):
 
     @property
     def api(self):
-        return self.client.api.nodes[self.name]
+        return self.client.api.cluster_members[self.name]
