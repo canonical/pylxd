@@ -17,10 +17,13 @@ from pylxd.models import _model as model
 class ClusterMember(model.Model):
     """A LXD certificate."""
 
-    name = model.Attribute()
-    url = model.Attribute()
-    database = model.Attribute()
-    state = model.Attribute()
+    name = model.Attribute(readonly=True)
+    url = model.Attribute(readonly=True)
+    database = model.Attribute(readonly=True)
+    state = model.Attribute(readonly=True)
+    server_name = model.Attribute(readonly=True)
+    status = model.Attribute(readonly=True)
+    message = model.Attribute(readonly=True)
 
     @classmethod
     def get(cls, client, name):
