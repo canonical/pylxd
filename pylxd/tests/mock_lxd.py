@@ -7,12 +7,6 @@ def containers_POST(request, context):
         'type': 'async',
         'operation': 'operation-abc'})
 
-def containers_remote_POST(request, context):
-    context.status_code = 202
-    return json.dumps({
-        'type': 'async',
-        'operation': 'operation-abc'})
-
 
 def container_POST(request, context):
     context.status_code = 202
@@ -244,7 +238,7 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/containers$',
     },
     {
-        'text': containers_remote_POST,
+        'text': containers_POST,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers\?target=an-remote',
     },
@@ -342,7 +336,7 @@ RULES = [
                 'created_at': "1983-06-16T00:00:00-00:00",
                 'last_used_at': "1983-06-16T00:00:00-00:00",
                 'description': "Some description",
-                'location':"an-remote",
+                'location': "an-remote",
                 'status': "Running",
                 'status_code': 103,
                 'unsupportedbypylxd': "This attribute is not supported by "\
