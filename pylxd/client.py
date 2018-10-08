@@ -157,7 +157,7 @@ class _APINode(object):
         kwargs.pop("target", None)
 
         if target is not None:
-            endpoint="{}?target={}".format(self._api_endpoint,target)
+            endpoint = "{}?target={}".format(self._api_endpoint, target)
         else:
             endpoint = self._api_endpoint
 

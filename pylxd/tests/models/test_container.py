@@ -78,6 +78,16 @@ class TestContainer(testing.PyLXDTestCase):
 
         self.assertEqual(config['name'], an_new_container.name)
 
+    def test_create_remote(self):
+        """A new container is created at target."""
+        config = {'name': 'an-new-remote-container'}
+
+        an_new_remote_container = models.Container.create(
+            self.client, config, wait=True, target="an-remote")
+
+        self.assertEqual(config['name'], an_new_remote_container.name)
+        self.assertEqual("an-remote", an_new_remote_container.location)
+
     def test_exists(self):
         """A container exists."""
         name = 'an-container'

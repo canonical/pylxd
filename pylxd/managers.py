@@ -30,6 +30,7 @@ class BaseManager(object):
 class ClusterMemberManager(BaseManager):
     manager_for = 'pylxd.models.ClusterMember'
 
+
 class CertificateManager(BaseManager):
     manager_for = 'pylxd.models.Certificate'
 
