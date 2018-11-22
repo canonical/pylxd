@@ -21,6 +21,7 @@ from six.moves.urllib import parse
 try:
     from ws4py.client import WebSocketBaseClient
     from ws4py.manager import WebSocketManager
+    from ws4py.messaging import BinaryMessage
     _ws4py_installed = True
 except ImportError:  # pragma: no cover
     WebSocketBaseClient = object
@@ -520,6 +521,8 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         if self.handler:
             self.handler(self._maybe_decode(message.data))
         self.buffer.append(message.data)
+        if isinstance(message, BinaryMessage):
+            self.manager.remove(self)
 
     def _maybe_decode(self, buffer):
         if self.decode and buffer is not None:
