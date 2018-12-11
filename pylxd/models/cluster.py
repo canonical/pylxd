@@ -42,9 +42,11 @@ class Cluster(model.Model):
         container = cls(client, **response.json()['metadata'])
         return container
 
+
 class ClusterMember(model.Model):
     """A LXD cluster member."""
 
+    name = model.Attribute(readonly=True)
     url = model.Attribute(readonly=True)
     database = model.Attribute(readonly=True)
     state = model.Attribute(readonly=True)

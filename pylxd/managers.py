@@ -4,9 +4,6 @@ import functools
 import importlib
 import inspect
 
-from pylxd import managers
-
-
 class BaseManager(object):
     """A BaseManager class for handling collection operations."""
 
@@ -72,8 +69,7 @@ class ClusterManager(BaseManager):
     def __init__(self, client, *args, **kwargs):
         super(ClusterManager, self).__init__(client, *args, **kwargs)
         self._client = client
-        self.members = managers.ClusterMemberManager(client)
-
+        self.members = ClusterMemberManager(client)
 
 
 @contextmanager

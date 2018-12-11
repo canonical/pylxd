@@ -30,12 +30,12 @@ class TestClusterMembers(ClusterMemberTestCase):
     def test_get(self):
         """A cluster member is fetched by its name."""
 
-        members = self.client.cluster_members.all()
+        members = self.client.cluster.members.all()
 
         random_member_name = "%s" % members[0].name
         random_member_url = "%s" % members[0].url
 
-        member = self.client.cluster_members.get(random_member_name)
+        member = self.client.cluster.members.get(random_member_name)
 
         new_url = "%s" % member.url
         self.assertEqual(random_member_url, new_url)
