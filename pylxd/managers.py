@@ -4,6 +4,7 @@ import functools
 import importlib
 import inspect
 
+
 class BaseManager(object):
     """A BaseManager class for handling collection operations."""
 
