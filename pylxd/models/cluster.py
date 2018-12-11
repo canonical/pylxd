@@ -12,12 +12,39 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 from pylxd.models import _model as model
+from pylxd import managers
 
+
+class Cluster(model.Model):
+    """An LXD Cluster.
+    """
+
+    server_name = model.Attribute()
+    enabled = model.Attribute()
+    member_config = model.Attribute()
+
+    members = model.Manager()
+
+    def __init__(self, *args, **kwargs):
+        super(Cluster, self).__init__(*args, **kwargs)
+        self.members = managers.ClusterMemberManager(self.client, self)
+
+    @property
+    def api(self):
+        return self.client.api.cluster
+
+    @classmethod
+    def get(cls, client, *args):
+        """Get cluster details"""
+        print(args)
+        response = client.api.cluster.get()
+        print(response.json())
+        container = cls(client, **response.json()['metadata'])
+        return container
 
 class ClusterMember(model.Model):
-    """A LXD certificate."""
+    """A LXD cluster member."""
 
-    name = model.Attribute(readonly=True)
     url = model.Attribute(readonly=True)
     database = model.Attribute(readonly=True)
     state = model.Attribute(readonly=True)
@@ -25,24 +52,26 @@ class ClusterMember(model.Model):
     status = model.Attribute(readonly=True)
     message = model.Attribute(readonly=True)
 
+    cluster = model.Parent()
+
     @classmethod
     def get(cls, client, name):
-        """Get a certificate by fingerprint."""
-        response = client.api.cluster_members[name].get()
+        """Get a cluster member by name."""
+        response = client.api.cluster.members[name].get()
 
         return cls(client, **response.json()['metadata'])
 
     @classmethod
-    def all(cls, client):
+    def all(cls, client, *args):
         """Get all certificates."""
-        response = client.api.cluster_members.get()
+        response = client.api.cluster.members.get()
 
         nodes = []
         for node in response.json()['metadata']:
             name = node.split('/')[-1]
-            nodes.append(cls(client, name=name))
+            nodes.append(cls(client, server_name=name))
         return nodes
 
     @property
     def api(self):
-        return self.client.api.cluster_members[self.name]
+        return self.client.api.cluster.members[self.server_name]

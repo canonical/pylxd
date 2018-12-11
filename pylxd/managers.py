@@ -4,6 +4,8 @@ import functools
 import importlib
 import inspect
 
+from pylxd import managers
+
 
 class BaseManager(object):
     """A BaseManager class for handling collection operations."""
@@ -25,10 +27,6 @@ class BaseManager(object):
             func = functools.partial(method, *args, **kwargs)
             setattr(self, name, func)
         return super(BaseManager, self).__init__()
-
-
-class ClusterMemberManager(BaseManager):
-    manager_for = 'pylxd.models.ClusterMember'
 
 
 class CertificateManager(BaseManager):
@@ -61,6 +59,21 @@ class SnapshotManager(BaseManager):
 
 class StoragePoolManager(BaseManager):
     manager_for = 'pylxd.models.StoragePool'
+
+
+class ClusterMemberManager(BaseManager):
+    manager_for = 'pylxd.models.ClusterMember'
+
+
+class ClusterManager(BaseManager):
+
+    manager_for = 'pylxd.models.Cluster'
+
+    def __init__(self, client, *args, **kwargs):
+        super(ClusterManager, self).__init__(client, *args, **kwargs)
+        self._client = client
+        self.members = managers.ClusterMemberManager(client)
+
 
 
 @contextmanager

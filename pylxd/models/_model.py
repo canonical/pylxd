@@ -121,6 +121,8 @@ class Model(object):
         try:
             return super(Model, self).__getattribute__(name)
         except AttributeError:
+            print(self.__attributes__)
+            print(self.__slots__)
             if name in self.__attributes__:
                 self.sync()
                 return super(Model, self).__getattribute__(name)
@@ -153,6 +155,7 @@ class Model(object):
         # on existing attributes.
         response = self.api.get()
         payload = response.json()['metadata']
+        print(payload)
         for key, val in payload.items():
             if key not in self.__dirty__ or rollback:
                 try:
