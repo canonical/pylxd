@@ -15,6 +15,7 @@ import json
 import os
 import os.path
 from collections import namedtuple
+from enum import Enum
 
 import requests
 import requests_unixsocket
@@ -43,6 +44,13 @@ DEFAULT_CERTS = Cert(
     cert=os.path.expanduser(os.path.join(CERTS_PATH, 'client.crt')),
     key=os.path.expanduser(os.path.join(CERTS_PATH, 'client.key'))
 )  # pragma: no cover
+
+
+class EventType(Enum):
+    All = 'all'
+    Operation = 'operation'
+    Logging = 'logging'
+    Lifecycle = 'lifecycle'
 
 
 class _APINode(object):
@@ -354,7 +362,7 @@ class Client(object):
         url = parse.urlunparse((scheme, host, '', '', '', ''))
         return url
 
-    def events(self, websocket_client=None):
+    def events(self, websocket_client=None, event_types=None):
         """Get a websocket client for getting events.
 
         /events is a websocket url, and so must be handled differently than
@@ -365,6 +373,17 @@ class Client(object):
         An optional `websocket_client` parameter can be
         specified for implementation-specific handling
         of events as they occur.
+
+        :param websocket_client: Optional websocket client can be specified for
+         implementation-specific handling of events as they occur.
+        :type websocket_client: ws4py.client import WebSocketBaseClient
+
+        :param event_types: Optional set of event types to propagate. Omit this
+         argument or specify {EventTypes.All} to receive all events.
+        :type event_types: Set[EventType]
+
+        :returns: instance of the websocket client
+        :rtype: Option[_WebsocketClient(), :param:`websocket_client`]
         """
         if not _ws4py_installed:
             raise ValueError(
@@ -374,6 +393,14 @@ class Client(object):
 
         client = websocket_client(self.websocket_url)
         parsed = parse.urlparse(self.api.events._api_endpoint)
-        client.resource = parsed.path
+
+        resource = parsed.path
+
+        if event_types and EventType.All not in event_types:
+            query = parse.parse_qs(parsed.query)
+            query.update({'type': ','.join(t.value for t in event_types)})
+            resource = '{}?{}'.format(resource, parse.urlencode(query))
+
+        client.resource = resource
 
         return client

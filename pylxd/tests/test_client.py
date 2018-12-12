@@ -20,6 +20,8 @@ import mock
 import requests
 import requests_unixsocket
 
+from six.moves.urllib import parse
+
 from pylxd import client, exceptions
 from pylxd.tests.testing import requires_ws4py
 
@@ -238,6 +240,45 @@ class TestClient(unittest.TestCase):
         an_client.events(websocket_client=WebsocketClient)
 
         WebsocketClient.assert_called_once_with('wss://lxd.local')
+
+    @requires_ws4py
+    def test_events_type_filter(self):
+        """The websocket client can filter events by type."""
+
+        an_client = client.Client()
+
+        # from the itertools recipes documentation
+        def powerset(types):
+            from itertools import chain, combinations
+            pwset = [combinations(types, r) for r in range(len(types) + 1)]
+            return chain.from_iterable(pwset)
+
+        event_path = '/1.0/events'
+
+        for types in powerset(client.EventType):
+            ws_client = an_client.events(event_types=set(types))
+
+            actual_resource = parse.urlparse(ws_client.resource)
+            expect_resource = parse.urlparse(event_path)
+
+            if types and client.EventType.All not in types:
+                type_csl = ','.join([t.value for t in types])
+                query = parse.parse_qs(expect_resource.query)
+                query.update({'type': type_csl})
+                qs = parse.urlencode(query)
+                expect_resource = expect_resource._replace(query=qs)
+
+            self.assertEqual(expect_resource.path, actual_resource.path)
+
+            if types and client.EventType.All not in types:
+                qdict = parse.parse_qs(expect_resource.query)
+                expect_types = set(qdict['type'][0].split(','))
+                qdict = parse.parse_qs(actual_resource.query)
+                actual_types = set(qdict['type'][0].split(','))
+
+                self.assertEqual(expect_types, actual_types)
+            else:
+                self.assertEqual(expect_resource.query, actual_resource.query)
 
     def test_has_api_extension(self):
         a_client = client.Client()
