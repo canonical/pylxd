@@ -32,7 +32,7 @@ class TestClusterMembers(ClusterMemberTestCase):
 
         members = self.client.cluster.members.all()
 
-        random_member_name = "%s" % members[0].name
+        random_member_name = "%s" % members[0].server_name
         random_member_url = "%s" % members[0].url
 
         member = self.client.cluster.members.get(random_member_name)

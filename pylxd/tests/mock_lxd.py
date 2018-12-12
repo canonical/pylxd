@@ -207,10 +207,11 @@ RULES = [
         'text': json.dumps({
             'type': 'sync',
             'metadata': {
-                "name": "an-member",
+                "server_name": "an-member",
                 "url": "https://10.1.1.101:8443",
-                "database": "true",
-                "state": "Online",
+                "database": 'false',
+                "status": "Online",
+                "message": "fully operational",
             }}),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/cluster/members/an-member$',  # NOQA

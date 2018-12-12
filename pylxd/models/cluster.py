@@ -46,10 +46,8 @@ class Cluster(model.Model):
 class ClusterMember(model.Model):
     """A LXD cluster member."""
 
-    name = model.Attribute(readonly=True)
     url = model.Attribute(readonly=True)
     database = model.Attribute(readonly=True)
-    state = model.Attribute(readonly=True)
     server_name = model.Attribute(readonly=True)
     status = model.Attribute(readonly=True)
     message = model.Attribute(readonly=True)
@@ -57,9 +55,9 @@ class ClusterMember(model.Model):
     cluster = model.Parent()
 
     @classmethod
-    def get(cls, client, name):
+    def get(cls, client, server_name):
         """Get a cluster member by name."""
-        response = client.api.cluster.members[name].get()
+        response = client.api.cluster.members[server_name].get()
 
         return cls(client, **response.json()['metadata'])
 
@@ -70,8 +68,8 @@ class ClusterMember(model.Model):
 
         nodes = []
         for node in response.json()['metadata']:
-            name = node.split('/')[-1]
-            nodes.append(cls(client, server_name=name))
+            server_name = node.split('/')[-1]
+            nodes.append(cls(client, server_name=server_name))
         return nodes
 
     @property
