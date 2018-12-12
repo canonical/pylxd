@@ -192,6 +192,37 @@ RULES = [
     },
 
 
+    # Cluster
+    {
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': {
+                "server_name": "an-member",
+                "enabled": 'true',
+                "member_config": [{
+                    "entity": "storage-pool",
+                    "name": "local",
+                    "key": "source",
+                    "value": "",
+                    "description":
+                        "\"source\" property for storage pool \"local\""
+                },
+                {
+                    "entity": "storage-pool",
+                    "name": "local",
+                    "key": "volatile.initial_source",
+                    "value": "",
+                    "description":
+                        "\"volatile.initial_source\" property for"
+                        " storage pool \"local\""
+                }]
+            }
+        }),
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/cluster$',
+    },
+
+
     # Cluster Members
     {
         'text': json.dumps({
