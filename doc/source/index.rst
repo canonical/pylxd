@@ -23,6 +23,7 @@ Contents:
    profiles
    operations
    storage-pools
+   clustering
 
    contributing
    api
