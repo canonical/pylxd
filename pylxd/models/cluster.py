@@ -63,7 +63,7 @@ class ClusterMember(model.Model):
 
     @classmethod
     def all(cls, client, *args):
-        """Get all certificates."""
+        """Get all cluster members."""
         response = client.api.cluster.members.get()
 
         nodes = []
