@@ -59,6 +59,20 @@ class StoragePoolManager(BaseManager):
     manager_for = 'pylxd.models.StoragePool'
 
 
+class ClusterMemberManager(BaseManager):
+    manager_for = 'pylxd.models.ClusterMember'
+
+
+class ClusterManager(BaseManager):
+
+    manager_for = 'pylxd.models.Cluster'
+
+    def __init__(self, client, *args, **kwargs):
+        super(ClusterManager, self).__init__(client, *args, **kwargs)
+        self._client = client
+        self.members = ClusterMemberManager(client)
+
+
 @contextmanager
 def web_socket_manager(manager):
     try:

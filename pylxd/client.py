@@ -151,6 +151,13 @@ class _APINode(object):
     def post(self, *args, **kwargs):
         """Perform an HTTP POST."""
         kwargs['timeout'] = kwargs.get('timeout', self._timeout)
+        target = kwargs.pop("target", None)
+
+        if target is not None:
+            params = kwargs.get("params", {})
+            params["target"] = target
+            kwargs["params"] = params
+
         response = self.session.post(self._api_endpoint, *args, **kwargs)
         # Prior to LXD 2.0.3, successful synchronous requests returned 200,
         # rather than 201.
@@ -296,6 +303,7 @@ class Client(object):
                 requests.exceptions.InvalidURL):
             raise exceptions.ClientConnectionFailed()
 
+        self.cluster = managers.ClusterManager(self)
         self.certificates = managers.CertificateManager(self)
         self.containers = managers.ContainerManager(self)
         self.images = managers.ImageManager(self)

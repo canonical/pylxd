@@ -257,9 +257,9 @@ class Container(model.Model):
         return containers
 
     @classmethod
-    def create(cls, client, config, wait=False):
+    def create(cls, client, config, wait=False, target=None):
         """Create a new container config."""
-        response = client.api.containers.post(json=config)
+        response = client.api.containers.post(json=config, target=target)
 
         if wait:
             client.operations.wait_for_operation(response.json()['operation'])
