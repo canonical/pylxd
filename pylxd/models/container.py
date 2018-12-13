@@ -258,7 +258,20 @@ class Container(model.Model):
 
     @classmethod
     def create(cls, client, config, wait=False, target=None):
-        """Create a new container config."""
+        """Create a new container config.
+
+        :param client: client instance
+        :type client: Client
+        :param config: The configuration for the new container.
+        :type config: dict
+        :param wait: Whether to wait for async operations to complete.
+        :type wait: bool
+        :param target: If in cluster mode, the target member.
+        :type target: str
+        :raises LXDAPIException: if something goes wrong.
+        :returns: a container if successful
+        :rtype: :class:`Container`
+        """
         response = client.api.containers.post(json=config, target=target)
 
         if wait:
