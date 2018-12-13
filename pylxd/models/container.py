@@ -273,6 +273,7 @@ class Container(model.Model):
         :rtype: :class:`Container`
         """
         response = client.api.containers.post(json=config, target=target)
+        
         if wait:
             client.operations.wait_for_operation(response.json()['operation'])
         return cls(client, name=config['name'])
