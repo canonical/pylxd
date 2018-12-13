@@ -397,7 +397,7 @@ class Container(model.Model):
         })
 
         fds = response.json()['metadata']['metadata']['fds']
-        operation_id = response.json()['operation'].split('/')[-1]
+        operation_id = response.json()['operation'].split('/')[-1].split('?')[0]
         parsed = parse.urlparse(
             self.client.api.operations[operation_id].websocket._api_endpoint)
 
