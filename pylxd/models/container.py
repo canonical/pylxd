@@ -450,8 +450,21 @@ class Container(model.Model):
         if self.api.scheme in ('http+unix',):
             raise ValueError('Cannot migrate from a local client connection')
 
-        return new_client.containers.create(
-            self.generate_migration_data(), wait=wait)
+        if self.status_code == 103:
+            try:
+                res = new_client.containers.create(
+                    self.generate_migration_data(), wait=wait)
+            except LXDAPIException as e:
+                if e.response.status_code == 103:
+                    self.delete()
+                    return new_client.containers.get(self.name)
+                else:
+                    raise e
+        else:
+            res = new_client.containers.create(
+                self.generate_migration_data(), wait=wait)
+        self.delete()
+        return res
 
     def generate_migration_data(self):
         """Generate the migration data.

@@ -259,6 +259,15 @@ RULES = [
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/containers$',
     },
+{
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': [
+                'http://pylxd2.test/1.0/containers/an-container',
+            ]}),
+        'method': 'GET',
+        'url': r'^http://pylxd2.test/1.0/containers$',
+    },
     {
         'text': containers_POST,
         'method': 'POST',
@@ -275,6 +284,54 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/containers\?target=an-remote',
     },
     {
+        'json': {
+            'type': 'sync',
+            'metadata': {
+                'name': 'an-container',
+
+                'architecture': "x86_64",
+                'config': {
+                    'security.privileged': "true",
+                },
+                'created_at': "1983-06-16T00:00:00-00:00",
+                'last_used_at': "1983-06-16T00:00:00-00:00",
+                'description': "Some description",
+                'devices': {
+                    'root': {
+                        'path': "/",
+                        'type': "disk"
+                    }
+                },
+                'ephemeral': True,
+                'expanded_config': {
+                    'security.privileged': "true",
+                },
+                'expanded_devices': {
+                    'eth0': {
+                        'name': "eth0",
+                        'nictype': "bridged",
+                        'parent': "lxdbr0",
+                        'type': "nic"
+                    },
+                    'root': {
+                        'path': "/",
+                        'type': "disk"
+                    }
+                },
+                'profiles': [
+                    "default"
+                ],
+                'stateful': False,
+                'status': "Running",
+                'status_code': 103,
+                'unsupportedbypylxd': "This attribute is not supported by "\
+                    "pylxd. We want to test whether the mere presence of it "\
+                    "makes it crash."
+            }},
+        'method': 'GET',
+        'url': r'^http://pylxd2.test/1.0/containers/an-container$',
+    },
+{
         'json': {
             'type': 'sync',
             'metadata': {
