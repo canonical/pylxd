@@ -21,6 +21,7 @@ from six.moves.urllib import parse
 try:
     from ws4py.client import WebSocketBaseClient
     from ws4py.manager import WebSocketManager
+    from ws4py.messaging import BinaryMessage
     _ws4py_installed = True
 except ImportError:  # pragma: no cover
     WebSocketBaseClient = object
@@ -256,9 +257,22 @@ class Container(model.Model):
         return containers
 
     @classmethod
-    def create(cls, client, config, wait=False):
-        """Create a new container config."""
-        response = client.api.containers.post(json=config)
+    def create(cls, client, config, wait=False, target=None):
+        """Create a new container config.
+
+        :param client: client instance
+        :type client: Client
+        :param config: The configuration for the new container.
+        :type config: dict
+        :param wait: Whether to wait for async operations to complete.
+        :type wait: bool
+        :param target: If in cluster mode, the target member.
+        :type target: str
+        :raises LXDAPIException: if something goes wrong.
+        :returns: a container if successful
+        :rtype: :class:`Container`
+        """
+        response = client.api.containers.post(json=config, target=target)
 
         if wait:
             client.operations.wait_for_operation(response.json()['operation'])
@@ -533,6 +547,8 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         if self.handler:
             self.handler(self._maybe_decode(message.data))
         self.buffer.append(message.data)
+        if isinstance(message, BinaryMessage):
+            self.manager.remove(self)
 
     def _maybe_decode(self, buffer):
         if self.decode and buffer is not None:

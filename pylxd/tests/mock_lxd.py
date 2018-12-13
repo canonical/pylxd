@@ -192,6 +192,63 @@ RULES = [
     },
 
 
+    # Cluster
+    {
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': {
+                "server_name": "an-member",
+                "enabled": 'true',
+                "member_config": [{
+                    "entity": "storage-pool",
+                    "name": "local",
+                    "key": "source",
+                    "value": "",
+                    "description":
+                        "\"source\" property for storage pool \"local\""
+                },
+                {
+                    "entity": "storage-pool",
+                    "name": "local",
+                    "key": "volatile.initial_source",
+                    "value": "",
+                    "description":
+                        "\"volatile.initial_source\" property for"
+                        " storage pool \"local\""
+                }]
+            }
+        }),
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/cluster$',
+    },
+
+
+    # Cluster Members
+    {
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': [
+                'http://pylxd.test/1.0/certificates/an-member',
+                'http://pylxd.test/1.0/certificates/nd-member',
+            ]}),
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/cluster/members$',
+    },
+    {
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': {
+                "server_name": "an-member",
+                "url": "https://10.1.1.101:8443",
+                "database": 'false',
+                "status": "Online",
+                "message": "fully operational",
+            }}),
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/cluster/members/an-member$',  # NOQA
+    },
+
+
     # Containers
     {
         'text': json.dumps({
@@ -220,6 +277,11 @@ RULES = [
         'text': containers_POST,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers$',
+    },
+    {
+        'text': containers_POST,
+        'method': 'POST',
+        'url': r'^http://pylxd.test/1.0/containers\?target=an-remote',
     },
     {
         'json': {
@@ -349,6 +411,29 @@ RULES = [
             }},
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/containers/an-container/state$',  # NOQA
+    },
+    {
+        'json': {
+            'type': 'sync',
+            'metadata': {
+                'name': 'an-new-remote-container',
+
+                'architecture': "x86_64",
+                'config': {
+                    'security.privileged': "true",
+                },
+                'created_at': "1983-06-16T00:00:00-00:00",
+                'last_used_at': "1983-06-16T00:00:00-00:00",
+                'description': "Some description",
+                'location': "an-remote",
+                'status': "Running",
+                'status_code': 103,
+                'unsupportedbypylxd': "This attribute is not supported by "\
+                    "pylxd. We want to test whether the mere presence of it "\
+                    "makes it crash."
+            }},
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/containers/an-new-remote-container$',
     },
     {
         'status_code': 202,

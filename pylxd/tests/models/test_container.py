@@ -78,6 +78,16 @@ class TestContainer(testing.PyLXDTestCase):
 
         self.assertEqual(config['name'], an_new_container.name)
 
+    def test_create_remote(self):
+        """A new container is created at target."""
+        config = {'name': 'an-new-remote-container'}
+
+        an_new_remote_container = models.Container.create(
+            self.client, config, wait=True, target="an-remote")
+
+        self.assertEqual(config['name'], an_new_remote_container.name)
+        self.assertEqual("an-remote", an_new_remote_container.location)
+
     def test_exists(self):
         """A container exists."""
         name = 'an-container'
@@ -537,7 +547,7 @@ class TestFiles(testing.PyLXDTestCase):
         self.add_rule({
             'method': 'DELETE',
             'url': (r'^http://pylxd.test/1.0/containers/an-container/files'
-                    '\?path=%2Fsome%2Ffile$')
+                    r'\?path=%2Fsome%2Ffile$')
         })
         self.container.files.delete('/some/file')
 
@@ -549,7 +559,7 @@ class TestFiles(testing.PyLXDTestCase):
             'text': responder,
             'method': 'DELETE',
             'url': (r'^http://pylxd.test/1.0/containers/an-container/files'
-                    '\?path=%2Fsome%2Ffile%2Fnot%2Ffound$')
+                    r'\?path=%2Fsome%2Ffile%2Fnot%2Ffound$')
         })
         with self.assertRaises(exceptions.LXDAPIException):
             self.container.files.delete('/some/file/not/found')
@@ -567,7 +577,7 @@ class TestFiles(testing.PyLXDTestCase):
             'text': capture,
             'method': 'POST',
             'url': (r'^http://pylxd.test/1.0/containers/an-container/files'
-                    '\?path=%2Ftmp%2Fputted$'),
+                    r'\?path=%2Ftmp%2Fputted$'),
         })
 
         data = 'The quick brown fox'
@@ -618,7 +628,7 @@ class TestFiles(testing.PyLXDTestCase):
 
         with tempdir() as _dir:
             base = (r'^http://pylxd.test/1.0/containers/'
-                    'an-container/files\?path=')
+                    r'an-container/files\?path=')
             rules = [
                 {
                     'text': capture,
@@ -670,7 +680,7 @@ class TestFiles(testing.PyLXDTestCase):
             'text': not_found,
             'method': 'GET',
             'url': (r'^http://pylxd.test/1.0/containers/an-container/files'
-                    '\?path=%2Ftmp%2Fgetted$'),
+                    r'\?path=%2Ftmp%2Fgetted$'),
         }
         self.add_rule(rule)
 
@@ -686,7 +696,7 @@ class TestFiles(testing.PyLXDTestCase):
             'text': not_found,
             'method': 'GET',
             'url': (r'^http://pylxd.test/1.0/containers/an-container/files'
-                    '\?path=%2Ftmp%2Fgetted$'),
+                    r'\?path=%2Ftmp%2Fgetted$'),
         }
         self.add_rule(rule)
 

@@ -28,6 +28,7 @@ pip-log.txt
 nosetests.xml
 .testrepository
 .venv
+htmlcov/
 
 # Translations
 *.mo
@@ -36,6 +37,9 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+# Pycharm
+.idea/
 
 # Complexity
 output/*.html
