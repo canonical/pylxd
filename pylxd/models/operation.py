@@ -37,6 +37,8 @@ class Operation(object):
         """Get an operation."""
         if operation_id.startswith('/'):
             operation_id = operation_id.split('/')[-1]
+        if '?' in operation_id:
+            operation_id = operation_id.split('?')[0]
         response = client.api.operations[operation_id].get()
         return cls(_client=client, **response.json()['metadata'])
 

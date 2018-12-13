@@ -273,7 +273,6 @@ class Container(model.Model):
         :rtype: :class:`Container`
         """
         response = client.api.containers.post(json=config, target=target)
-
         if wait:
             client.operations.wait_for_operation(response.json()['operation'])
         return cls(client, name=config['name'])
@@ -397,7 +396,8 @@ class Container(model.Model):
         })
 
         fds = response.json()['metadata']['metadata']['fds']
-        operation_id = response.json()['operation'].split('/')[-1].split('?')[0]
+        operation_id = response.json()['operation']\
+            .split('/')[-1].split('?')[0]
         parsed = parse.urlparse(
             self.client.api.operations[operation_id].websocket._api_endpoint)
 
