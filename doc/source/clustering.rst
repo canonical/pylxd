@@ -1,5 +1,5 @@
 Clustering
-=============
+==========
 
 LXD supports clustering. There is only one cluster object.
 

@@ -64,7 +64,7 @@ Storage Pool
    :members:
 
 Cluster
-------------
+-------
 
 .. autoclass:: pylxd.models.Cluster
    :members:
