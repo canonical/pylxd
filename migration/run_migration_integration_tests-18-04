@@ -1,0 +1,86 @@
+#!/bin/sh
+
+#NOTE: gabrik (24 Aug 2018) - this test create two containers for testing the migration
+
+NETWORK_NAME=pylxd0
+CONTAINER_IMAGE=ubuntu:18.04
+CONTAINERONE_NAME=pylxd-`uuidgen | cut -d"-" -f1`
+CONTAINERTWO_NAME=pylxd-`uuidgen | cut -d"-" -f1`
+PROFILE_NAME=pylxd
+
+
+#This create a network for testing the migration
+lxc network create $NETWORK_NAME ipv6.address=none ipv4.address=10.0.3.1/24 ipv4.nat=true
+
+#This create the profile used by the containers to be attached in the same network
+lxc profile copy default $PROFILE_NAME
+lxc profile device remove $PROFILE_NAME eth0
+lxc network attach-profile $NETWORK_NAME $PROFILE_NAME eth0
+
+# This creates a privileged container, because I was bumping into situations where it
+# seemed that we had maxed out user namespaces (I haven't checked it out, but it's likely
+# a bug in LXD).
+
+#First container
+lxc init $CONTAINER_IMAGE $CONTAINERONE_NAME -p $PROFILE_NAME -c security.nesting=true -c security.privileged=true
+lxc config set $CONTAINERONE_NAME raw.lxc "lxc.mount.auto = proc:rw sys:rw"
+lxc start $CONTAINERONE_NAME
+sleep 5  # Wait for the network to come up
+lxc exec $CONTAINERONE_NAME -- apt-get update
+lxc exec $CONTAINERONE_NAME -- apt-get install -y tox python3-dev libssl-dev libffi-dev build-essential criu
+lxc exec $CONTAINERONE_NAME -- lxc config set core.trust_password password
+lxc exec $CONTAINERONE_NAME -- lxc config set core.https_address [::]
+lxc exec $CONTAINERONE_NAME -- mkdir -p /root/.config/lxc
+openssl genrsa 1024 > ./$CONTAINERONE_NAME.key
+lxc file push ./$CONTAINERONE_NAME.key $CONTAINERONE_NAME/root/.config/lxc/client.key
+rm ./$CONTAINERONE_NAME.key
+lxc exec $CONTAINERONE_NAME -- chmod 400 /root/.config/lxc/client.key
+lxc exec $CONTAINERONE_NAME -- openssl req -new -x509 -nodes -sha1 -days 365 \
+	-key /root/.config/lxc/client.key -out /root/.config/lxc/client.crt \
+	-subj="/C=UK/ST=London/L=London/O=OrgName/OU=Test/CN=example.com"
+
+# create a default dir storage pool for bionic
+lxc exec $CONTAINERONE_NAME -- lxc storage create default dir
+lxc exec $CONTAINERONE_NAME -- lxc profile device add default root disk path=/ pool=default
+
+lxc exec $CONTAINERONE_NAME -- sudo shutdown -r now
+sleep 5  # Wait for the network to come up
+lxc exec $CONTAINERONE_NAME -- sudo ifconfig eth0 10.0.3.111 netmask 255.255.255.0
+lxc exec $CONTAINERONE_NAME -- route add default gw 10.0.3.1 eth0
+
+#Second container
+lxc init $CONTAINER_IMAGE $CONTAINERTWO_NAME -p $PROFILE_NAME -c security.nesting=true -c security.privileged=true
+lxc config set $CONTAINERTWO_NAME raw.lxc "lxc.mount.auto = proc:rw sys:rw"
+lxc start $CONTAINERTWO_NAME
+sleep 5  # Wait for the network to come up
+lxc exec $CONTAINERTWO_NAME -- apt-get update
+lxc exec $CONTAINERTWO_NAME -- apt-get install -y tox python3-dev libssl-dev libffi-dev build-essential criu
+lxc exec $CONTAINERTWO_NAME -- lxc config set core.trust_password password
+lxc exec $CONTAINERTWO_NAME -- lxc config set core.https_address [::]:8443
+lxc exec $CONTAINERONE_NAME -- mkdir -p /root/.config/lxc
+openssl genrsa 1024 > ./$CONTAINERTWO_NAME.key
+lxc file push ./$CONTAINERTWO_NAME.key $CONTAINERTWO_NAME/root/.config/lxc/client.key
+rm ./$CONTAINERTWO_NAME.key
+lxc exec $CONTAINERTWO_NAME -- chmod 400 /root/.config/lxc/client.key
+lxc exec $CONTAINERTWO_NAME -- openssl req -new -x509 -nodes -sha1 -days 365 \
+	-key /root/.config/lxc/client.key -out /root/.config/lxc/client.crt \
+	-subj="/C=UK/ST=London/L=London/O=OrgName/OU=Test/CN=example.com"
+
+# create a default dir storage pool for bionic
+lxc exec $CONTAINERTWO_NAME -- lxc storage create default dir
+lxc exec $CONTAINERTWO_NAME -- lxc profile device add default root disk path=/ pool=default
+lxc exec $CONTAINERTWO_NAME -- sudo shutdown -r now
+sleep 5  # Wait for the network to come up
+lxc exec $CONTAINERTWO_NAME -- sudo ifconfig eth0 10.0.3.222 netmask 255.255.255.0
+lxc exec $CONTAINERTWO_NAME -- route add default gw 10.0.3.1 eth0
+
+lxc exec $CONTAINERONE_NAME -- mkdir -p /opt/pylxd
+# NOTE: rockstar (13 Sep 2016) - --recursive is not supported in lxd <2.1, so
+# until we have pervasive support for that, we'll do this tar hack.
+tar cf - * .git | lxc exec $CONTAINERONE_NAME -- tar xf - -C /opt/pylxd
+lxc exec $CONTAINERONE_NAME -- /bin/sh -c "cd /opt/pylxd && tox -emigration"
+
+lxc delete --force $CONTAINERONE_NAME
+lxc delete --force $CONTAINERTWO_NAME
+lxc profile delete $PROFILE_NAME
+lxc network delete $NETWORK_NAME
