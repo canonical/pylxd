@@ -437,6 +437,46 @@ class Container(model.Model):
             return _ContainerExecuteResult(
                 operation.metadata['return'], stdout.data, stderr.data)
 
+    def interactive_execute(
+            self, commands, environment=None
+    ):
+        """Execute a command on the container interactively and return websocket.
+
+        In pylxd 2.2, this method will be renamed `execute` and the existing
+        `execute` method removed.
+
+        :param commands: The command and arguments as a list of strings (most likely a shell)
+        :type commands: [str]
+        :param environment: The environment variables to pass with the command
+        :type environment: {str: str}
+        :returns: A link to an interactive websocket and a control socket
+        :rtype: dict
+        """
+        if not _ws4py_installed:
+            raise ValueError(
+                'This feature requires the optional ws4py library.')
+        if isinstance(commands, six.string_types):
+            raise TypeError("First argument must be a list.")
+
+        if environment is None:
+            environment = {}
+
+        response = self.api['exec'].post(json={
+            'command': commands,
+            'environment': environment,
+            'wait-for-websocket': True,
+            'interactive': True,
+        })
+
+        fds = response.json()['metadata']['metadata']['fds']
+        operation_id = response.json()['operation']\
+            .split('/')[-1].split('?')[0]
+        parsed = parse.urlparse(
+            self.client.api.operations[operation_id].websocket._api_endpoint)
+
+        return {'ws': '{}?secret={}'.format(parsed.path, fds['0']),
+                'control': '{}?secret={}'.format(parsed.path, fds['control']),}
+
     def migrate(self, new_client, wait=False):
         """Migrate a container.
 
