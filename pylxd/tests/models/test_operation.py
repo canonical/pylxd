@@ -37,6 +37,14 @@ class TestOperation(testing.PyLXDTestCase):
 
         self.assertEqual('operation-abc', an_operation.id)
 
+    def test_get_full_path_and_project(self):
+        """Return an operation even if the full path is specified."""
+        name = '/1.0/operations/operation-abc?project=default'
+
+        an_operation = models.Operation.get(self.client, name)
+
+        self.assertEqual('operation-abc', an_operation.id)
+
     def test_wait_with_error(self):
         """If the operation errors, wait raises an exception."""
         def error(request, context):
