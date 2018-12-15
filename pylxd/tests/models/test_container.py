@@ -246,6 +246,16 @@ class TestContainer(testing.PyLXDTestCase):
         self.assertEqual(result['control'],
                          '/1.0/operations/operation-abc/websocket?secret=jkl')
 
+    def test_interactive_execute_env(self):
+        an_container = models.Container(self.client, name='an-container')
+
+        result = an_container.interactive_execute(['/bin/bash'], {"PATH": "/"})
+
+        self.assertEqual(result['ws'],
+                         '/1.0/operations/operation-abc/websocket?secret=abc')
+        self.assertEqual(result['control'],
+                         '/1.0/operations/operation-abc/websocket?secret=jkl')
+
     def test_interactive_execute_string(self):
         """A command passed as string raises a TypeError."""
         an_container = models.Container(
