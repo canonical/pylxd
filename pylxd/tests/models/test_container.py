@@ -236,6 +236,14 @@ class TestContainer(testing.PyLXDTestCase):
 
         self.assertRaises(TypeError, an_container.execute, 'apt-get update')
 
+    def test_interactive_execute(self):
+        an_container = models.Container(self.client, name='an-container')
+
+        result = an_container.interactive_execute(['/bin/bash'])
+
+        self.assertEqual(result['ws'],'/1.0/operations/operation-abc/websocket?secret=abc')
+        self.assertEqual(result['control'],'/1.0/operations/operation-abc/websocket?secret=jkl')
+
     def test_migrate(self):
         """A container is migrated."""
         from pylxd.client import Client
