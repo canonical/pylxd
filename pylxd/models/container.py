@@ -440,17 +440,15 @@ class Container(model.Model):
     def interactive_execute(
             self, commands, environment=None
     ):
-        """Execute a command on the container interactively and return websocket.
+        """Execute a command on the container interactively and returns websockets.
 
-        In pylxd 2.2, this method will be renamed `execute` and the existing
-        `execute` method removed.
-
-        :param commands: The command and arguments as a list of strings (most likely a shell)
+        :param commands: The command and arguments as a list of strings
+           (most likely a shell)
         :type commands: [str]
         :param environment: The environment variables to pass with the command
         :type environment: {str: str}
-        :returns: A link to an interactive websocket and a control socket
-        :rtype: dict
+        :returns: Two urls to an interactive websocket and a control socket
+        :rtype: {'ws':str,'control':str}
         """
         if not _ws4py_installed:
             raise ValueError(
@@ -475,7 +473,7 @@ class Container(model.Model):
             self.client.api.operations[operation_id].websocket._api_endpoint)
 
         return {'ws': '{}?secret={}'.format(parsed.path, fds['0']),
-                'control': '{}?secret={}'.format(parsed.path, fds['control']),}
+                'control': '{}?secret={}'.format(parsed.path, fds['control'])}
 
     def migrate(self, new_client, wait=False):
         """Migrate a container.

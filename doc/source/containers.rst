@@ -64,6 +64,8 @@ Container methods
     a list, in the form of `subprocess.Popen` with each item of the command
     as a separate item in the list. Returns a tuple of `(exit_code, stdout, stderr)`.
     This method will block while the command is executed.
+  - `interactive_execute` - Execute a command on the container. It will return
+    an interactive websocket and the execution only starts after a client connected to the websocket.
   - `migrate` - Migrate the container. The first argument is a client
     connection to the destination server. This call is asynchronous, so
     `wait=True` is optional. The container on the new client is returned.
