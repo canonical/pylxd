@@ -450,9 +450,6 @@ class Container(model.Model):
         :returns: Two urls to an interactive websocket and a control socket
         :rtype: {'ws':str,'control':str}
         """
-        if not _ws4py_installed:
-            raise ValueError(
-                'This feature requires the optional ws4py library.')
         if isinstance(commands, six.string_types):
             raise TypeError("First argument must be a list.")
 
