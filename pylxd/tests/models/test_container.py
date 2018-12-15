@@ -241,8 +241,10 @@ class TestContainer(testing.PyLXDTestCase):
 
         result = an_container.interactive_execute(['/bin/bash'])
 
-        self.assertEqual(result['ws'],'/1.0/operations/operation-abc/websocket?secret=abc')
-        self.assertEqual(result['control'],'/1.0/operations/operation-abc/websocket?secret=jkl')
+        self.assertEqual(result['ws'],
+                         '/1.0/operations/operation-abc/websocket?secret=abc')
+        self.assertEqual(result['control'],
+                         '/1.0/operations/operation-abc/websocket?secret=jkl')
 
     def test_migrate(self):
         """A container is migrated."""
