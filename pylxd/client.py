@@ -281,15 +281,13 @@ class Client(object):
                     endpoint, cert=cert, verify=verify, timeout=timeout)
         else:
             if 'LXD_DIR' in os.environ:
-                path = os.path.join(
-                    os.environ.get('LXD_DIR'), 'unix.socket')
+                path = os.path.join(os.environ.get('LXD_DIR'), 'unix.socket')
+            elif os.path.exists('/var/lib/lxd/unix.socket'):
+                path = '/var/lib/lxd/unix.socket'
             else:
-                if os.path.exists('/var/snap/lxd/common/lxd/unix.socket'):
-                    path = '/var/snap/lxd/common/lxd/unix.socket'
-                else:
-                    path = '/var/lib/lxd/unix.socket'
-            self.api = _APINode('http+unix://{}'.format(
-                parse.quote(path, safe='')), timeout=timeout)
+                path = '/var/snap/lxd/common/lxd/unix.socket'
+            endpoint = 'http+unix://{}'.format(parse.quote(path, safe=''))
+            self.api = _APINode(endpoint, timeout=timeout)
         self.api = self.api[version]
 
         # Verify the connection is valid.
