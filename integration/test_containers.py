@@ -11,6 +11,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import unittest
+
 from pylxd import exceptions
 from integration.testing import IntegrationTestCase
 
@@ -208,6 +210,7 @@ class TestContainer(IntegrationTestCase):
     # This test is commented because CRIU does NOT work
     # in LXD inside LXD
 
+    @unittest.skip("This test is broken as it assumes particular network")
     def test_migrate_running(self):
         """A running container is migrated."""
         from pylxd.client import Client
@@ -231,6 +234,7 @@ class TestContainer(IntegrationTestCase):
         self.assertEqual(client2,
                          an_migrated_container.client)
 
+    @unittest.skip("This test is broken as it assumes particular network")
     def test_migrate_local_client(self):
         """Raise ValueError, cannot migrate from local connection"""
         from pylxd.client import Client
@@ -243,6 +247,7 @@ class TestContainer(IntegrationTestCase):
         self.assertRaises(ValueError,
                           self.container.migrate, client2)
 
+    @unittest.skip("This test is broken as it assumes particular network")
     def test_migrate_stopped(self):
         """A stopped container is migrated."""
         from pylxd.client import Client
