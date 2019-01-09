@@ -59,7 +59,9 @@ class Operation(object):
         response = self._client.api.operations[self.id].wait.get()
 
         try:
-            if response.json()['metadata']['status'] == 'Failure':
+            md = response.json()['metadata']
+            if not md: md = response.json()
+            if md['status'] == 'Failure':
                 raise exceptions.LXDAPIException(response)
         except KeyError:
             # Support for legacy LXD
