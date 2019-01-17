@@ -30,6 +30,7 @@ except ImportError:  # pragma: no cover
 from pylxd import managers
 from pylxd.exceptions import LXDAPIException
 from pylxd.models import _model as model
+from pylxd.models.operation import Operation
 
 if six.PY2:
     # Python2.7 doesn't have this natively
@@ -397,7 +398,8 @@ class Container(model.Model):
         })
 
         fds = response.json()['metadata']['metadata']['fds']
-        operation_id = response.json()['operation'].split('/')[-1]
+        operation_id = \
+            Operation.extract_operation_id(response.json()['operation'])
         parsed = parse.urlparse(
             self.client.api.operations[operation_id].websocket._api_endpoint)
 
