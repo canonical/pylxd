@@ -29,7 +29,7 @@ setuptools.setup(
         'pbr>=1.8',
     ],
     install_requires=[
-        'requests!=2.8.0,>=2.5.2',
+        'requests>=2.20.0',
         # >= 0.1.5 needed for HTTP_PROXY support
         'requests-unixsocket>=0.1.5',
     ],
