@@ -236,33 +236,34 @@ class TestContainer(testing.PyLXDTestCase):
 
         self.assertRaises(TypeError, an_container.execute, 'apt-get update')
 
-    def test_interactive_execute(self):
+    def test_raw_interactive_execute(self):
         an_container = models.Container(self.client, name='an-container')
 
-        result = an_container.interactive_execute(['/bin/bash'])
+        result = an_container.raw_interactive_execute(['/bin/bash'])
 
         self.assertEqual(result['ws'],
                          '/1.0/operations/operation-abc/websocket?secret=abc')
         self.assertEqual(result['control'],
                          '/1.0/operations/operation-abc/websocket?secret=jkl')
 
-    def test_interactive_execute_env(self):
+    def test_raw_interactive_execute_env(self):
         an_container = models.Container(self.client, name='an-container')
 
-        result = an_container.interactive_execute(['/bin/bash'], {"PATH": "/"})
+        result = an_container.raw_interactive_execute(['/bin/bash'],
+                                                      {"PATH": "/"})
 
         self.assertEqual(result['ws'],
                          '/1.0/operations/operation-abc/websocket?secret=abc')
         self.assertEqual(result['control'],
                          '/1.0/operations/operation-abc/websocket?secret=jkl')
 
-    def test_interactive_execute_string(self):
+    def test_raw_interactive_execute_string(self):
         """A command passed as string raises a TypeError."""
         an_container = models.Container(
             self.client, name='an-container')
 
         self.assertRaises(TypeError,
-                          an_container.interactive_execute,
+                          an_container.raw_interactive_execute,
                           'apt-get update')
 
     def test_migrate(self):

@@ -438,9 +438,10 @@ class Container(model.Model):
                 operation.metadata['return'], stdout.data, stderr.data)
 
     def raw_interactive_execute(self, commands, environment=None):
-        """Execute a command on the container interactively and returns urls to websockets.
-        The urls contain a secret uuid, and can be accesses without further authentication.
-        The caller has to open and manage the websockets themselves.
+        """Execute a command on the container interactively and returns
+        urls to websockets. The urls contain a secret uuid, and can be accesses
+        without further authentication. The caller has to open and manage
+        the websockets themselves.
 
         :param commands: The command and arguments as a list of strings
            (most likely a shell)
