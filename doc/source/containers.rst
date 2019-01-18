@@ -64,8 +64,8 @@ Container methods
     a list, in the form of `subprocess.Popen` with each item of the command
     as a separate item in the list. Returns a tuple of `(exit_code, stdout, stderr)`.
     This method will block while the command is executed.
-  - `interactive_execute` - Execute a command on the container. It will return
-    an interactive websocket and the execution only starts after a client connected to the websocket.
+  - `raw_interactive_execute` - Execute a command on the container. It will return
+    an url to an interactive websocket and the execution only starts after a client connected to the websocket.
   - `migrate` - Migrate the container. The first argument is a client
     connection to the destination server. This call is asynchronous, so
     `wait=True` is optional. The container on the new client is returned.
@@ -164,6 +164,20 @@ the source server has to be reachable by the destination server otherwise the mi
     cont.migrate(client_destination,wait=True)
 
 This will migrate the container from source server to destination server
+
+If you want an interactive shell in the container, you can attach to it via a websocket.
+
+.. code-block:: python
+
+    >>> res = container.raw_interactive_execute(['/bin/bash'])
+    >>> res
+    {
+        "name": "container-name",
+        "ws": "/1.0/operations/adbaab82-afd2-450c-a67e-274726e875b1/websocket?secret=ef3dbdc103ec5c90fc6359c8e087dcaf1bc3eb46c76117289f34a8f949e08d87",
+        "control": "/1.0/operations/adbaab82-afd2-450c-a67e-274726e875b1/websocket?secret=dbbc67833009339d45140671773ac55b513e78b219f9f39609247a2d10458084"
+    }
+
+You can connect to this urls from e.g. https://xtermjs.org/ .
 
 Container Snapshots
 -------------------
