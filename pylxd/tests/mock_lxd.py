@@ -5,7 +5,7 @@ def containers_POST(request, context):
     context.status_code = 202
     return json.dumps({
         'type': 'async',
-        'operation': 'operation-abc'})
+        'operation': '/1.0/operations/operation-abc?project=default'})
 
 
 def container_POST(request, context):
@@ -13,11 +13,11 @@ def container_POST(request, context):
     if not request.json().get('migration', False):
         return {
             'type': 'async',
-            'operation': 'operation-abc'}
+            'operation': '/1.0/operations/operation-abc?project=default'}
     else:
         return {
             'type': 'async',
-            'operation': 'operation-abc',
+            'operation': '/1.0/operations/operation-abc?project=default',
             'metadata': {
                 'metadata': {
                     '0': 'abc',
@@ -32,21 +32,22 @@ def container_DELETE(request, context):
     context.status_code = 202
     return json.dumps({
         'type': 'async',
-        'operation': 'operation-abc'})
+        'operation': '/1.0/operations/operation-abc?project=default'})
 
 
 def images_POST(request, context):
     context.status_code = 202
     return json.dumps({
         'type': 'async',
-        'operation': 'images-create-operation'})
+        'operation': '/1.0/operations/images-create-operation?project=default'
+    })
 
 
 def image_DELETE(request, context):
     context.status_code = 202
     return json.dumps({
         'type': 'async',
-        'operation': 'operation-abc'})
+        'operation': '/1.0/operations/operation-abc?project=default'})
 
 
 def networks_GET(request, _):
@@ -80,7 +81,7 @@ def networks_DELETE(_, context):
     context.status_code = 202
     return json.dumps({
         'type': 'sync',
-        'operation': 'operation-abc'})
+        'operation': '/1.0/operations/operation-abc?project=default'})
 
 
 def profile_GET(request, context):
@@ -108,14 +109,14 @@ def profile_DELETE(request, context):
     context.status_code = 200
     return json.dumps({
         'type': 'sync',
-        'operation': 'operation-abc'})
+        'operation': '/1.0/operations/operation-abc?project=default'})
 
 
 def snapshot_DELETE(request, context):
     context.status_code = 202
     return json.dumps({
         'type': 'async',
-        'operation': 'operation-abc'})
+        'operation': '/1.0/operations/operation-abc?project=default'})
 
 
 RULES = [
@@ -192,6 +193,63 @@ RULES = [
     },
 
 
+    # Cluster
+    {
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': {
+                "server_name": "an-member",
+                "enabled": 'true',
+                "member_config": [{
+                    "entity": "storage-pool",
+                    "name": "local",
+                    "key": "source",
+                    "value": "",
+                    "description":
+                        "\"source\" property for storage pool \"local\""
+                },
+                {
+                    "entity": "storage-pool",
+                    "name": "local",
+                    "key": "volatile.initial_source",
+                    "value": "",
+                    "description":
+                        "\"volatile.initial_source\" property for"
+                        " storage pool \"local\""
+                }]
+            }
+        }),
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/cluster$',
+    },
+
+
+    # Cluster Members
+    {
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': [
+                'http://pylxd.test/1.0/certificates/an-member',
+                'http://pylxd.test/1.0/certificates/nd-member',
+            ]}),
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/cluster/members$',
+    },
+    {
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': {
+                "server_name": "an-member",
+                "url": "https://10.1.1.101:8443",
+                "database": 'false',
+                "status": "Online",
+                "message": "fully operational",
+            }}),
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/cluster/members/an-member$',  # NOQA
+    },
+
+
     # Containers
     {
         'text': json.dumps({
@@ -201,6 +259,15 @@ RULES = [
             ]}),
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/containers$',
+    },
+{
+        'text': json.dumps({
+            'type': 'sync',
+            'metadata': [
+                'http://pylxd2.test/1.0/containers/an-container',
+            ]}),
+        'method': 'GET',
+        'url': r'^http://pylxd2.test/1.0/containers$',
     },
     {
         'text': containers_POST,
@@ -213,6 +280,59 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/containers$',
     },
     {
+        'text': containers_POST,
+        'method': 'POST',
+        'url': r'^http://pylxd.test/1.0/containers\?target=an-remote',
+    },
+    {
+        'json': {
+            'type': 'sync',
+            'metadata': {
+                'name': 'an-container',
+
+                'architecture': "x86_64",
+                'config': {
+                    'security.privileged': "true",
+                },
+                'created_at': "1983-06-16T00:00:00-00:00",
+                'last_used_at': "1983-06-16T00:00:00-00:00",
+                'description': "Some description",
+                'devices': {
+                    'root': {
+                        'path': "/",
+                        'type': "disk"
+                    }
+                },
+                'ephemeral': True,
+                'expanded_config': {
+                    'security.privileged': "true",
+                },
+                'expanded_devices': {
+                    'eth0': {
+                        'name': "eth0",
+                        'nictype': "bridged",
+                        'parent': "lxdbr0",
+                        'type': "nic"
+                    },
+                    'root': {
+                        'path': "/",
+                        'type': "disk"
+                    }
+                },
+                'profiles': [
+                    "default"
+                ],
+                'stateful': False,
+                'status': "Running",
+                'status_code': 103,
+                'unsupportedbypylxd': "This attribute is not supported by "\
+                    "pylxd. We want to test whether the mere presence of it "\
+                    "makes it crash."
+            }},
+        'method': 'GET',
+        'url': r'^http://pylxd2.test/1.0/containers/an-container$',
+    },
+{
         'json': {
             'type': 'sync',
             'metadata': {
@@ -294,10 +414,33 @@ RULES = [
         'url': r'^http://pylxd.test/1.0/containers/an-container/state$',  # NOQA
     },
     {
+        'json': {
+            'type': 'sync',
+            'metadata': {
+                'name': 'an-new-remote-container',
+
+                'architecture': "x86_64",
+                'config': {
+                    'security.privileged': "true",
+                },
+                'created_at': "1983-06-16T00:00:00-00:00",
+                'last_used_at': "1983-06-16T00:00:00-00:00",
+                'description': "Some description",
+                'location': "an-remote",
+                'status': "Running",
+                'status_code': 103,
+                'unsupportedbypylxd': "This attribute is not supported by "\
+                    "pylxd. We want to test whether the mere presence of it "\
+                    "makes it crash."
+            }},
+        'method': 'GET',
+        'url': r'^http://pylxd.test/1.0/containers/an-new-remote-container$',
+    },
+    {
         'status_code': 202,
         'json': {
             'type': 'async',
-            'operation': 'operation-abc'},
+            'operation': '/1.0/operations/operation-abc?project=default'},
         'method': 'PUT',
         'url': r'^http://pylxd.test/1.0/containers/an-container/state$',  # NOQA
     },
@@ -309,7 +452,7 @@ RULES = [
     {
         'text': json.dumps({
             'type': 'async',
-            'operation': 'operation-abc'}),
+            'operation': '/1.0/operations/operation-abc?project=default'}),
         'status_code': 202,
         'method': 'PUT',
         'url': r'^http://pylxd.test/1.0/containers/an-container$',
@@ -332,7 +475,7 @@ RULES = [
                     }
                 },
             },
-            'operation': 'operation-abc'},
+            'operation': '/1.0/operations/operation-abc?project=default'},
         'status_code': 202,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container/exec$',  # NOQA
@@ -351,7 +494,7 @@ RULES = [
     {
         'text': json.dumps({
             'type': 'async',
-            'operation': 'operation-abc'}),
+            'operation': '/1.0/operations/operation-abc?project=default'}),
         'status_code': 202,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots$',  # NOQA
@@ -369,7 +512,7 @@ RULES = [
     {
         'text': json.dumps({
             'type': 'async',
-            'operation': 'operation-abc'}),
+            'operation': '/1.0/operations/operation-abc?project=default'}),
         'status_code': 202,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container/snapshots/an-snapshot$',  # NOQA
@@ -494,7 +637,9 @@ RULES = [
         'url': r'^http://pylxd2.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
     },
     {
-        'text': json.dumps({'type': 'async', 'operation': 'operation-abc'}),
+        'text': json.dumps({
+            'type': 'async',
+            'operation': '/1.0/operations/operation-abc?project=default'}),
         'status_code': 202,
         'method': 'PUT',
         'url': r'^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$',  # NOQA
@@ -723,7 +868,8 @@ RULES = [
     },
     # create an async storage volume
     {
-        'json': {'type': 'async', 'operation': 'operation-abc'},
+        'json': {'type': 'async',
+                 'operation': '/1.0/operations/operation-abc?project=default'},
         'status_code': 202,
         'method': 'POST',
         'url': (r'^http://pylxd.test/1.0/storage-pools/'
@@ -767,7 +913,7 @@ RULES = [
     {
         'json': {
             "type": "async",
-            "operation": "operation-abc",
+            "operation": "/1.0/operations/operation-abc?project=default",
             "metadata": {
                 "control": "secret1",
                 "fs": "secret2"

@@ -98,7 +98,7 @@ Storage Volumes
 Storage Volumes are stored in storage pools.  On the `pylxd` API they are
 accessed from a storage pool object:
 
-... code:: Python
+.. code:: Python
 
     storage_pool = client.storage_pools.get('pool1')
     volumes = storage_pool.volumes.all()

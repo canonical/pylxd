@@ -32,17 +32,21 @@ from pylxd import exceptions, managers
 requests_unixsocket.monkeypatch()
 
 LXD_PATH = '.config/lxc/'
-SNAP_ROOT = '~/snap/lxd/current/'
-APT_ROOT = '~/'
-if os.path.exists(os.path.expanduser(SNAP_ROOT)):  # pragma: no cover
+SNAP_ROOT = os.path.expanduser('~/snap/lxd/current/')
+APT_ROOT = os.path.expanduser('~/')
+CERT_FILE_NAME = 'client.crt'
+KEY_FILE_NAME = 'client.key'
+# check that the cert file and key file exist at the appopriate path
+if os.path.exists(os.path.join(
+        SNAP_ROOT, LXD_PATH, CERT_FILE_NAME)):  # pragma: no cover
     CERTS_PATH = os.path.join(SNAP_ROOT, LXD_PATH)  # pragma: no cover
 else:  # pragma: no cover
     CERTS_PATH = os.path.join(APT_ROOT, LXD_PATH)  # pragma: no cover
 
 Cert = namedtuple('Cert', ['cert', 'key'])  # pragma: no cover
 DEFAULT_CERTS = Cert(
-    cert=os.path.expanduser(os.path.join(CERTS_PATH, 'client.crt')),
-    key=os.path.expanduser(os.path.join(CERTS_PATH, 'client.key'))
+    cert=os.path.expanduser(os.path.join(CERTS_PATH, CERT_FILE_NAME)),
+    key=os.path.expanduser(os.path.join(CERTS_PATH, KEY_FILE_NAME))
 )  # pragma: no cover
 
 
@@ -159,6 +163,13 @@ class _APINode(object):
     def post(self, *args, **kwargs):
         """Perform an HTTP POST."""
         kwargs['timeout'] = kwargs.get('timeout', self._timeout)
+        target = kwargs.pop("target", None)
+
+        if target is not None:
+            params = kwargs.get("params", {})
+            params["target"] = target
+            kwargs["params"] = params
+
         response = self.session.post(self._api_endpoint, *args, **kwargs)
         # Prior to LXD 2.0.3, successful synchronous requests returned 200,
         # rather than 201.
@@ -282,15 +293,13 @@ class Client(object):
                     endpoint, cert=cert, verify=verify, timeout=timeout)
         else:
             if 'LXD_DIR' in os.environ:
-                path = os.path.join(
-                    os.environ.get('LXD_DIR'), 'unix.socket')
+                path = os.path.join(os.environ.get('LXD_DIR'), 'unix.socket')
+            elif os.path.exists('/var/lib/lxd/unix.socket'):
+                path = '/var/lib/lxd/unix.socket'
             else:
-                if os.path.exists('/var/snap/lxd/common/lxd/unix.socket'):
-                    path = '/var/snap/lxd/common/lxd/unix.socket'
-                else:
-                    path = '/var/lib/lxd/unix.socket'
-            self.api = _APINode('http+unix://{}'.format(
-                parse.quote(path, safe='')), timeout=timeout)
+                path = '/var/snap/lxd/common/lxd/unix.socket'
+            endpoint = 'http+unix://{}'.format(parse.quote(path, safe=''))
+            self.api = _APINode(endpoint, timeout=timeout)
         self.api = self.api[version]
 
         # Verify the connection is valid.
@@ -304,6 +313,7 @@ class Client(object):
                 requests.exceptions.InvalidURL):
             raise exceptions.ClientConnectionFailed()
 
+        self.cluster = managers.ClusterManager(self)
         self.certificates = managers.CertificateManager(self)
         self.containers = managers.ContainerManager(self)
         self.images = managers.ImageManager(self)

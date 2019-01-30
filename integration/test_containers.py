@@ -11,8 +11,9 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from pylxd import exceptions
+import unittest
 
+from pylxd import exceptions
 from integration.testing import IntegrationTestCase
 
 
@@ -204,3 +205,69 @@ class TestContainer(IntegrationTestCase):
         self.assertIn(
             image.fingerprint,
             [i.fingerprint for i in self.client.images.all()])
+
+    # COMMENT gabrik - 29/08/2018:
+    # This test is commented because CRIU does NOT work
+    # in LXD inside LXD
+
+    @unittest.skip("This test is broken as it assumes particular network")
+    def test_migrate_running(self):
+        """A running container is migrated."""
+        from pylxd.client import Client
+        first_host = 'https://10.0.3.111:8443/'
+        second_host = 'https://10.0.3.222:8443/'
+
+        client1 = Client(endpoint=first_host, verify=False)
+        client1.authenticate('password')
+
+        client2 = Client(endpoint=second_host, verify=False)
+        client2.authenticate('password')
+        an_container = \
+            client1.containers.get(self.container.name)
+        an_container.start(wait=True)
+        an_container.sync()
+        an_migrated_container = \
+            an_container.migrate(client2, wait=True)
+
+        self.assertEqual(an_container.name,
+                         an_migrated_container.name)
+        self.assertEqual(client2,
+                         an_migrated_container.client)
+
+    @unittest.skip("This test is broken as it assumes particular network")
+    def test_migrate_local_client(self):
+        """Raise ValueError, cannot migrate from local connection"""
+        from pylxd.client import Client
+
+        second_host = 'https://10.0.3.222:8443/'
+        client2 =\
+            Client(endpoint=second_host, verify=False)
+        client2.authenticate('password')
+
+        self.assertRaises(ValueError,
+                          self.container.migrate, client2)
+
+    @unittest.skip("This test is broken as it assumes particular network")
+    def test_migrate_stopped(self):
+        """A stopped container is migrated."""
+        from pylxd.client import Client
+
+        first_host = 'https://10.0.3.111:8443/'
+        second_host = 'https://10.0.3.222:8443/'
+
+        client1 = \
+            Client(endpoint=first_host, verify=False)
+        client1.authenticate('password')
+
+        client2 = \
+            Client(endpoint=second_host, verify=False)
+        client2.authenticate('password')
+        an_container = \
+            client1.containers.get(self.container.name)
+        an_migrated_container = \
+            an_container.migrate(client2, wait=True)
+
+        self.assertEqual(an_container.name,
+                         an_migrated_container.name)
+        self.assertEqual(client2,
+                         an_migrated_container.client)

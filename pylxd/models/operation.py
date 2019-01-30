@@ -13,8 +13,10 @@
 #    under the License.
 
 import warnings
+import os
 
 from pylxd import exceptions
+from six.moves.urllib import parse
 
 
 class Operation(object):
@@ -33,10 +35,13 @@ class Operation(object):
         return cls.get(client, operation.id)
 
     @classmethod
+    def extract_operation_id(cls, s):
+        return os.path.split(parse.urlparse(s).path)[-1]
+
+    @classmethod
     def get(cls, client, operation_id):
         """Get an operation."""
-        if operation_id.startswith('/'):
-            operation_id = operation_id.split('/')[-1]
+        operation_id = cls.extract_operation_id(operation_id)
         response = client.api.operations[operation_id].get()
         return cls(_client=client, **response.json()['metadata'])
 

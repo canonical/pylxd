@@ -34,5 +34,7 @@ These are the contributors to pylxd according to the Github repository.
  chrismacnaughton Chris MacNaughton
  ppkt             Karol Werner
  mrtc0            Kohei Morita
+ gabrik           Gabriele Baldoni
+ felix-engelmann  Felix Engelmann
  ===============  ==================================
 

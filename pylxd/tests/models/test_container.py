@@ -78,6 +78,16 @@ class TestContainer(testing.PyLXDTestCase):
 
         self.assertEqual(config['name'], an_new_container.name)
 
+    def test_create_remote(self):
+        """A new container is created at target."""
+        config = {'name': 'an-new-remote-container'}
+
+        an_new_remote_container = models.Container.create(
+            self.client, config, wait=True, target="an-remote")
+
+        self.assertEqual(config['name'], an_new_remote_container.name)
+        self.assertEqual("an-remote", an_new_remote_container.location)
+
     def test_exists(self):
         """A container exists."""
         name = 'an-container'
@@ -226,6 +236,36 @@ class TestContainer(testing.PyLXDTestCase):
 
         self.assertRaises(TypeError, an_container.execute, 'apt-get update')
 
+    def test_raw_interactive_execute(self):
+        an_container = models.Container(self.client, name='an-container')
+
+        result = an_container.raw_interactive_execute(['/bin/bash'])
+
+        self.assertEqual(result['ws'],
+                         '/1.0/operations/operation-abc/websocket?secret=abc')
+        self.assertEqual(result['control'],
+                         '/1.0/operations/operation-abc/websocket?secret=jkl')
+
+    def test_raw_interactive_execute_env(self):
+        an_container = models.Container(self.client, name='an-container')
+
+        result = an_container.raw_interactive_execute(['/bin/bash'],
+                                                      {"PATH": "/"})
+
+        self.assertEqual(result['ws'],
+                         '/1.0/operations/operation-abc/websocket?secret=abc')
+        self.assertEqual(result['control'],
+                         '/1.0/operations/operation-abc/websocket?secret=jkl')
+
+    def test_raw_interactive_execute_string(self):
+        """A command passed as string raises a TypeError."""
+        an_container = models.Container(
+            self.client, name='an-container')
+
+        self.assertRaises(TypeError,
+                          an_container.raw_interactive_execute,
+                          'apt-get update')
+
     def test_migrate(self):
         """A container is migrated."""
         from pylxd.client import Client
@@ -233,6 +273,74 @@ class TestContainer(testing.PyLXDTestCase):
         client2 = Client(endpoint='http://pylxd2.test')
         an_container = models.Container(
             self.client, name='an-container')
+
+        an_migrated_container = an_container.migrate(client2)
+
+        self.assertEqual('an-container', an_migrated_container.name)
+        self.assertEqual(client2, an_migrated_container.client)
+
+    @mock.patch('pylxd.models.container.Container.generate_migration_data')
+    def test_migrate_exception_error(self, generate_migration_data):
+        """LXDAPIException is raised in case of migration failure"""
+        from pylxd.client import Client
+        from pylxd.exceptions import LXDAPIException
+
+        def generate_exception():
+            response = mock.Mock()
+            response.status_code = 400
+            raise LXDAPIException(response)
+
+        generate_migration_data.side_effect = generate_exception
+
+        an_container = models.Container(
+            self.client, name='an-container')
+
+        client2 = Client(endpoint='http://pylxd2.test')
+        self.assertRaises(LXDAPIException, an_container.migrate, client2)
+
+    @mock.patch('pylxd.models.container.Container.generate_migration_data')
+    def test_migrate_exception_running(self, generate_migration_data):
+        """Migrated container already running on destination"""
+        from pylxd.client import Client
+        from pylxd.exceptions import LXDAPIException
+
+        client2 = Client(endpoint='http://pylxd2.test')
+        an_container = models.Container(
+            self.client, name='an-container')
+        an_container.status_code = 103
+
+        def generate_exception():
+            response = mock.Mock()
+            response.status_code = 103
+            raise LXDAPIException(response)
+
+        generate_migration_data.side_effect = generate_exception
+
+        an_migrated_container = an_container.migrate(client2)
+
+        self.assertEqual('an-container', an_migrated_container.name)
+        self.assertEqual(client2, an_migrated_container.client)
+
+    def test_migrate_started(self):
+        """A container is migrated."""
+        from pylxd.client import Client
+
+        client2 = Client(endpoint='http://pylxd2.test')
+        an_container = models.Container.get(self.client, name='an-container')
+        an_container.status_code = 103
+
+        an_migrated_container = an_container.migrate(client2)
+
+        self.assertEqual('an-container', an_migrated_container.name)
+        self.assertEqual(client2, an_migrated_container.client)
+
+    def test_migrate_stopped(self):
+        """A container is migrated."""
+        from pylxd.client import Client
+
+        client2 = Client(endpoint='http://pylxd2.test')
+        an_container = models.Container.get(self.client, name='an-container')
+        an_container.status_code = 102
 
         an_migrated_container = an_container.migrate(client2)
 
