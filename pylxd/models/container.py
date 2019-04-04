@@ -382,7 +382,7 @@ class Container(model.Model):
             message recived via stderr
         :type stderr_handler: Callable[[str], None]
         :raises ValueError: if the ws4py library is not installed.
-        :returns: The return value, stdout and stdin
+        :returns: A tuple of `(exit_code, stdout, stderr)`
         :rtype: _ContainerExecuteResult() namedtuple
         """
         if not _ws4py_installed:
