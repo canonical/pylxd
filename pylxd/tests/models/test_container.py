@@ -390,6 +390,12 @@ class TestContainer(testing.PyLXDTestCase):
             'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
             image.fingerprint)
 
+    def test_restore_snapshot(self):
+        """Snapshots can be restored"""
+        an_container = models.Container(
+            self.client, name='an-container')
+        an_container.restore_snapshot('thing')
+
 
 class TestContainerState(testing.PyLXDTestCase):
     """Tests for pylxd.models.ContainerState."""
@@ -539,6 +545,13 @@ class TestSnapshot(testing.PyLXDTestCase):
         self.assertEqual(
             'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
             image.fingerprint)
+
+    def test_restore_snapshot(self):
+        """Snapshots can be restored from the snapshot object"""
+        snapshot = models.Snapshot(
+            self.client, container=self.container,
+            name='an-snapshot')
+        snapshot.restore(wait=True)
 
 
 class TestFiles(testing.PyLXDTestCase):
