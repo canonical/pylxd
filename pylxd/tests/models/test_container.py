@@ -285,7 +285,7 @@ class TestContainer(testing.PyLXDTestCase):
         from pylxd.client import Client
         from pylxd.exceptions import LXDAPIException
 
-        def generate_exception():
+        def generate_exception(*args, **kwargs):
             response = mock.Mock()
             response.status_code = 400
             raise LXDAPIException(response)
@@ -309,17 +309,18 @@ class TestContainer(testing.PyLXDTestCase):
             self.client, name='an-container')
         an_container.status_code = 103
 
-        def generate_exception():
+        def generate_exception(*args, **kwargs):
             response = mock.Mock()
             response.status_code = 103
             raise LXDAPIException(response)
 
         generate_migration_data.side_effect = generate_exception
 
-        an_migrated_container = an_container.migrate(client2)
+        an_migrated_container = an_container.migrate(client2, live=True)
 
         self.assertEqual('an-container', an_migrated_container.name)
         self.assertEqual(client2, an_migrated_container.client)
+        generate_migration_data.assert_called_once_with(True)
 
     def test_migrate_started(self):
         """A container is migrated."""
