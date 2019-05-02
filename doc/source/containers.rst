@@ -71,6 +71,7 @@ Container methods
     `wait=True` is optional. The container on the new client is returned.
   - `publish` - Publish the container as an image.  Note the container must be stopped
     in order to use this method.  If `wait=True` is passed, then the image is returned.
+  - `restore_snapshot` - Restore a snapshot by name.
 
 
 Examples
@@ -196,6 +197,7 @@ A container object (returned by `get` or `all`) has the following methods:
     image from the snapshot is bigger than the logical volume that is allocated
     by lxc.  See https://github.com/lxc/lxd/issues/2201 for more details.  The solution
     is to increase the `storage.lvm_volume_size` parameter in lxc.
+  - `restore` - restore the container to this snapshot.
 
 .. code-block:: python
 
