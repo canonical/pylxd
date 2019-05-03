@@ -101,3 +101,19 @@ Some changes to LXD will return immediately, but actually occur in the
 background after the http response returns. All operations that happen
 this way will also take an optional `wait` parameter that, when `True`,
 will not return until the operation is completed.
+
+UserWarning: Attempted to set unknown attribute "x" on instance of "y"
+----------------------------------------------------------------------
+
+The LXD server changes frequently, particularly if it is snap installed.  In
+this case it is possible that the LXD server may send back objects with
+attributes that this version of pylxd is not aware of, and in that situation,
+the pylxd library issues the warning above.
+
+The default behaviour is that *one* warning is issued for each unknown
+attribute on *each* object class that it unknown.  Further warnings are then
+surpressed.  The environment variable ``PYLXD_WARNINGS`` can be set to control
+the warnings further:
+
+  - if set to ``none`` then *all* warnings are surpressed all the time.
+  - if set to ``always`` then warnings are always issued for each instance returned from the server.

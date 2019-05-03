@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import os
 import warnings
 
 import six
@@ -83,6 +84,11 @@ class ModelType(type):
         return super(ModelType, cls).__new__(cls, name, bases, attrs)
 
 
+# Global used to record which warnings have been issues already for unknown
+# attributes.
+_seen_attribute_warnings = set()
+
+
 @six.add_metaclass(ModelType)
 class Model(object):
     """A Base LXD object model.
@@ -98,6 +104,13 @@ class Model(object):
     un-initialized attributes are read. When attributes are modified,
     the instance is marked as dirty. `save` will save the changes
     to the server.
+
+    If the LXD server sends attributes that this version of pylxd is unaware of
+    then a warning is printed.  By default the warning is issued ONCE and then
+    supressed for every subsequent attempted setting.  The warnings can be
+    completely suppressed by setting the environment variable PYLXD_WARNINGS to
+    'none', or always displayed by setting the PYLXD_WARNINGS variable to
+    'always'.
     """
     NotFound = exceptions.NotFound
     __slots__ = ['client', '__dirty__']
@@ -110,6 +123,14 @@ class Model(object):
             try:
                 setattr(self, key, val)
             except AttributeError:
+                global _seen_attribute_warnings
+                env = os.environ.get('PYLXD_WARNINGS', '').lower()
+                item = "{}.{}".format(self.__class__.__name__, key)
+                if env != 'always' and item in _seen_attribute_warnings:
+                    continue
+                _seen_attribute_warnings.add(item)
+                if env == 'none':
+                    continue
                 warnings.warn(
                     'Attempted to set unknown attribute "{}" '
                     'on instance of "{}"'.format(
