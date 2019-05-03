@@ -28,6 +28,14 @@ def container_POST(request, context):
         }
 
 
+def container_PUT(request, context):
+    context.status_code = 202
+    return {
+        'type': 'async',
+        'operation': '/1.0/operations/operation-abc?project=default'
+    }
+
+
 def container_DELETE(request, context):
     context.status_code = 202
     return json.dumps({
@@ -260,7 +268,7 @@ RULES = [
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/containers$',
     },
-{
+    {
         'text': json.dumps({
             'type': 'sync',
             'metadata': [
@@ -332,7 +340,7 @@ RULES = [
         'method': 'GET',
         'url': r'^http://pylxd2.test/1.0/containers/an-container$',
     },
-{
+    {
         'json': {
             'type': 'sync',
             'metadata': {
@@ -479,6 +487,11 @@ RULES = [
         'status_code': 202,
         'method': 'POST',
         'url': r'^http://pylxd.test/1.0/containers/an-container/exec$',  # NOQA
+    },
+    {
+        'json': container_PUT,
+        'method': 'PUT',
+        'url': r'^http://pylxd.test/1.0/containers/an-container$',
     },
 
     # Container Snapshots

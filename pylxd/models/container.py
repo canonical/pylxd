@@ -558,6 +558,28 @@ class Container(model.Model):
 
             return self.client.images.get(operation.metadata['fingerprint'])
 
+    def restore_snapshot(self, snapshot_name, wait=False):
+        """Restore a snapshot using its name.
+
+        Attempts to restore a container using a snapshot previously made.  The
+        container should be stopped, but the method does not enforce this
+        constraint, so an LXDAPIException may be raised if this method fails.
+
+        :param snapshot_name: the name of the snapshot to restore from
+        :type snapshot_name: str
+        :param wait: wait until the operation is completed.
+        :type wait: boolean
+        :raises: LXDAPIException if the the operation fails.
+        :returns: the original response from the restore operation (not the
+            operation result)
+        :rtype: :class:`requests.Response`
+        """
+        response = self.api.put(json={"restore": snapshot_name})
+        if wait:
+            self.client.operations.wait_for_operation(
+                response.json()['operation'])
+        return response
+
 
 class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
     """Handle a websocket for container.execute(...) and manage decoding of the
@@ -710,3 +732,19 @@ class Snapshot(model.Model):
             operation = self.client.operations.wait_for_operation(
                 response.json()['operation'])
             return self.client.images.get(operation.metadata['fingerprint'])
+
+    def restore(self, wait=False):
+        """Restore this snapshot.
+
+        Attempts to restore a container using this snapshot.  The container
+        should be stopped, but the method does not enforce this constraint, so
+        an LXDAPIException may be raised if this method fails.
+
+        :param wait: wait until the operation is completed.
+        :type wait: boolean
+        :raises: LXDAPIException if the the operation fails.
+        :returns: the original response from the restore operation (not the
+            operation result)
+        :rtype: :class:`requests.Response`
+        """
+        return self.container.restore_snapshot(self.name, wait)
