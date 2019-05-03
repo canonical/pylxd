@@ -68,7 +68,9 @@ Container methods
     an url to an interactive websocket and the execution only starts after a client connected to the websocket.
   - `migrate` - Migrate the container. The first argument is a client
     connection to the destination server. This call is asynchronous, so
-    `wait=True` is optional. The container on the new client is returned.
+    ``wait=True`` is optional. The container on the new client is returned.  If
+    ``live=True`` is passed to the function call, then the container is live
+    migrated (see the LXD documentation for further details).
   - `publish` - Publish the container as an image.  Note the container must be stopped
     in order to use this method.  If `wait=True` is passed, then the image is returned.
   - `restore_snapshot` - Restore a snapshot by name.
@@ -165,6 +167,12 @@ the source server has to be reachable by the destination server otherwise the mi
     cont.migrate(client_destination,wait=True)
 
 This will migrate the container from source server to destination server
+
+To migrate a live container, user the ``live=True`` parameter:
+
+..code-block:: python
+
+    cont.migrate(client__destination, live=True, wait=True)
 
 If you want an interactive shell in the container, you can attach to it via a websocket.
 

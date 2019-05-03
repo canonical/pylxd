@@ -475,15 +475,31 @@ class Container(model.Model):
         return {'ws': '{}?secret={}'.format(parsed.path, fds['0']),
                 'control': '{}?secret={}'.format(parsed.path, fds['control'])}
 
-    def migrate(self, new_client, wait=False):
+    def migrate(self, new_client, live=False, wait=False):
         """Migrate a container.
 
         Destination host information is contained in the client
         connection passed in.
 
-        If the container is running, it either must be shut down
-        first or criu must be installed on the source and destination
-        machines.
+        If the `live` param is True, then a live migration is attempted,
+        otherwise a non live one is running.
+
+        If the container is running for live migration, it either must be shut
+        down first or criu must be installed on the source and destination
+        machines and the `live` param should be True.
+
+        :param new_client: the pylxd client connection to migrate the container
+            to.
+        :type new_client: :class:`pylxd.client.Client`
+        :param live: whether to perform a live migration
+        :type live: bool
+        :param wait: if True, wait for the migration to complete
+        :type wait: bool
+        :raises: LXDAPIException if any of the API calls fail.
+        :raises: ValueError if source of target are local connections
+        :returns: the response from LXD of the new container (the target of the
+            migration and not the operation if waited on.)
+        :rtype: :class:`requests.Response`
         """
         if self.api.scheme in ('http+unix',):
             raise ValueError('Cannot migrate from a local client connection')
@@ -491,7 +507,7 @@ class Container(model.Model):
         if self.status_code == 103:
             try:
                 res = new_client.containers.create(
-                    self.generate_migration_data(), wait=wait)
+                    self.generate_migration_data(live), wait=wait)
             except LXDAPIException as e:
                 if e.response.status_code == 103:
                     self.delete()
@@ -500,19 +516,29 @@ class Container(model.Model):
                     raise e
         else:
             res = new_client.containers.create(
-                self.generate_migration_data(), wait=wait)
+                self.generate_migration_data(live), wait=wait)
         self.delete()
         return res
 
-    def generate_migration_data(self):
+    def generate_migration_data(self, live=False):
         """Generate the migration data.
 
         This method can be used to handle migrations where the client
         connection uses the local unix socket. For more information on
         migration, see `Container.migrate`.
+
+        :param live: Whether to include "live": "true" in the migration
+        :type live: bool
+        :raises: LXDAPIException if the request to migrate fails
+        :returns: dictionary of migration data suitable to send to an new
+            client to complete a migration.
+        :rtype: Dict[str, ANY]
         """
         self.sync()  # Make sure the object isn't stale
-        response = self.api.post(json={'migration': True})
+        _json = {'migration': True}
+        if live:
+            _json['live'] = True
+        response = self.api.post(json=_json)
         operation = self.client.operations.get(response.json()['operation'])
         operation_url = self.client.api.operations[operation.id]._api_endpoint
         secrets = response.json()['metadata']['metadata']
