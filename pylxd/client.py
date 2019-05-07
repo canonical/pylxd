@@ -85,7 +85,8 @@ class _APINode(object):
             name = 'storage-pools'
         return self.__class__('{}/{}'.format(self._api_endpoint, name),
                               cert=self.session.cert,
-                              verify=self.session.verify)
+                              verify=self.session.verify,
+                              timeout=self._timeout)
 
     def __getitem__(self, item):
         """This converts python api.thing[name] -> ".../thing/name"
