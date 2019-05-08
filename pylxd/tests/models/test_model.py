@@ -11,6 +11,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import mock
+
 from pylxd.models import _model as model
 from pylxd.tests import testing
 
@@ -76,6 +78,37 @@ class TestModel(testing.PyLXDTestCase):
         self.assertEqual(self.client, item.client)
         self.assertEqual('an-item', item.name)
 
+    @mock.patch.dict('os.environ', {'PYLXD_WARNINGS': ''})
+    @mock.patch('warnings.warn')
+    def test_init_warnings_once(self, mock_warn):
+        with mock.patch('pylxd.models._model._seen_attribute_warnings',
+                        new=set()):
+            Item(self.client, unknown='some_value')
+            mock_warn.assert_called_once_with(mock.ANY)
+            Item(self.client, unknown='some_value_as_well')
+            mock_warn.assert_called_once_with(mock.ANY)
+            Item(self.client, unknown2="some_2nd_value")
+            self.assertEqual(len(mock_warn.call_args_list), 2)
+
+    @mock.patch.dict('os.environ', {'PYLXD_WARNINGS': 'none'})
+    @mock.patch('warnings.warn')
+    def test_init_warnings_none(self, mock_warn):
+        with mock.patch('pylxd.models._model._seen_attribute_warnings',
+                        new=set()):
+            Item(self.client, unknown='some_value')
+            mock_warn.assert_not_called()
+
+    @mock.patch.dict('os.environ', {'PYLXD_WARNINGS': 'always'})
+    @mock.patch('warnings.warn')
+    def test_init_warnings_always(self, mock_warn):
+        with mock.patch('pylxd.models._model._seen_attribute_warnings',
+                        new=set()):
+            Item(self.client, unknown='some_value')
+            mock_warn.assert_called_once_with(mock.ANY)
+            Item(self.client, unknown='some_value_as_well')
+            self.assertEqual(len(mock_warn.call_args_list), 2)
+
+    @mock.patch.dict('os.environ', {'PYLXD_WARNINGS': 'none'})
     def test_init_unknown_attribute(self):
         """Unknown attributes aren't set."""
         item = Item(self.client, name='an-item', nonexistent='SRSLY')

@@ -13,6 +13,7 @@
 #    under the License.
 
 import json
+import mock
 
 from pylxd import exceptions, models
 from pylxd.tests import testing
@@ -20,6 +21,36 @@ from pylxd.tests import testing
 
 class TestOperation(testing.PyLXDTestCase):
     """Tests for pylxd.models.Operation."""
+
+    @mock.patch.dict('os.environ', {'PYLXD_WARNINGS': ''})
+    @mock.patch('warnings.warn')
+    def test_init_warnings_once(self, mock_warn):
+        with mock.patch('pylxd.models.operation._seen_attribute_warnings',
+                        new=set()):
+            models.Operation(unknown='some_value')
+            mock_warn.assert_called_once_with(mock.ANY)
+            models.Operation(unknown='some_value_as_well')
+            mock_warn.assert_called_once_with(mock.ANY)
+            models.Operation(unknown2="some_2nd_value")
+            self.assertEqual(len(mock_warn.call_args_list), 2)
+
+    @mock.patch.dict('os.environ', {'PYLXD_WARNINGS': 'none'})
+    @mock.patch('warnings.warn')
+    def test_init_warnings_none(self, mock_warn):
+        with mock.patch('pylxd.models.operation._seen_attribute_warnings',
+                        new=set()):
+            models.Operation(unknown='some_value')
+            mock_warn.assert_not_called()
+
+    @mock.patch.dict('os.environ', {'PYLXD_WARNINGS': 'always'})
+    @mock.patch('warnings.warn')
+    def test_init_warnings_always(self, mock_warn):
+        with mock.patch('pylxd.models.operation._seen_attribute_warnings',
+                        new=set()):
+            models.Operation(unknown='some_value')
+            mock_warn.assert_called_once_with(mock.ANY)
+            models.Operation(unknown='some_value_as_well')
+            self.assertEqual(len(mock_warn.call_args_list), 2)
 
     def test_get(self):
         """Return an operation."""
