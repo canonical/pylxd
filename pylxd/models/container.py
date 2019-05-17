@@ -353,7 +353,7 @@ class Container(model.Model):
     def execute(
             self, commands, environment={}, encoding=None, decode=True,
             stdin_payload=None, stdin_encoding="utf-8",
-            stdout_handler=None, stderr_handler=None
+            stdout_handler=None, stderr_handler=None,
     ):
         """Execute a command on the container.
 
@@ -430,8 +430,17 @@ class Container(model.Model):
                     break
                 time.sleep(.5)  # pragma: no cover
 
-            while len(manager.websockets.values()) > 0:
-                time.sleep(.1)  # pragma: no cover
+            try:
+                stdin.close()
+            except BrokenPipeError:
+                pass
+
+            stdout.finish_soon()
+            stderr.finish_soon()
+            manager.close_all()
+
+            while not stdout.finished or not stderr.finished:
+                time.sleep(.1)  # progma: no cover
 
             manager.stop()
             manager.join()
@@ -618,6 +627,9 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         self.encoding = kwargs.pop('encoding', None)
         self.handler = kwargs.pop('handler', None)
         self.message_encoding = None
+        self.finish_off = False
+        self.finished = False
+        self.last_message_empty = False
         super(_CommandWebsocketClient, self).__init__(*args, **kwargs)
 
     def handshake_ok(self):
@@ -626,15 +638,27 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
 
     def received_message(self, message):
         if message.data is None or len(message.data) == 0:
-            self.manager.remove(self)
-            return
+            self.last_message_empty = True
+            if self.finish_off:
+                self.finished = True
+                return
+        else:
+            self.last_message_empty = False
         if message.encoding and self.message_encoding is None:
             self.message_encoding = message.encoding
         if self.handler:
             self.handler(self._maybe_decode(message.data))
         self.buffer.append(message.data)
-        if isinstance(message, BinaryMessage):
-            self.manager.remove(self)
+        if self.finish_off and isinstance(message, BinaryMessage):
+            self.finished = True
+
+    def closed(self, code, reason=None):
+        self.finished = True
+
+    def finish_soon(self):
+        self.finish_off = True
+        if self.last_message_empty:
+            self.finished = True
 
     def _maybe_decode(self, buffer):
         if self.decode and buffer is not None:
