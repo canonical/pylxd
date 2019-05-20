@@ -641,7 +641,7 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
             self.last_message_empty = True
             if self.finish_off:
                 self.finished = True
-                return
+            return
         else:
             self.last_message_empty = False
         if message.encoding and self.message_encoding is None:
