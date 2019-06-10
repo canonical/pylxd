@@ -53,7 +53,7 @@ class TestClient(unittest.TestCase):
     @mock.patch('os.path.exists')
     def test_create(self, _path_exists):
         """Client creation sets default API endpoint."""
-        _path_exists.return_value = True
+        _path_exists.return_value = False
         expected = 'http+unix://%2Fvar%2Flib%2Flxd%2Funix.socket/1.0'
 
         an_client = client.Client()
@@ -64,7 +64,7 @@ class TestClient(unittest.TestCase):
     @mock.patch('os.environ')
     def test_create_with_snap_lxd(self, _environ, _path_exists):
         # """Client creation sets default API endpoint."""
-        _path_exists.return_value = False
+        _path_exists.return_value = True
         expected = ('http+unix://%2Fvar%2Fsnap%2Flxd%2F'
                     'common%2Flxd%2Funix.socket/1.0')
 
