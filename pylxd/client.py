@@ -295,10 +295,10 @@ class Client(object):
         else:
             if 'LXD_DIR' in os.environ:
                 path = os.path.join(os.environ.get('LXD_DIR'), 'unix.socket')
-            elif os.path.exists('/var/lib/lxd/unix.socket'):
-                path = '/var/lib/lxd/unix.socket'
-            else:
+            elif os.path.exists('/var/snap/lxd/common/lxd/unix.socket'):
                 path = '/var/snap/lxd/common/lxd/unix.socket'
+            else:
+                path = '/var/lib/lxd/unix.socket'
             endpoint = 'http+unix://{}'.format(parse.quote(path, safe=''))
             self.api = _APINode(endpoint, timeout=timeout)
         self.api = self.api[version]
@@ -311,8 +311,8 @@ class Client(object):
             self.host_info = response.json()['metadata']
 
         except (requests.exceptions.ConnectionError,
-                requests.exceptions.InvalidURL):
-            raise exceptions.ClientConnectionFailed()
+                requests.exceptions.InvalidURL) as e:
+            raise exceptions.ClientConnectionFailed(str(e))
 
         self.cluster = managers.ClusterManager(self)
         self.certificates = managers.CertificateManager(self)
