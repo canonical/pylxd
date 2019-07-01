@@ -280,7 +280,7 @@ class Client(object):
 
         self.cert = cert
         if endpoint is not None:
-            if endpoint.startswith('/') and os.path.isfile(endpoint):
+            if endpoint.startswith('/') and os.path.exist(endpoint):
                 self.api = _APINode('http+unix://{}'.format(
                     parse.quote(endpoint, safe='')), timeout=timeout)
             else:
