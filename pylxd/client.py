@@ -347,7 +347,7 @@ class Client:
         self.project = project
         self.cert = cert
         if endpoint:
-            if endpoint.startswith("/") and os.path.isfile(endpoint):
+            if endpoint.startswith("/") and os.path.exists(endpoint):
                 endpoint = "http+unix://{}".format(parse.quote(endpoint, safe=""))
             else:
                 # Extra trailing slashes cause LXD to 301
