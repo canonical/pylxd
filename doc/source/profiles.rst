@@ -21,11 +21,11 @@ methods:
 Profile attributes
 ------------------
 
-  - `config` - config options for containers
-  - `description` - The description of the profile
-  - `devices` - device options for containers
-  - `name` - The name of the profile
-  - `used_by` - A list of containers using this profile
+  - `config` - (dict) config options for containers
+  - `description` - (str) The description of the profile
+  - `devices` - (dict) device options for containers
+  - `name` - (str) name of the profile
+  - `used_by` - (list) containers using this profile
 
 
 Profile methods
@@ -51,8 +51,9 @@ Containers and Images. Profiles are keyed on a unique name.
 
 The profile can then be modified and saved.
 
-    >>> profile.config = profile.config.update({'security.nesting': 'true'})
-    >>> profile.update()
+    >>> profile.config.update({'security.nesting': 'true'})
+    >>> profile.devices.update({"eth0": {"parent": "lxdbr0", "nictype": "bridged", "type": "nic", "name": "eth0"}})
+    >>> profile.save()
 
 
 To create a new profile, use `create` with a name, and optional `config`
