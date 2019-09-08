@@ -351,9 +351,9 @@ class Container(model.Model):
                                wait=wait)
 
     def execute(
-            self, commands, environment={}, encoding=None, decode=True,
+            self, commands, environment=None, encoding=None, decode=True,
             stdin_payload=None, stdin_encoding="utf-8",
-            stdout_handler=None, stderr_handler=None,
+            stdout_handler=None, stderr_handler=None, store=True,
     ):
         """Execute a command on the container.
 
@@ -381,6 +381,8 @@ class Container(model.Model):
         :param stderr_handler: Callable than receive as first parameter each
             message recived via stderr
         :type stderr_handler: Callable[[str], None]
+        :param store: Whether to store all captured stdout/stderr
+        :type store: bool
         :raises ValueError: if the ws4py library is not installed.
         :returns: A tuple of `(exit_code, stdout, stderr)`
         :rtype: _ContainerExecuteResult() namedtuple
@@ -390,6 +392,9 @@ class Container(model.Model):
                 'This feature requires the optional ws4py library.')
         if isinstance(commands, six.string_types):
             raise TypeError("First argument must be a list.")
+        if environment is None:
+            environment = {}
+
         response = self.api['exec'].post(json={
             'command': commands,
             'environment': environment,
@@ -412,12 +417,14 @@ class Container(model.Model):
             stdin.connect()
             stdout = _CommandWebsocketClient(
                 manager, self.client.websocket_url,
-                encoding=encoding, decode=decode, handler=stdout_handler)
+                encoding=encoding, decode=decode, handler=stdout_handler,
+                store=store)
             stdout.resource = '{}?secret={}'.format(parsed.path, fds['1'])
             stdout.connect()
             stderr = _CommandWebsocketClient(
                 manager, self.client.websocket_url,
-                encoding=encoding, decode=decode, handler=stderr_handler)
+                encoding=encoding, decode=decode, handler=stderr_handler,
+                store=store)
             stderr.resource = '{}?secret={}'.format(parsed.path, fds['2'])
             stderr.connect()
 
@@ -626,10 +633,12 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         self.decode = kwargs.pop('decode', True)
         self.encoding = kwargs.pop('encoding', None)
         self.handler = kwargs.pop('handler', None)
+        self.store = kwargs.pop('store', True)
         self.message_encoding = None
         self.finish_off = False
         self.finished = False
         self.last_message_empty = False
+        self.buffer = []
         super(_CommandWebsocketClient, self).__init__(*args, **kwargs)
 
     def handshake_ok(self):
@@ -648,7 +657,8 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
             self.message_encoding = message.encoding
         if self.handler:
             self.handler(self._maybe_decode(message.data))
-        self.buffer.append(message.data)
+        if self.store:
+            self.buffer.append(message.data)
         if self.finish_off and isinstance(message, BinaryMessage):
             self.finished = True
 
