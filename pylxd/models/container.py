@@ -353,12 +353,9 @@ class Container(model.Model):
     def execute(
             self, commands, environment=None, encoding=None, decode=True,
             stdin_payload=None, stdin_encoding="utf-8",
-            stdout_handler=None, stderr_handler=None, store=True,
-    ):
-        """Execute a command on the container.
-
-        In pylxd 2.2, this method will be renamed `execute` and the existing
-        `execute` method removed.
+            stdout_handler=None, stderr_handler=None):
+        """Execute a command on the container. stdout and stderr are buffered if
+        no handler is given.
 
         :param commands: The command and arguments as a list of strings
         :type commands: [str]
@@ -376,13 +373,11 @@ class Container(model.Model):
             ws4py Message object
         :param stdin_encoding: Encoding to pass text to stdin (default utf-8)
         :param stdout_handler: Callable than receive as first parameter each
-            message recived via stdout
+            message received via stdout
         :type stdout_handler: Callable[[str], None]
         :param stderr_handler: Callable than receive as first parameter each
-            message recived via stderr
+            message received via stderr
         :type stderr_handler: Callable[[str], None]
-        :param store: Whether to store all captured stdout/stderr
-        :type store: bool
         :raises ValueError: if the ws4py library is not installed.
         :returns: A tuple of `(exit_code, stdout, stderr)`
         :rtype: _ContainerExecuteResult() namedtuple
@@ -417,14 +412,12 @@ class Container(model.Model):
             stdin.connect()
             stdout = _CommandWebsocketClient(
                 manager, self.client.websocket_url,
-                encoding=encoding, decode=decode, handler=stdout_handler,
-                store=store)
+                encoding=encoding, decode=decode, handler=stdout_handler)
             stdout.resource = '{}?secret={}'.format(parsed.path, fds['1'])
             stdout.connect()
             stderr = _CommandWebsocketClient(
                 manager, self.client.websocket_url,
-                encoding=encoding, decode=decode, handler=stderr_handler,
-                store=store)
+                encoding=encoding, decode=decode, handler=stderr_handler)
             stderr.resource = '{}?secret={}'.format(parsed.path, fds['2'])
             stderr.connect()
 
@@ -633,7 +626,6 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         self.decode = kwargs.pop('decode', True)
         self.encoding = kwargs.pop('encoding', None)
         self.handler = kwargs.pop('handler', None)
-        self.store = kwargs.pop('store', True)
         self.message_encoding = None
         self.finish_off = False
         self.finished = False
@@ -657,7 +649,7 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
             self.message_encoding = message.encoding
         if self.handler:
             self.handler(self._maybe_decode(message.data))
-        if self.store:
+        else:
             self.buffer.append(message.data)
         if self.finish_off and isinstance(message, BinaryMessage):
             self.finished = True

@@ -213,6 +213,26 @@ class TestContainer(testing.PyLXDTestCase):
         self.assertEqual(0, result.exit_code)
         self.assertEqual('test\n', result.stdout)
 
+    @testing.requires_ws4py
+    @mock.patch('pylxd.models.container._StdinWebsocket')
+    @mock.patch('pylxd.models.container._CommandWebsocketClient')
+    def test_execute_with_env(self, _CommandWebsocketClient, _StdinWebsocket):
+        """A command is executed on a container with custom env variables."""
+        fake_websocket = mock.Mock()
+        fake_websocket.data = 'test\n'
+        _StdinWebsocket.return_value = fake_websocket
+        _CommandWebsocketClient.return_value = fake_websocket
+
+        an_container = models.Container(
+            self.client, name='an-container')
+
+        result = an_container.execute(['echo', 'test'], environment={
+            "DISPLAY": ":1"
+        })
+
+        self.assertEqual(0, result.exit_code)
+        self.assertEqual('test\n', result.stdout)
+
     def test_execute_no_ws4py(self):
         """If ws4py is not installed, ValueError is raised."""
         from pylxd.models import container
