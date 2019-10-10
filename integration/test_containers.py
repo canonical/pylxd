@@ -209,7 +209,8 @@ class TestContainer(IntegrationTestCase):
         )
 
         self.assertEqual(0, result.exit_code)
-        self.assertEqual(test_msg, result.stdout)
+        # if a handler is supplied then there is no stdout in result
+        self.assertEqual('', result.stdout)
         self.assertEqual('', result.stderr)
         self.assertEqual(stdout_msgs, [test_msg])
 
