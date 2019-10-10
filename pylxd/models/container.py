@@ -351,14 +351,11 @@ class Container(model.Model):
                                wait=wait)
 
     def execute(
-            self, commands, environment={}, encoding=None, decode=True,
+            self, commands, environment=None, encoding=None, decode=True,
             stdin_payload=None, stdin_encoding="utf-8",
-            stdout_handler=None, stderr_handler=None,
-    ):
-        """Execute a command on the container.
-
-        In pylxd 2.2, this method will be renamed `execute` and the existing
-        `execute` method removed.
+            stdout_handler=None, stderr_handler=None):
+        """Execute a command on the container. stdout and stderr are buffered if
+        no handler is given.
 
         :param commands: The command and arguments as a list of strings
         :type commands: [str]
@@ -376,10 +373,10 @@ class Container(model.Model):
             ws4py Message object
         :param stdin_encoding: Encoding to pass text to stdin (default utf-8)
         :param stdout_handler: Callable than receive as first parameter each
-            message recived via stdout
+            message received via stdout
         :type stdout_handler: Callable[[str], None]
         :param stderr_handler: Callable than receive as first parameter each
-            message recived via stderr
+            message received via stderr
         :type stderr_handler: Callable[[str], None]
         :raises ValueError: if the ws4py library is not installed.
         :returns: A tuple of `(exit_code, stdout, stderr)`
@@ -390,6 +387,9 @@ class Container(model.Model):
                 'This feature requires the optional ws4py library.')
         if isinstance(commands, six.string_types):
             raise TypeError("First argument must be a list.")
+        if environment is None:
+            environment = {}
+
         response = self.api['exec'].post(json={
             'command': commands,
             'environment': environment,
@@ -630,6 +630,7 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         self.finish_off = False
         self.finished = False
         self.last_message_empty = False
+        self.buffer = []
         super(_CommandWebsocketClient, self).__init__(*args, **kwargs)
 
     def handshake_ok(self):
@@ -648,7 +649,8 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
             self.message_encoding = message.encoding
         if self.handler:
             self.handler(self._maybe_decode(message.data))
-        self.buffer.append(message.data)
+        else:
+            self.buffer.append(message.data)
         if self.finish_off and isinstance(message, BinaryMessage):
             self.finished = True
 
