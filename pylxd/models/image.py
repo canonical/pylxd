@@ -157,6 +157,27 @@ class Image(model.Model):
         return client.images.get(op.metadata['fingerprint'])
 
     @classmethod
+    def create_from_image(cls, client, server, fingerprint=None, alias=None,
+                          public=False, auto_update=False):
+        """Copy an image from remote lxd."""
+        config = {
+            'public': public,
+            'auto_update': auto_update,
+            'source': {
+                'type': 'image',
+                'mode': 'pull',
+                'server': server,
+                'protocol': 'lxd',
+                'fingerprint': fingerprint,
+                'alias': alias
+            }
+        }
+
+        op = _image_create_from_config(client, config, wait=True)
+
+        return client.images.get(op.metadata['fingerprint'])
+
+    @classmethod
     def create_from_url(cls, client, url,
                         public=False, auto_update=False):
         """Copy an image from an url."""

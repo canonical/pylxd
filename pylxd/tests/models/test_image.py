@@ -368,6 +368,17 @@ class TestImage(testing.PyLXDTestCase):
             image.fingerprint
         )
 
+    def test_create_from_image(self):
+        """Try to create an image from image at public lxd."""
+        image = self.client.images.create_from_image(
+            'https://images.nlogn.org:8443',
+            alias='debian/8'
+        )
+        self.assertEqual(
+            'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            image.fingerprint
+        )
+
     def test_create_from_url(self):
         """Try to create an image from an URL."""
         image = self.client.images.create_from_url(
