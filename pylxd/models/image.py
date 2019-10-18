@@ -158,7 +158,8 @@ class Image(model.Model):
 
     @classmethod
     def create_from_image(cls, client, server, fingerprint=None, alias=None,
-                          public=False, auto_update=False):
+                          public=False, auto_update=False, secret=None,
+                          certificate=None):
         """Copy an image from remote lxd."""
         config = {
             'public': public,
@@ -169,9 +170,13 @@ class Image(model.Model):
                 'server': server,
                 'protocol': 'lxd',
                 'fingerprint': fingerprint,
-                'alias': alias
+                'alias': alias,
+                'secret': secret,
+                'certificate': certificate
             }
         }
+        if alias is not None:
+            config["aliases"] = [{'name': alias}]
 
         op = _image_create_from_config(client, config, wait=True)
 
