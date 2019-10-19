@@ -160,7 +160,29 @@ class Image(model.Model):
     def create_from_image(cls, client, server, fingerprint=None, alias=None,
                           public=False, auto_update=False, secret=None,
                           certificate=None):
-        """Copy an image from remote lxd."""
+        """Copy an image from remote lxd.
+        :param client:  the pylxd client
+        :type client: pylxd.Client
+        :param server: URL of the remote LXD-API
+        :type server: str
+        :param fingerprint: The fingerprint of the image to fetch
+            (mandatory if no alias is provided)
+        :type fingerprint: str
+        :param alias: The alias of the image to fetch
+            (mandatory if no fingerprint is provided)
+        :type alias: str
+        :param public: Make the new image public
+        :type public: bool
+        :param auto_update: Set the image to auto-update
+        :type auto_update: bool
+        :param secret: Secret to authenticate to remote lxd instance
+        :type secret: str
+        :param certificate: Optional PEM certificate.
+            If not mentioned, system CA is used.
+        :type certificate: str
+        :returns: newly created image
+        :rtype: pylxd.Image
+        """
         config = {
             'public': public,
             'auto_update': auto_update,
