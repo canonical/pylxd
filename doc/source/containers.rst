@@ -170,7 +170,7 @@ This will migrate the container from source server to destination server
 
 To migrate a live container, user the ``live=True`` parameter:
 
-..code-block:: python
+.. code-block:: python
 
     cont.migrate(client__destination, live=True, wait=True)
 
