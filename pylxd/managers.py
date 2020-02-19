@@ -31,8 +31,16 @@ class CertificateManager(BaseManager):
     manager_for = 'pylxd.models.Certificate'
 
 
+class InstanceManager(BaseManager):
+    manager_for = 'pylxd.models.Instance'
+
+
 class ContainerManager(BaseManager):
     manager_for = 'pylxd.models.Container'
+
+
+class VirtualMachineManager(BaseManager):
+    manager_for = 'pylxd.models.VirtualMachine'
 
 
 class ImageManager(BaseManager):

@@ -189,7 +189,7 @@ class TestStorageVolume(testing.PyLXDTestCase):
 
         # assert that we decoded stuff reasonably well.
         self.assertEqual(len(volumes), 6)
-        self.assertEqual(volumes[0].type, 'container')
+        self.assertEqual(volumes[0].type, 'instance')
         self.assertEqual(volumes[0].name, 'c1')
         self.assertEqual(volumes[3].type, 'image')
         self.assertEqual(volumes[3].name, 'i1')

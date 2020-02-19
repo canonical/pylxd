@@ -351,6 +351,10 @@ class StorageVolume(model.Model):
             # for each type, convert to the string that will work with GET
             if _type == 'containers':
                 _type = 'container'
+            elif _type == 'virtual-machines':
+                _type = 'virtual-machine'
+            elif _type == 'instances':
+                _type = 'instance'
             elif _type == 'images':
                 _type = 'image'
             else:
