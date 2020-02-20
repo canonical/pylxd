@@ -80,9 +80,9 @@ class _APINode(object):
         :returns: new _APINode with /<name> on the end
         :rtype: _APINode
         """
-        # Special case for storage_pools which needs to become 'storage-pools'
-        if name == 'storage_pools':
-            name = 'storage-pools'
+        # '-' can't be used in variable names
+        if name in ('storage_pools', 'virtual_machines'):
+            name = name.replace('_', '-')
         return self.__class__('{}/{}'.format(self._api_endpoint, name),
                               cert=self.session.cert,
                               verify=self.session.verify,
@@ -222,10 +222,20 @@ class Client(object):
     This client wraps all the functionality required to interact with
     LXD, and is meant to be the sole entry point.
 
+    .. attribute:: instances
+
+        Instance of :class:`Client.Instances
+        <pylxd.client.Client.Instances>`:
+
     .. attribute:: containers
 
         Instance of :class:`Client.Containers
         <pylxd.client.Client.Containers>`:
+
+    .. attribute:: virtual_machines
+
+        Instance of :class:`Client.VirtualMachines
+        <pylxd.client.Client.VirtualMachines>`:
 
     .. attribute:: images
 
@@ -253,8 +263,8 @@ class Client(object):
             >>> response = api.get()
             # Check status code and response
             >>> print response.status_code, response.json()
-            # /containers/test/
-            >>> print api.containers['test'].get().json()
+            # /instances/test/
+            >>> print api.instances['test'].get().json()
 
     """
 
@@ -316,7 +326,9 @@ class Client(object):
 
         self.cluster = managers.ClusterManager(self)
         self.certificates = managers.CertificateManager(self)
+        self.instances = managers.InstanceManager(self)
         self.containers = managers.ContainerManager(self)
+        self.virtual_machines = managers.VirtualMachineManager(self)
         self.images = managers.ImageManager(self)
         self.networks = managers.NetworkManager(self)
         self.operations = managers.OperationManager(self)

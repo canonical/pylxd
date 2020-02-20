@@ -178,7 +178,8 @@ class Model(object):
             if key not in self.__dirty__ or rollback:
                 try:
                     setattr(self, key, val)
-                    self.__dirty__.remove(key)
+                    if key in self.__dirty__:
+                        self.__dirty__.remove(key)
                 except AttributeError:
                     # We have received an attribute from the server that we
                     # don't support in our model. Ignore this error, it
