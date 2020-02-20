@@ -844,7 +844,10 @@ RULES = [
             'metadata': [
                 '/1.0/storage-pools/default/volumes/instances/c1',
                 '/1.0/storage-pools/default/volumes/instances/c2',
-                '/1.0/storage-pools/default/volumes/instances/c3',
+                '/1.0/storage-pools/default/volumes/containers/c3',
+                '/1.0/storage-pools/default/volumes/containers/c4',
+                '/1.0/storage-pools/default/volumes/virtual-machines/vm1',
+                '/1.0/storage-pools/default/volumes/virtual-machines/vm2',
                 '/1.0/storage-pools/default/volumes/images/i1',
                 '/1.0/storage-pools/default/volumes/images/i2',
                 '/1.0/storage-pools/default/volumes/custom/cu1',

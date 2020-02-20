@@ -232,7 +232,7 @@ class Instance(model.Model):
             return True
         except cls.NotFound:
             return False
-        
+
     @classmethod
     def get(cls, client, name):
         """Get a instance by name."""
