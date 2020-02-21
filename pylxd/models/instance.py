@@ -82,15 +82,15 @@ class Instance(model.Model):
 
     @property
     def api(self):
-        return getattr(self.client.api, self._endpoint)[self.name]
+        return self.client.api[self._endpoint][self.name]
 
     class FilesManager(object):
         """A pseudo-manager for namespacing file operations."""
 
         def __init__(self, instance):
             self._instance = instance
-            self._endpoint = getattr(
-                instance.client.api, instance._endpoint)[instance.name].files
+            self._endpoint = instance.client.api[
+                instance._endpoint][instance.name].files
 
         def put(self, filepath, data, mode=None, uid=None, gid=None):
             """Push a file to the instance.
@@ -236,7 +236,7 @@ class Instance(model.Model):
     @classmethod
     def get(cls, client, name):
         """Get a instance by name."""
-        response = getattr(client.api, cls._endpoint)[name].get()
+        response = client.api[cls._endpoint][name].get()
 
         return cls(client, **response.json()['metadata'])
 
@@ -249,7 +249,7 @@ class Instance(model.Model):
         information is needed, `Instance.sync` is the method call
         that should be used.
         """
-        response = getattr(client.api, cls._endpoint).get()
+        response = client.api[cls._endpoint].get()
 
         instances = []
         for url in response.json()['metadata']:
@@ -273,7 +273,7 @@ class Instance(model.Model):
         :returns: an instance if successful
         :rtype: :class:`Instance`
         """
-        response = getattr(client.api, cls._endpoint).post(
+        response = client.api[cls._endpoint].post(
             json=config, target=target)
 
         if wait:
