@@ -331,6 +331,7 @@ class Client(object):
     @property
     def resources(self):
         if self._resource_cache is None:
+            self.assert_has_api_extension('resources')
             response = self.api.resources.get()
             if response.status_code != 200:
                 raise exceptions.ClientConnectionFailed()

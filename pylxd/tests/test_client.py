@@ -282,6 +282,7 @@ class TestClient(unittest.TestCase):
 
     def test_resources(self):
         a_client = client.Client()
+        a_client.host_info['api_extensions'] = ['resources']
         response = mock.MagicMock(status_code=200)
         response.json.return_value = {'metadata': {
             'cpu': {},
@@ -289,11 +290,18 @@ class TestClient(unittest.TestCase):
         self.get.return_value = response
         self.assertIn('cpu', a_client.resources)
 
-    def test_resources_raises_exception(self):
+    def test_resources_raises_conn_failed_exception(self):
         a_client = client.Client()
+        a_client.host_info['api_extensions'] = ['resources']
         response = mock.MagicMock(status_code=400)
         self.get.return_value = response
         with self.assertRaises(exceptions.ClientConnectionFailed):
+            a_client.resources
+
+    def test_resources_raises_api_extension_not_avail_exception(self):
+        a_client = client.Client()
+        a_client.host_info['api_extensions'] = []
+        with self.assertRaises(exceptions.LXDAPIExtensionNotAvailable):
             a_client.resources
 
     def test_resources_uses_cache(self):
