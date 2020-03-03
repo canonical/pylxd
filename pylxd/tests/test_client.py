@@ -280,6 +280,39 @@ class TestClient(unittest.TestCase):
             else:
                 self.assertEqual(expect_resource.query, actual_resource.query)
 
+    def test_resources(self):
+        a_client = client.Client()
+        a_client.host_info['api_extensions'] = ['resources']
+        response = mock.MagicMock(status_code=200)
+        response.json.return_value = {'metadata': {
+            'cpu': {},
+        }}
+        self.get.return_value = response
+        self.assertIn('cpu', a_client.resources)
+
+    def test_resources_raises_conn_failed_exception(self):
+        a_client = client.Client()
+        a_client.host_info['api_extensions'] = ['resources']
+        response = mock.MagicMock(status_code=400)
+        self.get.return_value = response
+        with self.assertRaises(exceptions.ClientConnectionFailed):
+            a_client.resources
+
+    def test_resources_raises_api_extension_not_avail_exception(self):
+        a_client = client.Client()
+        a_client.host_info['api_extensions'] = []
+        with self.assertRaises(exceptions.LXDAPIExtensionNotAvailable):
+            a_client.resources
+
+    def test_resources_uses_cache(self):
+        a_client = client.Client()
+        a_client._resource_cache = {'cpu': {}}
+        # Client.__init__ calls get, reset the mock before trying
+        # resources to confirm it wasn't called.
+        self.get.called = False
+        self.assertIn('cpu', a_client.resources)
+        self.assertFalse(self.get.called)
+
     def test_has_api_extension(self):
         a_client = client.Client()
         a_client.host_info = {'api_extensions': ["one", "two"]}

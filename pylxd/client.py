@@ -322,10 +322,21 @@ class Client(object):
         self.operations = managers.OperationManager(self)
         self.profiles = managers.ProfileManager(self)
         self.storage_pools = managers.StoragePoolManager(self)
+        self._resource_cache = None
 
     @property
     def trusted(self):
         return self.host_info['auth'] == 'trusted'
+
+    @property
+    def resources(self):
+        if self._resource_cache is None:
+            self.assert_has_api_extension('resources')
+            response = self.api.resources.get()
+            if response.status_code != 200:
+                raise exceptions.ClientConnectionFailed()
+            self._resource_cache = response.json()['metadata']
+        return self._resource_cache
 
     def has_api_extension(self, name):
         """Return True if the `name` api extension exists.
