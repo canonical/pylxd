@@ -305,7 +305,7 @@ class Instance(model.Model):
             self.client.operations.wait_for_operation(
                 response.json()['operation'])
             if 'status' in self.__dirty__:
-                del self.__dirty__[self.__dirty__.index('status')]
+                self.__dirty__.remove('status')
             if self.ephemeral and state == 'stop':
                 self.client = None
             else:
