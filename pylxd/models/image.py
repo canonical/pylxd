@@ -137,7 +137,8 @@ class Image(model.Model):
 
     @classmethod
     def create_from_simplestreams(cls, client, server, alias,
-                                  public=False, auto_update=False):
+                                  public=False, auto_update=False,
+                                  new_alias=None):
         """Copy an image from simplestreams."""
         config = {
             'public': public,
@@ -147,10 +148,14 @@ class Image(model.Model):
                 'type': 'image',
                 'mode': 'pull',
                 'server': server,
-                'protocol': 'simplestreams',
-                'fingerprint': alias
+                'protocol': 'simplestreams'
             }
         }
+        if alias is not None:
+            config['source']['fingerprint'] = alias
+        if new_alias is not None:
+            config['source']['alias'] = new_alias
+            config["aliases"] = [{'name': new_alias}]
 
         op = _image_create_from_config(client, config, wait=True)
 
