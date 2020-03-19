@@ -516,20 +516,22 @@ class Container(model.Model):
         if self.status_code == 103:
             try:
                 res = new_client.containers.create(
-                    self.generate_migration_data(live), wait=wait)
+                    self.generate_migration_data(live, new_client), wait=wait)
             except LXDAPIException as e:
                 if e.response.status_code == 103:
-                    self.delete()
+                    self.stop(wait=wait)
+                    self.delete(wait=wait)
                     return new_client.containers.get(self.name)
                 else:
                     raise e
         else:
             res = new_client.containers.create(
-                self.generate_migration_data(live), wait=wait)
-        self.delete()
+                self.generate_migration_data(live, new_client), wait=wait)
+        self.stop(wait=wait)
+        self.delete(wait=wait)
         return res
 
-    def generate_migration_data(self, live=False):
+    def generate_migration_data(self, live=False, new_client=None):
         """Generate the migration data.
 
         This method can be used to handle migrations where the client
@@ -538,20 +540,20 @@ class Container(model.Model):
 
         :param live: Whether to include "live": "true" in the migration
         :type live: bool
+        :param live: Destination client - used to obtain correct certificate
+        :type live: :class:`pylxd.client.Client`
         :raises: LXDAPIException if the request to migrate fails
         :returns: dictionary of migration data suitable to send to an new
             client to complete a migration.
         :rtype: Dict[str, ANY]
         """
         self.sync()  # Make sure the object isn't stale
-        _json = {'migration': True}
-        if live:
-            _json['live'] = True
+        _json = {'migration': True, 'live': live}
         response = self.api.post(json=_json)
         operation = self.client.operations.get(response.json()['operation'])
         operation_url = self.client.api.operations[operation.id]._api_endpoint
         secrets = response.json()['metadata']['metadata']
-        cert = self.client.host_info['environment']['certificate']
+        cert = new_client.host_info['environment']['certificate']
 
         return {
             'name': self.name,

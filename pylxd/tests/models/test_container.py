@@ -340,7 +340,7 @@ class TestContainer(testing.PyLXDTestCase):
 
         self.assertEqual('an-container', an_migrated_container.name)
         self.assertEqual(client2, an_migrated_container.client)
-        generate_migration_data.assert_called_once_with(True)
+        generate_migration_data.assert_called_once_with(True, client2)
 
     def test_migrate_started(self):
         """A container is migrated."""
@@ -362,7 +362,6 @@ class TestContainer(testing.PyLXDTestCase):
         client2 = Client(endpoint='http://pylxd2.test')
         an_container = models.Container.get(self.client, name='an-container')
         an_container.status_code = 102
-
         an_migrated_container = an_container.migrate(client2)
 
         self.assertEqual('an-container', an_migrated_container.name)

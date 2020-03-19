@@ -145,7 +145,9 @@ RULES = [
         'text': json.dumps({
             'type': 'sync',
             'metadata': {'auth': 'trusted',
-                         'environment': {},
+                         'environment': {
+                            'certificate': 'another-pem-cert',
+                         },
                          'api_extensions': []
                          }}),
         'method': 'GET',
