@@ -404,6 +404,8 @@ class TestInstance(testing.PyLXDTestCase):
 
         an_instance = models.Instance(
             self.client, name='an-instance')
+        # Hack to get around mocked data
+        an_instance.type = 'container'
 
         image = an_instance.publish(wait=True)
 

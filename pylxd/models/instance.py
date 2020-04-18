@@ -582,7 +582,7 @@ class Instance(model.Model):
         data = {
             'public': public,
             'source': {
-                'type': 'instance',
+                'type': self.type,
                 'name': self.name,
             }
         }
@@ -718,12 +718,12 @@ class Snapshot(model.Model):
 
     @property
     def api(self):
-        return self.client.api.instances[
+        return self.client.api[self.instance._endpoint][
             self.instance.name].snapshots[self.name]
 
     @classmethod
     def get(cls, client, instance, name):
-        response = client.api.instances[
+        response = client.api[instance._endpoint][
             instance.name].snapshots[name].get()
 
         snapshot = cls(
@@ -737,7 +737,8 @@ class Snapshot(model.Model):
 
     @classmethod
     def all(cls, client, instance):
-        response = client.api.instances[instance.name].snapshots.get()
+        response = client.api[instance._endpoint][
+            instance.name].snapshots.get()
 
         return [cls(
                 client, name=snapshot.split('/')[-1],
@@ -746,8 +747,9 @@ class Snapshot(model.Model):
 
     @classmethod
     def create(cls, client, instance, name, stateful=False, wait=False):
-        response = client.api.instances[instance.name].snapshots.post(json={
-            'name': name, 'stateful': stateful})
+        response = client.api[instance._endpoint][
+            instance.name].snapshots.post(
+                json={'name': name, 'stateful': stateful})
 
         snapshot = cls(client, instance=instance, name=name)
         if wait:
