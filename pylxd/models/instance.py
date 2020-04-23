@@ -438,7 +438,10 @@ class Instance(model.Model):
 
             stdout.finish_soon()
             stderr.finish_soon()
-            manager.close_all()
+            try:
+                manager.close_all()
+            except BrokenPipeError:
+                pass
 
             while not stdout.finished or not stderr.finished:
                 time.sleep(.1)  # progma: no cover
