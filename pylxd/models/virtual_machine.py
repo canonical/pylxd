@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2020 Canonical Ltd
+# Copyright (c) 2020 Canonical Ltd
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -14,6 +14,6 @@
 from pylxd.models import Instance
 
 
-class Container(Instance):
+class VirtualMachine(Instance):
 
-    _endpoint = 'containers'
+    _endpoint = 'virtual-machines'

@@ -216,6 +216,8 @@ class TestContainer(IntegrationTestCase):
 
     def test_publish(self):
         """A container is published."""
+        # Hack to get around mocked data
+        self.container.type = 'container'
         image = self.container.publish(wait=True)
 
         self.assertIn(

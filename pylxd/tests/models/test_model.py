@@ -28,6 +28,10 @@ class Item(model.Model):
         return self.client.api.items[self.name]
 
 
+class ChildItem(Item):
+    """A fake model child class."""
+
+
 class TestModel(testing.PyLXDTestCase):
     """Tests for pylxd.model.Model."""
 
@@ -118,6 +122,13 @@ class TestModel(testing.PyLXDTestCase):
             self.fail('item.nonexistent did not raise AttributeError')
         except AttributeError:
             pass
+
+    def test_init_sets_attributes_on_child_class(self):
+        """Ensure that .__attributes__ is set on a child class."""
+        item = Item(self.client)
+        child_item = ChildItem(self.client)
+        self.assertEqual(
+            len(item.__attributes__), len(child_item.__attributes__))
 
     def test_unknown_attribute(self):
         """Setting unknown attributes raise an exception."""
