@@ -208,23 +208,25 @@ RULES = [
             'metadata': {
                 "server_name": "an-member",
                 "enabled": 'true',
-                "member_config": [{
-                    "entity": "storage-pool",
-                    "name": "local",
-                    "key": "source",
-                    "value": "",
-                    "description":
-                        "\"source\" property for storage pool \"local\""
-                },
-                {
-                    "entity": "storage-pool",
-                    "name": "local",
-                    "key": "volatile.initial_source",
-                    "value": "",
-                    "description":
-                        "\"volatile.initial_source\" property for"
-                        " storage pool \"local\""
-                }]
+                "member_config": [
+                    {
+                        "entity": "storage-pool",
+                        "name": "local",
+                        "key": "source",
+                        "value": "",
+                        "description":
+                            "\"source\" property for storage pool \"local\""
+                    },
+                    {
+                        "entity": "storage-pool",
+                        "name": "local",
+                        "key": "volatile.initial_source",
+                        "value": "",
+                        "description":
+                            "\"volatile.initial_source\" property for"
+                            " storage pool \"local\""
+                    },
+                ]
             }
         }),
         'method': 'GET',
@@ -333,9 +335,10 @@ RULES = [
                 'stateful': False,
                 'status': "Running",
                 'status_code': 103,
-                'unsupportedbypylxd': "This attribute is not supported by "\
-                    "pylxd. We want to test whether the mere presence of it "\
-                    "makes it crash."
+                'unsupportedbypylxd': (
+                    "This attribute is not supported by "
+                    "pylxd. We want to test whether the mere presence of it "
+                    "makes it crash.")
             }},
         'method': 'GET',
         'url': r'^http://pylxd2.test/1.0/instances/an-instance$',
@@ -381,9 +384,10 @@ RULES = [
                 'stateful': False,
                 'status': "Running",
                 'status_code': 103,
-                'unsupportedbypylxd': "This attribute is not supported by "\
-                    "pylxd. We want to test whether the mere presence of it "\
-                    "makes it crash."
+                'unsupportedbypylxd': (
+                    "This attribute is not supported by "
+                    "pylxd. We want to test whether the mere presence of it "
+                    "makes it crash.")
             }},
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/instances/an-instance$',
@@ -437,9 +441,10 @@ RULES = [
                 'location': "an-remote",
                 'status': "Running",
                 'status_code': 103,
-                'unsupportedbypylxd': "This attribute is not supported by "\
-                    "pylxd. We want to test whether the mere presence of it "\
-                    "makes it crash."
+                'unsupportedbypylxd': (
+                    "This attribute is not supported by "
+                    "pylxd. We want to test whether the mere presence of it "
+                    "makes it crash.")
             }},
         'method': 'GET',
         'url': r'^http://pylxd.test/1.0/instances/an-new-remote-instance$',
