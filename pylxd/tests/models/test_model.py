@@ -150,6 +150,14 @@ class TestModel(testing.PyLXDTestCase):
 
         self.assertEqual(1000, item.age)
 
+    def test_iter(self):
+        """Test models can be iterated over."""
+        item = Item(self.client, name='an-item')
+
+        self.assertDictEqual(
+            {'name': 'an-item', 'age': 1000, 'data': {'key': 'val'}},
+            dict(item))
+
     def test_sync(self):
         """A sync will update attributes from the server."""
         item = Item(self.client, name='an-item')

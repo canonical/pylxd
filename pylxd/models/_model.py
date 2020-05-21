@@ -162,6 +162,10 @@ class Model(object):
             self.__dirty__.add(name)
         return super(Model, self).__setattr__(name, value)
 
+    def __iter__(self):
+        for attr in self.__attributes__.keys():
+            yield attr, getattr(self, attr)
+
     @property
     def dirty(self):
         return len(self.__dirty__) > 0
