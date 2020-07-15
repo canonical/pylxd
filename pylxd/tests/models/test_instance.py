@@ -839,14 +839,14 @@ class TestFiles(testing.PyLXDTestCase):
                             .recursive_get('/tmp/getted', '/tmp')
                         assert (mkdir_mocked.call_count == 1)
                         assert(open_mocked.call_count == 2)
-                except ModuleNotFoundError:
+                except ImportError:
                     try:
                         with mock.patch('builtins.open') as open_mocked:
                             self.instance.files\
                                 .recursive_get('/tmp/getted', '/tmp')
                             assert (mkdir_mocked.call_count == 1)
                             assert (open_mocked.call_count == 2)
-                    except ModuleNotFoundError as e:
+                    except ImportError as e:
                         raise e
 
     def test_get_not_found(self):
