@@ -237,7 +237,10 @@ Containers also have a `files` manager for getting and putting files on the
 container.  The following methods are available on the `files` manager:
 
   - `put` - push a file into the container.
+  - `put_dir` - push an empty directory to the container.
+  - `recursive_put` - recursively push a directory to the container.
   - `get` - get a file from the container.
+  - `recursive_get` - recursively pull a directory from the container.
   - `delete_available` - If the `file_delete` extension is available on the lxc
     host, then this method returns `True` and the `delete` method is available.
   - `delete` - delete a file on the container.

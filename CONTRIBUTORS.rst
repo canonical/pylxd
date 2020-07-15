@@ -36,5 +36,7 @@ These are the contributors to pylxd according to the Github repository.
  mrtc0            Kohei Morita
  gabrik           Gabriele Baldoni
  felix-engelmann  Felix Engelmann
+ weichweich       ???
+ anneborcherding  Anne Borcherding
  ===============  ==================================
 

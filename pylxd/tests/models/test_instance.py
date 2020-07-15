@@ -5,6 +5,7 @@ import shutil
 import tempfile
 
 import mock
+import requests
 
 from six.moves.urllib.parse import quote as url_quote
 
@@ -31,12 +32,14 @@ class TestInstance(testing.PyLXDTestCase):
 
     def test_get_not_found(self):
         """LXDAPIException is raised when the instance doesn't exist."""
+
         def not_found(request, context):
             context.status_code = 404
             return json.dumps({
                 'type': 'error',
                 'error': 'Not found',
                 'error_code': 404})
+
         self.add_rule({
             'text': not_found,
             'method': 'GET',
@@ -51,12 +54,14 @@ class TestInstance(testing.PyLXDTestCase):
 
     def test_get_error(self):
         """LXDAPIException is raised when the LXD API errors."""
+
         def not_found(request, context):
             context.status_code = 500
             return json.dumps({
                 'type': 'error',
                 'error': 'Not found',
                 'error_code': 500})
+
         self.add_rule({
             'text': not_found,
             'method': 'GET',
@@ -96,12 +101,14 @@ class TestInstance(testing.PyLXDTestCase):
 
     def test_not_exists(self):
         """A instance exists."""
+
         def not_found(request, context):
             context.status_code = 404
             return json.dumps({
                 'type': 'error',
                 'error': 'Not found',
                 'error_code': 404})
+
         self.add_rule({
             'text': not_found,
             'method': 'GET',
@@ -123,12 +130,14 @@ class TestInstance(testing.PyLXDTestCase):
 
     def test_fetch_not_found(self):
         """LXDAPIException is raised on a 404 for updating instance."""
+
         def not_found(request, context):
             context.status_code = 404
             return json.dumps({
                 'type': 'error',
                 'error': 'Not found',
                 'error_code': 404})
+
         self.add_rule({
             'text': not_found,
             'method': 'GET',
@@ -142,12 +151,14 @@ class TestInstance(testing.PyLXDTestCase):
 
     def test_fetch_error(self):
         """LXDAPIException is raised on error."""
+
         def not_found(request, context):
             context.status_code = 500
             return json.dumps({
                 'type': 'error',
                 'error': 'An bad error',
                 'error_code': 500})
+
         self.add_rule({
             'text': not_found,
             'method': 'GET',
@@ -241,6 +252,7 @@ class TestInstance(testing.PyLXDTestCase):
 
         def cleanup():
             instance._ws4py_installed = old_installed
+
         self.addCleanup(cleanup)
 
         an_instance = models.Instance(
@@ -395,9 +407,9 @@ class TestInstance(testing.PyLXDTestCase):
                     'metadata': {
                         'fingerprint': ('e3b0c44298fc1c149afbf4c8996fb92427'
                                         'ae41e4649b934ca495991b7852b855')
-                        }
                     }
-                }),
+                }
+            }),
             'method': 'GET',
             'url': r'^http://pylxd.test/1.0/operations/operation-abc$',
         })
@@ -523,12 +535,14 @@ class TestSnapshot(testing.PyLXDTestCase):
 
     def test_delete_failure(self):
         """If the response indicates delete failure, raise an exception."""
+
         def not_found(request, context):
             context.status_code = 404
             return json.dumps({
                 'type': 'error',
                 'error': 'Not found',
                 'error_code': 404})
+
         self.add_rule({
             'text': not_found,
             'method': 'DELETE',
@@ -552,9 +566,9 @@ class TestSnapshot(testing.PyLXDTestCase):
                     'metadata': {
                         'fingerprint': ('e3b0c44298fc1c149afbf4c8996fb92427'
                                         'ae41e4649b934ca495991b7852b855')
-                        }
                     }
-                }),
+                }
+            }),
             'method': 'GET',
             'url': r'^http://pylxd.test/1.0/operations/operation-abc$',
         })
@@ -597,7 +611,7 @@ class TestFiles(testing.PyLXDTestCase):
                 'metadata': {'auth': 'trusted',
                              'environment': {
                                  'certificate': 'an-pem-cert',
-                                 },
+                             },
                              'api_extensions': ['file_delete']
                              }}),
             'method': 'GET',
@@ -664,6 +678,38 @@ class TestFiles(testing.PyLXDTestCase):
         # check that assertion is raised
         with self.assertRaises(ValueError):
             self.instance.files.put('/tmp/putted', data, mode=object)
+
+    def test_put_dir(self):
+        """Tests pushing an empty directory"""
+        _capture = {}
+
+        def capture(request, context):
+            _capture['headers'] = getattr(request._request, 'headers')
+            context.status_code = 200
+
+        self.add_rule({
+            'text': capture,
+            'method': 'POST',
+            'url': (r'^http://pylxd.test/1.0/instances/an-instance/files'
+                    r'\?path=%2Ftmp%2Fputted$'),
+        })
+
+        self.instance.files.put_dir('/tmp/putted', mode=0o123, uid=1, gid=2)
+        headers = _capture['headers']
+        self.assertEqual(headers['X-LXD-type'], 'directory')
+        self.assertEqual(headers['X-LXD-mode'], '0123')
+        self.assertEqual(headers['X-LXD-uid'], '1')
+        self.assertEqual(headers['X-LXD-gid'], '2')
+        # check that assertion is raised
+        with self.assertRaises(ValueError):
+            self.instance.files.put_dir('/tmp/putted', mode=object)
+
+        response = mock.Mock()
+        response.status_code = 404
+
+        with mock.patch('pylxd.client._APINode.post', response):
+            with self.assertRaises(exceptions.LXDAPIException):
+                self.instance.files.put_dir('/tmp/putted')
 
     def test_recursive_put(self):
 
@@ -738,10 +784,77 @@ class TestFiles(testing.PyLXDTestCase):
 
         self.assertEqual(b'This is a getted file', data)
 
+    def test_recursive_get(self):
+        """A folder is retrieved recursively from the instance"""
+
+        @contextlib.contextmanager
+        def tempdir(prefix='tmp'):
+            tmpdir = tempfile.mkdtemp(prefix=prefix)
+            try:
+                yield tmpdir
+            finally:
+                shutil.rmtree(tmpdir)
+
+        def create_file(_dir, name, content):
+            path = os.path.join(_dir, name)
+            actual_dir = os.path.dirname(path)
+            if not os.path.exists(actual_dir):
+                os.makedirs(actual_dir)
+            with open(path, 'w') as f:
+                f.write(content)
+
+        _captures = []
+
+        def capture(request, context):
+            _captures.append({
+                'headers': getattr(request._request, 'headers'),
+                'body': request._request.body,
+            })
+            context.status_code = 200
+
+        response = requests.models.Response()
+        response.status_code = 200
+        response.headers["X-LXD-type"] = "directory"
+        response._content = json.dumps({'metadata': ['file1', 'file2']})
+
+        response1 = requests.models.Response()
+        response1.status_code = 200
+        response1.headers["X-LXD-type"] = "file"
+        response1._content = "This is file1"
+
+        response2 = requests.models.Response()
+        response2.status_code = 200
+        response2.headers["X-LXD-type"] = "file"
+        response2._content = "This is file2"
+
+        return_values = [response, response1, response2]
+
+        with mock.patch('pylxd.client._APINode.get') as get_mocked:
+            get_mocked.side_effect = return_values
+            with mock.patch('os.mkdir') as mkdir_mocked:
+                # distinction needed for the code to work with python2.7 and 3
+                try:
+                    with mock.patch('__builtin__.open') as open_mocked:
+                        self.instance.files\
+                            .recursive_get('/tmp/getted', '/tmp')
+                        assert (mkdir_mocked.call_count == 1)
+                        assert(open_mocked.call_count == 2)
+                except ModuleNotFoundError:
+                    try:
+                        with mock.patch('builtins.open') as open_mocked:
+                            self.instance.files\
+                                .recursive_get('/tmp/getted', '/tmp')
+                            assert (mkdir_mocked.call_count == 1)
+                            assert (open_mocked.call_count == 2)
+                    except ModuleNotFoundError as e:
+                        raise e
+
     def test_get_not_found(self):
         """LXDAPIException is raised on bogus filenames."""
+
         def not_found(request, context):
             context.status_code = 500
+
         rule = {
             'text': not_found,
             'method': 'GET',
@@ -756,8 +869,10 @@ class TestFiles(testing.PyLXDTestCase):
 
     def test_get_error(self):
         """LXDAPIException is raised on error."""
+
         def not_found(request, context):
             context.status_code = 503
+
         rule = {
             'text': not_found,
             'method': 'GET',
