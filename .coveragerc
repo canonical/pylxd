@@ -3,6 +3,7 @@ branch = True
 source = pylxd
 
 [report]
+show_missing=True
 omit =
     pylxd/tests/*
     pylxd/deprecated/*
