@@ -237,7 +237,7 @@ Containers also have a `files` manager for getting and putting files on the
 container.  The following methods are available on the `files` manager:
 
   - `put` - push a file into the container.
-  - `put_dir` - push an empty directory to the container.
+  - `mk_dir` - create an empty directory on the container.
   - `recursive_put` - recursively push a directory to the container.
   - `get` - get a file from the container.
   - `recursive_get` - recursively pull a directory from the container.

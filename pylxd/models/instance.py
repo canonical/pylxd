@@ -125,8 +125,8 @@ class Instance(model.Model):
                 return
             raise LXDAPIException(response)
 
-        def put_dir(self, path, mode=None, uid=None, gid=None):
-            """Push an empty directory to the container.
+        def mk_dir(self, path, mode=None, uid=None, gid=None):
+            """Creates an empty directory on the container.
             This pushes an empty directory to the containers file system
             named by the `filepath`.
             :param path: The path in the container to to store the data in.
@@ -147,7 +147,7 @@ class Instance(model.Model):
             headers['X-LXD-type'] = 'directory'
             response = self._endpoint.post(
                 params={'path': path},
-                headers=headers or None)
+                headers=headers)
             if response.status_code == 200:
                 return
             raise LXDAPIException(response)
@@ -269,13 +269,9 @@ class Instance(model.Model):
             response = self._endpoint.get(
                 params={'path': remote_path}, is_api=False)
 
-            print(response)
             if "X-LXD-type" in response.headers:
-                print("1")
                 if response.headers["X-LXD-type"] == "directory":
-                    print("2")
                     os.mkdir(local_path)
-                    print(response.content)
                     content = json.loads(response.content)
                     if "metadata" in content and content["metadata"]:
                         for file in content["metadata"]:
