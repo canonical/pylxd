@@ -271,6 +271,9 @@ class Instance(model.Model):
 
             if "X-LXD-type" in response.headers:
                 if response.headers["X-LXD-type"] == "directory":
+                    # TODO: We considered using the X-LXD-uid, X-LXD-gid,
+                    #       and X-LXD-mode header information, but it was
+                    #       beyond the scope of this change.
                     os.mkdir(local_path)
                     content = json.loads(response.content)
                     if "metadata" in content and content["metadata"]:
@@ -279,6 +282,7 @@ class Instance(model.Model):
                                                os.path.join(local_path, file))
                 elif response.headers["X-LXD-type"] == "file":
                     with open(local_path, "wb") as f:
+                        # TODO: Same thoughts on file permissions as above.
                         f.write(response.content)
 
     @classmethod
