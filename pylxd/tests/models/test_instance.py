@@ -679,7 +679,7 @@ class TestFiles(testing.PyLXDTestCase):
         with self.assertRaises(ValueError):
             self.instance.files.put('/tmp/putted', data, mode=object)
 
-    def test_put_dir(self):
+    def test_mk_dir(self):
         """Tests pushing an empty directory"""
         _capture = {}
 
@@ -694,7 +694,7 @@ class TestFiles(testing.PyLXDTestCase):
                     r'\?path=%2Ftmp%2Fputted$'),
         })
 
-        self.instance.files.put_dir('/tmp/putted', mode=0o123, uid=1, gid=2)
+        self.instance.files.mk_dir('/tmp/putted', mode=0o123, uid=1, gid=2)
         headers = _capture['headers']
         self.assertEqual(headers['X-LXD-type'], 'directory')
         self.assertEqual(headers['X-LXD-mode'], '0123')
@@ -702,14 +702,14 @@ class TestFiles(testing.PyLXDTestCase):
         self.assertEqual(headers['X-LXD-gid'], '2')
         # check that assertion is raised
         with self.assertRaises(ValueError):
-            self.instance.files.put_dir('/tmp/putted', mode=object)
+            self.instance.files.mk_dir('/tmp/putted', mode=object)
 
         response = mock.Mock()
         response.status_code = 404
 
         with mock.patch('pylxd.client._APINode.post', response):
             with self.assertRaises(exceptions.LXDAPIException):
-                self.instance.files.put_dir('/tmp/putted')
+                self.instance.files.mk_dir('/tmp/putted')
 
     def test_recursive_put(self):
 
