@@ -63,6 +63,7 @@ class TestNetworks(NetworkTestCase):
         kwargs = {
             'name': 'eth10',
             'config': {
+                'bridge.hwaddr': '00:16:3e:12:34:56',
                 'ipv4.address': '10.10.10.1/24',
                 'ipv4.nat': 'true',
                 'ipv6.address': 'none',
