@@ -46,6 +46,8 @@ the LXD documentation.
   - `profiles` - A list of profiles applied to the instance
   - `status` - (Read only) A string representing the status of the instance
   - `last_used_at` - (Read only) when the instance was last used
+  - `location` - (Read only) the host of the instance in a cluster
+  - `type` - (Read only) whether a container (default) or virtual-machine
   - `status_code` - (Read only) A LXD status code of the instance
   - `stateful` - (Read only) Whether the instance is stateful
 
@@ -108,7 +110,7 @@ you'll pass `wait=True` as well.
 
 .. code-block:: python
 
-    >>> config = {'name': 'my-instance', 'source': {'type': 'none'}}
+    >>> config = {'name': 'my-instance', 'source': {'type': 'none'}, 'type': 'container'}
     >>> instance = client.instances.create(config, wait=False)
     >>> instance
     <instance.Instance at 0x7f95d8af72b0>
