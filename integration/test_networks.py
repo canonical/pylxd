@@ -63,7 +63,6 @@ class TestNetworks(NetworkTestCase):
         kwargs = {
             'name': 'eth10',
             'config': {
-                'bridge.hwaddr': '00:16:3e:12:34:56',
                 'ipv4.address': '10.10.10.1/24',
                 'ipv4.nat': 'true',
                 'ipv6.address': 'none',
@@ -72,6 +71,9 @@ class TestNetworks(NetworkTestCase):
             'type': 'bridge',
             'description': 'network description',
         }
+
+        if self.client.has_api_extension('network_hwaddr'):
+            kwargs['config']['bridge.hwaddr'] = '00:16:3e:12:34:56'
 
         network = self.client.networks.create(**kwargs)
         self.addCleanup(self.delete_network, kwargs['name'])
