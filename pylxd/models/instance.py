@@ -12,12 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import collections
+import json
 import os
 import stat
 import time
 
 import six
 from six.moves.urllib import parse
+
 try:
     from ws4py.client import WebSocketBaseClient
     from ws4py.manager import WebSocketManager
@@ -123,6 +125,33 @@ class Instance(model.Model):
                 return
             raise LXDAPIException(response)
 
+        def mk_dir(self, path, mode=None, uid=None, gid=None):
+            """Creates an empty directory on the container.
+            This pushes an empty directory to the containers file system
+            named by the `filepath`.
+            :param path: The path in the container to to store the data in.
+            :type path: str
+            :param mode: The unit mode to store the file with.  The default of
+                None stores the file with the current mask of 0700, which is
+                the lxd default.
+            :type mode: Union[oct, int, str]
+            :param uid: The uid to use inside the container. Default of None
+                results in 0 (root).
+            :type uid: int
+            :param gid: The gid to use inside the container.  Default of None
+                results in 0 (root).
+            :type gid: int
+            :raises: LXDAPIException if something goes wrong
+            """
+            headers = self._resolve_headers(mode=mode, uid=uid, gid=gid)
+            headers['X-LXD-type'] = 'directory'
+            response = self._endpoint.post(
+                params={'path': path},
+                headers=headers)
+            if response.status_code == 200:
+                return
+            raise LXDAPIException(response)
+
         @staticmethod
         def _resolve_headers(headers=None, mode=None, uid=None, gid=None):
             if headers is None:
@@ -223,6 +252,38 @@ class Instance(model.Model):
                             headers=headers or None)
                         if response.status_code != 200:
                             raise LXDAPIException(response)
+
+        def recursive_get(self, remote_path, local_path):
+            """Recursively pulls a directory from the container.
+            Pulls the directory named `remote_path` from the container and
+            creates a local folder named `local_path` with the
+            content of `remote_path`.
+            If `remote_path` is a file, it will be copied to `local_path`.
+            :param remote_path: The directory path on the container.
+            :type remote_path: str
+            :param local_path: The path at which the directory will be stored.
+            :type local_path: str
+            :return:
+            :raises: LXDAPIException if an error occurs
+            """
+            response = self._endpoint.get(
+                params={'path': remote_path}, is_api=False)
+
+            if "X-LXD-type" in response.headers:
+                if response.headers["X-LXD-type"] == "directory":
+                    # TODO: We considered using the X-LXD-uid, X-LXD-gid,
+                    #       and X-LXD-mode header information, but it was
+                    #       beyond the scope of this change.
+                    os.mkdir(local_path)
+                    content = json.loads(response.content)
+                    if "metadata" in content and content["metadata"]:
+                        for file in content["metadata"]:
+                            self.recursive_get(os.path.join(remote_path, file),
+                                               os.path.join(local_path, file))
+                elif response.headers["X-LXD-type"] == "file":
+                    with open(local_path, "wb") as f:
+                        # TODO: Same thoughts on file permissions as above.
+                        f.write(response.content)
 
     @classmethod
     def exists(cls, client, name):
