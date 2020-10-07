@@ -60,9 +60,11 @@ class EventType(Enum):
 class _APINode(object):
     """An api node object."""
 
-    def __init__(self, api_endpoint, cert=None, verify=True, timeout=None):
+    def __init__(self, api_endpoint, cert=None, verify=True,
+                 timeout=None, project=None):
         self._api_endpoint = api_endpoint
         self._timeout = timeout
+        self._project = project
 
         if self._api_endpoint.startswith('http+unix://'):
             self.session = requests_unixsocket.Session()
@@ -86,7 +88,8 @@ class _APINode(object):
         return self.__class__('{}/{}'.format(self._api_endpoint, name),
                               cert=self.session.cert,
                               verify=self.session.verify,
-                              timeout=self._timeout)
+                              timeout=self._timeout,
+                              project=self._project)
 
     def __getitem__(self, item):
         """This converts python api.thing[name] -> ".../thing/name"
@@ -99,7 +102,8 @@ class _APINode(object):
         return self.__class__('{}/{}'.format(self._api_endpoint, item),
                               cert=self.session.cert,
                               verify=self.session.verify,
-                              timeout=self._timeout)
+                              timeout=self._timeout,
+                              project=self._project)
 
     def _assert_response(self, response, allowed_status_codes=(200,),
                          stream=False, is_api=True):
@@ -155,6 +159,12 @@ class _APINode(object):
         """
         is_api = kwargs.pop('is_api', True)
         kwargs['timeout'] = kwargs.get('timeout', self._timeout)
+
+        if self._project is not None:
+            params = kwargs.get("params", {})
+            params["project"] = self._project
+            kwargs["params"] = params
+
         response = self.session.get(self._api_endpoint, *args, **kwargs)
         self._assert_response(response,
                               stream=kwargs.get('stream', False),
@@ -164,11 +174,16 @@ class _APINode(object):
     def post(self, *args, **kwargs):
         """Perform an HTTP POST."""
         kwargs['timeout'] = kwargs.get('timeout', self._timeout)
-        target = kwargs.pop("target", None)
 
+        target = kwargs.pop("target", None)
         if target is not None:
             params = kwargs.get("params", {})
             params["target"] = target
+            kwargs["params"] = params
+
+        if self._project is not None:
+            params = kwargs.get("params", {})
+            params["project"] = self._project
             kwargs["params"] = params
 
         response = self.session.post(self._api_endpoint, *args, **kwargs)
@@ -180,6 +195,12 @@ class _APINode(object):
     def put(self, *args, **kwargs):
         """Perform an HTTP PUT."""
         kwargs['timeout'] = kwargs.get('timeout', self._timeout)
+
+        if self._project is not None:
+            params = kwargs.get("params", {})
+            params["project"] = self._project
+            kwargs["params"] = params
+
         response = self.session.put(self._api_endpoint, *args, **kwargs)
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
@@ -187,6 +208,12 @@ class _APINode(object):
     def patch(self, *args, **kwargs):
         """Perform an HTTP PATCH."""
         kwargs['timeout'] = kwargs.get('timeout', self._timeout)
+
+        if self._project is not None:
+            params = kwargs.get("params", {})
+            params["project"] = self._project
+            kwargs["params"] = params
+
         response = self.session.patch(self._api_endpoint, *args, **kwargs)
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
@@ -194,6 +221,12 @@ class _APINode(object):
     def delete(self, *args, **kwargs):
         """Perform an HTTP delete."""
         kwargs['timeout'] = kwargs.get('timeout', self._timeout)
+
+        if self._project is not None:
+            params = kwargs.get("params", {})
+            params["project"] = self._project
+            kwargs["params"] = params
+
         response = self.session.delete(self._api_endpoint, *args, **kwargs)
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
@@ -270,7 +303,7 @@ class Client(object):
 
     def __init__(
             self, endpoint=None, version='1.0', cert=None, verify=True,
-            timeout=None):
+            timeout=None, project=None):
         """Constructs a LXD client
 
         :param endpoint: (optional): endpoint can be an http endpoint or
@@ -285,9 +318,11 @@ class Client(object):
         :param timeout: (optional) How long to wait for the server to send
             data before giving up, as a float, or a :ref:`(connect timeout,
             read timeout) <timeouts>` tuple.
+        :param project: (optional) Name of the LXD project to interact with.
 
         """
 
+        self.project = project
         self.cert = cert
         if endpoint is not None:
             if endpoint.startswith('/') and os.path.isfile(endpoint):
@@ -301,7 +336,8 @@ class Client(object):
                         os.path.exists(DEFAULT_CERTS.key)):
                     cert = DEFAULT_CERTS
                 self.api = _APINode(
-                    endpoint, cert=cert, verify=verify, timeout=timeout)
+                    endpoint, cert=cert, verify=verify,
+                    timeout=timeout, project=project)
         else:
             if 'LXD_DIR' in os.environ:
                 path = os.path.join(os.environ.get('LXD_DIR'), 'unix.socket')
@@ -310,7 +346,7 @@ class Client(object):
             else:
                 path = '/var/lib/lxd/unix.socket'
             endpoint = 'http+unix://{}'.format(parse.quote(path, safe=''))
-            self.api = _APINode(endpoint, timeout=timeout)
+            self.api = _APINode(endpoint, timeout=timeout, project=project)
         self.api = self.api[version]
 
         # Verify the connection is valid.
@@ -323,6 +359,11 @@ class Client(object):
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.InvalidURL) as e:
             raise exceptions.ClientConnectionFailed(str(e))
+
+        if self.project and self.project != self.host_info["environment"].get(
+                "project", "default"):
+            raise exceptions.ClientConnectionFailed(
+                "Remote server doesn't handle projects")
 
         self.cluster = managers.ClusterManager(self)
         self.certificates = managers.CertificateManager(self)
