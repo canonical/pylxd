@@ -17,16 +17,15 @@ from pylxd import exceptions as lxd_exceptions
 
 
 def upload_image(image):
-    alias = '{}/{}/{}/{}'.format(image['os'],
-                                 image['release'],
-                                 image['arch'],
-                                 image['variant'])
+    alias = "{}/{}/{}/{}".format(
+        image["os"], image["release"], image["arch"], image["variant"]
+    )
     lxd = api.API()
-    imgs = api.API(host='images.linuxcontainers.org')
+    imgs = api.API(host="images.linuxcontainers.org")
     d = imgs.alias_show(alias)
 
-    meta = d[1]['metadata']
-    tgt = meta['target']
+    meta = d[1]["metadata"]
+    tgt = meta["target"]
 
     try:
         lxd.alias_update(meta)

@@ -15,25 +15,26 @@ import collections
 import contextlib
 import tempfile
 import warnings
+
 from requests_toolbelt import MultipartEncoder
 
 from pylxd.models import _model as model
 
 
 def _image_create_from_config(client, config, wait=False):
-    """ Create an image from the given configuration.
+    """Create an image from the given configuration.
 
     See: https://github.com/lxc/lxd/blob/master/doc/rest-api.md#post-6
     """
     response = client.api.images.post(json=config)
     if wait:
-        return client.operations.wait_for_operation(
-            response.json()['operation'])
-    return response.json()['operation']
+        return client.operations.wait_for_operation(response.json()["operation"])
+    return response.json()["operation"]
 
 
 class Image(model.Model):
     """A LXD Image."""
+
     aliases = model.Attribute(readonly=True)
     auto_update = model.Attribute(optional=True)
     architecture = model.Attribute(readonly=True)
@@ -74,7 +75,7 @@ class Image(model.Model):
         """Get an image."""
         response = client.api.images[fingerprint].get()
 
-        image = cls(client, **response.json()['metadata'])
+        image = cls(client, **response.json()["metadata"])
         return image
 
     @classmethod
@@ -82,7 +83,7 @@ class Image(model.Model):
         """Get an image by its alias."""
         response = client.api.images.aliases[alias].get()
 
-        fingerprint = response.json()['metadata']['target']
+        fingerprint = response.json()["metadata"]["target"]
         return cls.get(client, fingerprint)
 
     @classmethod
@@ -91,14 +92,13 @@ class Image(model.Model):
         response = client.api.images.get()
 
         images = []
-        for url in response.json()['metadata']:
-            fingerprint = url.split('/')[-1]
+        for url in response.json()["metadata"]:
+            fingerprint = url.split("/")[-1]
             images.append(cls(client, fingerprint=fingerprint))
         return images
 
     @classmethod
-    def create(
-            cls, client, image_data, metadata=None, public=False, wait=True):
+    def create(cls, client, image_data, metadata=None, public=False, wait=True):
         """Create an image.
 
         If metadata is provided, a multipart form data request is formed to
@@ -111,69 +111,64 @@ class Image(model.Model):
 
         if wait is False:  # pragma: no cover
             warnings.warn(
-                'Image.create wait parameter ignored and will be removed in '
-                '2.3', DeprecationWarning)
+                "Image.create wait parameter ignored and will be removed in " "2.3",
+                DeprecationWarning,
+            )
 
         headers = {}
         if public:
-            headers['X-LXD-Public'] = '1'
+            headers["X-LXD-Public"] = "1"
 
         if metadata is not None:
             # Image uploaded as chunked/stream (metadata, rootfs)
             # multipart message.
             # Order of parts is important metadata should be passed first
             files = collections.OrderedDict(
-                metadata=('metadata', metadata, 'application/octet-stream'),
-                rootfs=('rootfs', image_data, 'application/octet-stream'))
+                metadata=("metadata", metadata, "application/octet-stream"),
+                rootfs=("rootfs", image_data, "application/octet-stream"),
+            )
             data = MultipartEncoder(files)
             headers.update({"Content-Type": data.content_type})
         else:
             data = image_data
 
         response = client.api.images.post(data=data, headers=headers)
-        operation = client.operations.wait_for_operation(
-            response.json()['operation'])
-        return cls(client, fingerprint=operation.metadata['fingerprint'])
+        operation = client.operations.wait_for_operation(response.json()["operation"])
+        return cls(client, fingerprint=operation.metadata["fingerprint"])
 
     @classmethod
-    def create_from_simplestreams(cls, client, server, alias,
-                                  public=False, auto_update=False):
+    def create_from_simplestreams(
+        cls, client, server, alias, public=False, auto_update=False
+    ):
         """Copy an image from simplestreams."""
         config = {
-            'public': public,
-            'auto_update': auto_update,
-
-            'source': {
-                'type': 'image',
-                'mode': 'pull',
-                'server': server,
-                'protocol': 'simplestreams',
-                'fingerprint': alias
-            }
+            "public": public,
+            "auto_update": auto_update,
+            "source": {
+                "type": "image",
+                "mode": "pull",
+                "server": server,
+                "protocol": "simplestreams",
+                "fingerprint": alias,
+            },
         }
 
         op = _image_create_from_config(client, config, wait=True)
 
-        return client.images.get(op.metadata['fingerprint'])
+        return client.images.get(op.metadata["fingerprint"])
 
     @classmethod
-    def create_from_url(cls, client, url,
-                        public=False, auto_update=False):
+    def create_from_url(cls, client, url, public=False, auto_update=False):
         """Copy an image from an url."""
         config = {
-            'public': public,
-            'auto_update': auto_update,
-
-            'source': {
-                'type': 'url',
-                'mode': 'pull',
-                'url': url
-            }
+            "public": public,
+            "auto_update": auto_update,
+            "source": {"type": "url", "mode": "pull", "url": url},
         }
 
         op = _image_create_from_config(client, config, wait=True)
 
-        return client.images.get(op.metadata['fingerprint'])
+        return client.images.get(op.metadata["fingerprint"])
 
     def export(self):
         """Export the image.
@@ -191,25 +186,21 @@ class Image(model.Model):
 
     def add_alias(self, name, description):
         """Add an alias to the image."""
-        self.client.api.images.aliases.post(json={
-            'description': description,
-            'target': self.fingerprint,
-            'name': name
-        })
+        self.client.api.images.aliases.post(
+            json={"description": description, "target": self.fingerprint, "name": name}
+        )
 
         # Update current aliases list
-        self.aliases.append({
-            'description': description,
-            'target': self.fingerprint,
-            'name': name
-        })
+        self.aliases.append(
+            {"description": description, "target": self.fingerprint, "name": name}
+        )
 
     def delete_alias(self, name):
         """Delete an alias from the image."""
         self.client.api.images.aliases[name].delete()
 
         # Update current aliases list
-        la = [a['name'] for a in self.aliases]
+        la = [a["name"] for a in self.aliases]
         try:
             del self.aliases[la.index(name)]
         except ValueError:
@@ -223,7 +214,7 @@ class Image(model.Model):
         """
         self.sync()  # Make sure the object isn't stale
 
-        url = '/'.join(self.client.api._api_endpoint.split('/')[:-1])
+        url = "/".join(self.client.api._api_endpoint.split("/")[:-1])
 
         if public is None:
             public = self.public
@@ -232,26 +223,25 @@ class Image(model.Model):
             auto_update = self.auto_update
 
         config = {
-            'filename': self.filename,
-            'public': public,
-            'auto_update': auto_update,
-            'properties': self.properties,
-
-            'source': {
-                'type': 'image',
-                'mode': 'pull',
-                'server': url,
-                'protocol': 'lxd',
-                'fingerprint': self.fingerprint
-            }
+            "filename": self.filename,
+            "public": public,
+            "auto_update": auto_update,
+            "properties": self.properties,
+            "source": {
+                "type": "image",
+                "mode": "pull",
+                "server": url,
+                "protocol": "lxd",
+                "fingerprint": self.fingerprint,
+            },
         }
 
         if self.public is not True:
             response = self.api.secret.post(json={})
-            secret = response.json()['metadata']['metadata']['secret']
-            config['source']['secret'] = secret
-            cert = self.client.host_info['environment']['certificate']
-            config['source']['certificate'] = cert
+            secret = response.json()["metadata"]["metadata"]["secret"]
+            config["source"]["secret"] = secret
+            cert = self.client.host_info["environment"]["certificate"]
+            config["source"]["certificate"] = cert
 
         _image_create_from_config(new_client, config, wait)
 

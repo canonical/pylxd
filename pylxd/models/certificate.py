@@ -34,7 +34,7 @@ class Certificate(model.Model):
         """Get a certificate by fingerprint."""
         response = client.api.certificates[fingerprint].get()
 
-        return cls(client, **response.json()['metadata'])
+        return cls(client, **response.json()["metadata"])
 
     @classmethod
     def all(cls, client):
@@ -42,8 +42,8 @@ class Certificate(model.Model):
         response = client.api.certificates.get()
 
         certs = []
-        for cert in response.json()['metadata']:
-            fingerprint = cert.split('/')[-1]
+        for cert in response.json()["metadata"]:
+            fingerprint = cert.split("/")[-1]
             certs.append(cls(client, fingerprint=fingerprint))
         return certs
 
@@ -51,20 +51,21 @@ class Certificate(model.Model):
     def create(cls, client, password, cert_data):
         """Create a new certificate."""
         cert = x509.load_pem_x509_certificate(cert_data, default_backend())
-        base64_cert = cert.public_bytes(Encoding.PEM).decode('utf-8')
+        base64_cert = cert.public_bytes(Encoding.PEM).decode("utf-8")
         # STRIP OUT CERT META "-----BEGIN CERTIFICATE-----"
-        base64_cert = '\n'.join(base64_cert.split('\n')[1:-2])
+        base64_cert = "\n".join(base64_cert.split("\n")[1:-2])
         data = {
-            'type': 'client',
-            'certificate': base64_cert,
-            'password': password,
+            "type": "client",
+            "certificate": base64_cert,
+            "password": password,
         }
         client.api.certificates.post(json=data)
 
         # XXX: rockstar (08 Jun 2016) - Please see the open lxd bug here:
         # https://github.com/lxc/lxd/issues/2092
-        fingerprint = binascii.hexlify(
-            cert.fingerprint(hashes.SHA256())).decode('utf-8')
+        fingerprint = binascii.hexlify(cert.fingerprint(hashes.SHA256())).decode(
+            "utf-8"
+        )
         return cls.get(client, fingerprint)
 
     @property

@@ -17,6 +17,5 @@ from pylxd.deprecated import connection
 
 
 class LXDBase(object):
-
     def __init__(self, conn=None):
         self.connection = conn or connection.LXDConnection()

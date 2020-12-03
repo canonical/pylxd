@@ -24,6 +24,6 @@ def block_container():
 
 
 def get_lxd_error(state, data):
-    status_code = data.get('error_code')
-    error = data.get('error')
+    status_code = data.get("error_code")
+    error = data.get("error")
     raise exceptions.APIError(error, status_code)

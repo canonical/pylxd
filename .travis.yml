@@ -1,11 +1,11 @@
 language: python
 python:
-  - "3.5"
+  - "3.8"
 env:
   matrix:
   - TOXENV=py27
   - TOXENV=py3
-  - TOXENV=pep8
+  - TOXENV=lint
   # - TOXENV=integration # requires a remote lxd setup
 
 install:

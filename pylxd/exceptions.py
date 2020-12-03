@@ -20,16 +20,16 @@ class LXDAPIException(Exception):
     def __str__(self):
         if self.response.status_code == 200:  # Operation failure
             try:
-                return self.response.json()['metadata']['err']
+                return self.response.json()["metadata"]["err"]
             except (ValueError, KeyError):
                 pass
 
         try:
             data = self.response.json()
-            return data['error']
+            return data["error"]
         except (ValueError, KeyError):
             pass
-        return self.response.content.decode('utf-8')
+        return self.response.content.decode("utf-8")
 
 
 class NotFound(LXDAPIException):
@@ -48,8 +48,8 @@ class LXDAPIExtensionNotAvailable(Exception):
         :type name: str
         """
         super(LXDAPIExtensionNotAvailable, self).__init__(
-            "LXD API extension '{}' is not available".format(name),
-            *args, **kwargs)
+            "LXD API extension '{}' is not available".format(name), *args, **kwargs
+        )
 
 
 class ClientConnectionFailed(Exception):
@@ -57,5 +57,6 @@ class ClientConnectionFailed(Exception):
 
 
 if six.PY2:
+
     class NotADirectoryError(Exception):
         """ An exception raised when not a directory for python2 """

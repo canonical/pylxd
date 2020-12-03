@@ -17,57 +17,61 @@ from pylxd.deprecated import base
 
 
 class LXDOperation(base.LXDBase):
-
     def operation_list(self):
-        (state, data) = self.connection.get_object('GET', '/1.0/operations')
-        return data['metadata']
+        (state, data) = self.connection.get_object("GET", "/1.0/operations")
+        return data["metadata"]
 
     def operation_show(self, operation):
-        (state, data) = self.connection.get_object('GET', operation)
+        (state, data) = self.connection.get_object("GET", operation)
 
         return {
-            'operation_create_time':
-                self.operation_create_time(operation, data.get('metadata')),
-            'operation_update_time':
-                self.operation_update_time(operation, data.get('metadata')),
-            'operation_status_code':
-                self.operation_status_code(operation, data.get('metadata'))
+            "operation_create_time": self.operation_create_time(
+                operation, data.get("metadata")
+            ),
+            "operation_update_time": self.operation_update_time(
+                operation, data.get("metadata")
+            ),
+            "operation_status_code": self.operation_status_code(
+                operation, data.get("metadata")
+            ),
         }
 
     def operation_info(self, operation):
-        return self.connection.get_object('GET', operation)
+        return self.connection.get_object("GET", operation)
 
     def operation_create_time(self, operation, data):
         if data is None:
-            (state, data) = self.connection.get_object('GET', operation)
-            data = data.get('metadata')
-        return parse_date(data['created_at']).strftime('%Y-%m-%d %H:%M:%S')
+            (state, data) = self.connection.get_object("GET", operation)
+            data = data.get("metadata")
+        return parse_date(data["created_at"]).strftime("%Y-%m-%d %H:%M:%S")
 
     def operation_update_time(self, operation, data):
         if data is None:
-            (state, data) = self.connection.get_object('GET', operation)
-            data = data.get('metadata')
-        return parse_date(data['updated_at']).strftime('%Y-%m-%d %H:%M:%S')
+            (state, data) = self.connection.get_object("GET", operation)
+            data = data.get("metadata")
+        return parse_date(data["updated_at"]).strftime("%Y-%m-%d %H:%M:%S")
 
     def operation_status_code(self, operation, data):
         if data is None:
-            (state, data) = self.connection.get_object('GET', operation)
-            data = data.get('metadata')
-        return data['status']
+            (state, data) = self.connection.get_object("GET", operation)
+            data = data.get("metadata")
+        return data["status"]
 
     def operation_wait(self, operation, status_code, timeout):
         if timeout == -1:
             return self.connection.get_status(
-                'GET', '%s/wait?status_code=%s'
-                % (operation, status_code))
+                "GET", "%s/wait?status_code=%s" % (operation, status_code)
+            )
         else:
             return self.connection.get_status(
-                'GET', '%s/wait?status_code=%s&timeout=%s'
-                % (operation, status_code, timeout))
+                "GET",
+                "%s/wait?status_code=%s&timeout=%s" % (operation, status_code, timeout),
+            )
 
     def operation_stream(self, operation, operation_secret):
         return self.connection.get_ws(
-            '%s/websocket?secret=%s' % (operation, operation_secret))
+            "%s/websocket?secret=%s" % (operation, operation_secret)
+        )
 
     def operation_delete(self, operation):
-        return self.connection.get_status('DELETE', operation)
+        return self.connection.get_status("DELETE", operation)
