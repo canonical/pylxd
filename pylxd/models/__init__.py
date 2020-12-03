@@ -6,6 +6,7 @@ from pylxd.models.instance import Instance, Snapshot
 from pylxd.models.network import Network
 from pylxd.models.operation import Operation
 from pylxd.models.profile import Profile
+from pylxd.models.project import Project
 from pylxd.models.storage_pool import StoragePool, StorageResources, StorageVolume
 from pylxd.models.virtual_machine import VirtualMachine
 
@@ -19,6 +20,7 @@ __all__ = [
     "Network",
     "Operation",
     "Profile",
+    "Project",
     "Snapshot",
     "StoragePool",
     "StorageResources",

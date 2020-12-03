@@ -57,6 +57,10 @@ class ProfileManager(BaseManager):
     manager_for = "pylxd.models.Profile"
 
 
+class ProjectManager(BaseManager):
+    manager_for = "pylxd.models.Project"
+
+
 class SnapshotManager(BaseManager):
     manager_for = "pylxd.models.Snapshot"
 

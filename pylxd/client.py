@@ -292,6 +292,10 @@ class Client:
 
         Instance of :class:`Client.Profiles <pylxd.client.Client.Profiles>`.
 
+    .. attribute::projects
+
+        Instance of :class:`Client.Project <pylxd.client.Client.Project >`.
+
     .. attribute:: api
 
         This attribute provides tree traversal syntax to LXD's REST API for
@@ -396,6 +400,7 @@ class Client:
         self.networks = managers.NetworkManager(self)
         self.operations = managers.OperationManager(self)
         self.profiles = managers.ProfileManager(self)
+        self.projects = managers.ProjectManager(self)
         self.storage_pools = managers.StoragePoolManager(self)
         self._resource_cache = None
 
