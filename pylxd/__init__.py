@@ -16,4 +16,6 @@ import pbr.version
 
 __version__ = pbr.version.VersionInfo("pylxd").version_string()
 
-from pylxd.client import Client, EventType  # NOQA
+from pylxd.client import Client, EventType
+
+__all__ = ["Client", "EventType"]
