@@ -185,13 +185,13 @@ RULES = [
                 "type": "sync",
                 "metadata": {
                     "certificate": "certificate-content",
-                    "fingerprint": "eaf55b72fc23aa516d709271df9b0116064bf8cfa009cf34c67c33ad32c2320c",  # NOQA
+                    "fingerprint": "eaf55b72fc23aa516d709271df9b0116064bf8cfa009cf34c67c33ad32c2320c",
                     "type": "client",
                 },
             }
         ),
         "method": "GET",
-        "url": r"^http://pylxd.test/1.0/certificates/eaf55b72fc23aa516d709271df9b0116064bf8cfa009cf34c67c33ad32c2320c$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/certificates/eaf55b72fc23aa516d709271df9b0116064bf8cfa009cf34c67c33ad32c2320c$",
     },
     {
         "text": json.dumps(
@@ -275,7 +275,7 @@ RULES = [
             }
         ),
         "method": "GET",
-        "url": r"^http://pylxd.test/1.0/cluster/members/an-member$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/cluster/members/an-member$",
     },
     # Instances
     {
@@ -431,7 +431,7 @@ RULES = [
             },
         },
         "method": "GET",
-        "url": r"^http://pylxd.test/1.0/instances/an-instance/state$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/instances/an-instance/state$",
     },
     {
         "json": {
@@ -465,7 +465,7 @@ RULES = [
             "operation": "/1.0/operations/operation-abc?project=default",
         },
         "method": "PUT",
-        "url": r"^http://pylxd.test/1.0/instances/an-instance/state$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/instances/an-instance/state$",
     },
     {
         "json": instance_POST,
@@ -505,7 +505,7 @@ RULES = [
         },
         "status_code": 202,
         "method": "POST",
-        "url": r"^http://pylxd.test/1.0/instances/an-instance/exec$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/instances/an-instance/exec$",
     },
     {
         "json": instance_PUT,
@@ -523,7 +523,7 @@ RULES = [
             }
         ),
         "method": "GET",
-        "url": r"^http://pylxd.test/1.0/instances/an-instance/snapshots$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/instances/an-instance/snapshots$",
     },
     {
         "text": json.dumps(
@@ -534,7 +534,7 @@ RULES = [
         ),
         "status_code": 202,
         "method": "POST",
-        "url": r"^http://pylxd.test/1.0/instances/an-instance/snapshots$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/instances/an-instance/snapshots$",
     },
     {
         "text": json.dumps(
@@ -547,7 +547,7 @@ RULES = [
             }
         ),
         "method": "GET",
-        "url": r"^http://pylxd.test/1.0/instances/an-instance/snapshots/an-snapshot$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/instances/an-instance/snapshots/an-snapshot$",
     },
     {
         "text": json.dumps(
@@ -558,31 +558,31 @@ RULES = [
         ),
         "status_code": 202,
         "method": "POST",
-        "url": r"^http://pylxd.test/1.0/instances/an-instance/snapshots/an-snapshot$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/instances/an-instance/snapshots/an-snapshot$",
     },
     {
         "text": snapshot_DELETE,
         "method": "DELETE",
-        "url": r"^http://pylxd.test/1.0/instances/an-instance/snapshots/an-snapshot$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/instances/an-instance/snapshots/an-snapshot$",
     },
     # Instance files
     {
         "text": "This is a getted file",
         "method": "GET",
-        "url": r"^http://pylxd.test/1.0/instances/an-instance/files\?path=%2Ftmp%2Fgetted$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/instances/an-instance/files\?path=%2Ftmp%2Fgetted$",
     },
     {
         "text": '{"some": "value"}',
         "method": "GET",
-        "url": r"^http://pylxd.test/1.0/instances/an-instance/files\?path=%2Ftmp%2Fjson-get$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/instances/an-instance/files\?path=%2Ftmp%2Fjson-get$",
     },
     {
         "method": "POST",
-        "url": r"^http://pylxd.test/1.0/instances/an-instance/files\?path=%2Ftmp%2Fputted$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/instances/an-instance/files\?path=%2Ftmp%2Fputted$",
     },
     {
         "method": "DELETE",
-        "url": r"^http://pylxd.test/1.0/instances/an-instance/files\?path=%2Ftmp%2Fputted$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/instances/an-instance/files\?path=%2Ftmp%2Fputted$",
     },
     # Images
     {
@@ -590,7 +590,7 @@ RULES = [
             {
                 "type": "sync",
                 "metadata": [
-                    "http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",  # NOQA
+                    "http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                 ],
             }
         ),
@@ -615,7 +615,7 @@ RULES = [
             "metadata": {
                 "name": "an-alias",
                 "description": "an-alias",
-                "target": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",  # NOQA
+                "target": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             },
         },
         "method": "GET",
@@ -628,14 +628,14 @@ RULES = [
                 "metadata": {
                     "aliases": [
                         {
-                            "name": "an-alias",  # NOQA
-                            "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",  # NOQA
+                            "name": "an-alias",
+                            "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                         }
                     ],
                     "architecture": "x86_64",
                     "cached": False,
                     "filename": "a_image.tar.bz2",
-                    "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",  # NOQA
+                    "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                     "public": False,
                     "properties": {},
                     "size": 1,
@@ -648,7 +648,7 @@ RULES = [
             }
         ),
         "method": "GET",
-        "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",
     },
     {
         "text": json.dumps(
@@ -657,14 +657,14 @@ RULES = [
                 "metadata": {
                     "aliases": [
                         {
-                            "name": "an-alias",  # NOQA
-                            "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",  # NOQA
+                            "name": "an-alias",
+                            "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                         }
                     ],
                     "architecture": "x86_64",
                     "cached": False,
                     "filename": "a_image.tar.bz2",
-                    "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",  # NOQA
+                    "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                     "public": False,
                     "properties": {},
                     "size": 1,
@@ -677,7 +677,7 @@ RULES = [
             }
         ),
         "method": "GET",
-        "url": r"^http://pylxd2.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",  # NOQA
+        "url": r"^http://pylxd2.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",
     },
     {
         "text": json.dumps(
@@ -688,17 +688,17 @@ RULES = [
         ),
         "status_code": 202,
         "method": "PUT",
-        "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",
     },
     {
         "text": "0" * 2048,
         "method": "GET",
-        "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855/export$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855/export$",
     },
     {
         "text": image_DELETE,
         "method": "DELETE",
-        "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",
     },
     # Image Aliases
     {
@@ -709,7 +709,7 @@ RULES = [
             "metadata": {
                 "name": "an-alias",
                 "description": "an-alias",
-                "target": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",  # NOQA
+                "target": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             },
         },
         "method": "GET",
@@ -749,7 +749,7 @@ RULES = [
             "metadata": {"metadata": {"secret": "abcdefg"}},
         },
         "method": "POST",
-        "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855/secret$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855/secret$",
     },
     # Networks
     {
@@ -989,7 +989,7 @@ RULES = [
     {
         "text": profile_GET,
         "method": "GET",
-        "url": r"^http://pylxd.test/1.0/profiles/(an-profile|an-new-profile|an-renamed-profile)$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/profiles/(an-profile|an-new-profile|an-renamed-profile)$",
     },
     {
         "text": json.dumps({"type": "sync"}),
@@ -1052,7 +1052,7 @@ RULES = [
                 "metadata": {
                     "id": "images-create-operation",
                     "metadata": {
-                        "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"  # NOQA
+                        "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
                     },
                 },
             }
@@ -1067,7 +1067,7 @@ RULES = [
             }
         ),
         "method": "GET",
-        "url": r"^http://pylxd.test/1.0/operations/images-create-operation/wait$",  # NOQA
+        "url": r"^http://pylxd.test/1.0/operations/images-create-operation/wait$",
     },
     {
         "text": json.dumps(
@@ -1086,6 +1086,6 @@ RULES = [
             }
         ),
         "method": "GET",
-        "url": r"^http://pylxd2.test/1.0/operations/images-create-operation/wait$",  # NOQA
+        "url": r"^http://pylxd2.test/1.0/operations/images-create-operation/wait$",
     },
 ]

@@ -29,7 +29,7 @@ class TestImage(testing.PyLXDTestCase):
             {
                 "text": not_found,
                 "method": "GET",
-                "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",  # NOQA
+                "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",
             }
         )
 
@@ -52,7 +52,7 @@ class TestImage(testing.PyLXDTestCase):
             {
                 "text": error,
                 "method": "GET",
-                "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",  # NOQA
+                "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",
             }
         )
 
@@ -92,7 +92,7 @@ class TestImage(testing.PyLXDTestCase):
             {
                 "text": not_found,
                 "method": "GET",
-                "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",  # NOQA
+                "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",
             }
         )
 
@@ -162,7 +162,7 @@ class TestImage(testing.PyLXDTestCase):
             {
                 "text": not_found,
                 "method": "GET",
-                "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",  # NOQA
+                "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",
             }
         )
         fingerprint = hashlib.sha256(b"").hexdigest()
@@ -184,7 +184,7 @@ class TestImage(testing.PyLXDTestCase):
             {
                 "text": not_found,
                 "method": "GET",
-                "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",  # NOQA
+                "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",
             }
         )
         fingerprint = hashlib.sha256(b"").hexdigest()
@@ -204,9 +204,7 @@ class TestImage(testing.PyLXDTestCase):
 
     def test_export(self):
         """An image is exported."""
-        expected = (
-            "e2943f8d0b0e7d5835f9533722a6e25f669acb8980daee378b4edb44da212f51"  # NOQA
-        )
+        expected = "e2943f8d0b0e7d5835f9533722a6e25f669acb8980daee378b4edb44da212f51"
         a_image = self.client.images.all()[0]
 
         data = a_image.export()
@@ -227,7 +225,7 @@ class TestImage(testing.PyLXDTestCase):
             {
                 "text": not_found,
                 "method": "GET",
-                "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855/export$",  # NOQA
+                "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855/export$",
             }
         )
         a_image = self.client.images.all()[0]
@@ -247,7 +245,7 @@ class TestImage(testing.PyLXDTestCase):
             {
                 "text": error,
                 "method": "GET",
-                "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855/export$",  # NOQA
+                "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855/export$",
             }
         )
         a_image = self.client.images.all()[0]
@@ -275,7 +273,7 @@ class TestImage(testing.PyLXDTestCase):
             {
                 "text": error,
                 "method": "POST",
-                "url": r"^http://pylxd.test/1.0/images/aliases$",  # NOQA
+                "url": r"^http://pylxd.test/1.0/images/aliases$",
             }
         )
 
@@ -305,7 +303,7 @@ class TestImage(testing.PyLXDTestCase):
             {
                 "text": error,
                 "method": "DELETE",
-                "url": r"^http://pylxd.test/1.0/images/aliases/lol$",  # NOQA
+                "url": r"^http://pylxd.test/1.0/images/aliases/lol$",
             }
         )
 
@@ -339,14 +337,14 @@ class TestImage(testing.PyLXDTestCase):
                     "metadata": {
                         "aliases": [
                             {
-                                "name": "an-alias",  # NOQA
-                                "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",  # NOQA
+                                "name": "an-alias",
+                                "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                             }
                         ],
                         "architecture": "x86_64",
                         "cached": False,
                         "filename": "a_image.tar.bz2",
-                        "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",  # NOQA
+                        "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                         "public": True,
                         "properties": {},
                         "size": 1,
@@ -363,7 +361,7 @@ class TestImage(testing.PyLXDTestCase):
             {
                 "text": image_get,
                 "method": "GET",
-                "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",  # NOQA
+                "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855$",
             }
         )
 

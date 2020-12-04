@@ -159,7 +159,7 @@ class TestClient(unittest.TestCase):
                 return {
                     "metadata": {
                         "type": "client",
-                        "fingerprint": "eaf55b72fc23aa516d709271df9b0116064bf8cfa009cf34c67c33ad32c2320c",  # NOQA
+                        "fingerprint": "eaf55b72fc23aa516d709271df9b0116064bf8cfa009cf34c67c33ad32c2320c",
                     }
                 }
             else:
