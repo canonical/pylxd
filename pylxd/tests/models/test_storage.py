@@ -118,7 +118,7 @@ class TestStoragePool(testing.PyLXDTestCase):
             {
                 "text": not_found,
                 "method": "GET",
-                "url": r"^http://pylxd.test/1.0/storage-pools/an-missing-storage-pool$",  # NOQA
+                "url": r"^http://pylxd.test/1.0/storage-pools/an-missing-storage-pool$",
             }
         )
 

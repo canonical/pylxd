@@ -91,7 +91,7 @@ class TestOperation(testing.PyLXDTestCase):
             {
                 "json": error,
                 "method": "GET",
-                "url": r"^http://pylxd.test/1.0/operations/operation-abc/wait$",  # NOQA
+                "url": r"^http://pylxd.test/1.0/operations/operation-abc/wait$",
             }
         )
 
