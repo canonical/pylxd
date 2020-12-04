@@ -16,7 +16,6 @@ import random
 import string
 import unittest
 
-import six
 
 from integration.testing import IntegrationTestCase
 import pylxd.exceptions as exceptions
@@ -130,7 +129,7 @@ class TestStorageVolume(StorageTestCase):
 
     def create_storage_volume(self, pool):
         # note 'pool' needs to be storage_pool object or a string
-        if isinstance(pool, six.string_types):
+        if isinstance(pool, str):
             pool = self.client.storage_pools.get(pool)
         vol_input = {
             "config": {},
@@ -144,8 +143,8 @@ class TestStorageVolume(StorageTestCase):
     def delete_storage_volume(self, pool, volume):
         # pool is either string or storage_pool object
         # volume is either a string of storage_pool object
-        if isinstance(volume, six.string_types):
-            if isinstance(pool, six.string_types):
+        if isinstance(volume, str):
+            if isinstance(pool, str):
                 pool = self.client.storage_pools.get(pool)
             volume = pool.volumes.get('custom', volume)
         volume.delete()

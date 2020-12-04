@@ -16,13 +16,12 @@
 import copy
 import json
 import os
+import queue
 import socket
 import ssl
 import threading
 from collections import namedtuple
-
-import six
-from six.moves import http_client, queue
+from http import client as http_client
 
 try:
     from ws4py import client as websocket
@@ -40,12 +39,7 @@ else:
 
 class UnixHTTPConnection(http_client.HTTPConnection):
     def __init__(self, path, host="localhost", port=None, strict=None, timeout=None):
-        if six.PY3:
-            http_client.HTTPConnection.__init__(self, host, port=port, timeout=timeout)
-        else:
-            http_client.HTTPConnection.__init__(
-                self, host, port=port, strict=strict, timeout=timeout
-            )
+        http_client.HTTPConnection.__init__(self, host, port=port, timeout=timeout)
 
         self.path = path
 
@@ -154,10 +148,7 @@ class LXDConnection(object):
         status = response.status
         raw_body = response.read()
         try:
-            if six.PY3:
-                body = json.loads(raw_body.decode())
-            else:
-                body = json.loads(raw_body)
+            body = json.loads(raw_body.decode())
         except ValueError:
             body = None
 

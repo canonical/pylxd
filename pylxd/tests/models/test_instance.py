@@ -3,10 +3,10 @@ import json
 import os
 import shutil
 import tempfile
+from urllib.parse import quote as url_quote
 
 import mock
 import requests
-from six.moves.urllib.parse import quote as url_quote
 
 from pylxd import exceptions, models
 from pylxd.tests import testing

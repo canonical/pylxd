@@ -15,8 +15,7 @@ from __future__ import print_function
 
 import datetime
 import json
-
-from six.moves import urllib
+import urllib
 
 from pylxd.deprecated import base, connection, exceptions
 

@@ -1,6 +1,3 @@
-import six
-
-
 class LXDAPIException(Exception):
     """A generic exception for representing unexpected LXD API responses.
 

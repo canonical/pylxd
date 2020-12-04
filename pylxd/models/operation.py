@@ -14,8 +14,7 @@
 
 import os
 import warnings
-
-from six.moves.urllib import parse
+from urllib import parse
 
 from pylxd import exceptions
 
