@@ -34,7 +34,7 @@ from pylxd.models import _model as model
 from pylxd.models.operation import Operation
 
 
-class InstanceState(object):
+class InstanceState:
     """A simple object for representing instance state."""
 
     def __init__(self, **kwargs):
@@ -81,7 +81,7 @@ class Instance(model.Model):
     def api(self):
         return self.client.api[self._endpoint][self.name]
 
-    class FilesManager(object):
+    class FilesManager:
         """A pseudo-manager for namespacing file operations."""
 
         def __init__(self, instance):

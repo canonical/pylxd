@@ -125,7 +125,7 @@ if websocket is not None:
             return message
 
 
-class LXDConnection(object):
+class LXDConnection:
     def __init__(self, host=None, port=8443):
         if host:
             self.host = host

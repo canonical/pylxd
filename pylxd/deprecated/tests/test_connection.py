@@ -92,7 +92,7 @@ class LXDInitConnectionTest(unittest.TestCase):
                 ms.assert_called_once_with(args[0], len(args) == 2 and args[1] or 8443)
 
 
-class FakeResponse(object):
+class FakeResponse:
     def __init__(self, status, data):
         self.status = status
         self.read = BytesIO(bytes(data, "utf-8")).read

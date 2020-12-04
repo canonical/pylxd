@@ -16,6 +16,6 @@ from __future__ import print_function
 from pylxd.deprecated import connection
 
 
-class LXDBase(object):
+class LXDBase:
     def __init__(self, conn=None):
         self.connection = conn or connection.LXDConnection()

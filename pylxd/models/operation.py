@@ -23,7 +23,7 @@ from pylxd import exceptions
 _seen_attribute_warnings = set()
 
 
-class Operation(object):
+class Operation:
     """An LXD operation.
 
     If the LXD server sends attributes that this version of pylxd is unaware of

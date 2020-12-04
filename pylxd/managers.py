@@ -4,7 +4,7 @@ import inspect
 from contextlib import contextmanager
 
 
-class BaseManager(object):
+class BaseManager:
     """A BaseManager class for handling collection operations."""
 
     @property

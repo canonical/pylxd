@@ -60,7 +60,7 @@ class EventType(Enum):
     Lifecycle = "lifecycle"
 
 
-class _APINode(object):
+class _APINode:
     """An api node object."""
 
     def __init__(self, api_endpoint, cert=None, verify=True, timeout=None):
@@ -224,7 +224,7 @@ class _WebsocketClient(WebSocketBaseClient):
         self.messages.append(json_message)
 
 
-class Client(object):
+class Client:
     """Client class for LXD REST API.
 
     This client wraps all the functionality required to interact with

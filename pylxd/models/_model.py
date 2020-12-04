@@ -19,7 +19,7 @@ from pylxd import exceptions
 MISSING = object()
 
 
-class Attribute(object):
+class Attribute:
     """A metadata class for model attributes."""
 
     def __init__(self, validator=None, readonly=False, optional=False):
@@ -28,7 +28,7 @@ class Attribute(object):
         self.optional = optional
 
 
-class Manager(object):
+class Manager:
     """A manager declaration.
 
     This class signals to the model that it will have a Manager
@@ -36,7 +36,7 @@ class Manager(object):
     """
 
 
-class Parent(object):
+class Parent:
     """A parent declaration.
 
     Child managers must keep a reference to their parent.
