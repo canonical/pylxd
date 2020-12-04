@@ -128,7 +128,7 @@ class TestImage(testing.PyLXDTestCase):
         """An image with metadata is created."""
         fingerprint = hashlib.sha256(b"").hexdigest()
         a_image = models.Image.create(
-            self.client, StringIO(u""), metadata=StringIO(u""), public=True, wait=True
+            self.client, StringIO(""), metadata=StringIO(""), public=True, wait=True
         )
 
         self.assertIsInstance(a_image, models.Image)
