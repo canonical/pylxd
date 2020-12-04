@@ -25,7 +25,7 @@ class Cluster(model.Model):
     members = model.Manager()
 
     def __init__(self, *args, **kwargs):
-        super(Cluster, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.members = managers.ClusterMemberManager(self.client, self)
 
     @property

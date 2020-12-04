@@ -21,7 +21,7 @@ from pylxd.deprecated import api
 
 class LXDAPITestBase(unittest.TestCase):
     def setUp(self):
-        super(LXDAPITestBase, self).setUp()
+        super().setUp()
         self.lxd = api.API()
 
 

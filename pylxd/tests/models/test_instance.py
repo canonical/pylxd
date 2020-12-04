@@ -476,7 +476,7 @@ class TestInstanceSnapshots(testing.PyLXDTestCase):
     """Tests for pylxd.models.Instance.snapshots."""
 
     def setUp(self):
-        super(TestInstanceSnapshots, self).setUp()
+        super().setUp()
         self.instance = models.Instance.get(self.client, "an-instance")
 
     def test_get(self):
@@ -507,7 +507,7 @@ class TestSnapshot(testing.PyLXDTestCase):
     """Tests for pylxd.models.Snapshot."""
 
     def setUp(self):
-        super(TestSnapshot, self).setUp()
+        super().setUp()
         self.instance = models.Instance.get(self.client, "an-instance")
 
     def test_rename(self):
@@ -602,7 +602,7 @@ class TestFiles(testing.PyLXDTestCase):
     """Tests for pylxd.models.Instance.files."""
 
     def setUp(self):
-        super(TestFiles, self).setUp()
+        super().setUp()
         self.instance = models.Instance.get(self.client, "an-instance")
 
     def test_put_delete(self):

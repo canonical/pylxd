@@ -102,7 +102,7 @@ class FakeResponse(object):
 @mock.patch("pylxd.deprecated.connection.LXDConnection.get_connection")
 class LXDConnectionTest(unittest.TestCase):
     def setUp(self):
-        super(LXDConnectionTest, self).setUp()
+        super().setUp()
         self.conn = connection.LXDConnection()
 
     @annotated_data(

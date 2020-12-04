@@ -123,7 +123,7 @@ class Network(model.Model):
 
     def save(self, *args, **kwargs):
         self.client.assert_has_api_extension("network")
-        super(Network, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     @property
     def api(self):

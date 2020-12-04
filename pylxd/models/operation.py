@@ -68,7 +68,7 @@ class Operation(object):
         return cls(_client=client, **response.json()["metadata"])
 
     def __init__(self, **kwargs):
-        super(Operation, self).__init__()
+        super().__init__()
         for key, value in kwargs.items():
             try:
                 setattr(self, key, value)

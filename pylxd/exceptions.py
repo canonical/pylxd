@@ -11,7 +11,7 @@ class LXDAPIException(Exception):
     """
 
     def __init__(self, response):
-        super(LXDAPIException, self).__init__()
+        super().__init__()
         self.response = response
 
     def __str__(self):
@@ -44,7 +44,7 @@ class LXDAPIExtensionNotAvailable(Exception):
         :param name: the api_extension that was needed.
         :type name: str
         """
-        super(LXDAPIExtensionNotAvailable, self).__init__(
+        super().__init__(
             "LXD API extension '{}' is not available".format(name), *args, **kwargs
         )
 

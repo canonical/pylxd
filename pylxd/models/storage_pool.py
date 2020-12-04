@@ -37,7 +37,7 @@ class StoragePool(model.Model):
     volumes = model.Manager()
 
     def __init__(self, *args, **kwargs):
-        super(StoragePool, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.resources = StorageResourcesManager(self)
         self.volumes = StorageVolumeManager(self)
@@ -188,7 +188,7 @@ class StoragePool(model.Model):
             can't be deleted.
         """
         # Note this method exists so that it is documented via sphinx.
-        super(StoragePool, self).save(wait=wait)
+        super().save(wait=wait)
 
     def delete(self):
         """Delete the storage pool.
@@ -202,7 +202,7 @@ class StoragePool(model.Model):
             can't be deleted.
         """
         # Note this method exists so that it is documented via sphinx.
-        super(StoragePool, self).delete()
+        super().delete()
 
     def put(self, put_object, wait=False):
         """Put the storage pool.
@@ -226,7 +226,7 @@ class StoragePool(model.Model):
             can't be modified.
         """
         # Note this method exists so that it is documented via sphinx.
-        super(StoragePool, self).put(put_object, wait)
+        super().put(put_object, wait)
 
     def patch(self, patch_object, wait=False):
         """Patch the storage pool.
@@ -246,7 +246,7 @@ class StoragePool(model.Model):
             can't be modified.
         """
         # Note this method exists so that it is documented via sphinx.
-        super(StoragePool, self).patch(patch_object, wait)
+        super().patch(patch_object, wait)
 
 
 class StorageResourcesManager(managers.BaseManager):
@@ -547,7 +547,7 @@ class StorageVolume(model.Model):
             can't be modified.
         """
         # Note this method exists so that it is documented via sphinx.
-        super(StorageVolume, self).put(put_object, wait)
+        super().put(put_object, wait)
 
     def patch(self, patch_object, wait=False):
         """Patch the storage volume.
@@ -569,7 +569,7 @@ class StorageVolume(model.Model):
             volume can't be modified.
         """
         # Note this method exists so that it is documented via sphinx.
-        super(StorageVolume, self).patch(patch_object, wait)
+        super().patch(patch_object, wait)
 
     def save(self, wait=False):
         """Save the model using PUT back to the LXD server.
@@ -593,7 +593,7 @@ class StorageVolume(model.Model):
             volume can't be deleted.
         """
         # Note this method exists so that it is documented via sphinx.
-        super(StorageVolume, self).save(wait=wait)
+        super().save(wait=wait)
 
     def delete(self):
         """Delete the storage pool.
@@ -609,4 +609,4 @@ class StorageVolume(model.Model):
             can't be deleted.
         """
         # Note this method exists so that it is documented via sphinx.
-        super(StorageVolume, self).delete()
+        super().delete()

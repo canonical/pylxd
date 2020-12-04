@@ -82,7 +82,7 @@ class ModelType(type):
         attrs["__slots__"] = slots
         attrs["__attributes__"] = attributes
 
-        return super(ModelType, cls).__new__(cls, name, bases, attrs)
+        return super().__new__(cls, name, bases, attrs)
 
 
 # Global used to record which warnings have been issues already for unknown
@@ -140,11 +140,11 @@ class Model(object, metaclass=ModelType):
 
     def __getattribute__(self, name):
         try:
-            return super(Model, self).__getattribute__(name)
+            return super().__getattribute__(name)
         except AttributeError:
             if name in self.__attributes__:
                 self.sync()
-                return super(Model, self).__getattribute__(name)
+                return super().__getattribute__(name)
             else:
                 raise
 
@@ -156,7 +156,7 @@ class Model(object, metaclass=ModelType):
                 if attribute.validator is not type(value):
                     value = attribute.validator(value)
             self.__dirty__.add(name)
-        return super(Model, self).__setattr__(name, value)
+        return super().__setattr__(name, value)
 
     def __iter__(self):
         for attr in self.__attributes__.keys():
