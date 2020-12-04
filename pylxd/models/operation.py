@@ -12,12 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import warnings
 import os
+import warnings
 
-from pylxd import exceptions
 from six.moves.urllib import parse
 
+from pylxd import exceptions
 
 # Global used to record which warnings have been issues already for unknown
 # attributes.
@@ -36,9 +36,19 @@ class Operation(object):
     """
 
     __slots__ = [
-        '_client',
-        'class', 'created_at', 'description', 'err', 'id', 'may_cancel',
-        'metadata', 'resources', 'status', 'status_code', 'updated_at']
+        "_client",
+        "class",
+        "created_at",
+        "description",
+        "err",
+        "id",
+        "may_cancel",
+        "metadata",
+        "resources",
+        "status",
+        "status_code",
+        "updated_at",
+    ]
 
     @classmethod
     def wait_for_operation(cls, client, operation_id):
@@ -56,7 +66,7 @@ class Operation(object):
         """Get an operation."""
         operation_id = cls.extract_operation_id(operation_id)
         response = client.api.operations[operation_id].get()
-        return cls(_client=client, **response.json()['metadata'])
+        return cls(_client=client, **response.json()["metadata"])
 
     def __init__(self, **kwargs):
         super(Operation, self).__init__()
@@ -67,16 +77,16 @@ class Operation(object):
                 # ignore attributes we don't know about -- prevent breakage
                 # in the future if new attributes are added.
                 global _seen_attribute_warnings
-                env = os.environ.get('PYLXD_WARNINGS', '').lower()
-                if env != 'always' and key in _seen_attribute_warnings:
+                env = os.environ.get("PYLXD_WARNINGS", "").lower()
+                if env != "always" and key in _seen_attribute_warnings:
                     continue
                 _seen_attribute_warnings.add(key)
-                if env == 'none':
+                if env == "none":
                     continue
                 warnings.warn(
                     'Attempted to set unknown attribute "{}" '
-                    'on instance of "{}"'
-                    .format(key, self.__class__.__name__))
+                    'on instance of "{}"'.format(key, self.__class__.__name__)
+                )
                 pass
 
     def wait(self):
@@ -84,7 +94,7 @@ class Operation(object):
         response = self._client.api.operations[self.id].wait.get()
 
         try:
-            if response.json()['metadata']['status'] == 'Failure':
+            if response.json()["metadata"]["status"] == "Failure":
                 raise exceptions.LXDAPIException(response)
         except KeyError:
             # Support for legacy LXD

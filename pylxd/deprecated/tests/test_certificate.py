@@ -12,46 +12,35 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from ddt import ddt
 import json
+
 import mock
+from ddt import ddt
 
 from pylxd.deprecated import connection
-
-from pylxd.deprecated.tests import annotated_data
-from pylxd.deprecated.tests import fake_api
-from pylxd.deprecated.tests import LXDAPITestBase
+from pylxd.deprecated.tests import LXDAPITestBase, annotated_data, fake_api
 
 
 @ddt
 class LXDAPICertificateTest(LXDAPITestBase):
-
     def test_list_certificates(self):
-        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
-            ms.return_value = ('200', fake_api.fake_certificate_list())
-            self.assertEqual(
-                ['ABCDEF01'],
-                self.lxd.certificate_list())
-            ms.assert_called_with('GET',
-                                  '/1.0/certificates')
+        with mock.patch.object(connection.LXDConnection, "get_object") as ms:
+            ms.return_value = ("200", fake_api.fake_certificate_list())
+            self.assertEqual(["ABCDEF01"], self.lxd.certificate_list())
+            ms.assert_called_with("GET", "/1.0/certificates")
 
     def test_certificate_show(self):
-        with mock.patch.object(connection.LXDConnection, 'get_object') as ms:
-            ms.return_value = ('200', fake_api.fake_certificate())
-            self.assertEqual(
-                ms.return_value, self.lxd.certificate_show('ABCDEF01'))
-            ms.assert_called_with('GET',
-                                  '/1.0/certificates/ABCDEF01')
+        with mock.patch.object(connection.LXDConnection, "get_object") as ms:
+            ms.return_value = ("200", fake_api.fake_certificate())
+            self.assertEqual(ms.return_value, self.lxd.certificate_show("ABCDEF01"))
+            ms.assert_called_with("GET", "/1.0/certificates/ABCDEF01")
 
     @annotated_data(
-        ('delete', 'DELETE', '/ABCDEF01'),
-        ('create', 'POST', '', (json.dumps('ABCDEF01'),)),
+        ("delete", "DELETE", "/ABCDEF01"),
+        ("create", "POST", "", (json.dumps("ABCDEF01"),)),
     )
     def test_certificate_operations(self, method, http, path, call_args=()):
-        with mock.patch.object(connection.LXDConnection, 'get_status') as ms:
+        with mock.patch.object(connection.LXDConnection, "get_status") as ms:
             ms.return_value = True
-            self.assertTrue(
-                getattr(self.lxd, 'certificate_' + method)('ABCDEF01'))
-            ms.assert_called_with(http,
-                                  '/1.0/certificates' + path,
-                                  *call_args)
+            self.assertTrue(getattr(self.lxd, "certificate_" + method)("ABCDEF01"))
+            ms.assert_called_with(http, "/1.0/certificates" + path, *call_args)

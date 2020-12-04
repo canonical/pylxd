@@ -15,9 +15,10 @@ def requires_ws4py(f):
     """
     try:
         import ws4py  # NOQA
+
         return f
     except ImportError:
-        return unittest.skip('ws4py is not installed')(f)
+        return unittest.skip("ws4py is not installed")(f)
 
 
 class PyLXDTestCase(unittest.TestCase):
@@ -27,7 +28,7 @@ class PyLXDTestCase(unittest.TestCase):
         mock_services.update_http_rules(mock_lxd.RULES)
         mock_services.start_http_mock()
 
-        self.client = Client(endpoint='http://pylxd.test')
+        self.client = Client(endpoint="http://pylxd.test")
 
     def tearDown(self):
         mock_services.stop_http_mock()

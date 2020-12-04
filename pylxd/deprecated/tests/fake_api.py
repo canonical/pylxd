@@ -14,12 +14,7 @@
 
 
 def fake_standard_return():
-    return {
-        "type": "sync",
-        "status": "Success",
-        "status_code": 200,
-        "metadata": {}
-    }
+    return {"type": "sync", "status": "Success", "status_code": 200, "metadata": {}}
 
 
 def fake_host():
@@ -28,27 +23,22 @@ def fake_host():
         "status": "Success",
         "status_code": 200,
         "metadata": {
-                "api_compat": 1,
-                "auth": "trusted",
-                "config": {},
-                "environment": {
-                    "backing_fs": "ext4",
-                    "driver": "lxc",
-                    "kernel_version": "3.19.0-22-generic",
-                    "lxc_version": "1.1.2",
-                    "lxd_version": "0.12"
-                }
-        }
+            "api_compat": 1,
+            "auth": "trusted",
+            "config": {},
+            "environment": {
+                "backing_fs": "ext4",
+                "driver": "lxc",
+                "kernel_version": "3.19.0-22-generic",
+                "lxc_version": "1.1.2",
+                "lxd_version": "0.12",
+            },
+        },
     }
 
 
 def fake_image_list_empty():
-    return {
-        "type": "sync",
-        "status": "Success",
-        "status_code": 200,
-        "metadata": []
-    }
+    return {"type": "sync", "status": "Success", "status_code": 200, "metadata": []}
 
 
 def fake_image_list():
@@ -56,7 +46,7 @@ def fake_image_list():
         "type": "sync",
         "status": "Success",
         "status_code": 200,
-        "metadata": ['/1.0/images/trusty']
+        "metadata": ["/1.0/images/trusty"],
     }
 
 
@@ -66,23 +56,18 @@ def fake_image_info():
         "status": "Success",
         "status_code": 200,
         "metadata": {
-            "aliases": [
-                {
-                    "target": "ubuntu",
-                    "description": "ubuntu"
-                }
-            ],
+            "aliases": [{"target": "ubuntu", "description": "ubuntu"}],
             "architecture": 2,
             "fingerprint": "04aac4257341478b49c25d22cea8a6ce"
-                           "0489dc6c42d835367945e7596368a37f",
+            "0489dc6c42d835367945e7596368a37f",
             "filename": "",
             "properties": {},
             "public": 0,
             "size": 67043148,
             "created_at": 0,
             "expires_at": 0,
-            "uploaded_at": 1435669853
-        }
+            "uploaded_at": 1435669853,
+        },
     }
 
 
@@ -91,10 +76,7 @@ def fake_alias():
         "type": "sync",
         "status": "Success",
         "status_code": 200,
-        "metadata": {
-                "target": "ubuntu",
-                "description": "ubuntu"
-        }
+        "metadata": {"target": "ubuntu", "description": "ubuntu"},
     }
 
 
@@ -103,9 +85,7 @@ def fake_alias_list():
         "type": "sync",
         "status": "Success",
         "status_code": 200,
-        "metadata": [
-            "/1.0/images/aliases/ubuntu"
-        ]
+        "metadata": ["/1.0/images/aliases/ubuntu"],
     }
 
 
@@ -114,9 +94,7 @@ def fake_container_list():
         "type": "sync",
         "status": "Success",
         "status_code": 200,
-        "metadata": [
-            "/1.0/containers/trusty-1"
-        ]
+        "metadata": ["/1.0/containers/trusty-1"],
     }
 
 
@@ -125,9 +103,7 @@ def fake_container_state(status):
         "type": "sync",
         "status": "Success",
         "status_code": 200,
-        "metadata": {
-            "status": status
-        }
+        "metadata": {"status": status},
     }
 
 
@@ -136,9 +112,7 @@ def fake_container_log():
         "type": "sync",
         "status": "Success",
         "status_code": 200,
-        "metadata": {
-            "log": "fake log"
-        }
+        "metadata": {"log": "fake log"},
     }
 
 
@@ -152,7 +126,7 @@ def fake_container_migrate():
             "control": "fake_control",
             "fs": "fake_fs",
             "criu": "fake_criu",
-        }
+        },
     }
 
 
@@ -161,9 +135,7 @@ def fake_snapshots_list():
         "type": "sync",
         "status": "Success",
         "status_code": 200,
-        "metadata": [
-            "/1.0/containers/trusty-1/snapshots/first"
-        ]
+        "metadata": ["/1.0/containers/trusty-1/snapshots/first"],
     }
 
 
@@ -172,9 +144,7 @@ def fake_certificate_list():
         "type": "sync",
         "status": "Success",
         "status_code": 200,
-        "metadata": [
-            "/1.0/certificates/ABCDEF01"
-        ]
+        "metadata": ["/1.0/certificates/ABCDEF01"],
     }
 
 
@@ -183,10 +153,7 @@ def fake_certificate():
         "type": "sync",
         "status": "Success",
         "status_code": 200,
-        "metadata": {
-            "type": "client",
-            "certificate": "ABCDEF01"
-        }
+        "metadata": {"type": "client", "certificate": "ABCDEF01"},
     }
 
 
@@ -195,9 +162,7 @@ def fake_profile_list():
         "type": "sync",
         "status": "Success",
         "status_code": 200,
-        "metadata": [
-            "/1.0/profiles/fake-profile"
-        ]
+        "metadata": ["/1.0/profiles/fake-profile"],
     }
 
 
@@ -208,11 +173,8 @@ def fake_profile():
         "status_code": 200,
         "metadata": {
             "name": "fake-profile",
-            "config": {
-                "resources.memory": "2GB",
-                "network.0.bridge": "lxcbr0"
-            }
-        }
+            "config": {"resources.memory": "2GB", "network.0.bridge": "lxcbr0"},
+        },
     }
 
 
@@ -221,9 +183,7 @@ def fake_operation_list():
         "type": "sync",
         "status": "Success",
         "status_code": 200,
-        "metadata": [
-            "/1.0/operations/1234"
-        ]
+        "metadata": ["/1.0/operations/1234"],
     }
 
 
@@ -238,12 +198,10 @@ def fake_operation():
             "updated_at": "2015-06-09T19:07:23.379615253-06:00",
             "status": "Running",
             "status_code": 103,
-            "resources": {
-                "containers": ["/1.0/containers/1"]
-            },
+            "resources": {"containers": ["/1.0/containers/1"]},
             "metadata": {},
-            "may_cancel": True
-        }
+            "may_cancel": True,
+        },
     }
 
 
@@ -252,9 +210,7 @@ def fake_network_list():
         "type": "sync",
         "status": "Success",
         "status_code": 200,
-        "metadata": [
-            "/1.0/networks/lxcbr0"
-        ]
+        "metadata": ["/1.0/networks/lxcbr0"],
     }
 
 
@@ -267,6 +223,6 @@ def fake_network():
         "metadata": {
             "name": "lxcbr0",
             "type": "bridge",
-            "members": ["/1.0/containers/trusty-1"]
-        }
+            "members": ["/1.0/containers/trusty-1"],
+        },
     }

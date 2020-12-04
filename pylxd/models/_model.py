@@ -18,7 +18,6 @@ import six
 
 from pylxd import exceptions
 
-
 MISSING = object()
 
 
@@ -54,14 +53,14 @@ class ModelType(type):
     """
 
     def __new__(cls, name, bases, attrs):
-        if '__slots__' in attrs and name != 'Model':  # pragma: no cover
-            raise TypeError('__slots__ should not be specified.')
+        if "__slots__" in attrs and name != "Model":  # pragma: no cover
+            raise TypeError("__slots__ should not be specified.")
         attributes = {}
         for_removal = []
         managers = []
 
         for base in bases:
-            if hasattr(base, '__attributes__'):
+            if hasattr(base, "__attributes__"):
                 attributes.update(base.__attributes__)
 
         for key, val in attrs.items():
@@ -75,15 +74,15 @@ class ModelType(type):
             del attrs[key]
 
         slots = list(attributes.keys())
-        if '__slots__' in attrs:
-            slots = slots + attrs['__slots__']
+        if "__slots__" in attrs:
+            slots = slots + attrs["__slots__"]
         for base in bases:
-            if '__slots__' in dir(base):
+            if "__slots__" in dir(base):
                 slots = slots + base.__slots__
         if len(managers) > 0:
             slots = slots + managers
-        attrs['__slots__'] = slots
-        attrs['__attributes__'] = attributes
+        attrs["__slots__"] = slots
+        attrs["__attributes__"] = attributes
 
         return super(ModelType, cls).__new__(cls, name, bases, attrs)
 
@@ -116,8 +115,9 @@ class Model(object):
     'none', or always displayed by setting the PYLXD_WARNINGS variable to
     'always'.
     """
+
     NotFound = exceptions.NotFound
-    __slots__ = ['client', '__dirty__']
+    __slots__ = ["client", "__dirty__"]
 
     def __init__(self, client, **kwargs):
         self.__dirty__ = set()
@@ -128,18 +128,17 @@ class Model(object):
                 setattr(self, key, val)
             except AttributeError:
                 global _seen_attribute_warnings
-                env = os.environ.get('PYLXD_WARNINGS', '').lower()
+                env = os.environ.get("PYLXD_WARNINGS", "").lower()
                 item = "{}.{}".format(self.__class__.__name__, key)
-                if env != 'always' and item in _seen_attribute_warnings:
+                if env != "always" and item in _seen_attribute_warnings:
                     continue
                 _seen_attribute_warnings.add(item)
-                if env == 'none':
+                if env == "none":
                     continue
                 warnings.warn(
                     'Attempted to set unknown attribute "{}" '
-                    'on instance of "{}"'.format(
-                        key, self.__class__.__name__
-                    ))
+                    'on instance of "{}"'.format(key, self.__class__.__name__)
+                )
         self.__dirty__.clear()
 
     def __getattribute__(self, name):
@@ -181,7 +180,7 @@ class Model(object):
         # XXX: rockstar (25 Jun 2016) - This has the potential to step
         # on existing attributes.
         response = self.api.get()
-        payload = response.json()['metadata']
+        payload = response.json()["metadata"]
         for key, val in payload.items():
             if key not in self.__dirty__ or rollback:
                 try:
@@ -214,18 +213,16 @@ class Model(object):
         marshalled = self.marshall()
         response = self.api.put(json=marshalled)
 
-        if response.json()['type'] == 'async' and wait:
-            self.client.operations.wait_for_operation(
-                response.json()['operation'])
+        if response.json()["type"] == "async" and wait:
+            self.client.operations.wait_for_operation(response.json()["operation"])
         self.__dirty__.clear()
 
     def delete(self, wait=False):
         """Delete an object from the server."""
         response = self.api.delete()
 
-        if response.json()['type'] == 'async' and wait:
-            self.client.operations.wait_for_operation(
-                response.json()['operation'])
+        if response.json()["type"] == "async" and wait:
+            self.client.operations.wait_for_operation(response.json()["operation"])
         self.client = None
 
     def marshall(self, skip_readonly=True):
@@ -235,7 +232,8 @@ class Model(object):
             if attr.readonly and skip_readonly:
                 continue
             if (not attr.optional) or (  # pragma: no branch
-                    attr.optional and hasattr(self, key)):
+                attr.optional and hasattr(self, key)
+            ):
                 val = getattr(self, key)
                 # Don't send back to the server an attribute it doesn't
                 # support.
@@ -285,9 +283,8 @@ class Model(object):
         """
         response = self.api.put(json=put_object)
 
-        if response.json()['type'] == 'async' and wait:
-            self.client.operations.wait_for_operation(
-                response.json()['operation'])
+        if response.json()["type"] == "async" and wait:
+            self.client.operations.wait_for_operation(response.json()["operation"])
 
     def patch(self, patch_object, wait=False):
         """Access the PATCH method directly for the object.
@@ -332,6 +329,5 @@ class Model(object):
         """
         response = self.api.patch(json=patch_object)
 
-        if response.json()['type'] == 'async' and wait:
-            self.client.operations.wait_for_operation(
-                response.json()['operation'])
+        if response.json()["type"] == "async" and wait:
+            self.client.operations.wait_for_operation(response.json()["operation"])

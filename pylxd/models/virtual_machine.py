@@ -16,4 +16,4 @@ from pylxd.models import Instance
 
 class VirtualMachine(Instance):
 
-    _endpoint = 'virtual-machines'
+    _endpoint = "virtual-machines"

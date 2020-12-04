@@ -64,14 +64,13 @@ At this point, the contributor should then delete their private branch.
 Code standards
 --------------
 
-pyLXD follows `PEP 8`_ as closely as practical. To check your compliance, use
-the `pep8` tox target::
+pyLXD formats code with Black and isort. Verify the formatting with::
 
-    tox -e pep8
+    tox -e lint
 
-.. note:: if this fails then the code will not be merged.  If there is a good
-          reason for a PEP8 non-conformance, then a ``# NOQA`` comment should be
-          added to the relevant line(s).
+If it fails, you can reformat the code with::
+
+    tox -e format
 
 Testing
 -------

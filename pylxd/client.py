@@ -20,8 +20,10 @@ from enum import Enum
 import requests
 import requests_unixsocket
 from six.moves.urllib import parse
+
 try:
     from ws4py.client import WebSocketBaseClient
+
     _ws4py_installed = True
 except ImportError:  # pragma: no cover
     WebSocketBaseClient = object
@@ -31,30 +33,31 @@ from pylxd import exceptions, managers
 
 requests_unixsocket.monkeypatch()
 
-LXD_PATH = '.config/lxc/'
-SNAP_ROOT = os.path.expanduser('~/snap/lxd/current/')
-APT_ROOT = os.path.expanduser('~/')
-CERT_FILE_NAME = 'client.crt'
-KEY_FILE_NAME = 'client.key'
+LXD_PATH = ".config/lxc/"
+SNAP_ROOT = os.path.expanduser("~/snap/lxd/current/")
+APT_ROOT = os.path.expanduser("~/")
+CERT_FILE_NAME = "client.crt"
+KEY_FILE_NAME = "client.key"
 # check that the cert file and key file exist at the appopriate path
-if os.path.exists(os.path.join(
-        SNAP_ROOT, LXD_PATH, CERT_FILE_NAME)):  # pragma: no cover
+if os.path.exists(
+    os.path.join(SNAP_ROOT, LXD_PATH, CERT_FILE_NAME)
+):  # pragma: no cover
     CERTS_PATH = os.path.join(SNAP_ROOT, LXD_PATH)  # pragma: no cover
 else:  # pragma: no cover
     CERTS_PATH = os.path.join(APT_ROOT, LXD_PATH)  # pragma: no cover
 
-Cert = namedtuple('Cert', ['cert', 'key'])  # pragma: no cover
+Cert = namedtuple("Cert", ["cert", "key"])  # pragma: no cover
 DEFAULT_CERTS = Cert(
     cert=os.path.expanduser(os.path.join(CERTS_PATH, CERT_FILE_NAME)),
-    key=os.path.expanduser(os.path.join(CERTS_PATH, KEY_FILE_NAME))
+    key=os.path.expanduser(os.path.join(CERTS_PATH, KEY_FILE_NAME)),
 )  # pragma: no cover
 
 
 class EventType(Enum):
-    All = 'all'
-    Operation = 'operation'
-    Logging = 'logging'
-    Lifecycle = 'lifecycle'
+    All = "all"
+    Operation = "operation"
+    Logging = "logging"
+    Lifecycle = "lifecycle"
 
 
 class _APINode(object):
@@ -64,7 +67,7 @@ class _APINode(object):
         self._api_endpoint = api_endpoint
         self._timeout = timeout
 
-        if self._api_endpoint.startswith('http+unix://'):
+        if self._api_endpoint.startswith("http+unix://"):
             self.session = requests_unixsocket.Session()
         else:
             self.session = requests.Session()
@@ -81,12 +84,14 @@ class _APINode(object):
         :rtype: _APINode
         """
         # '-' can't be used in variable names
-        if name in ('storage_pools', 'virtual_machines'):
-            name = name.replace('_', '-')
-        return self.__class__('{}/{}'.format(self._api_endpoint, name),
-                              cert=self.session.cert,
-                              verify=self.session.verify,
-                              timeout=self._timeout)
+        if name in ("storage_pools", "virtual_machines"):
+            name = name.replace("_", "-")
+        return self.__class__(
+            "{}/{}".format(self._api_endpoint, name),
+            cert=self.session.cert,
+            verify=self.session.verify,
+            timeout=self._timeout,
+        )
 
     def __getitem__(self, item):
         """This converts python api.thing[name] -> ".../thing/name"
@@ -96,13 +101,16 @@ class _APINode(object):
         :returns: A new _APINode(with the new item tagged on as /<item>
         :rtype: _APINode
         """
-        return self.__class__('{}/{}'.format(self._api_endpoint, item),
-                              cert=self.session.cert,
-                              verify=self.session.verify,
-                              timeout=self._timeout)
+        return self.__class__(
+            "{}/{}".format(self._api_endpoint, item),
+            cert=self.session.cert,
+            verify=self.session.verify,
+            timeout=self._timeout,
+        )
 
-    def _assert_response(self, response, allowed_status_codes=(200,),
-                         stream=False, is_api=True):
+    def _assert_response(
+        self, response, allowed_status_codes=(200,), stream=False, is_api=True
+    ):
         """Assert properties of the response.
 
         LXD's API clearly defines specific responses. If the API
@@ -132,7 +140,7 @@ class _APINode(object):
         if response.status_code == 200:
             # Synchronous request
             try:
-                if data['type'] != 'sync':
+                if data["type"] != "sync":
                     raise exceptions.LXDAPIException(response)
             except KeyError:
                 # Missing 'type' in response
@@ -153,17 +161,17 @@ class _APINode(object):
         determine whether the get is an API call or a raw call.
         This is for py27 compatibility.
         """
-        is_api = kwargs.pop('is_api', True)
-        kwargs['timeout'] = kwargs.get('timeout', self._timeout)
+        is_api = kwargs.pop("is_api", True)
+        kwargs["timeout"] = kwargs.get("timeout", self._timeout)
         response = self.session.get(self._api_endpoint, *args, **kwargs)
-        self._assert_response(response,
-                              stream=kwargs.get('stream', False),
-                              is_api=is_api)
+        self._assert_response(
+            response, stream=kwargs.get("stream", False), is_api=is_api
+        )
         return response
 
     def post(self, *args, **kwargs):
         """Perform an HTTP POST."""
-        kwargs['timeout'] = kwargs.get('timeout', self._timeout)
+        kwargs["timeout"] = kwargs.get("timeout", self._timeout)
         target = kwargs.pop("target", None)
 
         if target is not None:
@@ -179,21 +187,21 @@ class _APINode(object):
 
     def put(self, *args, **kwargs):
         """Perform an HTTP PUT."""
-        kwargs['timeout'] = kwargs.get('timeout', self._timeout)
+        kwargs["timeout"] = kwargs.get("timeout", self._timeout)
         response = self.session.put(self._api_endpoint, *args, **kwargs)
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
 
     def patch(self, *args, **kwargs):
         """Perform an HTTP PATCH."""
-        kwargs['timeout'] = kwargs.get('timeout', self._timeout)
+        kwargs["timeout"] = kwargs.get("timeout", self._timeout)
         response = self.session.patch(self._api_endpoint, *args, **kwargs)
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
 
     def delete(self, *args, **kwargs):
         """Perform an HTTP delete."""
-        kwargs['timeout'] = kwargs.get('timeout', self._timeout)
+        kwargs["timeout"] = kwargs.get("timeout", self._timeout)
         response = self.session.delete(self._api_endpoint, *args, **kwargs)
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
@@ -212,7 +220,7 @@ class _WebsocketClient(WebSocketBaseClient):
         self.messages = []
 
     def received_message(self, message):
-        json_message = json.loads(message.data.decode('utf-8'))
+        json_message = json.loads(message.data.decode("utf-8"))
         self.messages.append(json_message)
 
 
@@ -269,8 +277,8 @@ class Client(object):
     """
 
     def __init__(
-            self, endpoint=None, version='1.0', cert=None, verify=True,
-            timeout=None):
+        self, endpoint=None, version="1.0", cert=None, verify=True, timeout=None
+    ):
         """Constructs a LXD client
 
         :param endpoint: (optional): endpoint can be an http endpoint or
@@ -290,26 +298,28 @@ class Client(object):
 
         self.cert = cert
         if endpoint is not None:
-            if endpoint.startswith('/') and os.path.isfile(endpoint):
-                self.api = _APINode('http+unix://{}'.format(
-                    parse.quote(endpoint, safe='')), timeout=timeout)
+            if endpoint.startswith("/") and os.path.isfile(endpoint):
+                self.api = _APINode(
+                    "http+unix://{}".format(parse.quote(endpoint, safe="")),
+                    timeout=timeout,
+                )
             else:
                 # Extra trailing slashes cause LXD to 301
-                endpoint = endpoint.rstrip('/')
+                endpoint = endpoint.rstrip("/")
                 if cert is None and (
-                        os.path.exists(DEFAULT_CERTS.cert) and
-                        os.path.exists(DEFAULT_CERTS.key)):
+                    os.path.exists(DEFAULT_CERTS.cert)
+                    and os.path.exists(DEFAULT_CERTS.key)
+                ):
                     cert = DEFAULT_CERTS
-                self.api = _APINode(
-                    endpoint, cert=cert, verify=verify, timeout=timeout)
+                self.api = _APINode(endpoint, cert=cert, verify=verify, timeout=timeout)
         else:
-            if 'LXD_DIR' in os.environ:
-                path = os.path.join(os.environ.get('LXD_DIR'), 'unix.socket')
-            elif os.path.exists('/var/snap/lxd/common/lxd/unix.socket'):
-                path = '/var/snap/lxd/common/lxd/unix.socket'
+            if "LXD_DIR" in os.environ:
+                path = os.path.join(os.environ.get("LXD_DIR"), "unix.socket")
+            elif os.path.exists("/var/snap/lxd/common/lxd/unix.socket"):
+                path = "/var/snap/lxd/common/lxd/unix.socket"
             else:
-                path = '/var/lib/lxd/unix.socket'
-            endpoint = 'http+unix://{}'.format(parse.quote(path, safe=''))
+                path = "/var/lib/lxd/unix.socket"
+            endpoint = "http+unix://{}".format(parse.quote(path, safe=""))
             self.api = _APINode(endpoint, timeout=timeout)
         self.api = self.api[version]
 
@@ -318,10 +328,12 @@ class Client(object):
             response = self.api.get()
             if response.status_code != 200:
                 raise exceptions.ClientConnectionFailed()
-            self.host_info = response.json()['metadata']
+            self.host_info = response.json()["metadata"]
 
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.InvalidURL) as e:
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.InvalidURL,
+        ) as e:
             raise exceptions.ClientConnectionFailed(str(e))
 
         self.cluster = managers.ClusterManager(self)
@@ -338,16 +350,16 @@ class Client(object):
 
     @property
     def trusted(self):
-        return self.host_info['auth'] == 'trusted'
+        return self.host_info["auth"] == "trusted"
 
     @property
     def resources(self):
         if self._resource_cache is None:
-            self.assert_has_api_extension('resources')
+            self.assert_has_api_extension("resources")
             response = self.api.resources.get()
             if response.status_code != 200:
                 raise exceptions.ClientConnectionFailed()
-            self._resource_cache = response.json()['metadata']
+            self._resource_cache = response.json()["metadata"]
         return self._resource_cache
 
     def has_api_extension(self, name):
@@ -358,7 +370,7 @@ class Client(object):
         :returns: True if extension exists
         :rtype: bool
         """
-        return name in self.host_info['api_extensions']
+        return name in self.host_info["api_extensions"]
 
     def assert_has_api_extension(self, name):
         """Asserts that the `name` api_extension exists.
@@ -375,25 +387,25 @@ class Client(object):
     def authenticate(self, password):
         if self.trusted:
             return
-        cert = open(self.api.session.cert[0]).read().encode('utf-8')
+        cert = open(self.api.session.cert[0]).read().encode("utf-8")
         self.certificates.create(password, cert)
 
         # Refresh the host info
         response = self.api.get()
-        self.host_info = response.json()['metadata']
+        self.host_info = response.json()["metadata"]
 
     @property
     def websocket_url(self):
-        if self.api.scheme in ('http', 'https'):
+        if self.api.scheme in ("http", "https"):
             host = self.api.netloc
-            if self.api.scheme == 'http':
-                scheme = 'ws'
+            if self.api.scheme == "http":
+                scheme = "ws"
             else:
-                scheme = 'wss'
+                scheme = "wss"
         else:
-            scheme = 'ws+unix'
+            scheme = "ws+unix"
             host = parse.unquote(self.api.netloc)
-        url = parse.urlunparse((scheme, host, '', '', '', ''))
+        url = parse.urlunparse((scheme, host, "", "", "", ""))
         return url
 
     def events(self, websocket_client=None, event_types=None):
@@ -420,8 +432,7 @@ class Client(object):
         :rtype: Option[_WebsocketClient(), :param:`websocket_client`]
         """
         if not _ws4py_installed:
-            raise ValueError(
-                'This feature requires the optional ws4py library.')
+            raise ValueError("This feature requires the optional ws4py library.")
         if websocket_client is None:
             websocket_client = _WebsocketClient
 
@@ -432,8 +443,8 @@ class Client(object):
 
         if event_types and EventType.All not in event_types:
             query = parse.parse_qs(parsed.query)
-            query.update({'type': ','.join(t.value for t in event_types)})
-            resource = '{}?{}'.format(resource, parse.urlencode(query))
+            query.update({"type": ",".join(t.value for t in event_types)})
+            resource = "{}?{}".format(resource, parse.urlencode(query))
 
         client.resource = resource
 

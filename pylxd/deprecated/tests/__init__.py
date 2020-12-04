@@ -12,15 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from ddt import data
-from ddt import unpack
 import unittest
+
+from ddt import data, unpack
 
 from pylxd.deprecated import api
 
 
 class LXDAPITestBase(unittest.TestCase):
-
     def setUp(self):
         super(LXDAPITestBase, self).setUp()
         self.lxd = api.API()
