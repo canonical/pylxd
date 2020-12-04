@@ -13,27 +13,6 @@
 #    under the License.
 
 from pylxd import api
-from pylxd import exceptions as lxd_exceptions
-
-
-def upload_image(image):
-    alias = "{}/{}/{}/{}".format(
-        image["os"], image["release"], image["arch"], image["variant"]
-    )
-    lxd = api.API()
-    imgs = api.API(host="images.linuxcontainers.org")
-    d = imgs.alias_show(alias)
-
-    meta = d[1]["metadata"]
-    tgt = meta["target"]
-
-    try:
-        lxd.alias_update(meta)
-    except lxd_exceptions.APIError as ex:
-        if ex.status_code == 404:
-            lxd.alias_create(meta)
-
-    return tgt
 
 
 def delete_image(image):
