@@ -12,10 +12,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import pbr.version
-
-__version__ = pbr.version.VersionInfo("pylxd").version_string()
+from pkg_resources import get_distribution
 
 from pylxd.client import Client, EventType
 
 __all__ = ["Client", "EventType"]
+
+__version__ = get_distribution("pylxd").version
