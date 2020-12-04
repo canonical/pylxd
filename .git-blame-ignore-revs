@@ -1,0 +1,15 @@
+# This file contains all the revisions that are only formatting changes and
+# should usually be ignored when running 'git blame'.
+#
+# Make use of it on a single file by running:
+#
+#   git blame --ignore-revs-file .git-blame-ignore-revs FILE
+#
+# ... or for global setting (most useful) configure git:
+#
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+#
+# Note that git 2.23 or newer is required for this to work
+
+# Blacken all the code
+f76cf13e23603717caec8af611e1a1889bca9eb4
