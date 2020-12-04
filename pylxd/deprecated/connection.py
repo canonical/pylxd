@@ -31,17 +31,11 @@ except ImportError:
 
 from pylxd.deprecated import exceptions, utils
 
-if hasattr(ssl, "SSLContext"):
-    # For Python >= 2.7.9 and Python 3.x
-    if hasattr(ssl, "PROTOCOL_TLSv1_2"):
-        DEFAULT_TLS_VERSION = ssl.PROTOCOL_TLSv1_2
-    else:
-        DEFAULT_TLS_VERSION = ssl.PROTOCOL_TLSv1
+# For Python >= 2.7.9 and Python 3.x
+if hasattr(ssl, "PROTOCOL_TLSv1_2"):
+    DEFAULT_TLS_VERSION = ssl.PROTOCOL_TLSv1_2
 else:
-    # For Python 2.6 and <= 2.7.8
-    from OpenSSL import SSL
-
-    DEFAULT_TLS_VERSION = SSL.TLSv1_2_METHOD
+    DEFAULT_TLS_VERSION = ssl.PROTOCOL_TLSv1
 
 
 class UnixHTTPConnection(http_client.HTTPConnection):

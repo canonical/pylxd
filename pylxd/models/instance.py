@@ -35,10 +35,6 @@ from pylxd.exceptions import LXDAPIException
 from pylxd.models import _model as model
 from pylxd.models.operation import Operation
 
-if six.PY2:
-    # Python2.7 doesn't have this natively
-    from pylxd.exceptions import NotADirectoryError
-
 
 class InstanceState(object):
     """A simple object for representing instance state."""
