@@ -12,12 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import builtins
 import datetime
 import unittest
+from io import StringIO
 
 import mock
 from ddt import ddt
-from six.moves import builtins, cStringIO
 
 from pylxd.deprecated import connection, exceptions, image
 from pylxd.deprecated.tests import LXDAPITestBase, annotated_data, fake_api
@@ -171,7 +172,7 @@ class LXDAPIImageTestStatus(LXDAPITestBase):
     return_value=("200", fake_api.fake_image_info()),
 )
 class LXDAPAPIImageTestUpload(LXDAPITestBase):
-    @mock.patch.object(builtins, "open", return_value=cStringIO("fake"))
+    @mock.patch.object(builtins, "open", return_value=StringIO("fake"))
     def test_image_upload_file(self, mo, ms):
         self.assertTrue(self.lxd.image_upload(path="/fake/path"))
         mo.assert_called_once_with("/fake/path", "rb")

@@ -16,13 +16,12 @@
 import copy
 import json
 import os
+import queue
 import socket
 import ssl
 import threading
 from collections import namedtuple
-
-import six
-from six.moves import http_client, queue
+from http import client as http_client
 
 try:
     from ws4py import client as websocket
@@ -31,27 +30,16 @@ except ImportError:
 
 from pylxd.deprecated import exceptions, utils
 
-if hasattr(ssl, "SSLContext"):
-    # For Python >= 2.7.9 and Python 3.x
-    if hasattr(ssl, "PROTOCOL_TLSv1_2"):
-        DEFAULT_TLS_VERSION = ssl.PROTOCOL_TLSv1_2
-    else:
-        DEFAULT_TLS_VERSION = ssl.PROTOCOL_TLSv1
+# For Python >= 2.7.9 and Python 3.x
+if hasattr(ssl, "PROTOCOL_TLSv1_2"):
+    DEFAULT_TLS_VERSION = ssl.PROTOCOL_TLSv1_2
 else:
-    # For Python 2.6 and <= 2.7.8
-    from OpenSSL import SSL
-
-    DEFAULT_TLS_VERSION = SSL.TLSv1_2_METHOD
+    DEFAULT_TLS_VERSION = ssl.PROTOCOL_TLSv1
 
 
 class UnixHTTPConnection(http_client.HTTPConnection):
     def __init__(self, path, host="localhost", port=None, strict=None, timeout=None):
-        if six.PY3:
-            http_client.HTTPConnection.__init__(self, host, port=port, timeout=timeout)
-        else:
-            http_client.HTTPConnection.__init__(
-                self, host, port=port, strict=strict, timeout=timeout
-            )
+        http_client.HTTPConnection.__init__(self, host, port=port, timeout=timeout)
 
         self.path = path
 
@@ -160,10 +148,7 @@ class LXDConnection(object):
         status = response.status
         raw_body = response.read()
         try:
-            if six.PY3:
-                body = json.loads(raw_body.decode())
-            else:
-                body = json.loads(raw_body)
+            body = json.loads(raw_body.decode())
         except ValueError:
             body = None
 

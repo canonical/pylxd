@@ -15,11 +15,11 @@ import json
 import os
 import os.path
 import unittest
+from urllib import parse
 
 import mock
 import requests
 import requests_unixsocket
-from six.moves.urllib import parse
 
 from pylxd import client, exceptions
 from pylxd.tests.testing import requires_ws4py

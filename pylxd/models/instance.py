@@ -16,9 +16,7 @@ import json
 import os
 import stat
 import time
-
-import six
-from six.moves.urllib import parse
+from urllib import parse
 
 try:
     from ws4py.client import WebSocketBaseClient
@@ -35,16 +33,12 @@ from pylxd.exceptions import LXDAPIException
 from pylxd.models import _model as model
 from pylxd.models.operation import Operation
 
-if six.PY2:
-    # Python2.7 doesn't have this natively
-    from pylxd.exceptions import NotADirectoryError
-
 
 class InstanceState(object):
     """A simple object for representing instance state."""
 
     def __init__(self, **kwargs):
-        for key, value in six.iteritems(kwargs):
+        for key, value in kwargs.items():
             setattr(self, key, value)
 
 
@@ -158,7 +152,7 @@ class Instance(model.Model):
             if mode is not None:
                 if isinstance(mode, int):
                     mode = format(mode, "o")
-                if not isinstance(mode, six.string_types):
+                if not isinstance(mode, str):
                     raise ValueError("'mode' parameter must be int or string")
                 if not mode.startswith("0"):
                     mode = "0{}".format(mode)
@@ -427,7 +421,7 @@ class Instance(model.Model):
         """
         if not _ws4py_installed:
             raise ValueError("This feature requires the optional ws4py library.")
-        if isinstance(commands, six.string_types):
+        if isinstance(commands, str):
             raise TypeError("First argument must be a list.")
         if environment is None:
             environment = {}
@@ -519,7 +513,7 @@ class Instance(model.Model):
         :returns: Two urls to an interactive websocket and a control socket
         :rtype: {'ws':str,'control':str}
         """
-        if isinstance(commands, six.string_types):
+        if isinstance(commands, str):
             raise TypeError("First argument must be a list.")
 
         if environment is None:
@@ -753,7 +747,7 @@ class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
         super(_StdinWebsocket, self).__init__(url, **kwargs)
 
     def _smart_encode(self, msg):
-        if type(msg) == six.text_type and self.encoding:
+        if type(msg) == str and self.encoding:
             return msg.encode(self.encoding)
         return msg
 

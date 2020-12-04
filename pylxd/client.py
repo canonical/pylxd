@@ -16,10 +16,10 @@ import os
 import os.path
 from collections import namedtuple
 from enum import Enum
+from urllib import parse
 
 import requests
 import requests_unixsocket
-from six.moves.urllib import parse
 
 try:
     from ws4py.client import WebSocketBaseClient

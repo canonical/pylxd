@@ -14,8 +14,6 @@
 import os
 import warnings
 
-import six
-
 from pylxd import exceptions
 
 MISSING = object()
@@ -92,8 +90,7 @@ class ModelType(type):
 _seen_attribute_warnings = set()
 
 
-@six.add_metaclass(ModelType)
-class Model(object):
+class Model(object, metaclass=ModelType):
     """A Base LXD object model.
 
     Objects fetched from the LXD API have state, which allows
