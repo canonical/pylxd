@@ -23,7 +23,7 @@ from pylxd import exceptions
 _seen_attribute_warnings = set()
 
 
-class Operation(object):
+class Operation:
     """An LXD operation.
 
     If the LXD server sends attributes that this version of pylxd is unaware of
@@ -68,7 +68,7 @@ class Operation(object):
         return cls(_client=client, **response.json()["metadata"])
 
     def __init__(self, **kwargs):
-        super(Operation, self).__init__()
+        super().__init__()
         for key, value in kwargs.items():
             try:
                 setattr(self, key, value)

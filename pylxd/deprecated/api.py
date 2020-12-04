@@ -25,7 +25,7 @@ from pylxd.deprecated import (
 )
 
 
-class API(object):
+class API:
     def __init__(self, host=None, port=8443):
         warnings.warn(
             "pylxd.api.API is deprecated. Please use pylxd.Client.", DeprecationWarning

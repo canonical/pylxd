@@ -4,7 +4,7 @@ import inspect
 from contextlib import contextmanager
 
 
-class BaseManager(object):
+class BaseManager:
     """A BaseManager class for handling collection operations."""
 
     @property
@@ -22,7 +22,7 @@ class BaseManager(object):
         for name, method in methods:
             func = functools.partial(method, *args, **kwargs)
             setattr(self, name, func)
-        return super(BaseManager, self).__init__()
+        return super().__init__()
 
 
 class CertificateManager(BaseManager):
@@ -74,7 +74,7 @@ class ClusterManager(BaseManager):
     manager_for = "pylxd.models.Cluster"
 
     def __init__(self, client, *args, **kwargs):
-        super(ClusterManager, self).__init__(client, *args, **kwargs)
+        super().__init__(client, *args, **kwargs)
         self._client = client
         self.members = ClusterMemberManager(client)
 

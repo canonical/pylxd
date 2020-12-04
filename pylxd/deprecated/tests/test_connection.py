@@ -92,7 +92,7 @@ class LXDInitConnectionTest(unittest.TestCase):
                 ms.assert_called_once_with(args[0], len(args) == 2 and args[1] or 8443)
 
 
-class FakeResponse(object):
+class FakeResponse:
     def __init__(self, status, data):
         self.status = status
         self.read = BytesIO(bytes(data, "utf-8")).read
@@ -102,7 +102,7 @@ class FakeResponse(object):
 @mock.patch("pylxd.deprecated.connection.LXDConnection.get_connection")
 class LXDConnectionTest(unittest.TestCase):
     def setUp(self):
-        super(LXDConnectionTest, self).setUp()
+        super().setUp()
         self.conn = connection.LXDConnection()
 
     @annotated_data(

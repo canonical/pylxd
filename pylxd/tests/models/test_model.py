@@ -37,7 +37,7 @@ class TestModel(testing.PyLXDTestCase):
     """Tests for pylxd.model.Model."""
 
     def setUp(self):
-        super(TestModel, self).setUp()
+        super().setUp()
 
         self.add_rule(
             {

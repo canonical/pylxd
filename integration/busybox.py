@@ -26,7 +26,7 @@ def find_on_path(command):
     return False
 
 
-class Busybox(object):
+class Busybox:
     workdir = None
 
     def __init__(self):

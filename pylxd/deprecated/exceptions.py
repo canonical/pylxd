@@ -40,6 +40,6 @@ class ImageInvalidSize(PyLXDException):
 class APIError(PyLXDException):
     def __init__(self, error, status_code):
         msg = "Error %s - %s." % (status_code, error)
-        super(APIError, self).__init__(msg)
+        super().__init__(msg)
         self.status_code = status_code
         self.error = error
