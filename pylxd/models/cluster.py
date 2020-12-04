@@ -35,9 +35,7 @@ class Cluster(model.Model):
     @classmethod
     def get(cls, client, *args):
         """Get cluster details"""
-        print(args)
         response = client.api.cluster.get()
-        print(response.json())
         container = cls(client, **response.json()["metadata"])
         return container
 
