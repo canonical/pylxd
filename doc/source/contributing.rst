@@ -78,7 +78,7 @@ Testing
 Testing pyLXD is in 3 parts:
 
 1. Conformance with `PEP 8`_, using the ``tox -e pep8`` command.
-2. Unit tests using ``tox -e py3``.
+2. Unit tests using ``tox -e py``.
 3. Integration tests using the ``run_integration_tests`` script in the root of
    the repository.
 
@@ -87,9 +87,8 @@ Testing pyLXD is in 3 parts:
           automatically run as they require a working LXD environment.
 
 All of the commands use the `Tox`_ automation project to run tests in a
-sandboxed environment.  On Ubuntu this is installed using::
+sandboxed environment.
 
-    sudo apt install python-tox
 
 Unit Testing
 ^^^^^^^^^^^^
@@ -126,7 +125,7 @@ Some hints on how to run the integration tests:
 1. On Ubuntu it's probably easiest to use the `Multipass`_ snap.
 2. Launch an LTS instance using ``multipass launch -n foo``
 3. Shell into the instance: ``multipass exec foo -- bash``
-4. Install tox and python3.6+: ``sudo apt install python-tox python3-dev``
+4. Install tox and python3.6+.
 5. Clone the branch from the PR (or otherwise copy the repo into the machine)
 6. Configure LXD using ``lxd init`` -- follow the prompts provided.
 7. Run the integration tests.
