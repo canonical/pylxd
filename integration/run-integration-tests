@@ -13,7 +13,7 @@ lxc config set core.https_address [::]
 # force generation of client certificate to an address that doesn't work (http)
 # generate an openssl certificate and key for the remote not verified test
 mkdir -p $HOME/.config/lxc
-openssl genrsa 1024 > $HOME/.config/lxc/client.key
+openssl genrsa 2048 > $HOME/.config/lxc/client.key
 chmod 400 $HOME/.config/lxc/client.key
 
 openssl req -new -x509 -nodes -sha1 -days 365 \
