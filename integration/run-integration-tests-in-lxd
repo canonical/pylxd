@@ -15,21 +15,23 @@ _dir="$( cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd)"
 
 function _run_tests {
 	local _target=${1}
-	CONTAINER_NAME=pylxd-`uuidgen | cut -d"-" -f1`
+	CONTAINER_NAME=pylxd-$_target-`uuidgen | cut -d"-" -f1`
 
-	if [[ "${_target}" == "bionic" ]]; then
+	if [[ "${_target}" == "focal" ]]; then
+		echo "Running Focal (20:04) integration tests"
+		CONTAINER_IMAGE="ubuntu:20.04"
+	elif [[ "${_target}" == "bionic" ]]; then
 		echo "Running Bionic (18:04) integration tests"
 		CONTAINER_IMAGE="ubuntu:18.04"
 	else
-		echo "Running Xenial (16:04) integration tests"
-		CONTAINER_IMAGE="ubuntu:16.04"
+	    exit
 	fi
 
 	# This creates a privileged container, because I was bumping into situations where it
 	# seemed that we had maxed out user namespaces (I haven't checked it out, but it's likely
 	# a bug in LXD).
 	lxc launch $CONTAINER_IMAGE $CONTAINER_NAME -c security.nesting=true -c security.privileged=true
-	sleep 5  # Wait for the network to come up
+	lxc exec $CONTAINER_NAME -- cloud-init status --long --wait
 
 	lxc exec $CONTAINER_NAME -- mkdir -p /opt/pylxd
 	# NOTE: rockstar (13 Sep 2016) - --recursive is not supported in lxd <2.1, so
@@ -42,6 +44,6 @@ function _run_tests {
 	lxc delete --force $CONTAINER_NAME
 }
 
-# run xenial and then bionic integration tests
-_run_tests xenial
+# run focal and then bionic integration tests
 _run_tests bionic
+_run_tests focal
