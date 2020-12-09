@@ -7,7 +7,7 @@ pylxd
     :target: https://github.com/lxc/pylxd/actions?query=workflow%3A%22CI+tests%22
 .. image:: https://codecov.io/github/lxc/pylxd/coverage.svg?branch=master
     :target: https://codecov.io/github/lxc/pylxd
-.. image:: https://readthedocs.org/projects/docs/badge/?version=latest
+.. image:: https://readthedocs.org/projects/pylxd/badge/?version=latest
     :target: https://pylxd.readthedocs.io/en/latest/?badge=latest
 
 A Python library for interacting with the LXD REST API.
