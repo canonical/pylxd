@@ -116,7 +116,7 @@ Currently, there are two variants of the script to run integration tests:
 
 The default is ``run_integration_tests-18-04``, which is symlinked to
 ``run_integration_tests``. This is because the default is to test on Ubuntu
-Bionic, with Ubuntu Xenial (16.04) for maintenance purposes.
+Focal (20.04 LTS), with Ubuntu Bionic (18.04 LTS) for maintenance purposes.
 
 .. note:: A script to automate running the integration tests needs to be added.
 
