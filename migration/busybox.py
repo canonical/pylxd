@@ -14,9 +14,9 @@ import uuid
 def find_on_path(command):
     """Is command on the executable search path?"""
 
-    if 'PATH' not in os.environ:
+    if "PATH" not in os.environ:
         return False
-    path = os.environ['PATH']
+    path = os.environ["PATH"]
     for element in path.split(os.pathsep):
         if not element:
             continue
@@ -44,20 +44,21 @@ class Busybox:
         target_tarball = tarfile.open(destination_tar, "w:")
 
         if split:
-            destination_tar_rootfs = os.path.join(self.workdir,
-                                                  "busybox.rootfs.tar")
+            destination_tar_rootfs = os.path.join(self.workdir, "busybox.rootfs.tar")
             target_tarball_rootfs = tarfile.open(destination_tar_rootfs, "w:")
 
-        metadata = {'architecture': os.uname()[4],
-                    'creation_date': int(os.stat("/bin/busybox").st_ctime),
-                    'properties': {
-                        'os': "Busybox",
-                        'architecture': os.uname()[4],
-                        'description': "Busybox %s" % os.uname()[4],
-                        'name': "busybox-%s" % os.uname()[4],
-                        # Don't overwrite actual busybox images.
-                        'obfuscate': str(uuid.uuid4()), },
-                    }
+        metadata = {
+            "architecture": os.uname()[4],
+            "creation_date": int(os.stat("/bin/busybox").st_ctime),
+            "properties": {
+                "os": "Busybox",
+                "architecture": os.uname()[4],
+                "description": "Busybox %s" % os.uname()[4],
+                "name": "busybox-%s" % os.uname()[4],
+                # Don't overwrite actual busybox images.
+                "obfuscate": str(uuid.uuid4()),
+            },
+        }
 
         # Add busybox
         with open("/bin/busybox", "rb") as fd:
@@ -72,9 +73,11 @@ class Busybox:
                 target_tarball.addfile(busybox_file, fd)
 
         # Add symlinks
-        busybox = subprocess.Popen(["/bin/busybox", "--list-full"],
-                                   stdout=subprocess.PIPE,
-                                   universal_newlines=True)
+        busybox = subprocess.Popen(
+            ["/bin/busybox", "--list-full"],
+            stdout=subprocess.PIPE,
+            universal_newlines=True,
+        )
         busybox.wait()
 
         for path in busybox.stdout.read().split("\n"):
@@ -103,15 +106,21 @@ class Busybox:
                 target_tarball.addfile(directory_file)
 
         # Add the metadata file
-        metadata_yaml = json.dumps(metadata, sort_keys=True,
-                                   indent=4, separators=(',', ': '),
-                                   ensure_ascii=False).encode('utf-8') + b"\n"
+        metadata_yaml = (
+            json.dumps(
+                metadata,
+                sort_keys=True,
+                indent=4,
+                separators=(",", ": "),
+                ensure_ascii=False,
+            ).encode("utf-8")
+            + b"\n"
+        )
 
         metadata_file = tarfile.TarInfo()
         metadata_file.size = len(metadata_yaml)
         metadata_file.name = "metadata.yaml"
-        target_tarball.addfile(metadata_file,
-                               io.BytesIO(metadata_yaml))
+        target_tarball.addfile(metadata_file, io.BytesIO(metadata_yaml))
 
         # Add an /etc/inittab; this is to work around:
         # http://lists.busybox.net/pipermail/busybox/2015-November/083618.html
@@ -135,8 +144,7 @@ class Busybox:
         if split:
             r = subprocess.call([xz, "-9", destination_tar_rootfs])
             if r:
-                raise Exception("Failed to compress: %s" %
-                                destination_tar_rootfs)
+                raise Exception("Failed to compress: %s" % destination_tar_rootfs)
             return destination_tar + ".xz", destination_tar_rootfs + ".xz"
         else:
             return destination_tar + ".xz"

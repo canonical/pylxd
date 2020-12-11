@@ -14,9 +14,8 @@
 import hashlib
 import time
 
+from integration.testing import IntegrationTestCase, create_busybox_image
 from pylxd import exceptions
-
-from integration.testing import create_busybox_image, IntegrationTestCase
 
 
 class TestImages(IntegrationTestCase):
@@ -48,7 +47,7 @@ class TestImages(IntegrationTestCase):
         path, fingerprint = create_busybox_image()
         self.addCleanup(self.delete_image, fingerprint)
 
-        with open(path, 'rb') as f:
+        with open(path, "rb") as f:
             data = f.read()
             image = self.client.images.create(data, wait=True)
 
@@ -69,20 +68,20 @@ class TestImage(IntegrationTestCase):
 
     def test_save(self):
         """The image properties are updated."""
-        description = 'an description'
-        self.image.properties['description'] = description
+        description = "an description"
+        self.image.properties["description"] = description
         self.image.save()
 
         image = self.client.images.get(self.image.fingerprint)
-        self.assertEqual(description, image.properties['description'])
+        self.assertEqual(description, image.properties["description"])
 
     def test_delete(self):
         """The image is deleted."""
         self.image.delete(wait=True)
 
         self.assertRaises(
-            exceptions.LXDAPIException,
-            self.client.images.get, self.image.fingerprint)
+            exceptions.LXDAPIException, self.client.images.get, self.image.fingerprint
+        )
 
     def test_export(self):
         """The image is successfully exported."""
