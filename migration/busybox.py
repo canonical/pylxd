@@ -80,18 +80,20 @@ class Busybox:
         )
         busybox.wait()
 
-        for path in busybox.stdout.read().split("\n"):
-            if not path.strip():
+        for path in busybox.stdout.readlines():
+
+            path = path.strip()
+            if not path:
                 continue
 
             symlink_file = tarfile.TarInfo()
             symlink_file.type = tarfile.SYMTYPE
             symlink_file.linkname = "/bin/busybox"
             if split:
-                symlink_file.name = "%s" % path.strip()
+                symlink_file.name = "%s" % path
                 target_tarball_rootfs.addfile(symlink_file)
             else:
-                symlink_file.name = "rootfs/%s" % path.strip()
+                symlink_file.name = "rootfs/%s" % path
                 target_tarball.addfile(symlink_file)
 
         # Add directories
