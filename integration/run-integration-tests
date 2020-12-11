@@ -22,8 +22,11 @@ openssl req -new -x509 -nodes -sha1 -days 365 \
         -key "$config_dir/client.key" -out "$config_dir/client.crt" \
         -subj="/C=UK/ST=London/L=London/O=OrgName/OU=Test/CN=example.com"
 
-lxc storage create default dir
-lxc profile device add default root disk path=/ pool=default
+
+if ! lxc storage show default ; then
+    lxc storage create default dir
+    lxc profile device add default root disk path=/ pool=default
+fi
 
 # finally run the integration tests
 tox -e integration
