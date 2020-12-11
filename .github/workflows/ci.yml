@@ -9,7 +9,7 @@ on:
       - master
 
 jobs:
-  lint:
+  lint-python:
     runs-on: ubuntu-latest
     steps:
     - name: Repository checkout
@@ -24,9 +24,18 @@ jobs:
       run: |
         pip install --upgrade pip tox
 
-    - name: Lint
+    - name: Lint Python files
       run: |
         tox -e lint
+
+  lint-shell:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Repository checkout
+      uses: actions/checkout@v2
+
+    - name: Lint shell files
+      uses: ludeeus/action-shellcheck@master
 
   test:
     runs-on: ubuntu-latest
