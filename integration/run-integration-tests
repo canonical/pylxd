@@ -1,22 +1,25 @@
-#!/bin/bash
-set -ex
+#!/bin/bash -ex
 
-_dir="$( cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd)"
-
-sudo apt-get update
-sudo apt-get install -y tox python3-dev libssl-dev libffi-dev build-essential
+sudo apt update
+sudo apt install -y \
+     build-essential \
+     libffi-dev \
+     libssl-dev \
+     python3-dev \
+     tox
 
 lxc config set core.trust_password password
-lxc config set core.https_address [::]
+lxc config set core.https_address "[::]"
 
 # force generation of client certificate to an address that doesn't work (http)
 # generate an openssl certificate and key for the remote not verified test
-mkdir -p $HOME/.config/lxc
-openssl genrsa 2048 > $HOME/.config/lxc/client.key
-chmod 400 $HOME/.config/lxc/client.key
+config_dir="$HOME/.config/lxc"
+mkdir -p "$config_dir"
+openssl genrsa 2048 > "$config_dir/client.key"
+chmod 400 "$config_dir/client.key"
 
 openssl req -new -x509 -nodes -sha1 -days 365 \
-        -key $HOME/.config/lxc/client.key -out $HOME/.config/lxc/client.crt \
+        -key "$config_dir/client.key" -out "$config_dir/client.crt" \
         -subj="/C=UK/ST=London/L=London/O=OrgName/OU=Test/CN=example.com"
 
 lxc storage create default dir
