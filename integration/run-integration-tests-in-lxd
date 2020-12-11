@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -ex
 
 # This script runs the integration tests on an already configured LXD machine
 # where the tests are run LXD in LXD.  i.e. an LXD container is spawned, pylxd
@@ -9,34 +9,33 @@
 # tests on their own computers where they don't want the integration test to
 # mess with their setup.
 
-set -ex
-
-_dir="$( cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd)"
+DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 
 function _run_tests {
-	local _target=${1}
-	local CONTAINER_NAME=pylxd-$_target-`uuidgen | cut -d"-" -f1`
+	local target=${1}
 
-	local _image_release
-	case "${_target}" in
-		bionic) _image_release="18.04" ;;
-		focal) _image_release="20.04" ;;
+	local image_release
+	case "$target" in
+		bionic) image_release="18.04" ;;
+		focal) image_release="20.04" ;;
 	esac
-	CONTAINER_IMAGE="ubuntu:${_image_release}"
-	echo "Running ${_image_release} integration tests"
+	local container_name
+    container_name="pylxd-$target-$(uuidgen | cut -d- -f1)"
+	local container_image="ubuntu:${image_release}"
+	echo "Running ${image_release} integration tests"
 
-	lxc launch $CONTAINER_IMAGE $CONTAINER_NAME -c security.nesting=true
-	lxc exec $CONTAINER_NAME -- cloud-init status --long --wait
+	lxc launch "$container_image" "$container_name" -c security.nesting=true
+	lxc exec "$container_name" -- cloud-init status --long --wait
 
-	lxc exec $CONTAINER_NAME -- mkdir -p /opt/pylxd
+	lxc exec "$container_name" -- mkdir -p /opt/pylxd
 	# NOTE: rockstar (13 Sep 2016) - --recursive is not supported in lxd <2.1, so
 	# until we have pervasive support for that, we'll do this tar hack.
-	local ldir="${_dir}/.."
-	cd ${ldir} && tar cf - * .git | lxc exec $CONTAINER_NAME -- tar xf - -C /opt/pylxd
-	cd ${_dir}
-	lxc exec $CONTAINER_NAME -- /bin/sh -c "cd /opt/pylxd && integration/run-integration-tests"
+	local ldir="$DIR/.."
+	cd "$ldir" && tar cf - ./* .git | lxc exec "$container_name" -- tar xf - -C /opt/pylxd
+	cd "$DIR"
+	lxc exec "$container_name" -- /bin/sh -c "cd /opt/pylxd && integration/run-integration-tests"
 
-	lxc delete --force $CONTAINER_NAME
+	lxc delete --force "$container_name"
 }
 
 # run Bionic and then Focal integration tests
