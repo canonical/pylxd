@@ -16,12 +16,11 @@ from integration.testing import IntegrationTestCase
 
 
 class ClusterMemberTestCase(IntegrationTestCase):
-
     def setUp(self):
         super(ClusterMemberTestCase, self).setUp()
 
-        if not self.client.has_api_extension('clustering'):
-            self.skipTest('Required LXD API extension not available!')
+        if not self.client.has_api_extension("clustering"):
+            self.skipTest("Required LXD API extension not available!")
 
 
 class TestClusterMembers(ClusterMemberTestCase):
