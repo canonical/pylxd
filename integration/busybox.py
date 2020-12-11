@@ -83,7 +83,9 @@ class Busybox:
         for path in busybox.stdout.read().split("\n"):
             if not path.strip():
                 continue
-
+            if path.strip() == 'bin/busybox':
+                # Don't try and symlink to ourselves!
+                continue
             symlink_file = tarfile.TarInfo()
             symlink_file.type = tarfile.SYMTYPE
             symlink_file.linkname = "/bin/busybox"
