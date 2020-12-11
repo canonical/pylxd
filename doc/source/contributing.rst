@@ -77,10 +77,9 @@ Testing
 
 Testing pyLXD is in 3 parts:
 
-1. Conformance with `PEP 8`_, using the ``tox -e pep8`` command.
+1. Conformance with Black and isort, using the ``tox -e lint`` command.
 2. Unit tests using ``tox -e py``.
-3. Integration tests using the ``run_integration_tests`` script in the root of
-   the repository.
+3. Integration tests using the ``tox -e integration-in-lxd``.
 
 .. note:: all of the tests can be run by just using the ``tox`` command on it's
           own, with the exception of the integration tests.  These are not
@@ -94,7 +93,7 @@ Unit Testing
 ^^^^^^^^^^^^
 
 pyLXD tries to follow best practices when it comes to testing. PRs are gated
-by `Travis CI <https://travis-ci.org/lxc/pylxd>`_ and
+by `GitHub Actions <https://github.com/lxc/pylxd/actions>`_ and
 `CodeCov <https://codecov.io/gh/lxc/pylxd>`_. It's best to submit tests
 with new changes, as your patch is unlikely to be accepted without them.
 
@@ -105,32 +104,9 @@ To run the tests, you should use `Tox`_::
 Integration Testing
 ^^^^^^^^^^^^^^^^^^^
 
-Integration testing requires a running LXD system.  At present this is not
-performed by the CI system, although this is intended at some point in the
-future.  Integration testing *should* be performed prior to merging a PR.
-
-Currently, there are two variants of the script to run integration tests:
-
-1. ``run_integration_tests-16-04``
-2. ``run_integration_tests-18-04``
-
-The default is ``run_integration_tests-18-04``, which is symlinked to
-``run_integration_tests``. This is because the default is to test on Ubuntu
-Focal (20.04 LTS), with Ubuntu Bionic (18.04 LTS) for maintenance purposes.
-
-.. note:: A script to automate running the integration tests needs to be added.
-
-Some hints on how to run the integration tests:
-
-1. On Ubuntu it's probably easiest to use the `Multipass`_ snap.
-2. Launch an LTS instance using ``multipass launch -n foo``
-3. Shell into the instance: ``multipass exec foo -- bash``
-4. Install tox and python3.6+.
-5. Clone the branch from the PR (or otherwise copy the repo into the machine)
-6. Configure LXD using ``lxd init`` -- follow the prompts provided.
-7. Run the integration tests.
+Integration testing requires a running LXD system.  They can be tested locally
+in LXD container with nesting support; ``tox -e integration-in-lxd``.
 
 .. _Github: https://github.com/lxc/pylxd
-.. _PEP 8: https://www.python.org/dev/peps/pep-0008/
 .. _Tox: https://tox.readthedocs.io/en/latest/
 .. _Multipass: https://github.com/CanonicalLtd/multipass
