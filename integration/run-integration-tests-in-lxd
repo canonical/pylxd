@@ -15,17 +15,15 @@ _dir="$( cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd)"
 
 function _run_tests {
 	local _target=${1}
-	CONTAINER_NAME=pylxd-$_target-`uuidgen | cut -d"-" -f1`
+	local CONTAINER_NAME=pylxd-$_target-`uuidgen | cut -d"-" -f1`
 
-	if [[ "${_target}" == "focal" ]]; then
-		echo "Running Focal (20:04) integration tests"
-		CONTAINER_IMAGE="ubuntu:20.04"
-	elif [[ "${_target}" == "bionic" ]]; then
-		echo "Running Bionic (18:04) integration tests"
-		CONTAINER_IMAGE="ubuntu:18.04"
-	else
-	    exit
-	fi
+	local _image_release
+	case "${_target}" in
+		bionic) _image_release="18.04" ;;
+		focal) _image_release="20.04" ;;
+	esac
+	CONTAINER_IMAGE="ubuntu:${_image_release}"
+	echo "Running ${_image_release} integration tests"
 
 	lxc launch $CONTAINER_IMAGE $CONTAINER_NAME -c security.nesting=true
 	lxc exec $CONTAINER_NAME -- cloud-init status --long --wait
