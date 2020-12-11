@@ -27,10 +27,7 @@ function _run_tests {
 	    exit
 	fi
 
-	# This creates a privileged container, because I was bumping into situations where it
-	# seemed that we had maxed out user namespaces (I haven't checked it out, but it's likely
-	# a bug in LXD).
-	lxc launch $CONTAINER_IMAGE $CONTAINER_NAME -c security.nesting=true -c security.privileged=true
+	lxc launch $CONTAINER_IMAGE $CONTAINER_NAME -c security.nesting=true
 	lxc exec $CONTAINER_NAME -- cloud-init status --long --wait
 
 	lxc exec $CONTAINER_NAME -- mkdir -p /opt/pylxd
