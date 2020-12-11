@@ -39,6 +39,6 @@ function _run_tests {
 	lxc delete --force $CONTAINER_NAME
 }
 
-# run focal and then bionic integration tests
+# run Bionic and then Focal integration tests
 _run_tests bionic
 _run_tests focal
