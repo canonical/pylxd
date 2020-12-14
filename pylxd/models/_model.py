@@ -13,10 +13,22 @@
 #    under the License.
 import os
 import warnings
+from copy import deepcopy
 
 from pylxd import exceptions
 
 MISSING = object()
+
+
+class AttributeDict:
+    """Wrap a dict making keys accessible as attributes."""
+
+    def __init__(self, dct):
+        for key, value in dct.items():
+            setattr(self, key, value)
+
+    def _asdict(self):
+        return deepcopy(self.__dict__)
 
 
 class Attribute:
