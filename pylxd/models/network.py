@@ -16,6 +16,10 @@ import json
 from pylxd.models import _model as model
 
 
+class NetworkState(model.AttributeDict):
+    """A simple object for representing a network state."""
+
+
 class Network(model.Model):
     """Model representing a LXD network."""
 
@@ -124,6 +128,12 @@ class Network(model.Model):
     def save(self, *args, **kwargs):
         self.client.assert_has_api_extension("network")
         super().save(*args, **kwargs)
+
+    def state(self):
+        """Get network state."""
+        response = self.api.state.get()
+        state = NetworkState(response.json()["metadata"])
+        return state
 
     @property
     def api(self):

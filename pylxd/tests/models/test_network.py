@@ -216,6 +216,46 @@ class TestNetwork(testing.PyLXDTestCase):
 
         network.delete()
 
+    def test_state(self):
+        state = {
+            "addresses": [
+                {
+                    "family": "inet",
+                    "address": "10.87.252.1",
+                    "netmask": "24",
+                    "scope": "global",
+                },
+                {
+                    "family": "inet6",
+                    "address": "fd42:6e0e:6542:a212::1",
+                    "netmask": "64",
+                    "scope": "global",
+                },
+            ],
+            "counters": {
+                "bytes_received": 0,
+                "bytes_sent": 17724,
+                "packets_received": 0,
+                "packets_sent": 95,
+            },
+            "hwaddr": "36:19:09:9b:f9:aa",
+            "mtu": 1500,
+            "state": "up",
+            "type": "broadcast",
+        }
+        self.add_rule(
+            {
+                "json": {
+                    "type": "sync",
+                    "metadata": state,
+                },
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/networks/eth0/state$",
+            }
+        )
+        network = models.Network.get(self.client, "eth0")
+        assert network.state()._asdict() == state
+
     def test_str(self):
         """Network is printed in JSON format."""
         network = models.Network.get(self.client, "eth0")

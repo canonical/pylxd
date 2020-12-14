@@ -33,6 +33,18 @@ class ChildItem(Item):
     """A fake model child class."""
 
 
+class TestAttributeDict:
+    def test_from_dict(self):
+        a = model.AttributeDict({"foo": "bar", "baz": "bza"})
+        assert a.foo == "bar"
+        assert a.baz == "bza"
+
+    def test_as_dict(self):
+        d = {"foo": "bar", "baz": "bza"}
+        a = model.AttributeDict(d)
+        assert a._asdict() == d
+
+
 class TestModel(testing.PyLXDTestCase):
     """Tests for pylxd.model.Model."""
 

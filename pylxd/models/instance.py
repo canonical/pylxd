@@ -34,12 +34,8 @@ from pylxd.models import _model as model
 from pylxd.models.operation import Operation
 
 
-class InstanceState:
+class InstanceState(model.AttributeDict):
     """A simple object for representing instance state."""
-
-    def __init__(self, **kwargs):
-        for key, value in kwargs.items():
-            setattr(self, key, value)
 
 
 _InstanceExecuteResult = collections.namedtuple(
@@ -357,7 +353,7 @@ class Instance(model.Model):
 
     def state(self):
         response = self.api.state.get()
-        state = InstanceState(**response.json()["metadata"])
+        state = InstanceState(response.json()["metadata"])
         return state
 
     def start(self, timeout=30, force=True, wait=False):
