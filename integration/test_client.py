@@ -35,16 +35,15 @@ class TestClient(IntegrationTestCase):
         self.assertTrue(client.trusted)
 
     def test_authenticate_with_project(self):
-
-        client = pylxd.Client(
-            "https://127.0.0.1:8443/", verify=False, project="test-project"
-        )
+        try:
+            client = pylxd.Client(
+                "https://127.0.0.1:8443/", verify=False, project="test-project"
+            )
+        except exceptions.ClientConnectionFailed as e:
+            message = str(e)
+            if message == "Remote server doesn't handle projects":
+                self.skipTest(message)
+            raise
 
         client.authenticate("password")
-
-        try:
-            self.assertEqual(client.host_info["environment"]["project"], "test-project")
-        except exceptions.ClientConnectionFailed as e:
-            if e.message == "Remote server doesn't handle projects":
-                self.skipTest(e.message)
-            raise
+        self.assertEqual(client.host_info["environment"]["project"], "test-project")
