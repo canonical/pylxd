@@ -1,7 +1,3 @@
-include AUTHORS
-include ChangeLog
-exclude .gitignore
-exclude .gitreview
-exclude contrib_testing
-
-global-exclude *.pyc
+include CONTRIBUTORS.rst
+include README.rst
+include LICENSE
