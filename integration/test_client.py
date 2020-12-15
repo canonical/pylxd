@@ -16,8 +16,8 @@ import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 import pylxd
-from pylxd import exceptions
 from integration.testing import IntegrationTestCase
+from pylxd import exceptions
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
