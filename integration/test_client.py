@@ -16,6 +16,7 @@ import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 import pylxd
+from pylxd import exceptions
 from integration.testing import IntegrationTestCase
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -40,4 +41,10 @@ class TestClient(IntegrationTestCase):
         )
 
         client.authenticate("password")
-        self.assertEqual(client.host_info["environment"]["project"], "test-project")
+
+        try:
+            self.assertEqual(client.host_info["environment"]["project"], "test-project")
+        except exceptions.ClientConnectionFailed as e:
+            if e.message == "Remote server doesn't handle projects":
+                self.skipTest(e.message)
+            raise
