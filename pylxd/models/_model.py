@@ -13,7 +13,6 @@
 #    under the License.
 import os
 import warnings
-from copy import deepcopy
 
 from pylxd import exceptions
 
@@ -27,8 +26,8 @@ class AttributeDict:
         for key, value in dct.items():
             setattr(self, key, value)
 
-    def _asdict(self):
-        return deepcopy(self.__dict__)
+    def __iter__(self):
+        return iter(self.__dict__.items())
 
 
 class Attribute:

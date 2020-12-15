@@ -39,10 +39,10 @@ class TestAttributeDict:
         assert a.foo == "bar"
         assert a.baz == "bza"
 
-    def test_as_dict(self):
+    def test_iterable(self):
         d = {"foo": "bar", "baz": "bza"}
         a = model.AttributeDict(d)
-        assert a._asdict() == d
+        assert dict(a) == d
 
 
 class TestModel(testing.PyLXDTestCase):
