@@ -11,11 +11,13 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 import pylxd
 from integration.testing import IntegrationTestCase
+from pylxd import exceptions
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -24,8 +26,6 @@ class TestClient(IntegrationTestCase):
     """Tests for `Client`."""
 
     def test_authenticate(self):
-        # This is another test with multiple assertions, as it is a test of
-        # flow, rather than a single source of functionality.
         client = pylxd.Client("https://127.0.0.1:8443/", verify=False)
 
         self.assertFalse(client.trusted)
@@ -33,3 +33,17 @@ class TestClient(IntegrationTestCase):
         client.authenticate("password")
 
         self.assertTrue(client.trusted)
+
+    def test_authenticate_with_project(self):
+        try:
+            client = pylxd.Client(
+                "https://127.0.0.1:8443/", verify=False, project="test-project"
+            )
+        except exceptions.ClientConnectionFailed as e:
+            message = str(e)
+            if message == "Remote server doesn't handle projects":
+                self.skipTest(message)
+            raise
+
+        client.authenticate("password")
+        self.assertEqual(client.host_info["environment"]["project"], "test-project")
