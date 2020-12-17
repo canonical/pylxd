@@ -125,6 +125,21 @@ class IntegrationTestCase(unittest.TestCase):
                 return
             raise
 
+    def create_project(self):
+        """Create a project."""
+        name = self.generate_object_name()
+        self.lxd.projects.post(json={"name": name})
+        return name
+
+    def delete_project(self, name):
+        """Delete a project."""
+        try:
+            self.lxd.projects[name].delete()
+        except exceptions.LXDAPIException as e:
+            if e.response.status_code == 404:
+                return
+            raise
+
     def create_network(self):
         # get interface name in format xxx0
         name = "".join(random.sample(string.ascii_lowercase, 3)) + "0"

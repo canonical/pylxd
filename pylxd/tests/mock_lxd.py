@@ -123,6 +123,28 @@ def profile_DELETE(request, context):
     )
 
 
+def projects_GET(request, context):
+    name = request.path.split("/")[-1]
+    return json.dumps(
+        {
+            "type": "sync",
+            "metadata": {
+                "name": name,
+                "description": "new project is new",
+                "config": {
+                    "features.images": "true",
+                },
+                "used_by": [],
+            },
+        }
+    )
+
+
+def projects_POST(request, context):
+    context.status_code = 200
+    return json.dumps({"type": "sync", "metadata": {}})
+
+
 def snapshot_DELETE(request, context):
     context.status_code = 202
     return json.dumps(
@@ -1005,6 +1027,44 @@ RULES = [
         "text": profile_DELETE,
         "method": "DELETE",
         "url": r"^http://pylxd.test/1.0/profiles/(an-profile|an-new-profile)$",
+    },
+    # Projects
+    {
+        "text": json.dumps(
+            {
+                "type": "sync",
+                "metadata": [
+                    "http://pylxd.test/1.0/projects/test-project",
+                ],
+            }
+        ),
+        "method": "GET",
+        "url": r"^http://pylxd.test/1.0/projects$",
+    },
+    {
+        "text": projects_GET,
+        "method": "GET",
+        "url": r"^http://pylxd.test/1.0/projects/(test-project|new-project)$",
+    },
+    {
+        "text": projects_POST,
+        "method": "POST",
+        "url": r"^http://pylxd.test/1.0/projects$",
+    },
+    {
+        "text": json.dumps({"type": "sync"}),
+        "method": "PUT",
+        "url": r"^http://pylxd.test/1.0/projects/(test-project)$",
+    },
+    {
+        "text": json.dumps({"type": "sync"}),
+        "method": "POST",
+        "url": r"^http://pylxd.test/1.0/projects/(new-project)$",
+    },
+    {
+        "text": profile_DELETE,
+        "method": "DELETE",
+        "url": r"^http://pylxd.test/1.0/projects/(test-project)$",
     },
     # Operations
     {
