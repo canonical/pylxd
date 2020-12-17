@@ -65,7 +65,7 @@ class TestProjects(BaseTestProject):
         self.assertEqual(name, project.name)
         self.assertEqual(description, project.description)
         for key, value in config.items():
-            self.assertEqual(config[key], value)
+            self.assertEqual(project.config[key], value)
 
 
 class TestProject(BaseTestProject):
