@@ -116,7 +116,7 @@ container. You can also modify container config (limits and etc).
 
 .. code-block:: python
 
-    >>> config = {'name': 'my-container', 'source': {'type': 'image', 'alias': 'ubuntu/trusty'} 'config': {'limits.cpu': '2'}}
+    >>> config = {'name': 'my-container', 'source': {'type': 'image', 'alias': 'ubuntu/trusty'}, 'config': {'limits.cpu': '2'}}
     >>> container = client.containers.create(config, wait=True)
     >>> container.start()
     >>> container.freeze()
