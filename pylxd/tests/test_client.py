@@ -18,6 +18,7 @@ import unittest
 from urllib import parse
 
 import mock
+import pytest
 import requests
 import requests_unixsocket
 
@@ -179,7 +180,7 @@ class TestClient(unittest.TestCase):
         response.json.return_value = {
             "metadata": {
                 "auth": "untrusted",
-                "environment": {"project": "test-proj"},
+                "api_extensions": ["projects"],
             }
         }
         self.get.return_value = response
@@ -217,6 +218,20 @@ class TestClient(unittest.TestCase):
 
         self.assertTrue(an_client.trusted)
         self.assertEqual(an_client.host_info["environment"]["project"], "test-proj")
+
+    def test_authenticate_project_not_supported(self):
+        """A client raises an error if projects are not supported."""
+        response = mock.MagicMock(status_code=200)
+        response.json.return_value = {
+            "metadata": {
+                "auth": "untrusted",
+                "api_extensions": [],
+            }
+        }
+        self.get.return_value = response
+
+        with pytest.raises(exceptions.ClientConnectionFailed):
+            client.Client("https://lxd", project="test-proj")
 
     def test_authenticate_already_authenticated(self):
         """If the client is already authenticated, nothing happens."""
