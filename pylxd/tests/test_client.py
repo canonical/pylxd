@@ -233,6 +233,53 @@ class TestClient(unittest.TestCase):
         with pytest.raises(exceptions.ClientConnectionFailed):
             client.Client("https://lxd", project="test-proj")
 
+    def test_authenticate_project_not_supported_but_default(self):
+        """
+        A client doesn't raise an error if projects are not supported and the
+        default one is requested.
+        """
+        response = mock.MagicMock(status_code=200)
+        response.json.return_value = {
+            "metadata": {
+                "auth": "untrusted",
+                "api_extensions": [],
+            }
+        }
+        self.get.return_value = response
+
+        certs = (
+            os.path.join(os.path.dirname(__file__), "lxd.crt"),
+            os.path.join(os.path.dirname(__file__), "lxd.key"),
+        )
+        an_client = client.Client("https://lxd", cert=certs, project="default")
+
+        get_count = []
+
+        def _get(*args, **kwargs):
+            if len(get_count) == 0:
+                get_count.append(None)
+                return {
+                    "metadata": {
+                        "type": "client",
+                        "fingerprint": "eaf55b72fc23aa516d709271df9b0116064bf8cfa009cf34c67c33ad32c2320c",
+                    }
+                }
+            else:
+                return {
+                    "metadata": {
+                        "auth": "trusted",
+                        "environment": {},
+                    }
+                }
+
+        response = mock.MagicMock(status_code=200)
+        response.json.side_effect = _get
+        self.get.return_value = response
+
+        an_client.authenticate("test-password")
+
+        self.assertTrue(an_client.trusted)
+
     def test_authenticate_already_authenticated(self):
         """If the client is already authenticated, nothing happens."""
         an_client = client.Client()
