@@ -16,4 +16,6 @@ from pylxd.models.instance import Instance
 
 class Container(Instance):
 
+    """Flavour of :class:`models.Instance <pylxd.models.Instance>` for containers."""
+
     _endpoint = "containers"
