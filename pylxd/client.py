@@ -384,8 +384,9 @@ class Client:
         ) as e:
             raise exceptions.ClientConnectionFailed(str(e))
 
-        if self.project and self.project != self.host_info["environment"].get(
-            "project", "default"
+        if (
+            self.project not in (None, "default")
+            and "projects" not in self.host_info["api_extensions"]
         ):
             raise exceptions.ClientConnectionFailed(
                 "Remote server doesn't handle projects"
