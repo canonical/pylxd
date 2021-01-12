@@ -27,11 +27,21 @@ Certificate
 Container
 ---------
 
+.. autoclass:: pylxd.models.Instance
+   :members:
+
 .. autoclass:: pylxd.models.Container
    :members:
 
 .. autoclass:: pylxd.models.Snapshot
    :members:
+
+Virtual Machine
+---------------
+
+.. autoclass:: pylxd.models.VirtualMachine
+   :members:
+
 
 Image
 -----

@@ -36,7 +36,7 @@ Network attributes
   - :attr:`~Network.managed` - `boolean`; whether LXD manages the network.
 
 
-Profile methods
+Network methods
 ---------------
 
   - :func:`~Network.rename` - Rename the network.
@@ -87,10 +87,3 @@ arguments: `description` and `type` and `config`.
     >>> network = client.networks.create(
     ...     'lxdbr1', description='My new network', type='bridge', config={})
 
-
-    >>> network = client.networks.create(
-    ...     'lxdbr1', description='My new network', type='bridge', config={})
-
-
-    >>> network = client.networks.create(
-    ...     'lxdbr1', description='My new network', type='bridge', config={})
