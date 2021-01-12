@@ -21,6 +21,7 @@ Contents:
    images
    networks
    profiles
+   projects
    operations
    storage-pools
    clustering

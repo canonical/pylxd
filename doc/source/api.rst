@@ -57,6 +57,12 @@ Profile
 .. autoclass:: pylxd.models.Profile
    :members:
 
+Project
+-------
+
+.. autoclass:: pylxd.models.Project
+   :members:
+
 Storage Pool
 ------------
 
