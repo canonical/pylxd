@@ -15,7 +15,12 @@ from pylxd.models import _model as model
 
 
 class Project(model.Model):
-    """A LXD project."""
+    """A LXD project.
+
+    This corresponds to the LXD endpoint at /1.0/projects.
+
+    api_extension: 'projects'
+    """
 
     name = model.Attribute(readonly=True)
     config = model.Attribute()
