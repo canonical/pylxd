@@ -12,7 +12,7 @@ Manager methods
 Projects can be queried through the following client manager
 methods:
 
-  - :func:`~Project.all` - Retrieve all projects
+  - :func:`~Project.all` - Retrieve all projects.
   - :func:`~Project.exists` - See if a project with a name exists.  Returns `boolean`.
   - :func:`~Project.get` - Get a specific project, by its name.
   - :func:`~Project.create` - Create a new project. The `name` of the project is required. `description` is an optional string with a description of the project.  The `config` dictionary is also optional, the scope of which is documented in the LXD project documentation.
@@ -21,18 +21,18 @@ methods:
 Project attributes
 ------------------
 
-  - :attr:`Project.name` - (str) name of the project
-  - :attr:`Project.description` - (str) The description of the project
-  - :attr:`Project.config` - (dict) config options for the project
-  - :attr:`Project.used_by` - (list) images, instances, networks, and profiles using this project
+  - :attr:`~Project.name` - (str) name of the project.
+  - :attr:`~Project.description` - (str) The description of the project.
+  - :attr:`~Project.config` - (dict) config options for the project.
+  - :attr:`~Project.used_by` - (list) images, instances, networks, and profiles using this project.
 
 
 Project methods
 ---------------
 
-  - :func:`Project.rename` - Rename the project.
-  - :func:`Project.save` - save a project.  This uses the PUT HTTP method and not the PATCH.
-  - :func:`Project.delete` - deletes a project.
+  - :func:`~Project.rename` - Rename the project.
+  - :func:`~Project.save` - save a project.  This uses the PUT HTTP method and not the PATCH.
+  - :func:`~Project.delete` - deletes a project.
 
 
 Examples
