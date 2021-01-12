@@ -56,6 +56,6 @@ The project can then be modified and saved.
 
 To create a new project, use `create` with a name, optional `description` string
 and `config` dictionary.
-p
+
     >>> project = client.projects.create(
     ...     'a-project', description="New project", config={'limits.instances': '10'})
