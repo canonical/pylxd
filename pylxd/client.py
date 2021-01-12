@@ -266,35 +266,31 @@ class Client:
 
     .. attribute:: instances
 
-        Instance of :class:`Client.Instances
-        <pylxd.client.Client.Instances>`:
+        A :class:`models.Instance <pylxd.models.Instance>`.
 
     .. attribute:: containers
 
-        Instance of :class:`Client.Containers
-        <pylxd.client.Client.Containers>`:
+        A :class:`models.Container <pylxd.models.Container>`.
 
     .. attribute:: virtual_machines
 
-        Instance of :class:`Client.VirtualMachines
-        <pylxd.client.Client.VirtualMachines>`:
+        A :class:`models.VirtualMachine <pylxd.models.VirtualMachine>`.
 
     .. attribute:: images
 
-        Instance of :class:`Client.Images <pylxd.client.Client.Images>`.
+        A :class:`models.Image <pylxd.models.Image>`.
 
     .. attribute:: operations
 
-        Instance of :class:`Client.Operations
-        <pylxd.client.Client.Operations>`.
+        A :class:`models.Operation <pylxd.models.Operation>`.
 
     .. attribute:: profiles
 
-        Instance of :class:`Client.Profiles <pylxd.client.Client.Profiles>`.
+        A :class:`models.Profile <pylxd.models.Profile>`.
 
-    .. attribute::projects
+    .. attribute:: projects
 
-        Instance of :class:`Client.Project <pylxd.client.Client.Project >`.
+        A :class:`models.Project <pylxd.models.Project>`.
 
     .. attribute:: api
 
