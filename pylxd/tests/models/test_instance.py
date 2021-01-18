@@ -3,9 +3,9 @@ import json
 import os
 import shutil
 import tempfile
+from unittest import mock
 from urllib.parse import quote as url_quote
 
-import mock
 import requests
 
 from pylxd import exceptions, models

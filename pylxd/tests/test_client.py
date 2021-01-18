@@ -14,10 +14,9 @@
 import json
 import os
 import os.path
-import unittest
+from unittest import TestCase, mock
 from urllib import parse
 
-import mock
 import pytest
 import requests
 import requests_unixsocket
@@ -26,7 +25,7 @@ from pylxd import client, exceptions
 from pylxd.tests.testing import requires_ws4py
 
 
-class TestClient(unittest.TestCase):
+class TestClient(TestCase):
     """Tests for pylxd.client.Client."""
 
     def setUp(self):
@@ -421,7 +420,7 @@ class TestClient(unittest.TestCase):
         a_client.assert_has_api_extension("two")
 
 
-class TestAPINode(unittest.TestCase):
+class TestAPINode(TestCase):
     """Tests for pylxd.client._APINode."""
 
     def test_getattr(self):
@@ -568,7 +567,7 @@ class TestAPINode(unittest.TestCase):
         session.delete.assert_called_once_with("http://test.com", timeout=None)
 
 
-class TestWebsocketClient(unittest.TestCase):
+class TestWebsocketClient(TestCase):
     """Tests for pylxd.client.WebsocketClient."""
 
     @requires_ws4py

@@ -13,8 +13,8 @@
 #    under the License.
 
 import datetime
+from unittest import mock
 
-import mock
 from ddt import ddt
 
 from pylxd.deprecated import connection

@@ -14,10 +14,9 @@
 
 import builtins
 import datetime
-import unittest
 from io import StringIO
+from unittest import TestCase, mock
 
-import mock
 from ddt import ddt
 
 from pylxd.deprecated import connection, exceptions, image
@@ -198,7 +197,7 @@ class LXDAPIImageTestRaw(LXDAPITestBase):
     "get_object",
     return_value=(200, fake_api.fake_image_info()),
 )
-class LXDAPIImageInfoTest(unittest.TestCase):
+class LXDAPIImageInfoTest(TestCase):
     def setUp(self):
         super().setUp()
         self.image = image.LXDImage()

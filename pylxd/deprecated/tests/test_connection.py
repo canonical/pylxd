@@ -14,11 +14,10 @@
 
 import inspect
 import socket
-import unittest
 from http import client as http_client
 from io import BytesIO
+from unittest import TestCase, mock
 
-import mock
 from ddt import ddt
 
 from pylxd.deprecated import connection, exceptions
@@ -26,7 +25,7 @@ from pylxd.deprecated.tests import annotated_data
 
 
 @ddt
-class LXDInitConnectionTest(unittest.TestCase):
+class LXDInitConnectionTest(TestCase):
     @mock.patch("socket.socket")
     @mock.patch.object(http_client.HTTPConnection, "__init__")
     def test_http_connection(self, mc, ms):
@@ -100,7 +99,7 @@ class FakeResponse:
 
 @ddt
 @mock.patch("pylxd.deprecated.connection.LXDConnection.get_connection")
-class LXDConnectionTest(unittest.TestCase):
+class LXDConnectionTest(TestCase):
     def setUp(self):
         super().setUp()
         self.conn = connection.LXDConnection()
