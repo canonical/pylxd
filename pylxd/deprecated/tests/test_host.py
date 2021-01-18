@@ -12,7 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
+from unittest import mock
+
 from ddt import data, ddt
 
 from pylxd.deprecated import connection, exceptions

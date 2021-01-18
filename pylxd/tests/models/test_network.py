@@ -11,12 +11,9 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import json
 
-try:
-    from unittest import mock
-except ImportError:
-    import mock
+import json
+from unittest import mock
 
 from pylxd import exceptions, models
 from pylxd.exceptions import LXDAPIExtensionNotAvailable

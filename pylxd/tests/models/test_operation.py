@@ -13,8 +13,7 @@
 #    under the License.
 
 import json
-
-import mock
+from unittest import mock
 
 from pylxd import exceptions, models
 from pylxd.tests import testing

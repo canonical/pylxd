@@ -15,8 +15,8 @@
 import json
 import tempfile
 from collections import OrderedDict
+from unittest import mock
 
-import mock
 from ddt import ddt
 
 from pylxd.deprecated import connection

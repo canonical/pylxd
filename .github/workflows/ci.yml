@@ -37,6 +37,25 @@ jobs:
     - name: Lint shell files
       uses: ludeeus/action-shellcheck@master
 
+  check:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Repository checkout
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.6"
+
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip tox
+
+    - name: Typecheck Python files
+      run: |
+        tox -e check
+
   test:
     runs-on: ubuntu-latest
     strategy:
