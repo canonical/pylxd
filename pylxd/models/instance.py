@@ -39,7 +39,7 @@ class InstanceState(model.AttributeDict):
 
 
 _InstanceExecuteResult = collections.namedtuple(
-    "InstanceExecuteResult", ["exit_code", "stdout", "stderr"]
+    "_InstanceExecuteResult", ["exit_code", "stdout", "stderr"]
 )
 
 
