@@ -76,7 +76,7 @@ class HTTPSConnection(http_client.HTTPConnection):
         )
 
 
-_LXDResponse = namedtuple("LXDResponse", ["status", "body", "json"])
+_LXDResponse = namedtuple("_LXDResponse", ["status", "body", "json"])
 
 
 if websocket is not None:
