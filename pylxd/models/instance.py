@@ -11,11 +11,11 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import collections
 import json
 import os
 import stat
 import time
+from typing import IO, NamedTuple
 from urllib import parse
 
 try:
@@ -38,9 +38,11 @@ class InstanceState(model.AttributeDict):
     """A simple object for representing instance state."""
 
 
-_InstanceExecuteResult = collections.namedtuple(
-    "_InstanceExecuteResult", ["exit_code", "stdout", "stderr"]
-)
+class _InstanceExecuteResult(NamedTuple):
+
+    exit_code: int
+    stdout: IO
+    stderr: IO
 
 
 class Instance(model.Model):

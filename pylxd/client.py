@@ -14,8 +14,8 @@
 import json
 import os
 import os.path
-from collections import namedtuple
 from enum import Enum
+from typing import NamedTuple
 from urllib import parse
 
 import requests
@@ -46,7 +46,14 @@ if os.path.exists(
 else:  # pragma: no cover
     CERTS_PATH = os.path.join(APT_ROOT, LXD_PATH)  # pragma: no cover
 
-Cert = namedtuple("Cert", ["cert", "key"])  # pragma: no cover
+
+class Cert(NamedTuple):
+    """Paths for a certificate/key pair."""
+
+    cert: str
+    key: str
+
+
 DEFAULT_CERTS = Cert(
     cert=os.path.expanduser(os.path.join(CERTS_PATH, CERT_FILE_NAME)),
     key=os.path.expanduser(os.path.join(CERTS_PATH, KEY_FILE_NAME)),
