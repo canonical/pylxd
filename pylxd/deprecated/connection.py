@@ -20,8 +20,8 @@ import queue
 import socket
 import ssl
 import threading
-from collections import namedtuple
 from http import client as http_client
+from typing import Any, NamedTuple
 
 try:
     from ws4py import client as websocket
@@ -76,7 +76,11 @@ class HTTPSConnection(http_client.HTTPConnection):
         )
 
 
-_LXDResponse = namedtuple("_LXDResponse", ["status", "body", "json"])
+class _LXDResponse(NamedTuple):
+
+    status: int
+    body: bytes
+    json: Any
 
 
 if websocket is not None:
