@@ -346,12 +346,9 @@ class Client:
 
         self.project = project
         self.cert = cert
-        if endpoint is not None:
+        if endpoint:
             if endpoint.startswith("/") and os.path.isfile(endpoint):
-                self.api = _APINode(
-                    "http+unix://{}".format(parse.quote(endpoint, safe="")),
-                    timeout=timeout,
-                )
+                endpoint = "http+unix://{}".format(parse.quote(endpoint, safe=""))
             else:
                 # Extra trailing slashes cause LXD to 301
                 endpoint = endpoint.rstrip("/")
@@ -360,9 +357,6 @@ class Client:
                     and os.path.exists(DEFAULT_CERTS.key)
                 ):
                     cert = DEFAULT_CERTS
-                self.api = _APINode(
-                    endpoint, cert=cert, verify=verify, timeout=timeout, project=project
-                )
         else:
             if "LXD_DIR" in os.environ:
                 path = os.path.join(os.environ.get("LXD_DIR"), "unix.socket")
@@ -371,8 +365,10 @@ class Client:
             else:
                 path = "/var/lib/lxd/unix.socket"
             endpoint = "http+unix://{}".format(parse.quote(path, safe=""))
-            self.api = _APINode(endpoint, timeout=timeout, project=project)
-        self.api = self.api[version]
+        api = _APINode(
+            endpoint, cert=cert, verify=verify, timeout=timeout, project=project
+        )
+        self.api = api[version]
 
         # Verify the connection is valid.
         try:
