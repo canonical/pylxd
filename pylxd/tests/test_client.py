@@ -105,8 +105,8 @@ class TestClient(TestCase):
         endpoint = "/tmp/unix.socket"
         expected = "http+unix://%2Ftmp%2Funix.socket/1.0"
 
-        with mock.patch("os.path.isfile") as mock_isfile:
-            mock_isfile.return_value = True
+        with mock.patch("os.path.exists") as mock_exists:
+            mock_exists.return_value = True
             a_client = client.Client(endpoint=endpoint, project="prj")
 
         self.assertEqual(a_client.api._api_endpoint, expected)
@@ -117,12 +117,11 @@ class TestClient(TestCase):
         endpoint = "/tmp/unix.socket"
         expected = "http+unix://%2Ftmp%2Funix.socket/1.0"
 
-        real_isfile = os.path.isfile
-        os.path.isfile = lambda x: True
-        an_client = client.Client(endpoint)
-        os.path.isfile = real_isfile
+        with mock.patch("os.path.exists") as mock_exists:
+            mock_exists.return_value = True
+            a_client = client.Client(endpoint)
 
-        self.assertEqual(expected, an_client.api._api_endpoint)
+        self.assertEqual(expected, a_client.api._api_endpoint)
 
     def test_connection_404(self):
         """If the endpoint 404s, an exception is raised."""
