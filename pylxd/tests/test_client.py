@@ -89,6 +89,29 @@ class TestClient(TestCase):
 
         self.assertEqual(expected, an_client.api._api_endpoint)
 
+    def test_create_endpoint_with_project(self):
+        """Explicitly set the client endpoint."""
+        response = mock.MagicMock(status_code=200)
+        response.json.side_effect = [
+            {
+                "metadata": {
+                    "auth": "untrusted",
+                    "api_extensions": ["projects"],
+                }
+            },
+        ]
+        self.get.return_value = response
+
+        endpoint = "/tmp/unix.socket"
+        expected = "http+unix://%2Ftmp%2Funix.socket/1.0"
+
+        with mock.patch("os.path.isfile") as mock_isfile:
+            mock_isfile.return_value = True
+            a_client = client.Client(endpoint=endpoint, project="prj")
+
+        self.assertEqual(a_client.api._api_endpoint, expected)
+        self.assertEqual(a_client.api._project, "prj")
+
     def test_create_endpoint_unixsocket(self):
         """Test with unix socket endpoint."""
         endpoint = "/tmp/unix.socket"
