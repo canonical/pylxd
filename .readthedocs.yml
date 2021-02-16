@@ -1,0 +1,25 @@
+# .readthedocs.yml
+# Read the Docs configuration file
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
+# Required
+version: 2
+
+# Use the latest image - see https://github.com/readthedocs/readthedocs-docker-images
+build:
+  image: latest
+
+sphinx:
+   configuration: doc/source/conf.py
+
+formats:
+   - pdf
+   - epub
+
+python:
+   version: 3.7
+   install:
+   - method: pip
+     path: .
+     extra_requirements:
+       - docs
