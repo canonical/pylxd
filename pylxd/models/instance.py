@@ -388,6 +388,9 @@ class Instance(model.Model):
         stdin_encoding="utf-8",
         stdout_handler=None,
         stderr_handler=None,
+        user=None,
+        group=None,
+        cwd=None,
     ):
         """Execute a command on the instance. stdout and stderr are buffered if
         no handler is given.
@@ -413,6 +416,12 @@ class Instance(model.Model):
         :param stderr_handler: Callable than receive as first parameter each
             message received via stderr
         :type stderr_handler: Callable[[str], None]
+        :param user: User to run the command as
+        :type user: int
+        :param group: Group to run the command as
+        :type group: int
+        :param cwd: Current working directory
+        :type cwd: str
         :raises ValueError: if the ws4py library is not installed.
         :returns: A tuple of `(exit_code, stdout, stderr)`
         :rtype: _InstanceExecuteResult() namedtuple
@@ -430,6 +439,9 @@ class Instance(model.Model):
                 "environment": environment,
                 "wait-for-websocket": True,
                 "interactive": False,
+                "user": user,
+                "group": group,
+                "cwd": cwd,
             }
         )
 
@@ -497,7 +509,9 @@ class Instance(model.Model):
                 operation.metadata["return"], stdout.data, stderr.data
             )
 
-    def raw_interactive_execute(self, commands, environment=None):
+    def raw_interactive_execute(
+        self, commands, environment=None, user=None, group=None, cwd=None
+    ):
         """Execute a command on the instance interactively and returns
         urls to websockets. The urls contain a secret uuid, and can be accesses
         without further authentication. The caller has to open and manage
@@ -508,6 +522,12 @@ class Instance(model.Model):
         :type commands: [str]
         :param environment: The environment variables to pass with the command
         :type environment: {str: str}
+        :param user: User to run the command as
+        :type user: int
+        :param group: Group to run the command as
+        :type group: int
+        :param cwd: Current working directory
+        :type cwd: str
         :returns: Two urls to an interactive websocket and a control socket
         :rtype: {'ws':str,'control':str}
         """
@@ -523,6 +543,9 @@ class Instance(model.Model):
                 "environment": environment,
                 "wait-for-websocket": True,
                 "interactive": True,
+                "user": user,
+                "group": group,
+                "cwd": cwd,
             }
         )
 
