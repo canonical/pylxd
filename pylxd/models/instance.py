@@ -18,15 +18,9 @@ import time
 from typing import IO, NamedTuple
 from urllib import parse
 
-try:
-    from ws4py.client import WebSocketBaseClient
-    from ws4py.manager import WebSocketManager
-    from ws4py.messaging import BinaryMessage
-
-    _ws4py_installed = True
-except ImportError:  # pragma: no cover
-    WebSocketBaseClient = object
-    _ws4py_installed = False
+from ws4py.client import WebSocketBaseClient
+from ws4py.manager import WebSocketManager
+from ws4py.messaging import BinaryMessage
 
 from pylxd import managers
 from pylxd.exceptions import LXDAPIException
@@ -422,12 +416,9 @@ class Instance(model.Model):
         :type group: int
         :param cwd: Current working directory
         :type cwd: str
-        :raises ValueError: if the ws4py library is not installed.
         :returns: A tuple of `(exit_code, stdout, stderr)`
         :rtype: _InstanceExecuteResult() namedtuple
         """
-        if not _ws4py_installed:
-            raise ValueError("This feature requires the optional ws4py library.")
         if isinstance(commands, str):
             raise TypeError("First argument must be a list.")
         if environment is None:

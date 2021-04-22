@@ -20,14 +20,7 @@ from urllib import parse
 
 import requests
 import requests_unixsocket
-
-try:
-    from ws4py.client import WebSocketBaseClient
-
-    _ws4py_installed = True
-except ImportError:  # pragma: no cover
-    WebSocketBaseClient = object
-    _ws4py_installed = False
+from ws4py.client import WebSocketBaseClient
 
 from pylxd import exceptions, managers
 
@@ -487,8 +480,6 @@ class Client:
         :returns: instance of the websocket client
         :rtype: Option[_WebsocketClient(), :param:`websocket_client`]
         """
-        if not _ws4py_installed:
-            raise ValueError("This feature requires the optional ws4py library.")
         if websocket_client is None:
             websocket_client = _WebsocketClient
 

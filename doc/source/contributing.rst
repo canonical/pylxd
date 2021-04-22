@@ -78,7 +78,7 @@ Testing
 Testing pyLXD is in 3 parts:
 
 1. Conformance with Black and isort, using the ``tox -e lint`` command.
-2. Unit tests using ``tox -e py``.
+2. Unit tests using ``tox -e py`` or ``tox -e coverage``.
 3. Integration tests using the ``tox -e integration-in-lxd``.
 
 .. note:: all of the tests can be run by just using the ``tox`` command on it's
