@@ -293,6 +293,20 @@ class TestInstance(testing.PyLXDTestCase):
             TypeError, an_instance.raw_interactive_execute, "apt-get update"
         )
 
+    def test_raw_interactive_execute_options(self):
+        """It's possible to pass user, group and cwd arguments to an execute command."""
+        an_instance = models.Instance(self.client, name="an-instance")
+
+        result = an_instance.raw_interactive_execute(
+            ["/bin/bash"], user="user", group="group", cwd="/some/path"
+        )
+        self.assertEqual(
+            result["ws"], "/1.0/operations/operation-abc/websocket?secret=abc"
+        )
+        self.assertEqual(
+            result["control"], "/1.0/operations/operation-abc/websocket?secret=jkl"
+        )
+
     def test_migrate(self):
         """A instance is migrated."""
         from pylxd.client import Client
