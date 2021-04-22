@@ -79,5 +79,5 @@ jobs:
 
     - name: Test
       run: |
-        tox -e py
+        tox -e coverage
         codecov
