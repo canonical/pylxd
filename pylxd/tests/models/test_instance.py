@@ -204,7 +204,6 @@ class TestInstance(testing.PyLXDTestCase):
 
         an_instance.delete(wait=True)
 
-    @testing.requires_ws4py
     @mock.patch("pylxd.models.instance._StdinWebsocket")
     @mock.patch("pylxd.models.instance._CommandWebsocketClient")
     def test_execute(self, _CommandWebsocketClient, _StdinWebsocket):
@@ -221,7 +220,6 @@ class TestInstance(testing.PyLXDTestCase):
         self.assertEqual(0, result.exit_code)
         self.assertEqual("test\n", result.stdout)
 
-    @testing.requires_ws4py
     @mock.patch("pylxd.models.instance._StdinWebsocket")
     @mock.patch("pylxd.models.instance._CommandWebsocketClient")
     def test_execute_with_env(self, _CommandWebsocketClient, _StdinWebsocket):
@@ -238,23 +236,6 @@ class TestInstance(testing.PyLXDTestCase):
         self.assertEqual(0, result.exit_code)
         self.assertEqual("test\n", result.stdout)
 
-    def test_execute_no_ws4py(self):
-        """If ws4py is not installed, ValueError is raised."""
-        from pylxd.models import instance
-
-        old_installed = instance._ws4py_installed
-        instance._ws4py_installed = False
-
-        def cleanup():
-            instance._ws4py_installed = old_installed
-
-        self.addCleanup(cleanup)
-
-        an_instance = models.Instance(self.client, name="an-instance")
-
-        self.assertRaises(ValueError, an_instance.execute, ["echo", "test"])
-
-    @testing.requires_ws4py
     def test_execute_string(self):
         """A command passed as string raises a TypeError."""
         an_instance = models.Instance(self.client, name="an-instance")
