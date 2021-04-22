@@ -35,7 +35,7 @@ class TestCertificate(testing.PyLXDTestCase):
     def test_create(self):
         """A certificate is created."""
         cert_data = (
-            open(os.path.join(os.path.dirname(__file__), "..", "lxd.crt"))
+            open(os.path.join(os.path.dirname(__file__), "../../tests", "lxd.crt"))
             .read()
             .encode("utf-8")
         )
