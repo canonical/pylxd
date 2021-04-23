@@ -24,6 +24,10 @@ image:
     set `public` to `True`.
   - `create_from_simplestreams(server, alias, public=False, auto_update=False, wait=False)` -
     Create an image from simplestreams.
+  - `create_from_imagecreate_from_image(cls, client, server, fingerprint=None, alias=None,
+                                        public=False, auto_update=False, secret=None,
+                                        certificate=None):` -
+    Create an image from a public lxd instance.
   - `create_from_url(url, public=False, auto_update=False, wait=False)` -
     Create an image from a url.
 
@@ -99,6 +103,23 @@ you may also want to `wait=True`.
     >>> image.fingerprint
     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
+You can also download existing images from a remote lxd instance by either their alias or fingerprint.
+
+.. code-block:: python
+
+    >>> image = client.images.create_from_image("https://images.nlogn.org:8443",
+                                                alias='fedora/30', public=False, auto_update=True)
+    >>> image.fingerprint
+    'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+
+Or fetch an image from a simplestream server with:
+
+.. code-block:: python
+
+    >>> image = client.images.create_from_simplestreams('https://cloud-images.ubuntu.com/releases',
+                                                        'trusty/amd64', public=False, auto_update=True)
+    >>> image.fingerprint
+    'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 Finally, delete an image. As this is an asynchonous operation,
 you may also want to `wait=True`.
