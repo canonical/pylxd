@@ -11,8 +11,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from pylxd.models import _model as model
 from pylxd import managers
+from pylxd.models import _model as model
 
 
 class StoragePool(model.Model):
@@ -23,6 +23,7 @@ class StoragePool(model.Model):
 
     api_extension: 'storage'
     """
+
     name = model.Attribute(readonly=True)
     driver = model.Attribute(readonly=True)
     used_by = model.Attribute(readonly=True)
@@ -36,7 +37,7 @@ class StoragePool(model.Model):
     volumes = model.Manager()
 
     def __init__(self, *args, **kwargs):
-        super(StoragePool, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.resources = StorageResourcesManager(self)
         self.volumes = StorageVolumeManager(self)
@@ -57,10 +58,10 @@ class StoragePool(model.Model):
         :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if the
             'storage' api extension is missing.
         """
-        client.assert_has_api_extension('storage')
+        client.assert_has_api_extension("storage")
         response = client.api.storage_pools[name].get()
 
-        storage_pool = cls(client, **response.json()['metadata'])
+        storage_pool = cls(client, **response.json()["metadata"])
         return storage_pool
 
     @classmethod
@@ -80,12 +81,12 @@ class StoragePool(model.Model):
         :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if the
             'storage' api extension is missing.
         """
-        client.assert_has_api_extension('storage')
+        client.assert_has_api_extension("storage")
         response = client.api.storage_pools.get()
 
         storage_pools = []
-        for url in response.json()['metadata']:
-            name = url.split('/')[-1]
+        for url in response.json()["metadata"]:
+            name = url.split("/")[-1]
             storage_pools.append(cls(client, name=name))
         return storage_pools
 
@@ -125,10 +126,10 @@ class StoragePool(model.Model):
         :raises: :class:`pylxd.exceptions.LXDAPIException` if the storage pool
             couldn't be created.
         """
-        client.assert_has_api_extension('storage')
+        client.assert_has_api_extension("storage")
         client.api.storage_pools.post(json=definition)
 
-        storage_pool = cls.get(client, definition['name'])
+        storage_pool = cls.get(client, definition["name"])
         return storage_pool
 
     @classmethod
@@ -187,7 +188,7 @@ class StoragePool(model.Model):
             can't be deleted.
         """
         # Note this method exists so that it is documented via sphinx.
-        super(StoragePool, self).save(wait=wait)
+        super().save(wait=wait)
 
     def delete(self):
         """Delete the storage pool.
@@ -201,7 +202,7 @@ class StoragePool(model.Model):
             can't be deleted.
         """
         # Note this method exists so that it is documented via sphinx.
-        super(StoragePool, self).delete()
+        super().delete()
 
     def put(self, put_object, wait=False):
         """Put the storage pool.
@@ -225,7 +226,7 @@ class StoragePool(model.Model):
             can't be modified.
         """
         # Note this method exists so that it is documented via sphinx.
-        super(StoragePool, self).put(put_object, wait)
+        super().put(put_object, wait)
 
     def patch(self, patch_object, wait=False):
         """Patch the storage pool.
@@ -245,11 +246,11 @@ class StoragePool(model.Model):
             can't be modified.
         """
         # Note this method exists so that it is documented via sphinx.
-        super(StoragePool, self).patch(patch_object, wait)
+        super().patch(patch_object, wait)
 
 
 class StorageResourcesManager(managers.BaseManager):
-    manager_for = 'pylxd.models.StorageResources'
+    manager_for = "pylxd.models.StorageResources"
 
 
 class StorageResources(model.Model):
@@ -262,6 +263,7 @@ class StorageResources(model.Model):
 
     api_extension: 'resources'
     """
+
     space = model.Attribute(readonly=True)
     inodes = model.Attribute(readonly=True)
 
@@ -280,14 +282,14 @@ class StorageResources(model.Model):
         :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if the
             'resources' api extension is missing.
         """
-        storage_pool.client.assert_has_api_extension('resources')
+        storage_pool.client.assert_has_api_extension("resources")
         response = storage_pool.api.resources.get()
-        resources = cls(storage_pool.client, **response.json()['metadata'])
+        resources = cls(storage_pool.client, **response.json()["metadata"])
         return resources
 
 
 class StorageVolumeManager(managers.BaseManager):
-    manager_for = 'pylxd.models.StorageVolume'
+    manager_for = "pylxd.models.StorageVolume"
 
 
 class StorageVolume(model.Model):
@@ -298,6 +300,7 @@ class StorageVolume(model.Model):
 
     api_extension: 'storage'
     """
+
     name = model.Attribute(readonly=True)
     type = model.Attribute(readonly=True)
     description = model.Attribute(readonly=True)
@@ -342,24 +345,31 @@ class StorageVolume(model.Model):
         :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if the
             'storage' api extension is missing.
         """
-        storage_pool.client.assert_has_api_extension('storage')
+        storage_pool.client.assert_has_api_extension("storage")
         response = storage_pool.api.volumes.get()
 
         volumes = []
-        for volume in response.json()['metadata']:
-            (_type, name) = volume.split('/')[-2:]
+        for volume in response.json()["metadata"]:
+            (_type, name) = volume.split("/")[-2:]
             # for each type, convert to the string that will work with GET
-            if _type == 'containers':
-                _type = 'container'
-            elif _type == 'images':
-                _type = 'image'
+            if _type == "containers":
+                _type = "container"
+            elif _type == "virtual-machines":
+                _type = "virtual-machine"
+            elif _type == "instances":
+                _type = "instance"
+            elif _type == "images":
+                _type = "image"
             else:
-                _type = 'custom'
+                _type = "custom"
             volumes.append(
-                cls(storage_pool.client,
+                cls(
+                    storage_pool.client,
                     name=name,
                     type=_type,
-                    storage_pool=storage_pool))
+                    storage_pool=storage_pool,
+                )
+            )
         return volumes
 
     @classmethod
@@ -383,12 +393,14 @@ class StorageVolume(model.Model):
         :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if the
             'storage' api extension is missing.
         """
-        storage_pool.client.assert_has_api_extension('storage')
+        storage_pool.client.assert_has_api_extension("storage")
         response = storage_pool.api.volumes[_type][name].get()
 
         volume = cls(
-            storage_pool.client, storage_pool=storage_pool,
-            **response.json()['metadata'])
+            storage_pool.client,
+            storage_pool=storage_pool,
+            **response.json()["metadata"]
+        )
         return volume
 
     @classmethod
@@ -444,20 +456,19 @@ class StorageVolume(model.Model):
         # convenience of being able to call this 'naturally' off of a
         # storage_pool.  So we have to jump through some hurdles to get the
         # right positional parameters.
-        storage_pool.client.assert_has_api_extension('storage')
-        wait = kwargs.get('wait', True)
+        storage_pool.client.assert_has_api_extension("storage")
+        wait = kwargs.get("wait", True)
         definition = args[-1]
         assert isinstance(definition, dict)
-        assert 'name' in definition
+        assert "name" in definition
         response = storage_pool.api.volumes.custom.post(json=definition)
 
-        if response.json()['type'] == 'async' and wait:
+        if response.json()["type"] == "async" and wait:
             storage_pool.client.operations.wait_for_operation(
-                response.json()['operation'])
+                response.json()["operation"]
+            )
 
-        volume = cls.get(storage_pool,
-                         'custom',
-                         definition['name'])
+        volume = cls.get(storage_pool, "custom", definition["name"])
         return volume
 
     def rename(self, _input, wait=False):
@@ -497,16 +508,15 @@ class StorageVolume(model.Model):
             volume couldn't be renamed.
         """
         assert isinstance(_input, dict)
-        assert 'name' in _input
-        assert 'pool' in _input
+        assert "name" in _input
+        assert "pool" in _input
         response = self.api.post(json=_input)
 
         response_json = response.json()
         if wait:
-            self.client.operations.wait_for_operation(
-                response_json['operation'])
-        self.name = _input['name']
-        return response_json['metadata']
+            self.client.operations.wait_for_operation(response_json["operation"])
+        self.name = _input["name"]
+        return response_json["metadata"]
 
     def put(self, put_object, wait=False):
         """Put the storage volume.
@@ -537,7 +547,7 @@ class StorageVolume(model.Model):
             can't be modified.
         """
         # Note this method exists so that it is documented via sphinx.
-        super(StorageVolume, self).put(put_object, wait)
+        super().put(put_object, wait)
 
     def patch(self, patch_object, wait=False):
         """Patch the storage volume.
@@ -559,7 +569,7 @@ class StorageVolume(model.Model):
             volume can't be modified.
         """
         # Note this method exists so that it is documented via sphinx.
-        super(StorageVolume, self).patch(patch_object, wait)
+        super().patch(patch_object, wait)
 
     def save(self, wait=False):
         """Save the model using PUT back to the LXD server.
@@ -583,7 +593,7 @@ class StorageVolume(model.Model):
             volume can't be deleted.
         """
         # Note this method exists so that it is documented via sphinx.
-        super(StorageVolume, self).save(wait=wait)
+        super().save(wait=wait)
 
     def delete(self):
         """Delete the storage pool.
@@ -599,4 +609,4 @@ class StorageVolume(model.Model):
             can't be deleted.
         """
         # Note this method exists so that it is documented via sphinx.
-        super(StorageVolume, self).delete()
+        super().delete()

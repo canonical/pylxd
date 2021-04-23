@@ -16,8 +16,13 @@ import json
 from pylxd.models import _model as model
 
 
+class NetworkState(model.AttributeDict):
+    """A simple object for representing a network state."""
+
+
 class Network(model.Model):
     """Model representing a LXD network."""
+
     name = model.Attribute()
     description = model.Attribute()
     type = model.Attribute()
@@ -60,7 +65,7 @@ class Network(model.Model):
         """
         response = client.api.networks[name].get()
 
-        return cls(client, **response.json()['metadata'])
+        return cls(client, **response.json()["metadata"])
 
     @classmethod
     def all(cls, client):
@@ -74,8 +79,8 @@ class Network(model.Model):
         response = client.api.networks.get()
 
         networks = []
-        for url in response.json()['metadata']:
-            name = url.split('/')[-1]
+        for url in response.json()["metadata"]:
+            name = url.split("/")[-1]
             networks.append(cls(client, name=name))
         return networks
 
@@ -95,15 +100,15 @@ class Network(model.Model):
         :param config: additional configuration
         :type config: dict
         """
-        client.assert_has_api_extension('network')
+        client.assert_has_api_extension("network")
 
-        network = {'name': name}
+        network = {"name": name}
         if description is not None:
-            network['description'] = description
+            network["description"] = description
         if type is not None:
-            network['type'] = type
+            network["type"] = type
         if config is not None:
-            network['config'] = config
+            network["config"] = config
         client.api.networks.post(json=network)
         return cls.get(client, name)
 
@@ -116,13 +121,19 @@ class Network(model.Model):
         :return: Renamed network instance
         :rtype: :class:`Network`
         """
-        self.client.assert_has_api_extension('network')
-        self.client.api.networks.post(json={'name': new_name})
+        self.client.assert_has_api_extension("network")
+        self.client.api.networks.post(json={"name": new_name})
         return Network.get(self.client, new_name)
 
     def save(self, *args, **kwargs):
-        self.client.assert_has_api_extension('network')
-        super(Network, self).save(*args, **kwargs)
+        self.client.assert_has_api_extension("network")
+        super().save(*args, **kwargs)
+
+    def state(self):
+        """Get network state."""
+        response = self.api.state.get()
+        state = NetworkState(response.json()["metadata"])
+        return state
 
     @property
     def api(self):
@@ -134,8 +145,6 @@ class Network(model.Model):
     def __repr__(self):
         attrs = []
         for attribute, value in self.marshall().items():
-            attrs.append('{}={}'.format(attribute,
-                                        json.dumps(value, sort_keys=True)))
+            attrs.append("{}={}".format(attribute, json.dumps(value, sort_keys=True)))
 
-        return '{}({})'.format(self.__class__.__name__,
-                               ', '.join(sorted(attrs)))
+        return "{}({})".format(self.__class__.__name__, ", ".join(sorted(attrs)))

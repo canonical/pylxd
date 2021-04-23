@@ -12,46 +12,42 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from unittest import mock
+
 from ddt import ddt
-import mock
 
 from pylxd.deprecated import connection
-
-from pylxd.deprecated.tests import annotated_data
-from pylxd.deprecated.tests import fake_api
-from pylxd.deprecated.tests import LXDAPITestBase
+from pylxd.deprecated.tests import LXDAPITestBase, annotated_data, fake_api
 
 
 @ddt
-@mock.patch.object(connection.LXDConnection, 'get_object',
-                   return_value=(200, fake_api.fake_network()))
+@mock.patch.object(
+    connection.LXDConnection, "get_object", return_value=(200, fake_api.fake_network())
+)
 class LXDAPINetworkTest(LXDAPITestBase):
-
     def test_list_networks(self, ms):
-        ms.return_value = ('200', fake_api.fake_network_list())
-        self.assertEqual(
-            ['lxcbr0'],
-            self.lxd.network_list())
-        ms.assert_called_with('GET',
-                              '/1.0/networks')
+        ms.return_value = ("200", fake_api.fake_network_list())
+        self.assertEqual(["lxcbr0"], self.lxd.network_list())
+        ms.assert_called_with("GET", "/1.0/networks")
 
     def test_network_show(self, ms):
-        self.assertEqual({
-            'network_name': 'lxcbr0',
-            'network_type': 'bridge',
-            'network_members': ['/1.0/containers/trusty-1'],
-        }, self.lxd.network_show('lxcbr0'))
-        ms.assert_called_with('GET',
-                              '/1.0/networks/lxcbr0')
+        self.assertEqual(
+            {
+                "network_name": "lxcbr0",
+                "network_type": "bridge",
+                "network_members": ["/1.0/containers/trusty-1"],
+            },
+            self.lxd.network_show("lxcbr0"),
+        )
+        ms.assert_called_with("GET", "/1.0/networks/lxcbr0")
 
     @annotated_data(
-        ('name', 'lxcbr0'),
-        ('type', 'bridge'),
-        ('members', ['/1.0/containers/trusty-1']),
+        ("name", "lxcbr0"),
+        ("type", "bridge"),
+        ("members", ["/1.0/containers/trusty-1"]),
     )
     def test_network_data(self, method, expected, ms):
         self.assertEqual(
-            expected, getattr(self.lxd,
-                              'network_show_' + method)('lxcbr0'))
-        ms.assert_called_with('GET',
-                              '/1.0/networks/lxcbr0')
+            expected, getattr(self.lxd, "network_show_" + method)("lxcbr0")
+        )
+        ms.assert_called_with("GET", "/1.0/networks/lxcbr0")

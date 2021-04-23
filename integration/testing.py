@@ -32,9 +32,9 @@ class IntegrationTestCase(unittest.TestCase):
     def generate_object_name(self):
         """Generate a random object name."""
         # Underscores are not allowed in container names.
-        test = self.id().split('.')[-1].replace('_', '')
-        rando = str(uuid.uuid1()).split('-')[-1]
-        return '{}-{}'.format(test, rando)
+        test = self.id().split(".")[-1].replace("_", "")
+        rando = str(uuid.uuid1()).split("-")[-1]
+        return "{}-{}".format(test, rando)
 
     def create_container(self):
         """Create a container in lxd."""
@@ -42,16 +42,15 @@ class IntegrationTestCase(unittest.TestCase):
 
         name = self.generate_object_name()
         machine = {
-            'name': name,
-            'architecture': '2',
-            'profiles': ['default'],
-            'ephemeral': False,
-            'config': {'limits.cpu': '2'},
-            'source': {'type': 'image',
-                       'alias': alias},
+            "name": name,
+            "architecture": "2",
+            "profiles": ["default"],
+            "ephemeral": False,
+            "config": {"limits.cpu": "2"},
+            "source": {"type": "image", "alias": alias},
         }
-        result = self.lxd['containers'].post(json=machine)
-        operation_uuid = result.json()['operation'].split('/')[-1]
+        result = self.lxd["containers"].post(json=machine)
+        operation_uuid = result.json()["operation"].split("/")[-1]
         result = self.lxd.operations[operation_uuid].wait.get()
 
         self.addCleanup(self.delete_container, name)
@@ -63,21 +62,21 @@ class IntegrationTestCase(unittest.TestCase):
         # To ensure we don't get an infinite loop, let's count.
         count = 0
         try:
-            result = self.lxd['containers'][name].delete()
+            result = self.lxd["containers"][name].delete()
         except exceptions.LXDAPIException as e:
             if e.response.status_code in (400, 404):
                 return
             raise
         while enforce and result.status_code == 404 and count < 10:
             try:
-                result = self.lxd['containers'][name].delete()
+                result = self.lxd["containers"][name].delete()
             except exceptions.LXDAPIException as e:
                 if e.response.status_code in (400, 404):
                     return
                 raise
             count += 1
         try:
-            operation_uuid = result.json()['operation'].split('/')[-1]
+            operation_uuid = result.json()["operation"].split("/")[-1]
             result = self.lxd.operations[operation_uuid].wait.get()
         except KeyError:
             pass  # 404 cases are okay.
@@ -85,20 +84,18 @@ class IntegrationTestCase(unittest.TestCase):
     def create_image(self):
         """Create an image in lxd."""
         path, fingerprint = create_busybox_image()
-        with open(path, 'rb') as f:
+        with open(path, "rb") as f:
             headers = {
-                'X-LXD-Public': '1',
-                }
+                "X-LXD-Public": "1",
+            }
             response = self.lxd.images.post(data=f.read(), headers=headers)
-        operation_uuid = response.json()['operation'].split('/')[-1]
+        operation_uuid = response.json()["operation"].split("/")[-1]
         self.lxd.operations[operation_uuid].wait.get()
 
         alias = self.generate_object_name()
-        response = self.lxd.images.aliases.post(json={
-            'description': '',
-            'target': fingerprint,
-            'name': alias
-            })
+        response = self.lxd.images.aliases.post(
+            json={"description": "", "target": fingerprint, "name": alias}
+        )
 
         self.addCleanup(self.delete_image, fingerprint)
         return fingerprint, alias
@@ -115,11 +112,8 @@ class IntegrationTestCase(unittest.TestCase):
     def create_profile(self):
         """Create a profile."""
         name = self.generate_object_name()
-        config = {'limits.memory': '1GB'}
-        self.lxd.profiles.post(json={
-            'name': name,
-            'config': config
-            })
+        config = {"limits.memory": "1GB"}
+        self.lxd.profiles.post(json={"name": name, "config": config})
         return name
 
     def delete_profile(self, name):
@@ -131,13 +125,30 @@ class IntegrationTestCase(unittest.TestCase):
                 return
             raise
 
+    def create_project(self):
+        """Create a project."""
+        name = self.generate_object_name()
+        self.lxd.projects.post(json={"name": name})
+        return name
+
+    def delete_project(self, name):
+        """Delete a project."""
+        try:
+            self.lxd.projects[name].delete()
+        except exceptions.LXDAPIException as e:
+            if e.response.status_code == 404:
+                return
+            raise
+
     def create_network(self):
         # get interface name in format xxx0
-        name = ''.join(random.sample(string.ascii_lowercase, 3)) + '0'
-        self.lxd.networks.post(json={
-            'name': name,
-            'config': {},
-        })
+        name = "".join(random.sample(string.ascii_lowercase, 3)) + "0"
+        self.lxd.networks.post(
+            json={
+                "name": name,
+                "config": {},
+            }
+        )
         return name
 
     def delete_network(self, name):
@@ -152,7 +163,8 @@ class IntegrationTestCase(unittest.TestCase):
         LXD responses are relatively standard. This function makes assertions
         to all those standards.
         """
-        self.assertEqual(response.status_code, response.json()['status_code'])
+        self.assertEqual(response.status_code, response.json()["status_code"])
         self.assertEqual(
-            ['metadata', 'operation', 'status', 'status_code', 'type'],
-            sorted(response.json().keys()))
+            ["metadata", "operation", "status", "status_code", "type"],
+            sorted(response.json().keys()),
+        )

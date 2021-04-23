@@ -20,12 +20,12 @@ class TestClusterMember(testing.PyLXDTestCase):
 
     def test_get(self):
         """A cluster member is retrieved."""
-        member = self.client.cluster.members.get('an-member')
+        member = self.client.cluster.members.get("an-member")
 
-        self.assertEqual('https://10.1.1.101:8443', member.url)
+        self.assertEqual("https://10.1.1.101:8443", member.url)
 
     def test_all(self):
         """All cluster members are returned."""
         members = self.client.cluster.members.all()
 
-        self.assertIn('an-member', [m.server_name for m in members])
+        self.assertIn("an-member", [m.server_name for m in members])

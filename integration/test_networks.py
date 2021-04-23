@@ -17,12 +17,11 @@ from pylxd import exceptions
 
 
 class NetworkTestCase(IntegrationTestCase):
-
     def setUp(self):
         super(NetworkTestCase, self).setUp()
 
-        if not self.client.has_api_extension('network'):
-            self.skipTest('Required LXD API extension not available!')
+        if not self.client.has_api_extension("network"):
+            self.skipTest("Required LXD API extension not available!")
 
 
 class TestNetworks(NetworkTestCase):
@@ -49,37 +48,40 @@ class TestNetworks(NetworkTestCase):
 
     def test_create_default_arguments(self):
         """A network is created with default arguments"""
-        name = 'eth10'
+        name = "eth10"
         network = self.client.networks.create(name=name)
         self.addCleanup(self.delete_network, name)
 
         self.assertEqual(name, network.name)
         self.assertTrue(network.managed)
-        self.assertEqual('bridge', network.type)
-        self.assertEqual('', network.description)
+        self.assertEqual("bridge", network.type)
+        self.assertEqual("", network.description)
 
     def test_create_with_parameters(self):
         """A network is created with provided arguments"""
         kwargs = {
-            'name': 'eth10',
-            'config': {
-                'ipv4.address': '10.10.10.1/24',
-                'ipv4.nat': 'true',
-                'ipv6.address': 'none',
-                'ipv6.nat': 'false',
+            "name": "eth10",
+            "config": {
+                "ipv4.address": "10.10.10.1/24",
+                "ipv4.nat": "true",
+                "ipv6.address": "none",
+                "ipv6.nat": "false",
             },
-            'type': 'bridge',
-            'description': 'network description',
+            "type": "bridge",
+            "description": "network description",
         }
 
-        network = self.client.networks.create(**kwargs)
-        self.addCleanup(self.delete_network, kwargs['name'])
+        if self.client.has_api_extension("network_hwaddr"):
+            kwargs["config"]["bridge.hwaddr"] = "00:16:3e:12:34:56"
 
-        self.assertEqual(kwargs['name'], network.name)
-        self.assertEqual(kwargs['config'], network.config)
-        self.assertEqual(kwargs['type'], network.type)
+        network = self.client.networks.create(**kwargs)
+        self.addCleanup(self.delete_network, kwargs["name"])
+
+        self.assertEqual(kwargs["name"], network.name)
+        self.assertEqual(kwargs["config"], network.config)
+        self.assertEqual(kwargs["type"], network.type)
         self.assertTrue(network.managed)
-        self.assertEqual(kwargs['description'], network.description)
+        self.assertEqual(kwargs["description"], network.description)
 
 
 class TestNetwork(NetworkTestCase):
@@ -96,15 +98,15 @@ class TestNetwork(NetworkTestCase):
 
     def test_save(self):
         """A network is updated"""
-        self.network.config['ipv4.address'] = '11.11.11.1/24'
+        self.network.config["ipv4.address"] = "11.11.11.1/24"
         self.network.save()
 
         network = self.client.networks.get(self.network.name)
-        self.assertEqual('11.11.11.1/24', network.config['ipv4.address'])
+        self.assertEqual("11.11.11.1/24", network.config["ipv4.address"])
 
     def test_rename(self):
         """A network is renamed"""
-        name = 'eth20'
+        name = "eth20"
         self.addCleanup(self.delete_network, name)
 
         self.network.rename(name)
@@ -117,5 +119,5 @@ class TestNetwork(NetworkTestCase):
         self.network.delete()
 
         self.assertRaises(
-            exceptions.LXDAPIException,
-            self.client.networks.get, self.network.name)
+            exceptions.LXDAPIException, self.client.networks.get, self.network.name
+        )

@@ -17,10 +17,11 @@ Contents:
 
    events
    certificates
-   containers
+   instances
    images
    networks
    profiles
+   projects
    operations
    storage-pools
    clustering

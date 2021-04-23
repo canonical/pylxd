@@ -1,4 +1,3 @@
-
 # Copyright (c) 2015 Canonical Ltd
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,22 +13,23 @@
 #    under the License.
 import warnings
 
-from pylxd.deprecated import certificate
-from pylxd.deprecated import connection
-from pylxd.deprecated import container
-from pylxd.deprecated import hosts
-from pylxd.deprecated import image
-from pylxd.deprecated import network
-from pylxd.deprecated import operation
-from pylxd.deprecated import profiles
+from pylxd.deprecated import (
+    certificate,
+    connection,
+    container,
+    hosts,
+    image,
+    network,
+    operation,
+    profiles,
+)
 
 
-class API(object):
-
+class API:
     def __init__(self, host=None, port=8443):
         warnings.warn(
-            "pylxd.api.API is deprecated. Please use pylxd.Client.",
-            DeprecationWarning)
+            "pylxd.api.API is deprecated. Please use pylxd.Client.", DeprecationWarning
+        )
         conn = self.connection = connection.LXDConnection(host=host, port=port)
         self.hosts = hosts.LXDHost(conn)
         self.image = image.LXDImage(conn)
@@ -88,13 +88,13 @@ class API(object):
         return self.image.image_info(image)
 
     def image_upload_date(self, image, data=None):
-        return self.image.get_image_date(image, data, 'uploaded_at')
+        return self.image.get_image_date(image, data, "uploaded_at")
 
     def image_create_date(self, image, data=None):
-        return self.image.get_image_date(image, data, 'created_at')
+        return self.image.get_image_date(image, data, "created_at")
 
     def image_expire_date(self, image, data=None):
-        return self.image.get_image_date(image, data, 'expires_at')
+        return self.image.get_image_date(image, data, "expires_at")
 
     def image_upload(self, path=None, data=None, headers={}):
         return self.image.image_upload(path=path, data=data, headers=headers)
@@ -195,10 +195,12 @@ class API(object):
     def container_publish(self, container):
         return self.container.container_publish(container)
 
-    def put_container_file(self, container, src_file,
-                           dst_file, uid=0, gid=0, mode=0o644):
+    def put_container_file(
+        self, container, src_file, dst_file, uid=0, gid=0, mode=0o644
+    ):
         return self.container.put_container_file(
-            container, src_file, dst_file, uid, gid, mode)
+            container, src_file, dst_file, uid, gid, mode
+        )
 
     # snapshots
     def container_snapshot_list(self, container):
@@ -220,14 +222,15 @@ class API(object):
         return self.container.container_migrate(container)
 
     def container_migrate_sync(self, operation_id, container_secret):
-        return self.container.container_migrate_sync(
-            operation_id, container_secret)
+        return self.container.container_migrate_sync(operation_id, container_secret)
 
     # misc container
-    def container_run_command(self, container, args, interactive=False,
-                              web_sockets=False, env=None):
-        return self.container.run_command(container, args, interactive,
-                                          web_sockets, env)
+    def container_run_command(
+        self, container, args, interactive=False, web_sockets=False, env=None
+    ):
+        return self.container.run_command(
+            container, args, interactive, web_sockets, env
+        )
 
     # certificates
     def certificate_list(self):
@@ -244,31 +247,31 @@ class API(object):
 
     # profiles
     def profile_create(self, profile):
-        '''Create LXD profile'''
+        """Create LXD profile"""
         return self.profiles.profile_create(profile)
 
     def profile_show(self, profile):
-        '''Show LXD profile'''
+        """Show LXD profile"""
         return self.profiles.profile_show(profile)
 
     def profile_defined(self, profile):
-        '''Check to see if profile is defined'''
+        """Check to see if profile is defined"""
         return self.profiles.profile_defined(profile)
 
     def profile_list(self):
-        '''List LXD profiles'''
+        """List LXD profiles"""
         return self.profiles.profile_list()
 
     def profile_update(self, profile, config):
-        '''Update LXD profile'''
+        """Update LXD profile"""
         return self.profiles.profile_update(profile, config)
 
     def profile_rename(self, profile, config):
-        '''Rename LXD profile'''
+        """Rename LXD profile"""
         return self.profiles.profile_rename(profile, config)
 
     def profile_delete(self, profile):
-        '''Delete LXD profile'''
+        """Delete LXD profile"""
         return self.profiles.profile_delete(profile)
 
     # lxd operations

@@ -64,39 +64,36 @@ At this point, the contributor should then delete their private branch.
 Code standards
 --------------
 
-pyLXD follows `PEP 8`_ as closely as practical. To check your compliance, use
-the `pep8` tox target::
+pyLXD formats code with Black and isort. Verify the formatting with::
 
-    tox -e pep8
+    tox -e lint
 
-.. note:: if this fails then the code will not be merged.  If there is a good
-          reason for a PEP8 non-conformance, then a ``# NOQA`` comment should be
-          added to the relevant line(s).
+If it fails, you can reformat the code with::
+
+    tox -e format
 
 Testing
 -------
 
 Testing pyLXD is in 3 parts:
 
-1. Conformance with `PEP 8`_, using the ``tox -e pep8`` command.
-2. Unit tests using ``tox -e py27`` and ``tox -e py3``.
-3. Integration tests using the ``run_integration_tests`` script in the root of
-   the repository.
+1. Conformance with Black and isort, using the ``tox -e lint`` command.
+2. Unit tests using ``tox -e py`` or ``tox -e coverage``.
+3. Integration tests using the ``tox -e integration-in-lxd``.
 
 .. note:: all of the tests can be run by just using the ``tox`` command on it's
           own, with the exception of the integration tests.  These are not
           automatically run as they require a working LXD environment.
 
 All of the commands use the `Tox`_ automation project to run tests in a
-sandboxed environment.  On Ubuntu this is installed using::
+sandboxed environment.
 
-    sudo apt install python-tox
 
 Unit Testing
 ^^^^^^^^^^^^
 
 pyLXD tries to follow best practices when it comes to testing. PRs are gated
-by `Travis CI <https://travis-ci.org/lxc/pylxd>`_ and
+by `GitHub Actions <https://github.com/lxc/pylxd/actions>`_ and
 `CodeCov <https://codecov.io/gh/lxc/pylxd>`_. It's best to submit tests
 with new changes, as your patch is unlikely to be accepted without them.
 
@@ -107,32 +104,9 @@ To run the tests, you should use `Tox`_::
 Integration Testing
 ^^^^^^^^^^^^^^^^^^^
 
-Integration testing requires a running LXD system.  At present this is not
-performed by the CI system, although this is intended at some point in the
-future.  Integration testing *should* be performed prior to merging a PR.
-
-Currently, there are two variants of the script to run integration tests:
-
-1. ``run_integration_tests-16-04``
-2. ``run_integration_tests-18-04``
-
-The default is ``run_integration_tests-18-04``, which is symlinked to
-``run_integration_tests``. This is because the default is to test on Ubuntu
-Bionic, with Ubuntu Xenial (16.04) for maintenance purposes.
-
-.. note:: A script to automate running the integration tests needs to be added.
-
-Some hints on how to run the integration tests:
-
-1. On Ubuntu it's probably easiest to use the `Multipass`_ snap.
-2. Launch an LTS instance using ``multipass launch -n foo``
-3. Shell into the instance: ``multipass exec foo -- bash``
-4. Install tox and python2.7: ``sudo apt install python-tox python-2.7``
-5. Clone the branch from the PR (or otherwise copy the repo into the machine)
-6. Configure LXD using ``lxd init`` -- follow the prompts provided.
-7. Run the integration tests.
+Integration testing requires a running LXD system.  They can be tested locally
+in LXD container with nesting support; ``tox -e integration-in-lxd``.
 
 .. _Github: https://github.com/lxc/pylxd
-.. _PEP 8: https://www.python.org/dev/peps/pep-0008/
 .. _Tox: https://tox.readthedocs.io/en/latest/
 .. _Multipass: https://github.com/CanonicalLtd/multipass

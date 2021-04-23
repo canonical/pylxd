@@ -13,7 +13,7 @@
 #    under the License.
 
 import json
-import mock
+from unittest import mock
 
 from pylxd import exceptions, models
 from pylxd.tests import testing
@@ -22,39 +22,36 @@ from pylxd.tests import testing
 class TestOperation(testing.PyLXDTestCase):
     """Tests for pylxd.models.Operation."""
 
-    @mock.patch.dict('os.environ', {'PYLXD_WARNINGS': ''})
-    @mock.patch('warnings.warn')
+    @mock.patch.dict("os.environ", {"PYLXD_WARNINGS": ""})
+    @mock.patch("warnings.warn")
     def test_init_warnings_once(self, mock_warn):
-        with mock.patch('pylxd.models.operation._seen_attribute_warnings',
-                        new=set()):
-            models.Operation(unknown='some_value')
+        with mock.patch("pylxd.models.operation._seen_attribute_warnings", new=set()):
+            models.Operation(unknown="some_value")
             mock_warn.assert_called_once_with(mock.ANY)
-            models.Operation(unknown='some_value_as_well')
+            models.Operation(unknown="some_value_as_well")
             mock_warn.assert_called_once_with(mock.ANY)
             models.Operation(unknown2="some_2nd_value")
             self.assertEqual(len(mock_warn.call_args_list), 2)
 
-    @mock.patch.dict('os.environ', {'PYLXD_WARNINGS': 'none'})
-    @mock.patch('warnings.warn')
+    @mock.patch.dict("os.environ", {"PYLXD_WARNINGS": "none"})
+    @mock.patch("warnings.warn")
     def test_init_warnings_none(self, mock_warn):
-        with mock.patch('pylxd.models.operation._seen_attribute_warnings',
-                        new=set()):
-            models.Operation(unknown='some_value')
+        with mock.patch("pylxd.models.operation._seen_attribute_warnings", new=set()):
+            models.Operation(unknown="some_value")
             mock_warn.assert_not_called()
 
-    @mock.patch.dict('os.environ', {'PYLXD_WARNINGS': 'always'})
-    @mock.patch('warnings.warn')
+    @mock.patch.dict("os.environ", {"PYLXD_WARNINGS": "always"})
+    @mock.patch("warnings.warn")
     def test_init_warnings_always(self, mock_warn):
-        with mock.patch('pylxd.models.operation._seen_attribute_warnings',
-                        new=set()):
-            models.Operation(unknown='some_value')
+        with mock.patch("pylxd.models.operation._seen_attribute_warnings", new=set()):
+            models.Operation(unknown="some_value")
             mock_warn.assert_called_once_with(mock.ANY)
-            models.Operation(unknown='some_value_as_well')
+            models.Operation(unknown="some_value_as_well")
             self.assertEqual(len(mock_warn.call_args_list), 2)
 
     def test_get(self):
         """Return an operation."""
-        name = 'operation-abc'
+        name = "operation-abc"
 
         an_operation = models.Operation.get(self.client, name)
 
@@ -62,52 +59,63 @@ class TestOperation(testing.PyLXDTestCase):
 
     def test_get_full_path(self):
         """Return an operation even if the full path is specified."""
-        name = '/1.0/operations/operation-abc'
+        name = "/1.0/operations/operation-abc"
 
         an_operation = models.Operation.get(self.client, name)
 
-        self.assertEqual('operation-abc', an_operation.id)
+        self.assertEqual("operation-abc", an_operation.id)
 
     def test_get_full_path_and_project(self):
         """Return an operation even if the full path is specified."""
-        name = '/1.0/operations/operation-abc?project=default'
+        name = "/1.0/operations/operation-abc?project=default"
 
         an_operation = models.Operation.get(self.client, name)
 
-        self.assertEqual('operation-abc', an_operation.id)
+        self.assertEqual("operation-abc", an_operation.id)
 
     def test_wait_with_error(self):
         """If the operation errors, wait raises an exception."""
+
         def error(request, context):
             context.status_code = 200
             return {
-                'type': 'sync',
-                'metadata': {
-                    'status': 'Failure',
-                    'err': 'Keep your foot off the blasted samoflange.',
-                }}
-        self.add_rule({
-            'json': error,
-            'method': 'GET',
-            'url': r'^http://pylxd.test/1.0/operations/operation-abc/wait$',  # NOQA
-        })
+                "type": "sync",
+                "metadata": {
+                    "status": "Failure",
+                    "err": "Keep your foot off the blasted samoflange.",
+                },
+            }
 
-        name = '/1.0/operations/operation-abc'
+        self.add_rule(
+            {
+                "json": error,
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/operations/operation-abc/wait$",
+            }
+        )
+
+        name = "/1.0/operations/operation-abc"
 
         an_operation = models.Operation.get(self.client, name)
 
         self.assertRaises(exceptions.LXDAPIException, an_operation.wait)
 
     def test_unknown_attribute(self):
-        self.add_rule({
-            'text': json.dumps({
-                'type': 'sync',
-                'metadata': {'id': 'operation-unknown',
-                             'metadata': {'return': 0},
-                             'unknown': False},
-                }),
-            'method': 'GET',
-            'url': r'^http://pylxd.test/1.0/operations/operation-unknown$',
-        })
-        url = '/1.0/operations/operation-unknown'
+        self.add_rule(
+            {
+                "text": json.dumps(
+                    {
+                        "type": "sync",
+                        "metadata": {
+                            "id": "operation-unknown",
+                            "metadata": {"return": 0},
+                            "unknown": False,
+                        },
+                    }
+                ),
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/operations/operation-unknown$",
+            }
+        )
+        url = "/1.0/operations/operation-unknown"
         models.Operation.get(self.client, url)

@@ -36,7 +36,7 @@ class Profile(model.Model):
     def get(cls, client, name):
         """Get a profile."""
         response = client.api.profiles[name].get()
-        return cls(client, **response.json()['metadata'])
+        return cls(client, **response.json()["metadata"])
 
     @classmethod
     def all(cls, client):
@@ -44,19 +44,19 @@ class Profile(model.Model):
         response = client.api.profiles.get()
 
         profiles = []
-        for url in response.json()['metadata']:
-            name = url.split('/')[-1]
+        for url in response.json()["metadata"]:
+            name = url.split("/")[-1]
             profiles.append(cls(client, name=name))
         return profiles
 
     @classmethod
     def create(cls, client, name, config=None, devices=None):
         """Create a profile."""
-        profile = {'name': name}
+        profile = {"name": name}
         if config is not None:
-            profile['config'] = config
+            profile["config"] = config
         if devices is not None:
-            profile['devices'] = devices
+            profile["devices"] = devices
         client.api.profiles.post(json=profile)
         return cls.get(client, name)
 
@@ -66,6 +66,6 @@ class Profile(model.Model):
 
     def rename(self, new_name):
         """Rename the profile."""
-        self.api.post(json={'name': new_name})
+        self.api.post(json={"name": new_name})
 
         return Profile.get(self.client, new_name)

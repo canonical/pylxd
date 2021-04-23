@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 import datetime
-import pylxd
-import requests
 import time
 
+import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
+import pylxd
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -18,23 +18,26 @@ def log(s):
 
 def create_and_update(client):
     log("Creating...")
-    base = client.containers.create({
-        'name': 'ubuntu-1604',
-        'source': {
-            'type': 'image',
-            'protocol': 'simplestreams',
-            'server': 'https://images.linuxcontainers.org',
-            'alias': 'ubuntu/xenial/amd64'
-        }
-    }, wait=True)
+    base = client.containers.create(
+        {
+            "name": "ubuntu-1604",
+            "source": {
+                "type": "image",
+                "protocol": "simplestreams",
+                "server": "https://images.linuxcontainers.org",
+                "alias": "ubuntu/xenial/amd64",
+            },
+        },
+        wait=True,
+    )
     log("starting...")
     base.start(wait=True)
-    while len(base.state().network['eth0']['addresses']) < 2:
+    while len(base.state().network["eth0"]["addresses"]) < 2:
         time.sleep(1)
     commands = [
-        ['sleep', '10'],
-        ['apt-get', 'update'],
-        ['apt-get', 'install', 'openssh-server', 'sudo', 'man', '-y']
+        ["sleep", "10"],
+        ["apt-get", "update"],
+        ["apt-get", "install", "openssh-server", "sudo", "man", "-y"],
     ]
     for command in commands:
         log("command: {}".format(command))
@@ -44,9 +47,9 @@ def create_and_update(client):
         log("stderr: {}".format(result.stderr))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     client = pylxd.Client("https://10.245.162.33:8443/", verify=False)
     log("Authenticating...")
-    client.authenticate('password')
+    client.authenticate("password")
 
     create_and_update(client)

@@ -65,6 +65,7 @@ Image methods
   - `add_alias` - Add an alias to the image.
   - `delete_alias` - Remove an alias.
   - `copy` - Copy the image to another LXD client.
+  - `delete` - Deletes the image.
 
 Examples
 --------
@@ -119,3 +120,12 @@ Or fetch an image from a simplestream server with:
                                                         'trusty/amd64', public=False, auto_update=True)
     >>> image.fingerprint
     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+
+Finally, delete an image. As this is an asynchonous operation,
+you may also want to `wait=True`.
+
+.. code-block:: python
+
+    >>> image = client.images.get(
+    ...     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
+    >>> image.delete(wait=True)

@@ -12,8 +12,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import pbr.version
+from pkg_resources import get_distribution
 
-__version__ = pbr.version.VersionInfo('pylxd').version_string()
+from pylxd.client import Client, EventType
 
-from pylxd.client import Client,EventType  # NOQA
+__all__ = ["Client", "EventType"]
+
+__version__ = get_distribution("pylxd").version

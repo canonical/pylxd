@@ -14,15 +14,23 @@
 import os
 import warnings
 
-import six
-
 from pylxd import exceptions
-
 
 MISSING = object()
 
 
-class Attribute(object):
+class AttributeDict:
+    """Wrap a dict making keys accessible as attributes."""
+
+    def __init__(self, dct):
+        for key, value in dct.items():
+            setattr(self, key, value)
+
+    def __iter__(self):
+        return iter(self.__dict__.items())
+
+
+class Attribute:
     """A metadata class for model attributes."""
 
     def __init__(self, validator=None, readonly=False, optional=False):
@@ -31,7 +39,7 @@ class Attribute(object):
         self.optional = optional
 
 
-class Manager(object):
+class Manager:
     """A manager declaration.
 
     This class signals to the model that it will have a Manager
@@ -39,7 +47,7 @@ class Manager(object):
     """
 
 
-class Parent(object):
+class Parent:
     """A parent declaration.
 
     Child managers must keep a reference to their parent.
@@ -54,11 +62,15 @@ class ModelType(type):
     """
 
     def __new__(cls, name, bases, attrs):
-        if '__slots__' in attrs and name != 'Model':  # pragma: no cover
-            raise TypeError('__slots__ should not be specified.')
+        if "__slots__" in attrs and name != "Model":  # pragma: no cover
+            raise TypeError("__slots__ should not be specified.")
         attributes = {}
         for_removal = []
         managers = []
+
+        for base in bases:
+            if hasattr(base, "__attributes__"):
+                attributes.update(base.__attributes__)
 
         for key, val in attrs.items():
             if type(val) == Attribute:
@@ -71,17 +83,17 @@ class ModelType(type):
             del attrs[key]
 
         slots = list(attributes.keys())
-        if '__slots__' in attrs:
-            slots = slots + attrs['__slots__']
+        if "__slots__" in attrs:
+            slots = slots + attrs["__slots__"]
         for base in bases:
-            if '__slots__' in dir(base):
+            if "__slots__" in dir(base):
                 slots = slots + base.__slots__
         if len(managers) > 0:
             slots = slots + managers
-        attrs['__slots__'] = slots
-        attrs['__attributes__'] = attributes
+        attrs["__slots__"] = slots
+        attrs["__attributes__"] = attributes
 
-        return super(ModelType, cls).__new__(cls, name, bases, attrs)
+        return super().__new__(cls, name, bases, attrs)
 
 
 # Global used to record which warnings have been issues already for unknown
@@ -89,8 +101,7 @@ class ModelType(type):
 _seen_attribute_warnings = set()
 
 
-@six.add_metaclass(ModelType)
-class Model(object):
+class Model(object, metaclass=ModelType):
     """A Base LXD object model.
 
     Objects fetched from the LXD API have state, which allows
@@ -112,8 +123,9 @@ class Model(object):
     'none', or always displayed by setting the PYLXD_WARNINGS variable to
     'always'.
     """
+
     NotFound = exceptions.NotFound
-    __slots__ = ['client', '__dirty__']
+    __slots__ = ["client", "__dirty__"]
 
     def __init__(self, client, **kwargs):
         self.__dirty__ = set()
@@ -124,27 +136,26 @@ class Model(object):
                 setattr(self, key, val)
             except AttributeError:
                 global _seen_attribute_warnings
-                env = os.environ.get('PYLXD_WARNINGS', '').lower()
+                env = os.environ.get("PYLXD_WARNINGS", "").lower()
                 item = "{}.{}".format(self.__class__.__name__, key)
-                if env != 'always' and item in _seen_attribute_warnings:
+                if env != "always" and item in _seen_attribute_warnings:
                     continue
                 _seen_attribute_warnings.add(item)
-                if env == 'none':
+                if env == "none":
                     continue
                 warnings.warn(
                     'Attempted to set unknown attribute "{}" '
-                    'on instance of "{}"'.format(
-                        key, self.__class__.__name__
-                    ))
+                    'on instance of "{}"'.format(key, self.__class__.__name__)
+                )
         self.__dirty__.clear()
 
     def __getattribute__(self, name):
         try:
-            return super(Model, self).__getattribute__(name)
+            return super().__getattribute__(name)
         except AttributeError:
             if name in self.__attributes__:
                 self.sync()
-                return super(Model, self).__getattribute__(name)
+                return super().__getattribute__(name)
             else:
                 raise
 
@@ -156,7 +167,11 @@ class Model(object):
                 if attribute.validator is not type(value):
                     value = attribute.validator(value)
             self.__dirty__.add(name)
-        return super(Model, self).__setattr__(name, value)
+        return super().__setattr__(name, value)
+
+    def __iter__(self):
+        for attr in self.__attributes__.keys():
+            yield attr, getattr(self, attr)
 
     @property
     def dirty(self):
@@ -173,12 +188,11 @@ class Model(object):
         # XXX: rockstar (25 Jun 2016) - This has the potential to step
         # on existing attributes.
         response = self.api.get()
-        payload = response.json()['metadata']
+        payload = response.json()["metadata"]
         for key, val in payload.items():
             if key not in self.__dirty__ or rollback:
                 try:
                     setattr(self, key, val)
-                    self.__dirty__.remove(key)
                 except AttributeError:
                     # We have received an attribute from the server that we
                     # don't support in our model. Ignore this error, it
@@ -207,18 +221,16 @@ class Model(object):
         marshalled = self.marshall()
         response = self.api.put(json=marshalled)
 
-        if response.json()['type'] == 'async' and wait:
-            self.client.operations.wait_for_operation(
-                response.json()['operation'])
+        if response.json()["type"] == "async" and wait:
+            self.client.operations.wait_for_operation(response.json()["operation"])
         self.__dirty__.clear()
 
     def delete(self, wait=False):
         """Delete an object from the server."""
         response = self.api.delete()
 
-        if response.json()['type'] == 'async' and wait:
-            self.client.operations.wait_for_operation(
-                response.json()['operation'])
+        if response.json()["type"] == "async" and wait:
+            self.client.operations.wait_for_operation(response.json()["operation"])
         self.client = None
 
     def marshall(self, skip_readonly=True):
@@ -228,7 +240,8 @@ class Model(object):
             if attr.readonly and skip_readonly:
                 continue
             if (not attr.optional) or (  # pragma: no branch
-                    attr.optional and hasattr(self, key)):
+                attr.optional and hasattr(self, key)
+            ):
                 val = getattr(self, key)
                 # Don't send back to the server an attribute it doesn't
                 # support.
@@ -278,9 +291,8 @@ class Model(object):
         """
         response = self.api.put(json=put_object)
 
-        if response.json()['type'] == 'async' and wait:
-            self.client.operations.wait_for_operation(
-                response.json()['operation'])
+        if response.json()["type"] == "async" and wait:
+            self.client.operations.wait_for_operation(response.json()["operation"])
 
     def patch(self, patch_object, wait=False):
         """Access the PATCH method directly for the object.
@@ -325,6 +337,5 @@ class Model(object):
         """
         response = self.api.patch(json=patch_object)
 
-        if response.json()['type'] == 'async' and wait:
-            self.client.operations.wait_for_operation(
-                response.json()['operation'])
+        if response.json()["type"] == "async" and wait:
+            self.client.operations.wait_for_operation(response.json()["operation"])

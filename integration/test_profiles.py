@@ -11,9 +11,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from pylxd import exceptions
-
 from integration.testing import IntegrationTestCase
+from pylxd import exceptions
 
 
 class TestProfiles(IntegrationTestCase):
@@ -39,8 +38,8 @@ class TestProfiles(IntegrationTestCase):
 
     def test_create(self):
         """A profile is created."""
-        name = 'an-profile'
-        config = {'limits.memory': '1GB'}
+        name = "an-profile"
+        config = {"limits.memory": "1GB"}
         profile = self.client.profiles.create(name, config)
         self.addCleanup(self.delete_profile, name)
 
@@ -62,15 +61,15 @@ class TestProfile(IntegrationTestCase):
 
     def test_save(self):
         """A profile is updated."""
-        self.profile.config['limits.memory'] = '16GB'
+        self.profile.config["limits.memory"] = "16GB"
         self.profile.save()
 
         profile = self.client.profiles.get(self.profile.name)
-        self.assertEqual('16GB', profile.config['limits.memory'])
+        self.assertEqual("16GB", profile.config["limits.memory"])
 
     def test_rename(self):
         """A profile is renamed."""
-        name = 'a-other-profile'
+        name = "a-other-profile"
         self.addCleanup(self.delete_profile, name)
 
         self.profile.rename(name)
@@ -83,5 +82,5 @@ class TestProfile(IntegrationTestCase):
         self.profile.delete()
 
         self.assertRaises(
-            exceptions.LXDAPIException,
-            self.client.profiles.get, self.profile.name)
+            exceptions.LXDAPIException, self.client.profiles.get, self.profile.name
+        )

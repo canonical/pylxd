@@ -1,6 +1,3 @@
-import six
-
-
 class LXDAPIException(Exception):
     """A generic exception for representing unexpected LXD API responses.
 
@@ -14,22 +11,22 @@ class LXDAPIException(Exception):
     """
 
     def __init__(self, response):
-        super(LXDAPIException, self).__init__()
+        super().__init__()
         self.response = response
 
     def __str__(self):
         if self.response.status_code == 200:  # Operation failure
             try:
-                return self.response.json()['metadata']['err']
+                return self.response.json()["metadata"]["err"]
             except (ValueError, KeyError):
                 pass
 
         try:
             data = self.response.json()
-            return data['error']
+            return data["error"]
         except (ValueError, KeyError):
             pass
-        return self.response.content.decode('utf-8')
+        return self.response.content.decode("utf-8")
 
 
 class NotFound(LXDAPIException):
@@ -47,15 +44,10 @@ class LXDAPIExtensionNotAvailable(Exception):
         :param name: the api_extension that was needed.
         :type name: str
         """
-        super(LXDAPIExtensionNotAvailable, self).__init__(
-            "LXD API extension '{}' is not available".format(name),
-            *args, **kwargs)
+        super().__init__(
+            "LXD API extension '{}' is not available".format(name), *args, **kwargs
+        )
 
 
 class ClientConnectionFailed(Exception):
     """An exception raised when the Client connection fails."""
-
-
-if six.PY2:
-    class NotADirectoryError(Exception):
-        """ An exception raised when not a directory for python2 """

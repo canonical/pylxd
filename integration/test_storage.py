@@ -16,28 +16,27 @@ import random
 import string
 import unittest
 
-import six
-
-from integration.testing import IntegrationTestCase
 import pylxd.exceptions as exceptions
+from integration.testing import IntegrationTestCase
 
 
 class StorageTestCase(IntegrationTestCase):
-
     def setUp(self):
         super(StorageTestCase, self).setUp()
 
-        if not self.client.has_api_extension('storage'):
-            self.skipTest('Required LXD API extension not available!')
+        if not self.client.has_api_extension("storage"):
+            self.skipTest("Required LXD API extension not available!")
 
     def create_storage_pool(self):
         # create a storage pool in the form of 'xxx1' as a dir.
-        name = ''.join(random.sample(string.ascii_lowercase, 3)) + '1'
-        self.lxd.storage_pools.post(json={
-            "config": {},
-            "driver": "dir",
-            "name": name,
-        })
+        name = "".join(random.sample(string.ascii_lowercase, 3)) + "1"
+        self.lxd.storage_pools.post(
+            json={
+                "config": {},
+                "driver": "dir",
+                "name": name,
+            }
+        )
         return name
 
     def delete_storage_pool(self, name):
@@ -50,6 +49,7 @@ class StorageTestCase(IntegrationTestCase):
 
 class TestStoragePools(StorageTestCase):
     """Tests for :py:class:`pylxd.models.storage_pools.StoragePools"""
+
     # note create and delete are tested in every method
 
     def test_get(self):
@@ -126,11 +126,12 @@ class TestStorageResources(StorageTestCase):
 
 class TestStorageVolume(StorageTestCase):
     """Tests for :py:class:`pylxd.models.storage_pools.StorageVolume"""
+
     # note create and delete are tested in every method
 
     def create_storage_volume(self, pool):
         # note 'pool' needs to be storage_pool object or a string
-        if isinstance(pool, six.string_types):
+        if isinstance(pool, str):
             pool = self.client.storage_pools.get(pool)
         vol_input = {
             "config": {},
@@ -144,10 +145,10 @@ class TestStorageVolume(StorageTestCase):
     def delete_storage_volume(self, pool, volume):
         # pool is either string or storage_pool object
         # volume is either a string of storage_pool object
-        if isinstance(volume, six.string_types):
-            if isinstance(pool, six.string_types):
+        if isinstance(volume, str):
+            if isinstance(pool, str):
                 pool = self.client.storage_pools.get(pool)
-            volume = pool.volumes.get('custom', volume)
+            volume = pool.volumes.get("custom", volume)
         volume.delete()
 
     def test_create_and_get_and_delete(self):
