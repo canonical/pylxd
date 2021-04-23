@@ -17,7 +17,7 @@ Contents:
 
    events
    certificates
-   containers
+   instances
    images
    networks
    profiles
