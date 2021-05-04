@@ -122,7 +122,7 @@ instance. You can also modify instance config (limits and etc).
 
 .. code-block:: python
 
-    >>> config = {'name': 'my-instance', 'source': {'type': 'image', 'alias': 'ubuntu/trusty'} 'config': {'limits.cpu': '2'}}
+    >>> config = {'name': 'my-instance', 'source': {'type': 'image', 'alias': 'ubuntu/trusty'}, 'config': {'limits.cpu': '2'}}
     >>> instance = client.instances.create(config, wait=True)
     >>> instance.start()
     >>> instance.freeze()
