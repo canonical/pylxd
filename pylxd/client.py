@@ -487,16 +487,18 @@ class Client:
         ssl_options = (
             {"certfile": self.cert[0], "keyfile": self.cert[1]} if use_ssl else None
         )
-        client = websocket_client(self.websocket_url, ssl_options=ssl_options)
+       client = websocket_client(self.websocket_url, ssl_options=ssl_options)
         parsed = parse.urlparse(self.api.events._api_endpoint)
 
-        resource = parsed.path
+        query = parse.parse_qs(parsed.query)
 
-        if event_types and EventType.All not in event_types:
-            query = parse.parse_qs(parsed.query)
+        if event_types and EventType.All not in event_types:    
             query.update({"type": ",".join(t.value for t in event_types)})
-            resource = "{}?{}".format(resource, parse.urlencode(query))
+        
+        if self.project:
+            query.update({"project": self.project})
 
+        resource = "{}?{}".format(parsed.path, parse.urlencode(query))
         client.resource = resource
 
         return client
