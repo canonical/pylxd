@@ -487,7 +487,7 @@ class Client:
         ssl_options = (
             {"certfile": self.cert[0], "keyfile": self.cert[1]} if use_ssl else None
         )
-       client = websocket_client(self.websocket_url, ssl_options=ssl_options)
+        client = websocket_client(self.websocket_url, ssl_options=ssl_options)
         parsed = parse.urlparse(self.api.events._api_endpoint)
 
         query = parse.parse_qs(parsed.query)
