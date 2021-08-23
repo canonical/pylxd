@@ -338,7 +338,6 @@ class Client:
         """
 
         self.project = project
-        self.cert = cert
         if endpoint:
             if endpoint.startswith("/") and os.path.exists(endpoint):
                 endpoint = "http+unix://{}".format(parse.quote(endpoint, safe=""))
@@ -361,6 +360,7 @@ class Client:
         api = _APINode(
             endpoint, cert=cert, verify=verify, timeout=timeout, project=project
         )
+        self.cert = cert
         self.api = api[version]
 
         # Verify the connection is valid.
@@ -483,7 +483,11 @@ class Client:
         if websocket_client is None:
             websocket_client = _WebsocketClient
 
-        client = websocket_client(self.websocket_url)
+        use_ssl = self.api.scheme == "https" and self.cert
+        ssl_options = (
+            {"certfile": self.cert[0], "keyfile": self.cert[1]} if use_ssl else None
+        )
+        client = websocket_client(self.websocket_url, ssl_options=ssl_options)
         parsed = parse.urlparse(self.api.events._api_endpoint)
 
         resource = parsed.path

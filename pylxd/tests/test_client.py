@@ -304,7 +304,9 @@ class TestClient(TestCase):
 
         an_client.events(websocket_client=WebsocketClient)
 
-        WebsocketClient.assert_called_once_with("ws+unix:///lxd/unix.socket")
+        WebsocketClient.assert_called_once_with(
+            "ws+unix:///lxd/unix.socket", ssl_options=None
+        )
 
     def test_events_htt(self):
         """An http compatible websocket client is returned."""
@@ -315,18 +317,23 @@ class TestClient(TestCase):
 
         an_client.events(websocket_client=WebsocketClient)
 
-        WebsocketClient.assert_called_once_with("ws://lxd.local")
+        WebsocketClient.assert_called_once_with("ws://lxd.local", ssl_options=None)
 
     def test_events_https(self):
         """An https compatible websocket client is returned."""
         websocket_client = mock.Mock(resource=None)
         WebsocketClient = mock.Mock()
         WebsocketClient.return_value = websocket_client
-        an_client = client.Client("https://lxd.local")
+        an_client = client.Client("https://lxd.local", cert=client.DEFAULT_CERTS)
 
         an_client.events(websocket_client=WebsocketClient)
-
-        WebsocketClient.assert_called_once_with("wss://lxd.local")
+        ssl_options = {
+            "certfile": client.DEFAULT_CERTS.cert,
+            "keyfile": client.DEFAULT_CERTS.key,
+        }
+        WebsocketClient.assert_called_once_with(
+            "wss://lxd.local", ssl_options=ssl_options
+        )
 
     def test_events_type_filter(self):
         """The websocket client can filter events by type."""
