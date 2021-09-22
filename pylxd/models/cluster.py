@@ -72,3 +72,26 @@ class ClusterMember(model.Model):
     @property
     def api(self):
         return self.client.api.cluster.members[self.server_name]
+
+
+class ClusterCertificate(model.Model):
+    """A LXD cluster certificate"""
+
+    cluster_certificate = model.Attribute()
+    cluster_certificate_key = model.Attribute()
+
+    cluster = model.Parent()
+
+    @classmethod
+    def put(cls, client, cert, key):
+        response = client.api.cluster.certificate.put(
+            json={"cluster_certificate": cert, "cluster_certificate_key": key}
+        )
+
+        if response.status_code == 200:
+            return
+        raise LXDAPIException(response)
+
+    @property
+    def api(self):
+        return self.client.api.cluster.certificate

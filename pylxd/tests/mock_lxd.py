@@ -303,6 +303,12 @@ RULES = [
         "method": "GET",
         "url": r"^http://pylxd.test/1.0/cluster/members/an-member$",
     },
+    # cluster-certificate
+    {
+        "text": json.dumps({"type": "sync", "status": "Success", "status_code": 200}),
+        "method": "PUT",
+        "url": r"^http://pylxd.test/1.0/cluster/certificate$",
+    },
     # Instances
     {
         "text": json.dumps(
