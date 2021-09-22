@@ -293,6 +293,10 @@ RULES = [
                     "database": "false",
                     "status": "Online",
                     "message": "fully operational",
+                    "architecture": "x86_64",
+                    "description": "AMD Epyc 32c/64t",
+                    "failure_domain": "rack1",
+                    "roles": []
                 },
             }
         ),
