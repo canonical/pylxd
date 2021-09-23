@@ -38,5 +38,6 @@ These are the contributors to pylxd according to the Github repository.
  felix-engelmann  Felix Engelmann
  weichweich       ???
  anneborcherding  Anne Borcherding
+ cpg1111          Christian Grabowski (Canonical)
  ===============  ==================================
 
