@@ -13,6 +13,7 @@ from pylxd.models.virtual_machine import VirtualMachine
 __all__ = [
     "Certificate",
     "Cluster",
+    "ClusterCertificate",
     "ClusterMember",
     "Container",
     "Image",

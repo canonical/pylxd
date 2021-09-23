@@ -22,7 +22,9 @@ class TestClusterMember(testing.PyLXDTestCase):
         """A cluster member is retrieved."""
         member = self.client.cluster.members.get("an-member")
 
-        self.assertEqual("https://10.1.1.101:8443", member.url)
+        assert member.url == "https://10.1.1.101:8443"
+        assert member.architecture == "x86_64"
+        assert member.roles == []
 
     def test_all(self):
         """All cluster members are returned."""
