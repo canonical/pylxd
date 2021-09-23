@@ -293,11 +293,21 @@ RULES = [
                     "database": "false",
                     "status": "Online",
                     "message": "fully operational",
+                    "architecture": "x86_64",
+                    "description": "AMD Epyc 32c/64t",
+                    "failure_domain": "rack1",
+                    "roles": [],
                 },
             }
         ),
         "method": "GET",
         "url": r"^http://pylxd.test/1.0/cluster/members/an-member$",
+    },
+    # cluster-certificate
+    {
+        "text": json.dumps({"type": "sync", "status": "Success", "status_code": 200}),
+        "method": "PUT",
+        "url": r"^http://pylxd.test/1.0/cluster/certificate$",
     },
     # Instances
     {

@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 from pylxd import managers
+from pylxd.exceptions import LXDAPIException
 from pylxd.models import _model as model
 
 
@@ -23,6 +24,7 @@ class Cluster(model.Model):
     member_config = model.Attribute()
 
     members = model.Manager()
+    certificate = model.Manager()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -43,6 +45,10 @@ class Cluster(model.Model):
 class ClusterMember(model.Model):
     """A LXD cluster member."""
 
+    architecture = model.Attribute(readonly=True)
+    description = model.Attribute(readonly=True)
+    failure_domain = model.Attribute(readonly=True)
+    roles = model.Attribute(readonly=True)
     url = model.Attribute(readonly=True)
     database = model.Attribute(readonly=True)
     server_name = model.Attribute(readonly=True)
@@ -72,3 +78,26 @@ class ClusterMember(model.Model):
     @property
     def api(self):
         return self.client.api.cluster.members[self.server_name]
+
+
+class ClusterCertificate(model.Model):
+    """A LXD cluster certificate"""
+
+    cluster_certificate = model.Attribute()
+    cluster_certificate_key = model.Attribute()
+
+    cluster = model.Parent()
+
+    @classmethod
+    def put(cls, client, cert, key):
+        response = client.api.cluster.certificate.put(
+            json={"cluster_certificate": cert, "cluster_certificate_key": key}
+        )
+
+        if response.status_code == 200:
+            return
+        raise LXDAPIException(response)
+
+    @property
+    def api(self):
+        return self.client.api.cluster.certificate

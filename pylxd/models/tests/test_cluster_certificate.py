@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Canonical Ltd
+# Copyright (c) 2021 Canonical Ltd
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -15,19 +15,12 @@
 from pylxd.tests import testing
 
 
-class TestClusterMember(testing.PyLXDTestCase):
-    """Tests for pylxd.models.ClusterMember."""
+class TestClusterCertificate(testing.PyLXDTestCase):
+    """Tests for pylxd.models.ClusterCertificate"""
 
-    def test_get(self):
-        """A cluster member is retrieved."""
-        member = self.client.cluster.members.get("an-member")
+    def test_put(self):
+        """Update the certificate for a cluster"""
 
-        assert member.url == "https://10.1.1.101:8443"
-        assert member.architecture == "x86_64"
-        assert member.roles == []
-
-    def test_all(self):
-        """All cluster members are returned."""
-        members = self.client.cluster.members.all()
-
-        self.assertIn("an-member", [m.server_name for m in members])
+        self.client.cluster.certificate.put(
+            cert="my-cluster-cert", key="my-cluster-key"
+        )

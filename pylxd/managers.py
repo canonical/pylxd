@@ -73,6 +73,10 @@ class ClusterMemberManager(BaseManager):
     manager_for = "pylxd.models.ClusterMember"
 
 
+class ClusterCertificateManager(BaseManager):
+    manager_for = "pylxd.models.ClusterCertificate"
+
+
 class ClusterManager(BaseManager):
 
     manager_for = "pylxd.models.Cluster"
@@ -81,6 +85,7 @@ class ClusterManager(BaseManager):
         super().__init__(client, *args, **kwargs)
         self._client = client
         self.members = ClusterMemberManager(client)
+        self.certificate = ClusterCertificateManager(client)
 
 
 @contextmanager
