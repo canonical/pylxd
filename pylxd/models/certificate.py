@@ -28,6 +28,8 @@ class Certificate(model.Model):
     fingerprint = model.Attribute()
     type = model.Attribute()
     name = model.Attribute()
+    projects = model.Attribute()
+    restricted = model.Attribute()
 
     @classmethod
     def get(cls, client, fingerprint):
