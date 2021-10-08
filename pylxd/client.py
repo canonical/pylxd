@@ -354,6 +354,8 @@ class Client:
                 path = os.path.join(os.environ.get("LXD_DIR"), "unix.socket")
             elif os.path.exists("/var/snap/lxd/common/lxd/unix.socket"):
                 path = "/var/snap/lxd/common/lxd/unix.socket"
+            elif os.path.exists("/run/lxd.socket"):
+                path = "/run/lxd.socket"
             else:
                 path = "/var/lib/lxd/unix.socket"
             endpoint = "http+unix://{}".format(parse.quote(path, safe=""))
