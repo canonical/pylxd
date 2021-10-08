@@ -20,6 +20,8 @@ from urllib import parse
 
 import requests
 import requests_unixsocket
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes
 from ws4py.client import WebSocketBaseClient
 
 from pylxd import exceptions, managers
@@ -60,6 +62,16 @@ class EventType(Enum):
     Lifecycle = "lifecycle"
 
 
+class LXDSSLAdapter(requests.adapters.HTTPAdapter):
+    def cert_verify(self, conn, url, verify, cert):
+        with open(verify, "rb") as fd:
+            servercert = x509.load_pem_x509_certificate(fd.read())
+            fingerprint = servercert.fingerprint(hashes.SHA256())
+
+        conn.assert_fingerprint = "".join([f"{i:02x}" for i in fingerprint])
+        super().cert_verify(conn, url, False, cert)
+
+
 class _APINode:
     """An api node object."""
 
@@ -76,6 +88,9 @@ class _APINode:
             self.session = requests.Session()
             self.session.cert = cert
             self.session.verify = verify
+
+            if isinstance(verify, str):
+                self.session.mount(api_endpoint, LXDSSLAdapter())
 
     def __getattr__(self, name):
         """Converts attribute lookup into the next /<segment> of an api
