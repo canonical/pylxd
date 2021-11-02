@@ -160,6 +160,34 @@ class TestClient(TestCase):
 
         self.assertTrue(an_client.trusted)
 
+    def test_server_clustered_false_no_info(self):
+        """Client.server_clustered is False if the info is not available in metadata."""
+        response = mock.MagicMock(status_code=200)
+        response.json.return_value = {"metadata": {"environment": {}}}
+        self.get.return_value = response
+        a_client = client.Client()
+        self.assertFalse(a_client.server_clustered)
+
+    def test_server_clustered_false(self):
+        """Client.server_clustered is False if not clustered."""
+        response = mock.MagicMock(status_code=200)
+        response.json.return_value = {
+            "metadata": {"environment": {"server_clustered": False}}
+        }
+        self.get.return_value = response
+        a_client = client.Client()
+        self.assertFalse(a_client.server_clustered)
+
+    def test_server_clustered_true(self):
+        """Client.server_clustered is True if clustered."""
+        response = mock.MagicMock(status_code=200)
+        response.json.return_value = {
+            "metadata": {"environment": {"server_clustered": True}}
+        }
+        self.get.return_value = response
+        a_client = client.Client()
+        self.assertTrue(a_client.server_clustered)
+
     def test_authenticate(self):
         """A client is authenticated."""
         response = mock.MagicMock(status_code=200)

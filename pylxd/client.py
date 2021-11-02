@@ -391,9 +391,8 @@ class Client:
         ) as e:
             raise exceptions.ClientConnectionFailed(str(e))
 
-        if (
-            self.project not in (None, "default")
-            and "projects" not in self.host_info["api_extensions"]
+        if self.project not in (None, "default") and not self.has_api_extension(
+            "projects"
         ):
             raise exceptions.ClientConnectionFailed(
                 "Remote server doesn't handle projects"
@@ -415,6 +414,10 @@ class Client:
     @property
     def trusted(self):
         return self.host_info["auth"] == "trusted"
+
+    @property
+    def server_clustered(self):
+        return self.host_info["environment"].get("server_clustered", False)
 
     @property
     def resources(self):

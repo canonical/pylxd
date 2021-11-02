@@ -83,9 +83,12 @@ class TestInstance(testing.PyLXDTestCase):
 
         self.assertEqual(config["name"], an_new_instance.name)
 
-    def test_create_remote(self):
+    def test_create_remote_location(self):
         """A new instance is created at target."""
         config = {"name": "an-new-remote-instance"}
+
+        # the server must be in a cluster for the location to be set
+        self.client.host_info["environment"]["server_clustered"] = True
 
         an_new_remote_instance = models.Instance.create(
             self.client, config, wait=True, target="an-remote"
@@ -93,6 +96,13 @@ class TestInstance(testing.PyLXDTestCase):
 
         self.assertEqual(config["name"], an_new_remote_instance.name)
         self.assertEqual("an-remote", an_new_remote_instance.location)
+
+    def test_create_location_none(self):
+        config = {"name": "an-new-remote-instance"}
+
+        instance = models.Instance.create(self.client, config, wait=True)
+
+        self.assertIsNone(instance.location)
 
     def test_exists(self):
         """A instance exists."""
