@@ -69,6 +69,12 @@ class Instance(model.Model):
 
     _endpoint = "instances"
 
+    def __setattr__(self, name, value):
+        if name == "location" and not self.client.server_clustered:
+            # LXD reports "none" as location when not in a cluster
+            value = None
+        super().__setattr__(name, value)
+
     @property
     def api(self):
         return self.client.api[self._endpoint][self.name]
