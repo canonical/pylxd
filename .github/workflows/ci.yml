@@ -64,6 +64,8 @@ jobs:
           - "3.6"
           - "3.7"
           - "3.8"
+          - "3.9"
+          - "3.10"
     steps:
     - name: Repository checkout
       uses: actions/checkout@v2
