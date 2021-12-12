@@ -22,6 +22,9 @@ class ClusterMemberTestCase(IntegrationTestCase):
         if not self.client.has_api_extension("clustering"):
             self.skipTest("Required LXD API extension not available!")
 
+        if not self.client.server_clustered:
+            self.skipTest("Server isn't part of a cluster!")
+
 
 class TestClusterMembers(ClusterMemberTestCase):
     """Tests for `Client.cluster_members.`"""
