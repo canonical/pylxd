@@ -29,6 +29,17 @@ of (cert, key) as the `cert` argument.
 Note: in the case where the certificate is self signed (LXD default),
 you may need to pass `verify=False`.
 
+If LXD is configured to use projects and you would like to interact with a
+specific one, you can specify its name as the `project` argument.
+
+.. code-block:: python
+
+    >>> from pylxd import Client
+    >>> client = Client(project='my-project')
+
+Note: omitting the `project` argument will connect the API client to the
+default project of the LXD instance.
+
 Querying LXD
 ------------
 
