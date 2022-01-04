@@ -143,6 +143,6 @@ following methods are available:
 
 .. links
 
-.. _LXD Storage Pools: https://lxd.readthedocs.io/en/latest/storage/
+.. _LXD Storage Pools: https://linuxcontainers.org/lxd/docs/master/storage/
 .. _LXD REST API: https://github.com/lxc/lxd/blob/master/doc/rest-api.md
 .. _LXD Storage Pools REST API: https://github.com/lxc/lxd/blob/master/doc/rest-api.md#10storage-pools
