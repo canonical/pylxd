@@ -110,7 +110,7 @@ class StoragePool(model.Model):
         Note that **all** fields in the `definition` parameter are strings.
 
         For further details on the storage pool types see:
-        https://lxd.readthedocs.io/en/latest/storage/
+        https://linuxcontainers.org/lxd/docs/master/storage/
 
         The function returns the a `StoragePool` instance, if it is
         successfully created, otherwise an Exception is raised.

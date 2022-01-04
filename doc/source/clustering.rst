@@ -80,6 +80,6 @@ the `LXD Cluster REST API`_ documentation.
 
 .. links
 
-.. _LXD Storage Pools: https://lxd.readthedocs.io/en/latest/storage/
+.. _LXD Storage Pools: https://linuxcontainers.org/lxd/docs/master/storage/
 .. _LXD REST API: https://github.com/lxc/lxd/blob/master/doc/rest-api.md
 .. _LXD Cluster REST API: https://github.com/lxc/lxd/blob/master/doc/rest-api.md#10cluster
