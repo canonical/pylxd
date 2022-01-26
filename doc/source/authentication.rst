@@ -10,10 +10,10 @@ instance's "trust password".
 Generate a certificate
 ======================
 
-To generate a keypair, you should use the `openssl` command. As an example::
+To generate a keypair, you should use the `openssl` command. As an example:
 
-    openssl req -newkey rsa:2048 -nodes -keyout lxd.key -out lxd.csr
-    openssl x509 -signkey lxd.key -in lxd.csr -req -days 365 -out lxd.crt
+.. code-block:: console
+    openssl req -x509 -newkey rsa:2048 -keyout lxd.key -nodes -out lxd.crt -subj "/CN=lxd.local"
 
 For more detail on the commands, or to customize the keys, please see the
 documentation for the `openssl` command.

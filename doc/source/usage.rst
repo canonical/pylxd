@@ -17,17 +17,28 @@ localhost:
     >>> client = Client()
 
 If your LXD instance is listening on HTTPS, you can pass a two part tuple
-of (cert, key) as the `cert` argument.
+of (cert, key) as the `cert` argument and a PEM file containing the LXD's
+certificate to the `verify` argument:
 
 .. code-block:: python
 
     >>> from pylxd import Client
     >>> client = Client(
     ...     endpoint='http://10.0.0.1:8443',
-    ...     cert=('/path/to/client.crt', '/path/to/client.key'))
+    ...     cert=('/path/to/client.crt', '/path/to/client.key'),
+    ...     verify='/path/to/server.crt')
 
-Note: in the case where the certificate is self signed (LXD default),
-you may need to pass `verify=False`.
+In the case where the certificate is self-signed (LXD's default), you may
+opt to disable the TLS fingerprint verification with `verify=False`. As this
+disables an important security feature, doing so is strongly discouraged.
+
+.. code-block:: python
+
+    >>> from pylxd import Client
+    >>> client = Client(
+    ...     endpoint='http://10.0.0.1:8443',
+    ...     cert=('/path/to/client.crt', '/path/to/client.key'),
+    ...     verify=False)
 
 If LXD is configured to use projects and you would like to interact with a
 specific one, you can specify its name as the `project` argument.
