@@ -122,6 +122,7 @@ class Instance(model.Model):
             """Creates an empty directory on the container.
             This pushes an empty directory to the containers file system
             named by the `filepath`.
+
             :param path: The path in the container to to store the data in.
             :type path: str
             :param mode: The unit mode to store the file with.  The default of
@@ -244,11 +245,11 @@ class Instance(model.Model):
             creates a local folder named `local_path` with the
             content of `remote_path`.
             If `remote_path` is a file, it will be copied to `local_path`.
+
             :param remote_path: The directory path on the container.
             :type remote_path: str
             :param local_path: The path at which the directory will be stored.
             :type local_path: str
-            :return:
             :raises: LXDAPIException if an error occurs
             """
             response = self._endpoint.get(params={"path": remote_path}, is_api=False)
