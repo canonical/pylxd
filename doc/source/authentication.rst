@@ -13,6 +13,7 @@ Generate a certificate
 To generate a keypair, you should use the `openssl` command. As an example:
 
 .. code-block:: console
+
     openssl req -x509 -newkey rsa:2048 -keyout lxd.key -nodes -out lxd.crt -subj "/CN=lxd.local"
 
 For more detail on the commands, or to customize the keys, please see the
