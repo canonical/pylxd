@@ -322,7 +322,6 @@ class Client:
             >>> print response.status_code, response.json()
             # /instances/test/
             >>> print api.instances['test'].get().json()
-
     """
 
     def __init__(
@@ -349,7 +348,6 @@ class Client:
             data before giving up, as a float, or a :ref:`(connect timeout,
             read timeout) <timeouts>` tuple.
         :param project: (optional) Name of the LXD project to interact with.
-
         """
 
         self.project = project
@@ -496,7 +494,7 @@ class Client:
         :type event_types: Set[EventType]
 
         :returns: instance of the websocket client
-        :rtype: Option[_WebsocketClient(), :param:`websocket_client`]
+        :rtype: Option[_WebsocketClient(), `websocket_client`]
         """
         if websocket_client is None:
             websocket_client = _WebsocketClient
