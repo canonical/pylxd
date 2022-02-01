@@ -96,8 +96,8 @@ class StoragePool(model.Model):
 
         Implements POST /1.0/storage-pools
 
-        The `definition` parameter defines what the storage pool will be.  An
-        example config for the zfs driver is:
+        The `definition` parameter defines what the storage pool will be.
+        An example config for the zfs driver is::
 
             {
                 "config": {
