@@ -83,3 +83,19 @@ jobs:
       run: |
         tox -e coverage
         codecov
+
+
+  publish:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v2
+    - name: Create Release
+      uses: ncipollo/release-action@v1
+      if: startsWith(github.event.ref, 'refs/tags')
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        name: Release ${{ github.ref }}
+        generateReleaseNotes: true
