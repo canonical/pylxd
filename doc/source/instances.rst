@@ -116,25 +116,28 @@ you'll pass `wait=True` as well.
     <instance.Instance at 0x7f95d8af72b0>
 
 
-If you were to use an actual image source, you would be able to operate
-on the instance, starting, stopping, snapshotting, and deleting the
-instance. You can also modify instance config (limits and etc).
+If you were to use an actual local image source, you would be able to
+operate on the instance: starting, stopping, freezing, deleting, etc.
+You could also customize the instance's config (limits and etc). Note
+that depends on having a local image with the alias `focal`. See
+the next example for using a remote image.
 
 .. code-block:: python
 
-    >>> config = {'name': 'my-instance', 'source': {'type': 'image', 'alias': 'ubuntu/trusty'}, 'config': {'limits.cpu': '2'}}
+    >>> config = {'name': 'my-instance', 'source': {'type': 'image', 'alias': 'focal'}, 'config': {'limits.cpu': '2'}}
     >>> instance = client.instances.create(config, wait=True)
     >>> instance.start()
     >>> instance.freeze()
     >>> instance.delete()
 
 
-Config line with a specific image source and a profile.
+Config line with a remote image source (daily build of the latest Ubuntu LTS)
+and a single profile named `profilename`.
 
 .. code-block:: python
 
     >>> config = {'name': 'my-instance', 'source': {'type': 'image', "mode": "pull", "server":
-        "https://cloud-images.ubuntu.com/daily", "protocol": "simplestreams", 'alias': 'bionic/amd64'},
+        "https://cloud-images.ubuntu.com/daily", "protocol": "simplestreams", 'alias': 'lts/amd64'},
         'profiles': ['profilename'] }
 
 
