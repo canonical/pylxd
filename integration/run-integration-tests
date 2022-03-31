@@ -20,7 +20,7 @@ openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:secp384r1 -sha384 \
         -keyout "$config_dir/client.key" -out "$config_dir/client.crt" \
         -nodes -subj "/CN=example.com" -days 3650
 
-if ! lxc storage show default ; then
+if ! lxc storage show default >/dev/null 2>&1; then
     lxc storage create default dir
     lxc profile device add default root disk path=/ pool=default
 fi
