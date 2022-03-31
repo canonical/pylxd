@@ -3,6 +3,7 @@
 sudo apt update
 sudo apt install -y \
      build-essential \
+     busybox-static \
      libffi-dev \
      libssl-dev \
      python3-dev \
@@ -15,15 +16,11 @@ lxc config set core.https_address "[::]"
 # generate an openssl certificate and key for the remote not verified test
 config_dir="$HOME/.config/lxc"
 mkdir -p "$config_dir"
-openssl genrsa 2048 > "$config_dir/client.key"
-chmod 400 "$config_dir/client.key"
+openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:secp384r1 -sha384 \
+        -keyout "$config_dir/client.key" -out "$config_dir/client.crt" \
+        -nodes -subj "/CN=example.com" -days 3650
 
-openssl req -new -x509 -nodes -sha1 -days 365 \
-        -key "$config_dir/client.key" -out "$config_dir/client.crt" \
-        -subj="/C=UK/ST=London/L=London/O=OrgName/OU=Test/CN=example.com"
-
-
-if ! lxc storage show default ; then
+if ! lxc storage show default >/dev/null 2>&1; then
     lxc storage create default dir
     lxc profile device add default root disk path=/ pool=default
 fi
