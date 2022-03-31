@@ -31,13 +31,9 @@ lxc exec "$CONTAINER_ONE_NAME" -- apt install -y tox python3-dev libssl-dev libf
 lxc exec "$CONTAINER_ONE_NAME" -- lxc config set core.trust_password password
 lxc exec "$CONTAINER_ONE_NAME" -- lxc config set core.https_address "[::]"
 lxc exec "$CONTAINER_ONE_NAME" -- mkdir -p /root/.config/lxc
-openssl genrsa 1024 > ./"$CONTAINER_ONE_NAME".key
-lxc file push ./"$CONTAINER_ONE_NAME".key "$CONTAINER_ONE_NAME"/root/.config/lxc/client.key
-rm ./"$CONTAINER_ONE_NAME".key
-lxc exec "$CONTAINER_ONE_NAME" -- chmod 400 /root/.config/lxc/client.key
-lxc exec "$CONTAINER_ONE_NAME" -- openssl req -new -x509 -nodes -sha1 -days 365 \
-	-key /root/.config/lxc/client.key -out /root/.config/lxc/client.crt \
-	-subj="/C=UK/ST=London/L=London/O=OrgName/OU=Test/CN=example.com"
+lxc exec "$CONTAINER_ONE_NAME" -- openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:secp384r1 \
+    -sha384 -keyout /root/.config/lxc/client.key -out /root/.config/lxc/client.crt -nodes \
+    -subj "/CN=example.com" -days 3650
 
 # create a default dir storage pool for bionic
 lxc exec "$CONTAINER_ONE_NAME" -- lxc storage create default dir
@@ -58,13 +54,9 @@ lxc exec "$CONTAINER_TWO_NAME" -- apt install -y tox python3-dev libssl-dev libf
 lxc exec "$CONTAINER_TWO_NAME" -- lxc config set core.trust_password password
 lxc exec "$CONTAINER_TWO_NAME" -- lxc config set core.https_address "[::]:8443"
 lxc exec "$CONTAINER_ONE_NAME" -- mkdir -p /root/.config/lxc
-openssl genrsa 1024 > ./"$CONTAINER_TWO_NAME".key
-lxc file push ./"$CONTAINER_TWO_NAME".key "$CONTAINER_TWO_NAME"/root/.config/lxc/client.key
-rm ./"$CONTAINER_TWO_NAME".key
-lxc exec "$CONTAINER_TWO_NAME" -- chmod 400 /root/.config/lxc/client.key
-lxc exec "$CONTAINER_TWO_NAME" -- openssl req -new -x509 -nodes -sha1 -days 365 \
-	-key /root/.config/lxc/client.key -out /root/.config/lxc/client.crt \
-	-subj="/C=UK/ST=London/L=London/O=OrgName/OU=Test/CN=example.com"
+lxc exec "$CONTAINER_TWO_NAME" -- openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:secp384r1 \
+    -sha384 -keyout /root/.config/lxc/client.key -out /root/.config/lxc/client.crt -nodes \
+    -subj "/CN=example.com" -days 3650
 
 # create a default dir storage pool for bionic
 lxc exec "$CONTAINER_TWO_NAME" -- lxc storage create default dir

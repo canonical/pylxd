@@ -16,13 +16,9 @@ lxc config set core.https_address "[::]"
 # generate an openssl certificate and key for the remote not verified test
 config_dir="$HOME/.config/lxc"
 mkdir -p "$config_dir"
-openssl genrsa 2048 > "$config_dir/client.key"
-chmod 400 "$config_dir/client.key"
-
-openssl req -new -x509 -nodes -sha1 -days 365 \
-        -key "$config_dir/client.key" -out "$config_dir/client.crt" \
-        -subj="/C=UK/ST=London/L=London/O=OrgName/OU=Test/CN=example.com"
-
+openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:secp384r1 -sha384 \
+        -keyout "$config_dir/client.key" -out "$config_dir/client.crt" \
+        -nodes -subj "/CN=example.com" -days 3650
 
 if ! lxc storage show default ; then
     lxc storage create default dir
