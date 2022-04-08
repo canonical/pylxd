@@ -13,7 +13,7 @@
 #    under the License.
 import json
 import os
-import os.path
+import re
 from enum import Enum
 from typing import NamedTuple
 from urllib import parse
@@ -28,18 +28,15 @@ from pylxd import exceptions, managers
 
 requests_unixsocket.monkeypatch()
 
-LXD_PATH = ".config/lxc/"
-SNAP_ROOT = os.path.expanduser("~/snap/lxd/current/")
-APT_ROOT = os.path.expanduser("~/")
+SNAP_ROOT = os.path.expanduser("~/snap/lxd/common/config/")
+APT_ROOT = os.path.expanduser("~/.config/lxc/")
 CERT_FILE_NAME = "client.crt"
 KEY_FILE_NAME = "client.key"
-# check that the cert file and key file exist at the appopriate path
-if os.path.exists(
-    os.path.join(SNAP_ROOT, LXD_PATH, CERT_FILE_NAME)
-):  # pragma: no cover
-    CERTS_PATH = os.path.join(SNAP_ROOT, LXD_PATH)  # pragma: no cover
+# check that the cert file and key file exist at the appropriate path
+if os.path.exists(os.path.join(SNAP_ROOT, CERT_FILE_NAME)):  # pragma: no cover
+    CERTS_PATH = SNAP_ROOT  # pragma: no cover
 else:  # pragma: no cover
-    CERTS_PATH = os.path.join(APT_ROOT, LXD_PATH)  # pragma: no cover
+    CERTS_PATH = APT_ROOT  # pragma: no cover
 
 
 class Cert(NamedTuple):
@@ -50,8 +47,8 @@ class Cert(NamedTuple):
 
 
 DEFAULT_CERTS = Cert(
-    cert=os.path.expanduser(os.path.join(CERTS_PATH, CERT_FILE_NAME)),
-    key=os.path.expanduser(os.path.join(CERTS_PATH, KEY_FILE_NAME)),
+    cert=os.path.join(CERTS_PATH, CERT_FILE_NAME),
+    key=os.path.join(CERTS_PATH, KEY_FILE_NAME),
 )  # pragma: no cover
 
 
@@ -362,6 +359,16 @@ class Client:
                     and os.path.exists(DEFAULT_CERTS.key)
                 ):
                     cert = DEFAULT_CERTS
+
+                # Try to use an existing server certificate if one exists
+                if isinstance(verify, bool) and endpoint.startswith("https://"):
+                    no_proto = re.sub(r"^https://\[?", "", endpoint)
+                    remote = re.sub(r"]?(:[0-9]+)?$", "", no_proto)
+                    remote_cert_path = os.path.join(
+                        CERTS_PATH, "servercerts", remote + ".crt"
+                    )
+                    if os.path.exists(remote_cert_path):
+                        verify = remote_cert_path
         else:
             if "LXD_DIR" in os.environ:
                 path = os.path.join(os.environ.get("LXD_DIR"), "unix.socket")
