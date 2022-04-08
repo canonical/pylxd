@@ -12,14 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import requests
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-
 import pylxd
 from integration.testing import IntegrationTestCase
 from pylxd import exceptions
-
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 class TestClient(IntegrationTestCase):
