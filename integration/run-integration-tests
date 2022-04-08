@@ -17,5 +17,11 @@ if ! lxc storage show default >/dev/null 2>&1; then
     lxc profile device add default root disk path=/ pool=default
 fi
 
+# Save a copy of the server cert for verification by pylxd client using "https://127.0.0.1:8443"
+if [ -e /var/snap/lxd/common/lxd/server.crt ]; then
+    mkdir -p ~/snap/lxd/common/config/servercerts
+    cp /var/snap/lxd/common/lxd/server.crt ~/snap/lxd/common/config/servercerts/127.0.0.1.crt
+fi
+
 # finally run the integration tests
 tox -e integration
