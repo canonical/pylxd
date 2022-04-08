@@ -13,7 +13,6 @@
 #    under the License.
 import json
 import os
-import os.path
 from enum import Enum
 from typing import NamedTuple
 from urllib import parse

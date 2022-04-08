@@ -13,7 +13,6 @@
 #    under the License.
 import json
 import os
-import os.path
 from unittest import TestCase, mock
 from urllib import parse
 
