@@ -13,6 +13,7 @@
 #    under the License.
 import json
 import os
+import re
 from enum import Enum
 from typing import NamedTuple
 from urllib import parse
@@ -358,6 +359,16 @@ class Client:
                     and os.path.exists(DEFAULT_CERTS.key)
                 ):
                     cert = DEFAULT_CERTS
+
+                # Try to use an existing server certificate if one exists
+                if isinstance(verify, bool) and endpoint.startswith("https://"):
+                    no_proto = re.sub(r"^https://\[?", "", endpoint)
+                    remote = re.sub(r"]?(:[0-9]+)?$", "", no_proto)
+                    remote_cert_path = os.path.join(
+                        CERTS_PATH, "servercerts", remote + ".crt"
+                    )
+                    if os.path.exists(remote_cert_path):
+                        verify = remote_cert_path
         else:
             if "LXD_DIR" in os.environ:
                 path = os.path.join(os.environ.get("LXD_DIR"), "unix.socket")
