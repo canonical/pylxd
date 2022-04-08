@@ -20,9 +20,7 @@ class BaseTestProject(IntegrationTestCase):
     def setUp(self):
         super().setUp()
         try:
-            pylxd.Client(
-                "https://127.0.0.1:8443/", verify=False, project="test-project"
-            )
+            pylxd.Client("https://127.0.0.1:8443/", project="test-project")
         except exceptions.ClientConnectionFailed as e:
             message = str(e)
             if message == "Remote server doesn't handle projects":
