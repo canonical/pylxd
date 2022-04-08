@@ -46,8 +46,8 @@ class Cert(NamedTuple):
 
 
 DEFAULT_CERTS = Cert(
-    cert=os.path.expanduser(os.path.join(CERTS_PATH, CERT_FILE_NAME)),
-    key=os.path.expanduser(os.path.join(CERTS_PATH, KEY_FILE_NAME)),
+    cert=os.path.join(CERTS_PATH, CERT_FILE_NAME),
+    key=os.path.join(CERTS_PATH, KEY_FILE_NAME),
 )  # pragma: no cover
 
 
