@@ -21,6 +21,12 @@ fi
 if [ -e /var/snap/lxd/common/lxd/server.crt ]; then
     mkdir -p ~/snap/lxd/common/config/servercerts
     cp /var/snap/lxd/common/lxd/server.crt ~/snap/lxd/common/config/servercerts/127.0.0.1.crt
+
+    # Old snap
+    if [ -d ~/snap/lxd/current/.config/lxc ]; then
+        mkdir -p ~/snap/lxd/current/.config/lxc/servercerts
+        cp /var/snap/lxd/common/lxd/server.crt ~/snap/lxd/current/.config/lxc/servercerts/127.0.0.1.crt
+    fi
 fi
 
 # finally run the integration tests
