@@ -335,7 +335,7 @@ class TestClient(TestCase):
             "ws+unix:///lxd/unix.socket", ssl_options=None
         )
 
-    def test_events_htt(self):
+    def test_events_http(self):
         """An http compatible websocket client is returned."""
         websocket_client = mock.Mock(resource=None)
         WebsocketClient = mock.Mock()
