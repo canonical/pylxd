@@ -11,11 +11,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import binascii
-
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
 
 from pylxd.models import _model as model
@@ -61,13 +58,9 @@ class Certificate(model.Model):
             "certificate": base64_cert,
             "password": password,
         }
-        client.api.certificates.post(json=data)
-
-        # XXX: rockstar (08 Jun 2016) - Please see the open lxd bug here:
-        # https://github.com/lxc/lxd/issues/2092
-        fingerprint = binascii.hexlify(cert.fingerprint(hashes.SHA256())).decode(
-            "utf-8"
-        )
+        response = client.api.certificates.post(json=data)
+        location = response.headers["Location"]
+        fingerprint = location.split("/")[-1]
         return cls.get(client, fingerprint)
 
     @property

@@ -200,6 +200,9 @@ RULES = [
     {
         "method": "POST",
         "url": r"^http://pylxd.test/1.0/certificates$",
+        "headers": {
+            "location": "/1.0/certificates/eaf55b72fc23aa516d709271df9b0116064bf8cfa009cf34c67c33ad32c2320c",
+        },
     },
     {
         "text": json.dumps(
