@@ -47,16 +47,28 @@ class Certificate(model.Model):
         return certs
 
     @classmethod
-    def create(cls, client, password, cert_data):
+    def create(
+        cls,
+        client,
+        password,
+        cert_data,
+        cert_type="client",
+        name="",
+        projects=None,
+        restricted=False,
+    ):
         """Create a new certificate."""
         cert = x509.load_pem_x509_certificate(cert_data, default_backend())
         base64_cert = cert.public_bytes(Encoding.PEM).decode("utf-8")
         # STRIP OUT CERT META "-----BEGIN CERTIFICATE-----"
         base64_cert = "\n".join(base64_cert.split("\n")[1:-2])
         data = {
-            "type": "client",
+            "type": cert_type,
             "certificate": base64_cert,
             "password": password,
+            "name": name,
+            "restricted": restricted,
+            "projects": projects,
         }
         response = client.api.certificates.post(json=data)
         location = response.headers["Location"]
