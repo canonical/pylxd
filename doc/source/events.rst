@@ -26,12 +26,12 @@ LXD server:
 
 .. code-block:: python
 
-   >>> filter = set([EventType.Operation, EventType.Logging])
-   >>> ws_client = client.events(event_filter=filter)
+   >>> types = set([EventType.Operation, EventType.Logging])
+   >>> ws_client = client.events(event_types=types)
 
 To receive only events pertaining to the lifecycle of the containers:
 
 .. code-block:: python
 		
-   >>> filter = set([EventType.Lifecycle])
-   >>> ws_client = client.events(event_filter=filter)
+   >>> types = set([EventType.Lifecycle])
+   >>> ws_client = client.events(event_types=types)
