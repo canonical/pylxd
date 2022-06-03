@@ -101,7 +101,7 @@ class Certificate(model.Model):
 
         # Assemble a token from the returned metadata
         token = {
-            "name": name,
+            "client_name": name,
             "fingerprint": metadata["fingerprint"],
             "addresses": metadata["addresses"],
             "secret": metadata["secret"],
