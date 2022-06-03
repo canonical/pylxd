@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import json
 import os
 
 from pylxd import models
@@ -44,6 +45,67 @@ class TestCertificate(testing.PyLXDTestCase):
         self.assertEqual(
             "eaf55b72fc23aa516d709271df9b0116064bf8cfa009cf34c67c33ad32c2320c",
             an_certificate.fingerprint,
+        )
+
+    def test_create_token(self):
+        """A token is returned."""
+        self.add_rule(
+            {
+                "text": json.dumps(
+                    {
+                        "type": "sync",
+                        "status": "Operation created",
+                        "status_code": 100,
+                        "operation": "/1.0/operations/a1d77f1b-7dfb-44e0-a3a3-1dd18bd5c15a",
+                        "error_code": 0,
+                        "error": "",
+                        "metadata": {
+                            "id": "a1d77f1b-7dfb-44e0-a3a3-1dd18bd5c15a",
+                            "class": "token",
+                            "description": "Executing operation",
+                            "created_at": "2022-06-01T19:22:21.778204449Z",
+                            "updated_at": "2022-06-01T19:22:21.778204449Z",
+                            "status": "Running",
+                            "status_code": 103,
+                            "resources": None,
+                            "metadata": {
+                                "addresses": [
+                                    "127.0.0.1:8443",
+                                    "[::1]:8443",
+                                ],
+                                "fingerprint": "eddaa6023f9064f94dd6fadb36c01d9af9de935efff76f4ebada5a2fda4753be",
+                                "request": {
+                                    "name": "foo",
+                                    "type": "client",
+                                    "restricted": True,
+                                    "projects": ["default"],
+                                    "certificate": "",
+                                    "password": "",
+                                    "token": True,
+                                },
+                                "secret": "6efac2f5de066103dc9798414e916996a8ffe3b9818608d4fe3ba175fae618ad",
+                            },
+                            "may_cancel": True,
+                            "err": "",
+                            "location": "foo",
+                        },
+                    },
+                ),
+                "method": "POST",
+                "url": r"^http://pylxd.test/1.0/certificates$",
+                "headers": {
+                    "location": "/1.0/operations/a1d77f1b-7dfb-44e0-a3a3-1dd18bd5c15a",
+                },
+            },
+        )
+
+        a_token = self.client.certificates.create_token(
+            name="foo", projects=["default"], restricted=True
+        )
+
+        self.assertEqual(
+            "eyJuYW1lIjoiZm9vIiwiZmluZ2VycHJpbnQiOiJlZGRhYTYwMjNmOTA2NGY5NGRkNmZhZGIzNmMwMWQ5YWY5ZGU5MzVlZmZmNzZmNGViYWRhNWEyZmRhNDc1M2JlIiwiYWRkcmVzc2VzIjpbIjEyNy4wLjAuMTo4NDQzIiwiWzo6MV06ODQ0MyJdLCJzZWNyZXQiOiI2ZWZhYzJmNWRlMDY2MTAzZGM5Nzk4NDE0ZTkxNjk5NmE4ZmZlM2I5ODE4NjA4ZDRmZTNiYTE3NWZhZTYxOGFkIn0=",
+            a_token,
         )
 
     def test_fetch(self):

@@ -11,6 +11,9 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import json
+from base64 import b64encode
+
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import Encoding
@@ -74,6 +77,39 @@ class Certificate(model.Model):
         location = response.headers["Location"]
         fingerprint = location.split("/")[-1]
         return cls.get(client, fingerprint)
+
+    @classmethod
+    def create_token(
+        cls,
+        client,
+        name="",
+        projects=None,
+        restricted=False,
+    ):
+        """Create a new token."""
+        data = {
+            "password": "",
+            "certificate": "",
+            "type": "client",
+            "token": True,
+            "name": name,
+            "restricted": restricted,
+            "projects": projects,
+        }
+        response = client.api.certificates.post(json=data)
+        metadata = response.json()["metadata"]["metadata"]
+
+        # Assemble a token from the returned metadata
+        token = {
+            "name": name,
+            "fingerprint": metadata["fingerprint"],
+            "addresses": metadata["addresses"],
+            "secret": metadata["secret"],
+        }
+
+        # Convert to (compact) JSON and base64 encode it
+        token = json.dumps(token, separators=(",", ":"))
+        return b64encode(token.encode()).decode()
 
     @property
     def api(self):
