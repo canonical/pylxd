@@ -46,6 +46,7 @@ class Profile(model.Model):
         profiles = []
         for url in response.json()["metadata"]:
             name = url.split("/")[-1]
+            name = name.split("?")[0]
             profiles.append(cls(client, name=name))
         return profiles
 
