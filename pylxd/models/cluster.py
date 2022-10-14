@@ -29,6 +29,7 @@ class Cluster(model.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.members = managers.ClusterMemberManager(self.client, self)
+        self.certificate = managers.ClusterCertificateManager(self.client, self)
 
     @property
     def api(self):
