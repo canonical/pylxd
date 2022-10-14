@@ -55,8 +55,8 @@ class ClusterMember(model.Model):
     server_name = model.Attribute(readonly=True)
     status = model.Attribute(readonly=True)
     message = model.Attribute(readonly=True)
-    config = model.Attribute(readonly=True)
-    groups = model.Attribute(readonly=True)
+    config = model.Attribute(readonly=True, optional=True)
+    groups = model.Attribute(readonly=True, optional=True)
 
     cluster = model.Parent()
 
