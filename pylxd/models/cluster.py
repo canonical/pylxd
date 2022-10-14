@@ -58,7 +58,7 @@ class ClusterMember(model.Model):
     cluster = model.Parent()
 
     @classmethod
-    def get(cls, client, server_name):
+    def get(cls, client, cluster, server_name):
         """Get a cluster member by name."""
         response = client.api.cluster.members[server_name].get()
 
