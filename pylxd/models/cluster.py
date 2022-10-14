@@ -19,9 +19,9 @@ from pylxd.models import _model as model
 class Cluster(model.Model):
     """An LXD Cluster."""
 
-    server_name = model.Attribute()
-    enabled = model.Attribute()
-    member_config = model.Attribute()
+    server_name = model.Attribute(readonly=True)
+    enabled = model.Attribute(readonly=True)
+    member_config = model.Attribute(readonly=True)
 
     members = model.Manager()
     certificate = model.Manager()
@@ -29,6 +29,7 @@ class Cluster(model.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.members = managers.ClusterMemberManager(self.client, self)
+        self.certificate = managers.ClusterCertificateManager(self.client, self)
 
     @property
     def api(self):
@@ -54,6 +55,8 @@ class ClusterMember(model.Model):
     server_name = model.Attribute(readonly=True)
     status = model.Attribute(readonly=True)
     message = model.Attribute(readonly=True)
+    config = model.Attribute(readonly=True)
+    groups = model.Attribute(readonly=True)
 
     cluster = model.Parent()
 
