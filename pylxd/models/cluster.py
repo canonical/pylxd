@@ -93,6 +93,8 @@ class ClusterCertificate(model.Model):
 
     @classmethod
     def put(cls, client, cert, key):
+        client.assert_has_api_extension("clustering_update_cert")
+
         response = client.api.cluster.certificate.put(
             json={"cluster_certificate": cert, "cluster_certificate_key": key}
         )
