@@ -19,9 +19,9 @@ from pylxd.models import _model as model
 class Cluster(model.Model):
     """An LXD Cluster."""
 
-    server_name = model.Attribute()
-    enabled = model.Attribute()
-    member_config = model.Attribute()
+    server_name = model.Attribute(readonly=True)
+    enabled = model.Attribute(readonly=True)
+    member_config = model.Attribute(readonly=True)
 
     members = model.Manager()
     certificate = model.Manager()
