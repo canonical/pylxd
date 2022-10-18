@@ -38,6 +38,7 @@ class Cluster(model.Model):
     @classmethod
     def get(cls, client, *args):
         """Get cluster details"""
+        client.assert_has_api_extension("clustering")
         response = client.api.cluster.get()
         container = cls(client, **response.json()["metadata"])
         return container
