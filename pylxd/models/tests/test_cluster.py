@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from pylxd import exceptions, models
 from pylxd.tests import testing
 
 
@@ -20,6 +21,12 @@ class TestCluster(testing.PyLXDTestCase):
 
     def test_get(self):
         """A cluster is retrieved."""
+        # first assert that the lxd cluster requires 'clustering' api_extension
+        with self.assertRaises(exceptions.LXDAPIExtensionNotAvailable):
+            models.Cluster.get(self.client)
+        # now make sure that it's available without mocking it out.
+        testing.add_api_extension_helper(self, ["clustering"])
+
         cluster = self.client.cluster.get()
 
         self.assertEqual("an-member", cluster.server_name)
