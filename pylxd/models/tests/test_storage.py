@@ -19,29 +19,6 @@ from pylxd import exceptions, models
 from pylxd.tests import testing
 
 
-def add_api_extension_helper(obj, extensions):
-    obj.add_rule(
-        {
-            "text": json.dumps(
-                {
-                    "type": "sync",
-                    "metadata": {
-                        "auth": "trusted",
-                        "environment": {
-                            "certificate": "an-pem-cert",
-                        },
-                        "api_extensions": extensions,
-                    },
-                }
-            ),
-            "method": "GET",
-            "url": r"^http://pylxd.test/1.0$",
-        }
-    )
-    # Update hostinfo
-    obj.client.host_info = obj.client.api.get().json()["metadata"]
-
-
 class TestStoragePool(testing.PyLXDTestCase):
     """Tests for pylxd.models.StoragePool."""
 
@@ -51,7 +28,7 @@ class TestStoragePool(testing.PyLXDTestCase):
         with self.assertRaises(exceptions.LXDAPIExtensionNotAvailable):
             models.StoragePool.all(self.client)
         # now make sure that it's available without mocking it out.
-        add_api_extension_helper(self, ["storage"])
+        testing.add_api_extension_helper(self, ["storage"])
 
         storage_pools = models.StoragePool.all(self.client)
         self.assertEqual(1, len(storage_pools))
@@ -64,7 +41,7 @@ class TestStoragePool(testing.PyLXDTestCase):
         with self.assertRaises(exceptions.LXDAPIExtensionNotAvailable):
             models.StoragePool.get(self.client, name)
         # now make sure that it's available without mocking it out.
-        add_api_extension_helper(self, ["storage"])
+        testing.add_api_extension_helper(self, ["storage"])
 
         a_storage_pool = models.StoragePool.get(self.client, name)
 
@@ -84,7 +61,7 @@ class TestStoragePool(testing.PyLXDTestCase):
         with self.assertRaises(exceptions.LXDAPIExtensionNotAvailable):
             models.StoragePool.create(self.client, config)
         # now make sure that it's available without mocking it out.
-        add_api_extension_helper(self, ["storage"])
+        testing.add_api_extension_helper(self, ["storage"])
 
         a_storage_pool = models.StoragePool.create(self.client, config)
 
@@ -98,7 +75,7 @@ class TestStoragePool(testing.PyLXDTestCase):
         with self.assertRaises(exceptions.LXDAPIExtensionNotAvailable):
             models.StoragePool.exists(self.client, name)
         # now make sure that it's available without mocking it out.
-        add_api_extension_helper(self, ["storage"])
+        testing.add_api_extension_helper(self, ["storage"])
 
         self.assertTrue(models.StoragePool.exists(self.client, name))
 
@@ -168,7 +145,7 @@ class TestStorageResources(testing.PyLXDTestCase):
             a_storage_pool.resources.get()
 
         # now make sure that it's available without mocking it out.
-        add_api_extension_helper(self, ["resources"])
+        testing.add_api_extension_helper(self, ["resources"])
         resources = a_storage_pool.resources.get()
 
         self.assertEqual(resources.space["used"], 207111192576)
@@ -188,7 +165,7 @@ class TestStorageVolume(testing.PyLXDTestCase):
             a_storage_pool.volumes.all()
 
         # now make sure that it's available without mocking it out.
-        add_api_extension_helper(self, ["storage"])
+        testing.add_api_extension_helper(self, ["storage"])
 
         volumes = a_storage_pool.volumes.all()
 
@@ -220,7 +197,7 @@ class TestStorageVolume(testing.PyLXDTestCase):
         with self.assertRaises(exceptions.LXDAPIExtensionNotAvailable):
             a_storage_pool.volumes.get("custom", "cu1")
         # now make sure that it's available without mocking it out.
-        add_api_extension_helper(self, ["storage"])
+        testing.add_api_extension_helper(self, ["storage"])
 
         # now do the proper get
         volume = a_storage_pool.volumes.get("custom", "cu1")
@@ -241,20 +218,20 @@ class TestStorageVolume(testing.PyLXDTestCase):
         with self.assertRaises(exceptions.LXDAPIExtensionNotAvailable):
             a_storage_pool.volumes.create(self.client, config)
         # now make sure that it's available without mocking it out.
-        add_api_extension_helper(self, ["storage"])
+        testing.add_api_extension_helper(self, ["storage"])
 
         a_volume = a_storage_pool.volumes.create(self.client, config)
 
         self.assertEqual(config["name"], a_volume.name)
 
     def test_create_async(self):
-        add_api_extension_helper(self, ["storage"])
+        testing.add_api_extension_helper(self, ["storage"])
         a_storage_pool = models.StoragePool(self.client, name="async-lxd")
         config = {"config": {}, "pool": "async-lxd", "name": "cu1", "type": "custom"}
         a_storage_pool.volumes.create(self.client, config, wait=True)
 
     def test_rename(self):
-        add_api_extension_helper(self, ["storage"])
+        testing.add_api_extension_helper(self, ["storage"])
         a_storage_pool = models.StoragePool(self.client, name="lxd")
         a_volume = a_storage_pool.volumes.get("custom", "cu1")
 
@@ -264,7 +241,7 @@ class TestStorageVolume(testing.PyLXDTestCase):
         self.assertEqual(result["fs"], "secret2")
 
     def test_rename_async(self):
-        add_api_extension_helper(self, ["storage"])
+        testing.add_api_extension_helper(self, ["storage"])
         a_storage_pool = models.StoragePool(self.client, name="async-lxd")
         a_volume = a_storage_pool.volumes.get("custom", "cu1")
 
@@ -272,14 +249,14 @@ class TestStorageVolume(testing.PyLXDTestCase):
         a_volume.rename(_input, wait=True)
 
     def test_put(self):
-        add_api_extension_helper(self, ["storage"])
+        testing.add_api_extension_helper(self, ["storage"])
         a_storage_pool = models.StoragePool(self.client, name="lxd")
         a_volume = a_storage_pool.volumes.get("custom", "cu1")
         put_object = {"config": {"size": 1}}
         a_volume.put(put_object)
 
     def test_patch(self):
-        add_api_extension_helper(self, ["storage"])
+        testing.add_api_extension_helper(self, ["storage"])
         a_storage_pool = models.StoragePool(self.client, name="lxd")
         a_volume = a_storage_pool.volumes.get("custom", "cu1")
         patch_object = {"config": {"size": 1}}
@@ -287,14 +264,14 @@ class TestStorageVolume(testing.PyLXDTestCase):
             a_volume.patch(patch_object)
 
     def test_save(self):
-        add_api_extension_helper(self, ["storage"])
+        testing.add_api_extension_helper(self, ["storage"])
         a_storage_pool = models.StoragePool(self.client, name="lxd")
         a_volume = a_storage_pool.volumes.get("custom", "cu1")
         a_volume.config = {"size": 2}
         a_volume.save()
 
     def test_delete(self):
-        add_api_extension_helper(self, ["storage"])
+        testing.add_api_extension_helper(self, ["storage"])
         a_storage_pool = models.StoragePool(self.client, name="lxd")
         a_volume = a_storage_pool.volumes.get("custom", "cu1")
         a_volume.delete()
