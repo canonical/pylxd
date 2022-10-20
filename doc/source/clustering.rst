@@ -19,6 +19,7 @@ A cluster can be queried through the following client manager methods:
 
 
   - `get()` - Returns the cluster.
+  - `enable(server_name)` - Enable clustering.
 
 
 Cluster Object attributes
