@@ -60,6 +60,7 @@ class Instance(model.Model):
     last_used_at = model.Attribute(readonly=True)
     location = model.Attribute(readonly=True)
     type = model.Attribute(readonly=True)
+    project = model.Attribute(readonly=True, optional=True)
 
     status_code = model.Attribute(readonly=True)
     stateful = model.Attribute(readonly=True)

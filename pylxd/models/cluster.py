@@ -38,6 +38,7 @@ class Cluster(model.Model):
     @classmethod
     def get(cls, client, *args):
         """Get cluster details"""
+        client.assert_has_api_extension("clustering")
         response = client.api.cluster.get()
         container = cls(client, **response.json()["metadata"])
         return container
@@ -55,8 +56,8 @@ class ClusterMember(model.Model):
     server_name = model.Attribute(readonly=True)
     status = model.Attribute(readonly=True)
     message = model.Attribute(readonly=True)
-    config = model.Attribute(readonly=True)
-    groups = model.Attribute(readonly=True)
+    config = model.Attribute(readonly=True, optional=True)
+    groups = model.Attribute(readonly=True, optional=True)
 
     cluster = model.Parent()
 
@@ -93,6 +94,8 @@ class ClusterCertificate(model.Model):
 
     @classmethod
     def put(cls, client, cert, key):
+        client.assert_has_api_extension("clustering_update_cert")
+
         response = client.api.cluster.certificate.put(
             json={"cluster_certificate": cert, "cluster_certificate_key": key}
         )

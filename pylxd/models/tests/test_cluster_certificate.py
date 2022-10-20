@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from pylxd import exceptions, models
 from pylxd.tests import testing
 
 
@@ -20,7 +21,12 @@ class TestClusterCertificate(testing.PyLXDTestCase):
 
     def test_put(self):
         """Update the certificate for a cluster"""
+        cert = "my-cluster-cert"
+        key = "my-cluster-key"
+        # first assert that the lxd cluster certificate requires 'clustering_update_cert' api_extension
+        with self.assertRaises(exceptions.LXDAPIExtensionNotAvailable):
+            models.ClusterCertificate.put(self.client, cert, key)
+        # now make sure that it's available without mocking it out.
+        testing.add_api_extension_helper(self, ["clustering_update_cert"])
 
-        self.client.cluster.certificate.put(
-            cert="my-cluster-cert", key="my-cluster-key"
-        )
+        self.client.cluster.certificate.put(cert=cert, key=key)

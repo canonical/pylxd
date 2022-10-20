@@ -1,3 +1,4 @@
+import json
 import unittest
 
 import mock_services
@@ -24,3 +25,26 @@ class PyLXDTestCase(unittest.TestCase):
 
     def add_rules(self, rules):
         mock_services.update_http_rules(rules)
+
+
+def add_api_extension_helper(obj, extensions):
+    obj.add_rule(
+        {
+            "text": json.dumps(
+                {
+                    "type": "sync",
+                    "metadata": {
+                        "auth": "trusted",
+                        "environment": {
+                            "certificate": "an-pem-cert",
+                        },
+                        "api_extensions": extensions,
+                    },
+                }
+            ),
+            "method": "GET",
+            "url": r"^http://pylxd.test/1.0$",
+        }
+    )
+    # Update hostinfo
+    obj.client.host_info = obj.client.api.get().json()["metadata"]
