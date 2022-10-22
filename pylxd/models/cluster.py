@@ -36,6 +36,21 @@ class Cluster(model.Model):
         return self.client.api.cluster
 
     @classmethod
+    def enable(cls, client, server_name):
+        """Enable clustering on a single non-clustered LXD server."""
+        client.assert_has_api_extension("clustering_join")
+        response = client.api.cluster.put(
+            json={"server_name": server_name, "enabled": True},
+        )
+
+        # Wait for operation to complete
+        operation = client.operations.wait_for_operation(response.json()["operation"])
+
+        if operation.status_code == 200:
+            return
+        raise LXDAPIException(response)
+
+    @classmethod
     def get(cls, client, *args):
         """Get cluster details"""
         client.assert_has_api_extension("clustering")

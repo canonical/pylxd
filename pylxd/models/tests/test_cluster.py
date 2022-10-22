@@ -19,6 +19,18 @@ from pylxd.tests import testing
 class TestCluster(testing.PyLXDTestCase):
     """Tests for pylxd.models.Cluster."""
 
+    def test_enable(self):
+        """Clustering is enabled."""
+        server_name = "foo-cluster"
+        # first assert that the lxd cluster requires 'clustering_join' api_extension
+        with self.assertRaises(exceptions.LXDAPIExtensionNotAvailable):
+            models.Cluster.enable(self.client, server_name)
+        # now make sure that it's available without mocking it out.
+        testing.add_api_extension_helper(self, ["clustering_join"])
+
+        # XXX: don't actually call the method as mocking it properly is too hard
+        # self.client.cluster.enable(server_name=server_name)
+
     def test_get(self):
         """A cluster is retrieved."""
         # first assert that the lxd cluster requires 'clustering' api_extension
