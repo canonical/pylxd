@@ -837,20 +837,20 @@ RULES = [
             "metadata": {
                 "config": {},
                 "description": "Forward description",
-                "listen_address": "192.0.0.1",
+                "listen_address": "192.0.2.1",
                 "location": "eth0",
                 "ports": [
                     {
                         "description": "Port description",
                         "listen_port": "80",
-                        "target_address": "192.0.0.2",
+                        "target_address": "192.0.2.2",
                         "target_port": "80",
                     }
                 ],
             },
         },
         "method": "GET",
-        "url": r"^http://pylxd.test/1.0/networks/eth0/forwards/192.0.0.1$",
+        "url": r"^http://pylxd.test/1.0/networks/eth0/forwards/192.0.2.1$",
     },
     {
         "json": {
@@ -858,13 +858,13 @@ RULES = [
             "metadata": {
                 "config": {},
                 "description": "Forward description",
-                "listen_address": "192.0.0.1",
+                "listen_address": "192.0.2.1",
                 "location": "eth0",
                 "ports": [
                     {
                         "description": "Port description",
                         "listen_port": "80",
-                        "target_address": "192.0.0.2",
+                        "target_address": "192.0.2.2",
                         "target_port": "80",
                     }
                 ],
@@ -879,20 +879,20 @@ RULES = [
             "metadata": {
                 "config": {},
                 "description": "Updated",
-                "listen_address": "192.0.0.1",
+                "listen_address": "192.0.2.1",
                 "location": "eth0",
                 "ports": [
                     {
                         "description": "Port description",
                         "listen_port": "80",
-                        "target_address": "192.0.0.2",
+                        "target_address": "192.0.2.2",
                         "target_port": "80",
                     }
                 ],
             },
         },
         "method": "PUT",
-        "url": r"^http://pylxd.test/1.0/networks/eth0/forwards/192.0.0.1$",
+        "url": r"^http://pylxd.test/1.0/networks/eth0/forwards/192.0.2.1$",
     },
     # Storage Pools
     {
