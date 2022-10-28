@@ -33,12 +33,10 @@ class NetworkForward(model.Model):
         return forward
 
     @classmethod
-    def create(cls, client, network, config, wait=False):
-        response = client.api.networks[network.name].forwards.post(json=config)
+    def create(cls, client, network, config):
+        client.api.networks[network.name].forwards.post(json=config)
 
-        if wait:
-            client.operations.wait_for_operation(response.json()["operation"])
-        return cls(client, network=network)
+        return cls(client, network=network, **config)
 
     def save(self, *args, **kwargs):
         self.client.assert_has_api_extension("network")
