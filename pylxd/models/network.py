@@ -13,7 +13,48 @@
 #    under the License.
 import json
 
+from pylxd import managers
 from pylxd.models import _model as model
+
+
+class NetworkForward(model.Model):
+    config = model.Attribute()
+    description = model.Attribute()
+    location = model.Attribute()
+    listen_address = model.Attribute()
+    ports = model.Attribute()
+
+    network = model.Parent()
+
+    @classmethod
+    def get(cls, client, network, listen_address):
+        response = client.api.networks[network.name].forwards[listen_address].get()
+        forward = cls(client, network=network, **response.json()["metadata"])
+        return forward
+
+    @classmethod
+    def create(cls, client, network, config):
+        client.api.networks[network.name].forwards.post(json=config)
+
+        return cls(client, network=network, **config)
+
+    def save(self, *args, **kwargs):
+        self.client.assert_has_api_extension("network")
+        super().save(*args, **kwargs)
+
+    @property
+    def api(self):
+        return self.client.api.networks[self.network.name].forwards[self.listen_address]
+
+    def __str__(self):
+        return json.dumps(self.marshall(skip_readonly=False), indent=2)
+
+    def __repr__(self):
+        attrs = []
+        for attribute, value in self.marshall().items():
+            attrs.append("{}={}".format(attribute, json.dumps(value, sort_keys=True)))
+
+        return "{}({})".format(self.__class__.__name__, ", ".join(sorted(attrs)))
 
 
 class NetworkState(model.AttributeDict):
@@ -31,6 +72,13 @@ class Network(model.Model):
     locations = model.Attribute(readonly=True)
     managed = model.Attribute(readonly=True)
     used_by = model.Attribute(readonly=True)
+    _endpoint = "networks"
+
+    forwards = model.Manager()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.forwards = managers.NetworkForwardManager(self.client, self)
 
     @classmethod
     def exists(cls, client, name):

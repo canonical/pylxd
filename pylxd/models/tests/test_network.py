@@ -281,3 +281,165 @@ class TestNetwork(testing.PyLXDTestCase):
             '"true", "ipv6.address": "none", "ipv6.nat": "false"}, '
             'description="Network description", name="eth0", type="bridge")',
         )
+
+
+class TestNetworkForward(testing.PyLXDTestCase):
+    """Tests for pylxd.models.NetworkForward."""
+
+    def test_get(self):
+        network_name = "eth0"
+        an_network = models.Network.get(self.client, network_name)
+        forward = an_network.forwards.get('192.0.2.1')
+
+        self.assertEqual("Forward description", forward.description)
+
+    def test_get_not_found(self):
+        """LXDAPIException is raised on unknown network."""
+        network_name = "eth0"
+        an_network = models.Network.get(self.client, network_name)
+
+        def not_found(_, context):
+            context.status_code = 404
+            return json.dumps(
+                {"type": "error", "error": "Not found", "error_code": 404}
+            )
+
+        self.add_rule(
+            {
+                "text": not_found,
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/networks/eth0/forwards/192.0.2.1$",
+            }
+        )
+
+        self.assertRaises(
+            exceptions.LXDAPIException, models.NetworkForward.get, self.client, an_network, "192.0.2.1"
+        )
+
+    def test_get_error(self):
+        """LXDAPIException is raised on error."""
+        network_name = "eth0"
+        an_network = models.Network.get(self.client, network_name)
+
+        def error(_, context):
+            context.status_code = 500
+            return json.dumps(
+                {
+                    "type": "error",
+                    "error": "Not found",
+                    "error_code": 500,
+                }
+            )
+
+        self.add_rule(
+            {
+                "text": error,
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/networks/eth0/forwards/192.0.2.1$",
+            }
+        )
+
+        self.assertRaises(
+            exceptions.LXDAPIException, models.NetworkForward.get, self.client, an_network, "192.0.2.1"
+        )
+
+    def test_create(self):
+        network_name = "eth0"
+        an_network = models.Network.get(self.client, network_name)
+        config = {
+            "config": {},
+            "description": "Forward description",
+            "listen_address": "192.0.2.1",
+            "ports": [
+                {
+                    "description": "Port description",
+                    "listen_port": "80",
+                    "target_address": "192.0.2.2",
+                    "target_port": "80",
+                }
+            ],
+        }
+
+        with mock.patch.object(self.client, "assert_has_api_extension"):
+            forward = models.NetworkForward.create(
+                self.client,
+                network=an_network,
+                config=config,
+            )
+
+        self.assertIsInstance(forward, models.NetworkForward)
+        self.assertEqual("Forward description", forward.description)
+        self.assertEqual("192.0.2.1", forward.listen_address)
+        self.assertEqual(len(forward.ports), 1)
+        self.assertEqual("80", forward.ports[0]["listen_port"])
+        self.assertEqual("192.0.2.2", forward.ports[0]["target_address"])
+        self.assertEqual("80", forward.ports[0]["target_port"])
+        self.assertEqual("Port description", forward.ports[0]["description"])
+
+    def test_update(self):
+        network_name = "eth0"
+        an_network = models.Network.get(self.client, network_name)
+        config = {
+            "config": {},
+            "description": "Forward description",
+            "listen_address": "192.0.2.1",
+            "ports": [
+                {
+                    "description": "Port description",
+                    "listen_port": "80",
+                    "target_address": "192.0.2.2",
+                    "target_port": "80",
+                }
+            ],
+        }
+
+        with mock.patch.object(self.client, "assert_has_api_extension"):
+            forward = models.NetworkForward.create(
+                self.client,
+                network=an_network,
+                config=config,
+            )
+            forward.description = "Updated"
+            forward.save()
+
+        self.assertIsInstance(forward, models.NetworkForward)
+        self.assertEqual("Updated", forward.description)
+        self.assertEqual("192.0.2.1", forward.listen_address)
+        self.assertEqual(len(forward.ports), 1)
+        self.assertEqual("80", forward.ports[0]["listen_port"])
+        self.assertEqual("192.0.2.2", forward.ports[0]["target_address"])
+        self.assertEqual("80", forward.ports[0]["target_port"])
+        self.assertEqual("Port description", forward.ports[0]["description"])
+
+    def test_str(self):
+        network_name = "eth0"
+        an_network = models.Network.get(self.client, network_name)
+        forward = an_network.forwards.get('192.0.2.1')
+        self.assertEqual(
+            json.loads(str(forward)),
+            {
+                "config": {},
+                "description": "Forward description",
+                "location": "eth0",
+                "listen_address": "192.0.2.1",
+                "ports": [
+                    {
+                        "description": "Port description",
+                        "listen_port": "80",
+                        "target_address": "192.0.2.2",
+                        "target_port": "80"
+                    }
+                ]
+            }
+        )
+
+    def test_repr(self):
+        network_name = "eth0"
+        an_network = models.Network.get(self.client, network_name)
+        forward = an_network.forwards.get('192.0.2.1')
+        self.assertEqual(
+            repr(forward),
+            'NetworkForward(config={}, description="Forward description", listen_address="192.0.2.1",'
+            ' location="eth0", ports=[{"description": "Port description", "listen_port": "80",'
+            ' "target_address": "192.0.2.2", "target_port": "80"}])'
+        )
