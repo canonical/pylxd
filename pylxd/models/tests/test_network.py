@@ -289,7 +289,7 @@ class TestNetworkForward(testing.PyLXDTestCase):
     def test_get(self):
         network_name = "eth0"
         an_network = models.Network.get(self.client, network_name)
-        forward = an_network.forwards.get('192.0.2.1')
+        forward = an_network.forwards.get("192.0.2.1")
 
         self.assertEqual("Forward description", forward.description)
 
@@ -313,7 +313,11 @@ class TestNetworkForward(testing.PyLXDTestCase):
         )
 
         self.assertRaises(
-            exceptions.LXDAPIException, models.NetworkForward.get, self.client, an_network, "192.0.2.1"
+            exceptions.LXDAPIException,
+            models.NetworkForward.get,
+            self.client,
+            an_network,
+            "192.0.2.1",
         )
 
     def test_get_error(self):
@@ -340,7 +344,11 @@ class TestNetworkForward(testing.PyLXDTestCase):
         )
 
         self.assertRaises(
-            exceptions.LXDAPIException, models.NetworkForward.get, self.client, an_network, "192.0.2.1"
+            exceptions.LXDAPIException,
+            models.NetworkForward.get,
+            self.client,
+            an_network,
+            "192.0.2.1",
         )
 
     def test_create(self):
@@ -414,7 +422,7 @@ class TestNetworkForward(testing.PyLXDTestCase):
     def test_str(self):
         network_name = "eth0"
         an_network = models.Network.get(self.client, network_name)
-        forward = an_network.forwards.get('192.0.2.1')
+        forward = an_network.forwards.get("192.0.2.1")
         self.assertEqual(
             json.loads(str(forward)),
             {
@@ -427,19 +435,19 @@ class TestNetworkForward(testing.PyLXDTestCase):
                         "description": "Port description",
                         "listen_port": "80",
                         "target_address": "192.0.2.2",
-                        "target_port": "80"
+                        "target_port": "80",
                     }
-                ]
-            }
+                ],
+            },
         )
 
     def test_repr(self):
         network_name = "eth0"
         an_network = models.Network.get(self.client, network_name)
-        forward = an_network.forwards.get('192.0.2.1')
+        forward = an_network.forwards.get("192.0.2.1")
         self.assertEqual(
             repr(forward),
             'NetworkForward(config={}, description="Forward description", listen_address="192.0.2.1",'
             ' location="eth0", ports=[{"description": "Port description", "listen_port": "80",'
-            ' "target_address": "192.0.2.2", "target_port": "80"}])'
+            ' "target_address": "192.0.2.2", "target_port": "80"}])',
         )
