@@ -60,10 +60,10 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8", "3.11"]
-        os: ubuntu-latest
+        os: [ubuntu-latest]
         include:
           - os: ubuntu-20.04
-            python-version: 3.6
+            python-version: "3.6"
     
     runs-on: ${{ matrix.os }}
     steps:
