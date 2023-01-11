@@ -10,7 +10,7 @@ on:
 
 jobs:
   lint-python:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - name: Repository checkout
       uses: actions/checkout@v3
@@ -38,7 +38,7 @@ jobs:
       uses: ludeeus/action-shellcheck@master
 
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - name: Repository checkout
       uses: actions/checkout@v3
@@ -57,7 +57,7 @@ jobs:
         tox -e check
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         python-version:
