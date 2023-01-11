@@ -11,7 +11,9 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import errno
 import json
+import logging
 import os
 import stat
 import time
@@ -753,6 +755,17 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
     def data(self):
         buffer = b"".join(self.buffer)
         return self._maybe_decode(buffer)
+
+    def unhandled_error(self, error):
+        """
+        Handles the unfriendly socket closures on the server side
+        without showing a confusing error message
+        """
+        if hasattr(error, "errno") and error.errno == errno.ECONNRESET:
+            pass
+        else:
+            logger = logging.getLogger("ws4py")
+            logger.exception("Failed to receive data")
 
 
 class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
