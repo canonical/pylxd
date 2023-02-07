@@ -142,6 +142,8 @@ class _APINode:
         if response.status_code not in allowed_status_codes:
             if response.status_code == 404:
                 raise exceptions.NotFound(response)
+            elif response.status_code == 409:
+                raise exceptions.Conflict(response)
             raise exceptions.LXDAPIException(response)
 
         # In the case of streaming, we can't validate the json the way we

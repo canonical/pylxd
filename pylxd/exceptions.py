@@ -33,6 +33,10 @@ class NotFound(LXDAPIException):
     """An exception raised when an object is not found."""
 
 
+class Conflict(LXDAPIException):
+    """An exception raised when there is a conflict."""
+
+
 class LXDAPIExtensionNotAvailable(Exception):
     """An exception raised when requested LXD API Extension is not present
     on current host."""
