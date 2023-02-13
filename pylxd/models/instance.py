@@ -35,7 +35,6 @@ class InstanceState(model.AttributeDict):
 
 
 class _InstanceExecuteResult(NamedTuple):
-
     exit_code: int
     stdout: IO
     stderr: IO

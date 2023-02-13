@@ -30,7 +30,6 @@ from pylxd.deprecated.tests import LXDAPITestBase, annotated_data, fake_api
     return_value=("200", fake_api.fake_image_info()),
 )
 class LXDAPIImageTestObject(LXDAPITestBase):
-
     list_data = (
         ("list", (), ()),
         ("search", ({"foo": "bar"},), ("foo=bar",)),

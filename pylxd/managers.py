@@ -82,7 +82,6 @@ class ClusterCertificateManager(BaseManager):
 
 
 class ClusterManager(BaseManager):
-
     manager_for = "pylxd.models.Cluster"
 
     def __init__(self, client, *args, **kwargs):
