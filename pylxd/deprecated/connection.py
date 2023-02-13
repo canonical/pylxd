@@ -70,7 +70,6 @@ class HTTPSConnection(http_client.HTTPConnection):
 
 
 class _LXDResponse(NamedTuple):
-
     status: int
     body: bytes
     json: Any

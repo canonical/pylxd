@@ -132,7 +132,7 @@ class LXDImage(base.LXDBase):
             image_size = data["size"]
             if image_size <= 0:
                 raise exceptions.ImageInvalidSize()
-            return image_size // 1024 ** 2
+            return image_size // 1024**2
         except Exception as e:
             print("Unable to fetch image info - {}".format(e))
             raise
