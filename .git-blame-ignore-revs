@@ -16,3 +16,6 @@ f76cf13e23603717caec8af611e1a1889bca9eb4
 
 # Blacken and isort contrib_testing, integration and migration code
 dcaa938e29ff1d31c5e2fc264d10b8a699dccf4e
+
+# Reformat after Black update to 23.1
+2f276bf71dd2b6e07f36eceeae7db6a7ddc4e34b
