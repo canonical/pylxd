@@ -73,24 +73,40 @@ class LXDSSLAdapter(requests.adapters.HTTPAdapter):
 
 
 class _APINode:
-    """An api node object."""
+    """An api node object.
+
+    If `session` is given, it should be a
+    `requests{,_unixsocket}.Session` which is used for issuing requests.
+
+    `cert` and `verify` options are set on the session, and should not
+    be given when `session` is given.
+    """
 
     def __init__(
-        self, api_endpoint, cert=None, verify=True, timeout=None, project=None
+        self,
+        api_endpoint,
+        cert=None,
+        verify=True,
+        timeout=None,
+        project=None,
+        session=None,
     ):
         self._api_endpoint = api_endpoint
         self._timeout = timeout
         self._project = project
 
-        if self._api_endpoint.startswith("http+unix://"):
-            self.session = requests_unixsocket.Session()
-        else:
-            self.session = requests.Session()
-            self.session.cert = cert
-            self.session.verify = verify
+        if session is None:
+            if self._api_endpoint.startswith("http+unix://"):
+                self.session = requests_unixsocket.Session()
+            else:
+                self.session = requests.Session()
+                self.session.cert = cert
+                self.session.verify = verify
 
-            if isinstance(verify, str):
-                self.session.mount(api_endpoint, LXDSSLAdapter())
+                if isinstance(verify, str):
+                    self.session.mount(api_endpoint, LXDSSLAdapter())
+        else:
+            self.session = session
 
     def __getattr__(self, name):
         """Converts attribute lookup into the next /<segment> of an api
@@ -106,8 +122,7 @@ class _APINode:
             name = name.replace("_", "-")
         return self.__class__(
             "{}/{}".format(self._api_endpoint, name),
-            cert=self.session.cert,
-            verify=self.session.verify,
+            session=self.session,
             timeout=self._timeout,
             project=self._project,
         )
@@ -122,8 +137,7 @@ class _APINode:
         """
         return self.__class__(
             "{}/{}".format(self._api_endpoint, item),
-            cert=self.session.cert,
-            verify=self.session.verify,
+            session=self.session,
             timeout=self._timeout,
             project=self._project,
         )

@@ -495,6 +495,12 @@ class TestAPINode(TestCase):
         node = client._APINode("http+unix://test.com")
         self.assertIsInstance(node.session, requests_unixsocket.Session)
 
+    def test_session_passed_to_child(self):
+        """session should be shared across path traversl"""
+        parent_node = client._APINode("http+unix://test.com")
+        child_node = parent_node.instances
+        self.assertIs(parent_node.session, child_node.session)
+
     @mock.patch("pylxd.client.requests.Session")
     def test_get(self, Session):
         """Perform a session get."""
