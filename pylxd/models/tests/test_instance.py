@@ -820,34 +820,6 @@ class TestFiles(testing.PyLXDTestCase):
 
     def test_recursive_get(self):
         """A folder is retrieved recursively from the instance"""
-
-        @contextlib.contextmanager
-        def tempdir(prefix="tmp"):
-            tmpdir = tempfile.mkdtemp(prefix=prefix)
-            try:
-                yield tmpdir
-            finally:
-                shutil.rmtree(tmpdir)
-
-        def create_file(_dir, name, content):
-            path = os.path.join(_dir, name)
-            actual_dir = os.path.dirname(path)
-            if not os.path.exists(actual_dir):
-                os.makedirs(actual_dir)
-            with open(path, "w") as f:
-                f.write(content)
-
-        _captures = []
-
-        def capture(request, context):
-            _captures.append(
-                {
-                    "headers": getattr(request._request, "headers"),
-                    "body": request._request.body,
-                }
-            )
-            context.status_code = 200
-
         response = requests.models.Response()
         response.status_code = 200
         response.headers["X-LXD-type"] = "directory"
@@ -868,20 +840,11 @@ class TestFiles(testing.PyLXDTestCase):
         with mock.patch("pylxd.client._APINode.get") as get_mocked:
             get_mocked.side_effect = return_values
             with mock.patch("os.mkdir") as mkdir_mocked:
-                # distinction needed for the code to work with python2.7 and 3
-                try:
-                    with mock.patch("__builtin__.open") as open_mocked:
-                        self.instance.files.recursive_get("/tmp/getted", "/tmp")
-                        assert mkdir_mocked.call_count == 1
-                        assert open_mocked.call_count == 2
-                except ImportError:
-                    try:
-                        with mock.patch("builtins.open") as open_mocked:
-                            self.instance.files.recursive_get("/tmp/getted", "/tmp")
-                            assert mkdir_mocked.call_count == 1
-                            assert open_mocked.call_count == 2
-                    except ImportError as e:
-                        raise e
+                mock_open = mock.mock_open()
+                with mock.patch("pylxd.models.instance.open", mock_open):
+                    self.instance.files.recursive_get("/tmp/getted", "/tmp")
+                    assert mkdir_mocked.call_count == 1
+                    assert mock_open.call_count == 2
 
     def test_get_not_found(self):
         """LXDAPIException is raised on bogus filenames."""
