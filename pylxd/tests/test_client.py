@@ -458,13 +458,13 @@ class TestAPINode(TestCase):
 
     def test_getattr(self):
         """API Nodes can use object notation for nesting."""
-        node = client._APINode("http://test.com", mock.Mock())
+        node = client._APINode("http://test.com", mock.sentinel.session)
         new_node = node.test
         self.assertEqual("http://test.com/test", new_node._api_endpoint)
 
     def test_getattr_storage_pools(self):
         """API node with storage_pool should be storage-pool"""
-        node = client._APINode("http://test.com", mock.Mock())
+        node = client._APINode("http://test.com", mock.sentinel.session)
         new_node = node.test.storage_pools
         self.assertEqual("http://test.com/test/storage-pools", new_node._api_endpoint)
         # other _ should stay as they were.
@@ -473,7 +473,7 @@ class TestAPINode(TestCase):
 
     def test_getitem(self):
         """API Nodes can use dict notation for nesting."""
-        node = client._APINode("http://test.com", mock.Mock())
+        node = client._APINode("http://test.com", mock.sentinel.session)
         new_node = node["test"]
         self.assertEqual("http://test.com/test", new_node._api_endpoint)
 
@@ -481,7 +481,7 @@ class TestAPINode(TestCase):
         """Bug 295 erronously changed underscores to '-' -- let's make sure
         it doens't happend again
         """
-        node = client._APINode("http://test.com", mock.Mock())
+        node = client._APINode("http://test.com", mock.sentinel.session)
         new_node = node.thing["my_snapshot"]
         self.assertEqual("http://test.com/thing/my_snapshot", new_node._api_endpoint)
 
@@ -493,7 +493,7 @@ class TestAPINode(TestCase):
 
     def test_session_passed_to_child(self):
         """session should be shared across path traversl"""
-        parent_node = client._APINode("http+unix://test.com", mock.Mock())
+        parent_node = client._APINode("http+unix://test.com", mock.sentinel.session)
         child_node = parent_node.instances
         self.assertIs(parent_node.session, child_node.session)
 
