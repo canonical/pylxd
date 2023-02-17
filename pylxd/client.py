@@ -72,41 +72,42 @@ class LXDSSLAdapter(requests.adapters.HTTPAdapter):
         super().cert_verify(conn, url, False, cert)
 
 
+def get_session_for_url(url: str, verify=None, cert=None) -> requests.Session:
+    """Create a Session for use with requests for the given URL.
+
+    Call sites can use this to customise the session before passing into a Client.
+    """
+    session: requests.Session
+    if url.startswith("http+unix://"):
+        session = requests_unixsocket.Session()
+    else:
+        session = requests.Session()
+        session.cert = cert
+        session.verify = verify
+
+        if isinstance(verify, str):
+            session.mount(url, LXDSSLAdapter())
+    return session
+
+
 class _APINode:
     """An api node object.
 
-    If `session` is given, it should be a
-    `requests{,_unixsocket}.Session` which is used for issuing requests.
-
-    `cert` and `verify` options are set on the session, and should not
-    be given when `session` is given.
+    `session` is a `requests.Session` which is used for issuing
+       requests. See `get_session_for_url`
     """
 
     def __init__(
         self,
         api_endpoint,
-        cert=None,
-        verify=True,
+        session,
         timeout=None,
         project=None,
-        session=None,
     ):
         self._api_endpoint = api_endpoint
         self._timeout = timeout
         self._project = project
-
-        if session is None:
-            if self._api_endpoint.startswith("http+unix://"):
-                self.session = requests_unixsocket.Session()
-            else:
-                self.session = requests.Session()
-                self.session.cert = cert
-                self.session.verify = verify
-
-                if isinstance(verify, str):
-                    self.session.mount(api_endpoint, LXDSSLAdapter())
-        else:
-            self.session = session
+        self.session = session
 
     def __getattr__(self, name):
         """Converts attribute lookup into the next /<segment> of an api
@@ -348,6 +349,7 @@ class Client:
         verify=True,
         timeout=None,
         project=None,
+        session=None,
     ):
         """Constructs a LXD client
 
@@ -364,6 +366,9 @@ class Client:
             data before giving up, as a float, or a :ref:`(connect timeout,
             read timeout) <timeouts>` tuple.
         :param project: (optional) Name of the LXD project to interact with.
+        :param session: (optional) A requests.Session to use for
+            interactions with the endpoint. If given, cert and verify
+            arguments are ignored - see get_session_for_url().
         """
 
         self.project = project
@@ -396,11 +401,12 @@ class Client:
             else:
                 path = "/var/lib/lxd/unix.socket"
             endpoint = "http+unix://{}".format(parse.quote(path, safe=""))
-        api = _APINode(
-            endpoint, cert=cert, verify=verify, timeout=timeout, project=project
-        )
         self.cert = cert
-        self.api = api[version]
+        if session is None:
+            session = get_session_for_url(endpoint, cert=cert, verify=verify)
+        self.api = _APINode(
+            f"{endpoint}/{version}", session, timeout=timeout, project=project
+        )
 
         # Verify the connection is valid.
         try:

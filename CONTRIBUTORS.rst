@@ -41,5 +41,6 @@ These are the contributors to pylxd according to the Github repository.
  cpg1111          Christian Grabowski (Canonical)
  fliiiix          Felix
  simondeziel      Simon Déziel (Canonical)
+ sparkiegeek      Adam Collard (Canonical)
  ===============  ==================================
 

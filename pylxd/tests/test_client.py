@@ -458,13 +458,13 @@ class TestAPINode(TestCase):
 
     def test_getattr(self):
         """API Nodes can use object notation for nesting."""
-        node = client._APINode("http://test.com")
+        node = client._APINode("http://test.com", mock.Mock())
         new_node = node.test
         self.assertEqual("http://test.com/test", new_node._api_endpoint)
 
     def test_getattr_storage_pools(self):
         """API node with storage_pool should be storage-pool"""
-        node = client._APINode("http://test.com")
+        node = client._APINode("http://test.com", mock.Mock())
         new_node = node.test.storage_pools
         self.assertEqual("http://test.com/test/storage-pools", new_node._api_endpoint)
         # other _ should stay as they were.
@@ -473,7 +473,7 @@ class TestAPINode(TestCase):
 
     def test_getitem(self):
         """API Nodes can use dict notation for nesting."""
-        node = client._APINode("http://test.com")
+        node = client._APINode("http://test.com", mock.Mock())
         new_node = node["test"]
         self.assertEqual("http://test.com/test", new_node._api_endpoint)
 
@@ -481,23 +481,19 @@ class TestAPINode(TestCase):
         """Bug 295 erronously changed underscores to '-' -- let's make sure
         it doens't happend again
         """
-        node = client._APINode("http://test.com")
+        node = client._APINode("http://test.com", mock.Mock())
         new_node = node.thing["my_snapshot"]
         self.assertEqual("http://test.com/thing/my_snapshot", new_node._api_endpoint)
 
-    def test_session_http(self):
-        """HTTP nodes return the default requests session."""
-        node = client._APINode("http://test.com")
-        self.assertIsInstance(node.session, requests.Session)
-
-    def test_session_unix_socket(self):
-        """HTTP nodes return a requests_unixsocket session."""
-        node = client._APINode("http+unix://test.com")
-        self.assertIsInstance(node.session, requests_unixsocket.Session)
+    def test_session(self):
+        """Session is exposed on the _APINode."""
+        session = requests.Session()
+        node = client._APINode("http://test.com", session)
+        self.assertIs(node.session, session)
 
     def test_session_passed_to_child(self):
         """session should be shared across path traversl"""
-        parent_node = client._APINode("http+unix://test.com")
+        parent_node = client._APINode("http+unix://test.com", mock.Mock())
         child_node = parent_node.instances
         self.assertIs(parent_node.session, child_node.session)
 
@@ -513,7 +509,7 @@ class TestAPINode(TestCase):
         session = mock.Mock(**{"get.return_value": response})
         Session.return_value = session
 
-        node = client._APINode("http://test.com")
+        node = client._APINode("http://test.com", session)
         node.get()
         session.get.assert_called_once_with("http://test.com", timeout=None)
 
@@ -528,7 +524,7 @@ class TestAPINode(TestCase):
         )
         session = mock.Mock(**{"post.return_value": response})
         Session.return_value = session
-        node = client._APINode("http://test.com")
+        node = client._APINode("http://test.com", session)
         node.post()
         session.post.assert_called_once_with("http://test.com", timeout=None)
 
@@ -543,7 +539,7 @@ class TestAPINode(TestCase):
         )
         session = mock.Mock(**{"post.return_value": response})
         Session.return_value = session
-        node = client._APINode("http://test.com")
+        node = client._APINode("http://test.com", session)
         self.assertRaises(exceptions.LXDAPIException, node.post)
 
     @mock.patch("pylxd.client.requests.Session")
@@ -557,7 +553,7 @@ class TestAPINode(TestCase):
         )
         session = mock.Mock(**{"post.return_value": response})
         Session.return_value = session
-        node = client._APINode("http://test.com")
+        node = client._APINode("http://test.com", session)
         self.assertRaises(exceptions.LXDAPIException, node.post)
 
     @mock.patch("pylxd.client.requests.Session")
@@ -571,7 +567,7 @@ class TestAPINode(TestCase):
         )
         session = mock.Mock(**{"put.return_value": response})
         Session.return_value = session
-        node = client._APINode("http://test.com")
+        node = client._APINode("http://test.com", session)
         node.put()
         session.put.assert_called_once_with("http://test.com", timeout=None)
 
@@ -586,7 +582,7 @@ class TestAPINode(TestCase):
         )
         session = mock.Mock(**{"patch.return_value": response})
         Session.return_value = session
-        node = client._APINode("http://test.com")
+        node = client._APINode("http://test.com", session)
         node.patch()
         session.patch.assert_called_once_with("http://test.com", timeout=None)
 
@@ -601,7 +597,7 @@ class TestAPINode(TestCase):
         )
         session = mock.Mock(**{"delete.return_value": response})
         Session.return_value = session
-        node = client._APINode("http://test.com")
+        node = client._APINode("http://test.com", session)
         node.delete()
         session.delete.assert_called_once_with("http://test.com", timeout=None)
 
@@ -622,3 +618,32 @@ class TestWebsocketClient(TestCase):
         ws_client.handshake_ok()
         ws_client.received_message(message)
         self.assertEqual({"test": "data"}, ws_client.messages[0])
+
+
+class TestGetSessionForUrl(TestCase):
+    """Tests for pylxd.client.get_session_for_url."""
+
+    def test_session_unix_socket(self):
+        """http+unix URL return a requests_unixsocket session."""
+        session = client.get_session_for_url("http+unix://test.com")
+        self.assertIsInstance(session, requests_unixsocket.Session)
+
+    def test_session_http(self):
+        """HTTP nodes return the default requests session."""
+        session = client.get_session_for_url("http://test.com")
+        self.assertIsInstance(session, requests.Session)
+        self.assertNotIsInstance(session, requests_unixsocket.Session)
+
+    def test_session_cert(self):
+        """If certs are given, they're set on the Session."""
+        certs = (
+            os.path.join(os.path.dirname(__file__), "lxd.crt"),
+            os.path.join(os.path.dirname(__file__), "lxd.key"),
+        )
+        session = client.get_session_for_url("http://test.com", cert=certs)
+        self.assertEqual(session.cert, certs)
+
+    def test_session_verify(self):
+        """If verify is given, it's set on the Session."""
+        session = client.get_session_for_url("http://test.com", verify=True)
+        self.assertIs(session.verify, True)
