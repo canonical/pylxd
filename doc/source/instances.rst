@@ -20,11 +20,11 @@ methods:
   - `exists(name)` - Returns `boolean` indicating if the instance exists.
   - `all()` - Retrieve all instances.
   - `get()` - Get a specific instance, by its name.
-  - `create(config, wait=False)` - Create a new instance. This method
-    requires the instance config as the first parameter.
-    The config itself is beyond the scope of this documentation. Please
-    refer to the LXD documentation for more information. This method
-    will also return immediately, unless `wait` is `True`.
+  - `create(config, wait=False, target='lxd-cluster-member')` - Create a new instance. 
+    - This method requires the instance config as the first parameter.
+    - The config itself is beyond the scope of this documentation. Please refer to the LXD documentation for more information. 
+    - This method will also return immediately, unless `wait` is `True`.
+    - Optionally, the target node can be specified for LXD clusters.
 
 
 Instance attributes
