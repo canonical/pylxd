@@ -134,7 +134,7 @@ class LXDContainer(base.LXDBase):
 
     def container_migrate_sync(self, operation_id, container_secret):
         return self.connection.get_ws(
-            "/1.0/operations/%s/websocket?secret=%s" % (operation_id, container_secret)
+            "/1.0/operations/{}/websocket?secret={}".format(operation_id, container_secret)
         )
 
     def container_local_copy(self, container):
@@ -150,7 +150,7 @@ class LXDContainer(base.LXDBase):
     # file operations
     def get_container_file(self, container, filename):
         return self.connection.get_raw(
-            "GET", "/1.0/containers/%s/files?path=%s" % (container, filename)
+            "GET", "/1.0/containers/{}/files?path={}".format(container, filename)
         )
 
     def put_container_file(self, container, src_file, dst_file, uid, gid, mode):
@@ -158,7 +158,7 @@ class LXDContainer(base.LXDBase):
             data = f.read()
         return self.connection.get_object(
             "POST",
-            "/1.0/containers/%s/files?path=%s" % (container, dst_file),
+            "/1.0/containers/{}/files?path={}".format(container, dst_file),
             body=data,
             headers={"X-LXD-uid": uid, "X-LXD-gid": gid, "X-LXD-mode": mode},
         )
@@ -185,7 +185,7 @@ class LXDContainer(base.LXDBase):
             "GET", "/1.0/containers/%s/snapshots" % container
         )
         return [
-            snapshot.split("/1.0/containers/%s/snapshots/%s/" % (container, container))[
+            snapshot.split("/1.0/containers/{}/snapshots/{}/".format(container, container))[
                 -1
             ]
             for snapshot in data["metadata"]
@@ -198,17 +198,17 @@ class LXDContainer(base.LXDBase):
 
     def snapshot_info(self, container, snapshot):
         return self.connection.get_object(
-            "GET", "/1.0/containers/%s/snapshots/%s" % (container, snapshot)
+            "GET", "/1.0/containers/{}/snapshots/{}".format(container, snapshot)
         )
 
     def snapshot_rename(self, container, snapshot, config):
         return self.connection.get_object(
             "POST",
-            "/1.0/containers/%s/snapshots/%s" % (container, snapshot),
+            "/1.0/containers/{}/snapshots/{}".format(container, snapshot),
             json.dumps(config),
         )
 
     def snapshot_delete(self, container, snapshot):
         return self.connection.get_object(
-            "DELETE", "/1.0/containers/%s/snapshots/%s" % (container, snapshot)
+            "DELETE", "/1.0/containers/{}/snapshots/{}".format(container, snapshot)
         )

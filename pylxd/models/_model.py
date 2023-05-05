@@ -101,7 +101,7 @@ class ModelType(type):
 _seen_attribute_warnings = set()
 
 
-class Model(object, metaclass=ModelType):
+class Model(metaclass=ModelType):
     """A Base LXD object model.
 
     Objects fetched from the LXD API have state, which allows
@@ -137,7 +137,7 @@ class Model(object, metaclass=ModelType):
             except AttributeError:
                 global _seen_attribute_warnings
                 env = os.environ.get("PYLXD_WARNINGS", "").lower()
-                item = "{}.{}".format(self.__class__.__name__, key)
+                item = f"{self.__class__.__name__}.{key}"
                 if env != "always" and item in _seen_attribute_warnings:
                     continue
                 _seen_attribute_warnings.add(item)

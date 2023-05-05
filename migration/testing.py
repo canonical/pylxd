@@ -25,7 +25,7 @@ class IntegrationTestCase(unittest.TestCase):
     """A base test case for pylxd integration tests."""
 
     def setUp(self):
-        super(IntegrationTestCase, self).setUp()
+        super().setUp()
         self.client = Client()
         self.lxd = self.client.api
 
@@ -34,7 +34,7 @@ class IntegrationTestCase(unittest.TestCase):
         # Underscores are not allowed in container names.
         test = self.id().split(".")[-1].replace("_", "")
         rando = str(uuid.uuid1()).split("-")[-1]
-        return "{}-{}".format(test, rando)
+        return f"{test}-{rando}"
 
     def create_container(self):
         """Create a container in lxd."""

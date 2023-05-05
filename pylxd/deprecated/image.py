@@ -40,7 +40,7 @@ class LXDImage(base.LXDBase):
             (state, data) = self.connection.get_object("GET", "/1.0/images")
             return [image.split("/1.0/images/")[-1] for image in data["metadata"]]
         except Exception as e:
-            print("Unable to fetch image info - {}".format(e))
+            print(f"Unable to fetch image info - {e}")
             raise
 
     def image_defined(self, image):
@@ -61,7 +61,7 @@ class LXDImage(base.LXDBase):
             )
             return [image.split("/1.0/images/")[-1] for image in data["metadata"]]
         except Exception as e:
-            print("Unable to fetch image info - {}".format(e))
+            print(f"Unable to fetch image info - {e}")
             raise
 
     # image info
@@ -90,7 +90,7 @@ class LXDImage(base.LXDBase):
 
             return image
         except Exception as e:
-            print("Unable to fetch image info - {}".format(e))
+            print(f"Unable to fetch image info - {e}")
             raise
 
     def get_image_date(self, image, data, key):
@@ -107,7 +107,7 @@ class LXDImage(base.LXDBase):
             else:
                 return "Unknown"
         except Exception as e:
-            print("Unable to fetch image info - {}".format(e))
+            print(f"Unable to fetch image info - {e}")
             raise
 
     def get_image_permission(self, image, data):
@@ -119,7 +119,7 @@ class LXDImage(base.LXDBase):
                 data = data.get("metadata")
             return True if data["public"] == 1 else False
         except Exception as e:
-            print("Unable to fetch image info - {}".format(e))
+            print(f"Unable to fetch image info - {e}")
             raise
 
     def get_image_size(self, image, data):
@@ -134,7 +134,7 @@ class LXDImage(base.LXDBase):
                 raise exceptions.ImageInvalidSize()
             return image_size // 1024**2
         except Exception as e:
-            print("Unable to fetch image info - {}".format(e))
+            print(f"Unable to fetch image info - {e}")
             raise
 
     def get_image_fingerprint(self, image, data):
@@ -146,7 +146,7 @@ class LXDImage(base.LXDBase):
                 data = data.get("metadata")
             return data["fingerprint"]
         except Exception as e:
-            print("Unable to fetch image info - {}".format(e))
+            print(f"Unable to fetch image info - {e}")
             raise
 
     def get_image_architecture(self, image, data):
@@ -158,7 +158,7 @@ class LXDImage(base.LXDBase):
                 data = data.get("metadata")
             return image_architecture[data["architecture"]]
         except Exception as e:
-            print("Unable to fetch image info - {}".format(e))
+            print(f"Unable to fetch image info - {e}")
             raise
 
     # image operations
@@ -167,21 +167,21 @@ class LXDImage(base.LXDBase):
         try:
             return self.connection.get_object("POST", "/1.0/images", data, headers)
         except Exception as e:
-            print("Unable to upload image - {}".format(e))
+            print(f"Unable to upload image - {e}")
             raise
 
     def image_delete(self, image):
         try:
             return self.connection.get_status("DELETE", "/1.0/images/%s" % image)
         except Exception as e:
-            print("Unable to delete image - {}".format(e))
+            print(f"Unable to delete image - {e}")
             raise
 
     def image_export(self, image):
         try:
             return self.connection.get_raw("GET", "/1.0/images/%s/export" % image)
         except Exception as e:
-            print("Unable to export image - {}".format(e))
+            print(f"Unable to export image - {e}")
             raise
 
     def image_update(self, image, data):
@@ -190,7 +190,7 @@ class LXDImage(base.LXDBase):
                 "PUT", "/1.0/images/%s" % image, json.dumps(data)
             )
         except Exception as e:
-            print("Unable to update image - {}".format(e))
+            print(f"Unable to update image - {e}")
             raise
 
     def image_rename(self, image, data):
@@ -199,7 +199,7 @@ class LXDImage(base.LXDBase):
                 "POST", "/1.0/images/%s" % image, json.dumps(data)
             )
         except Exception as e:
-            print("Unable to rename image - {}".format(e))
+            print(f"Unable to rename image - {e}")
             raise
 
 

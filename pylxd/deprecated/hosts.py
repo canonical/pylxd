@@ -43,7 +43,7 @@ class LXDHost(base.LXDBase):
                 data = data.get("metadata")
             return data["api_compat"]
         except exceptions.PyLXDException as e:
-            print("Handling run-time error: {}".format(e))
+            print(f"Handling run-time error: {e}")
 
     def get_lxd_host_trust(self, data):
         try:
@@ -52,7 +52,7 @@ class LXDHost(base.LXDBase):
                 data = data.get("metadata")
             return True if data["auth"] == "trusted" else False
         except exceptions.PyLXDException as e:
-            print("Handling run-time error: {}".format(e))
+            print(f"Handling run-time error: {e}")
 
     def get_lxd_backing_fs(self, data):
         try:
@@ -61,7 +61,7 @@ class LXDHost(base.LXDBase):
                 data = data.get("metadata")
             return data["environment"]["backing_fs"]
         except exceptions.PyLXDException as e:
-            print("Handling run-time error: {}".format(e))
+            print(f"Handling run-time error: {e}")
 
     def get_lxd_driver(self, data):
         try:
@@ -70,7 +70,7 @@ class LXDHost(base.LXDBase):
                 data = data.get("metadata")
             return data["environment"]["driver"]
         except exceptions.PyLXDException as e:
-            print("Handling run-time error: {}".format(e))
+            print(f"Handling run-time error: {e}")
 
     def get_lxc_version(self, data):
         try:
@@ -79,7 +79,7 @@ class LXDHost(base.LXDBase):
                 data = data.get("metadata")
             return data["environment"]["lxc_version"]
         except exceptions.PyLXDException as e:
-            print("Handling run-time error: {}".format(e))
+            print(f"Handling run-time error: {e}")
 
     def get_lxd_version(self, data):
         try:
@@ -88,7 +88,7 @@ class LXDHost(base.LXDBase):
                 data = data.get("metadata")
             return float(data["environment"]["lxd_version"])
         except exceptions.PyLXDException as e:
-            print("Handling run-time error: {}".format(e))
+            print(f"Handling run-time error: {e}")
 
     def get_kernel_version(self, data):
         try:
@@ -97,7 +97,7 @@ class LXDHost(base.LXDBase):
                 data = data.get("metadata")
             return data["environment"]["kernel_version"]
         except exceptions.PyLXDException as e:
-            print("Handling run-time error: {}".format(e))
+            print(f"Handling run-time error: {e}")
 
     def get_certificate(self):
         try:
@@ -105,11 +105,11 @@ class LXDHost(base.LXDBase):
             data = data.get("metadata")
             return data["environment"]["certificate"]
         except exceptions.PyLXDException as e:
-            print("Handling run-time error: {}".format(e))
+            print(f"Handling run-time error: {e}")
 
     def host_config(self):
         try:
             (state, data) = self.connection.get_object("GET", "/1.0")
             return data.get("metadata")
         except exceptions.PyLXDException as e:
-            print("Handling run-time error: {}".format(e))
+            print(f"Handling run-time error: {e}")

@@ -156,7 +156,7 @@ class Instance(model.Model):
                 if not isinstance(mode, str):
                     raise ValueError("'mode' parameter must be int or string")
                 if not mode.startswith("0"):
-                    mode = "0{}".format(mode)
+                    mode = f"0{mode}"
                 headers["X-LXD-mode"] = mode
             if uid is not None:
                 headers["X-LXD-uid"] = str(uid)
@@ -861,7 +861,7 @@ class Snapshot(model.Model):
             "public": public,
             "source": {
                 "type": "snapshot",
-                "name": "{}/{}".format(self.instance.name, self.name),
+                "name": f"{self.instance.name}/{self.name}",
             },
         }
 

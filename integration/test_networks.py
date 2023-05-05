@@ -18,7 +18,7 @@ from pylxd import exceptions
 
 class NetworkTestCase(IntegrationTestCase):
     def setUp(self):
-        super(NetworkTestCase, self).setUp()
+        super().setUp()
 
         if not self.client.has_api_extension("network"):
             self.skipTest("Required LXD API extension not available!")
@@ -88,12 +88,12 @@ class TestNetwork(NetworkTestCase):
     """Tests for `Network`."""
 
     def setUp(self):
-        super(TestNetwork, self).setUp()
+        super().setUp()
         name = self.create_network()
         self.network = self.client.networks.get(name)
 
     def tearDown(self):
-        super(TestNetwork, self).tearDown()
+        super().tearDown()
         self.delete_network(self.network.name)
 
     def test_save(self):

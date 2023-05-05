@@ -51,12 +51,12 @@ class TestProfile(IntegrationTestCase):
     """Tests for `Profile`."""
 
     def setUp(self):
-        super(TestProfile, self).setUp()
+        super().setUp()
         name = self.create_profile()
         self.profile = self.client.profiles.get(name)
 
     def tearDown(self):
-        super(TestProfile, self).tearDown()
+        super().tearDown()
         self.delete_profile(self.profile.name)
 
     def test_save(self):
