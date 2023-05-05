@@ -49,7 +49,7 @@ class LXDAPIExtensionNotAvailable(Exception):
         :type name: str
         """
         super().__init__(
-            "LXD API extension '{}' is not available".format(name), *args, **kwargs
+            f"LXD API extension '{name}' is not available", *args, **kwargs
         )
 
 

@@ -52,7 +52,7 @@ class NetworkForward(model.Model):
     def __repr__(self):
         attrs = []
         for attribute, value in self.marshall().items():
-            attrs.append("{}={}".format(attribute, json.dumps(value, sort_keys=True)))
+            attrs.append(f"{attribute}={json.dumps(value, sort_keys=True)}")
 
         return "{}({})".format(self.__class__.__name__, ", ".join(sorted(attrs)))
 
@@ -193,6 +193,6 @@ class Network(model.Model):
     def __repr__(self):
         attrs = []
         for attribute, value in self.marshall().items():
-            attrs.append("{}={}".format(attribute, json.dumps(value, sort_keys=True)))
+            attrs.append(f"{attribute}={json.dumps(value, sort_keys=True)}")
 
         return "{}({})".format(self.__class__.__name__, ", ".join(sorted(attrs)))

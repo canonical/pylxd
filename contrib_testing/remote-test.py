@@ -13,7 +13,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 def log(s):
     now = datetime.datetime.utcnow()
-    print("{} - {}".format(now, s))
+    print(f"{now} - {s}")
 
 
 def create_and_update(client):
@@ -40,11 +40,11 @@ def create_and_update(client):
         ["apt-get", "install", "openssh-server", "sudo", "man", "-y"],
     ]
     for command in commands:
-        log("command: {}".format(command))
+        log(f"command: {command}")
         result = base.execute(command)
-        log("result: {}".format(result.exit_code))
-        log("stdout: {}".format(result.stdout))
-        log("stderr: {}".format(result.stderr))
+        log(f"result: {result.exit_code}")
+        log(f"stdout: {result.stdout}")
+        log(f"stderr: {result.stderr}")
 
 
 if __name__ == "__main__":

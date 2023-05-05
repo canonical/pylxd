@@ -107,7 +107,7 @@ class LXDAPIImageTestObject(LXDAPITestBase):
     def test_image_date(self, method, expected, ms):
         self.assertEqual(
             expected,
-            getattr(self.lxd, "image_{}_date".format(method))("test-image", data=None),
+            getattr(self.lxd, f"image_{method}_date")("test-image", data=None),
         )
         ms.assert_called_once_with("GET", "/1.0/images/test-image")
 
@@ -116,7 +116,7 @@ class LXDAPIImageTestObject(LXDAPITestBase):
         ms.side_effect = exceptions.PyLXDException
         self.assertRaises(
             exceptions.PyLXDException,
-            getattr(self.lxd, "image_{}_date".format(method)),
+            getattr(self.lxd, f"image_{method}_date"),
             "test-image",
             data=None,
         )

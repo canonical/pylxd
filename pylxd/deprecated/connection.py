@@ -192,10 +192,10 @@ class LXDConnection:
         if self.unix_socket:
             connection_string = "ws+unix://%s" % self.unix_socket
         else:
-            connection_string = "wss://%(host)s:%(port)s" % {
-                "host": self.host,
-                "port": self.port,
-            }
+            connection_string = "wss://{host}:{port}".format(
+                host=self.host,
+                port=self.port,
+            )
 
         ws = WebSocketClient(connection_string)
         ws.resource = path

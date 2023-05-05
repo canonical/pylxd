@@ -122,7 +122,7 @@ class _APINode:
         if name in ("storage_pools", "virtual_machines"):
             name = name.replace("_", "-")
         return self.__class__(
-            "{}/{}".format(self._api_endpoint, name),
+            f"{self._api_endpoint}/{name}",
             session=self.session,
             timeout=self._timeout,
             project=self._project,
@@ -137,7 +137,7 @@ class _APINode:
         :rtype: _APINode
         """
         return self.__class__(
-            "{}/{}".format(self._api_endpoint, item),
+            f"{self._api_endpoint}/{item}",
             session=self.session,
             timeout=self._timeout,
             project=self._project,
@@ -543,7 +543,7 @@ class Client:
         if event_types and EventType.All not in event_types:
             query = parse.parse_qs(parsed.query)
             query.update({"type": ",".join(t.value for t in event_types)})
-            resource = "{}?{}".format(resource, parse.urlencode(query))
+            resource = f"{resource}?{parse.urlencode(query)}"
 
         client.resource = resource
 
