@@ -34,6 +34,4 @@ class LXDCertificate(base.LXDBase):
         )
 
     def certificate_delete(self, fingerprint):
-        return self.connection.get_status(
-            "DELETE", f"/1.0/certificates/{fingerprint}"
-        )
+        return self.connection.get_status("DELETE", f"/1.0/certificates/{fingerprint}")

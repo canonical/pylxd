@@ -185,9 +185,7 @@ class LXDContainer(base.LXDBase):
             "GET", f"/1.0/containers/{container}/snapshots"
         )
         return [
-            snapshot.split(f"/1.0/containers/{container}/snapshots/{container}/")[
-                -1
-            ]
+            snapshot.split(f"/1.0/containers/{container}/snapshots/{container}/")[-1]
             for snapshot in data["metadata"]
         ]
 

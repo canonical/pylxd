@@ -237,7 +237,7 @@ class LXDAPIImageInfoTest(TestCase):
         *[
             ("architecture_" + v, "architecture", {"architecture": k}, v)
             for k, v in image.image_architecture.items()
-        ]
+        ],
     )
     def test_info_data(self, tag, method, metadata, expected, mc):
         self.assertEqual(
