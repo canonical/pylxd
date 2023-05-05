@@ -60,17 +60,17 @@ class LXDOperation(base.LXDBase):
     def operation_wait(self, operation, status_code, timeout):
         if timeout == -1:
             return self.connection.get_status(
-                "GET", "{}/wait?status_code={}".format(operation, status_code)
+                "GET", f"{operation}/wait?status_code={status_code}"
             )
         else:
             return self.connection.get_status(
                 "GET",
-                "{}/wait?status_code={}&timeout={}".format(operation, status_code, timeout),
+                f"{operation}/wait?status_code={status_code}&timeout={timeout}",
             )
 
     def operation_stream(self, operation, operation_secret):
         return self.connection.get_ws(
-            "{}/websocket?secret={}".format(operation, operation_secret)
+            f"{operation}/websocket?secret={operation_secret}"
         )
 
     def operation_delete(self, operation):

@@ -54,7 +54,7 @@ class NetworkForward(model.Model):
         for attribute, value in self.marshall().items():
             attrs.append(f"{attribute}={json.dumps(value, sort_keys=True)}")
 
-        return "{}({})".format(self.__class__.__name__, ", ".join(sorted(attrs)))
+        return f"{self.__class__.__name__}({', '.join(sorted(attrs))})"
 
 
 class NetworkState(model.AttributeDict):
@@ -195,4 +195,4 @@ class Network(model.Model):
         for attribute, value in self.marshall().items():
             attrs.append(f"{attribute}={json.dumps(value, sort_keys=True)}")
 
-        return "{}({})".format(self.__class__.__name__, ", ".join(sorted(attrs)))
+        return f"{self.__class__.__name__}({', '.join(sorted(attrs))})"

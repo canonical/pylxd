@@ -34,10 +34,10 @@ class TestClusterMembers(ClusterMemberTestCase):
 
         members = self.client.cluster.members.all()
 
-        random_member_name = "%s" % members[0].server_name
-        random_member_url = "%s" % members[0].url
+        random_member_name = f"{members[0].server_name}"
+        random_member_url = f"{members[0].url}"
 
         member = self.client.cluster.members.get(random_member_name)
 
-        new_url = "%s" % member.url
+        new_url = f"{member.url}"
         self.assertEqual(random_member_url, new_url)

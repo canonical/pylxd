@@ -457,7 +457,7 @@ class Instance(model.Model):
                 payload=stdin_payload,
                 encoding=stdin_encoding,
             )
-            stdin.resource = "{}?secret={}".format(parsed.path, fds["0"])
+            stdin.resource = f"{parsed.path}?secret={fds['0']}"
             stdin.connect()
             stdout = _CommandWebsocketClient(
                 manager,
@@ -466,7 +466,7 @@ class Instance(model.Model):
                 decode=decode,
                 handler=stdout_handler,
             )
-            stdout.resource = "{}?secret={}".format(parsed.path, fds["1"])
+            stdout.resource = f"{parsed.path}?secret={fds['1']}"
             stdout.connect()
             stderr = _CommandWebsocketClient(
                 manager,
@@ -475,7 +475,7 @@ class Instance(model.Model):
                 decode=decode,
                 handler=stderr_handler,
             )
-            stderr.resource = "{}?secret={}".format(parsed.path, fds["2"])
+            stderr.resource = f"{parsed.path}?secret={fds['2']}"
             stderr.connect()
 
             manager.start()
@@ -556,8 +556,8 @@ class Instance(model.Model):
         )
 
         return {
-            "ws": "{}?secret={}".format(parsed.path, fds["0"]),
-            "control": "{}?secret={}".format(parsed.path, fds["control"]),
+            "ws": f"{parsed.path}?secret={fds['0']}",
+            "control": f"{parsed.path}?secret={fds['control']}",
         }
 
     def migrate(self, new_client, live=False, wait=False):

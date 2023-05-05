@@ -374,7 +374,7 @@ class Client:
         self.project = project
         if endpoint:
             if endpoint.startswith("/") and os.path.exists(endpoint):
-                endpoint = "http+unix://{}".format(parse.quote(endpoint, safe=""))
+                endpoint = f"http+unix://{parse.quote(endpoint, safe='')}"
             else:
                 # Extra trailing slashes cause LXD to 301
                 endpoint = endpoint.rstrip("/")
@@ -400,7 +400,7 @@ class Client:
                 path = "/var/snap/lxd/common/lxd/unix.socket"
             else:
                 path = "/var/lib/lxd/unix.socket"
-            endpoint = "http+unix://{}".format(parse.quote(path, safe=""))
+            endpoint = f"http+unix://{parse.quote(path, safe='')}"
         self.cert = cert
         if session is None:
             session = get_session_for_url(endpoint, cert=cert, verify=verify)

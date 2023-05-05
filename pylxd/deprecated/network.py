@@ -22,7 +22,7 @@ class LXDNetwork(base.LXDBase):
 
     def network_show(self, network):
         """Show details of the LXD network"""
-        (state, data) = self.connection.get_object("GET", "/1.0/networks/%s" % network)
+        (state, data) = self.connection.get_object("GET", f"/1.0/networks/{network}")
         return {
             "network_name": self.show_network_name(network, data.get("metadata")),
             "network_type": self.show_network_type(network, data.get("metadata")),
@@ -33,7 +33,7 @@ class LXDNetwork(base.LXDBase):
         """Show the LXD network name"""
         if data is None:
             (state, data) = self.connection.get_object(
-                "GET", "/1.0/networks/%s" % network
+                "GET", f"/1.0/networks/{network}"
             )
             data = data.get("metadata")
         return data["name"]
@@ -41,7 +41,7 @@ class LXDNetwork(base.LXDBase):
     def show_network_type(self, network, data):
         if data is None:
             (state, data) = self.connection.get_object(
-                "GET", "/1.0/networks/%s" % network
+                "GET", f"/1.0/networks/{network}"
             )
             data = data.get("metadata")
         return data["type"]
@@ -49,7 +49,7 @@ class LXDNetwork(base.LXDBase):
     def show_network_members(self, network, data):
         if data is None:
             (state, data) = self.connection.get_object(
-                "GET", "/1.0/networks/%s" % network
+                "GET", f"/1.0/networks/{network}"
             )
             data = data.get("metadata")
         return [

@@ -20,7 +20,7 @@ class LXDHost(base.LXDBase):
         try:
             return self.connection.get_status("GET", "/1.0")
         except Exception as e:
-            msg = "LXD service is unavailable. %s" % e
+            msg = f"LXD service is unavailable. {e}"
             raise exceptions.PyLXDException(msg)
 
     def host_info(self):

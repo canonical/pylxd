@@ -45,7 +45,7 @@ class LXDImage(base.LXDBase):
 
     def image_defined(self, image):
         try:
-            (state, data) = self.connection.get_object("GET", "/1.0/images/%s" % image)
+            (state, data) = self.connection.get_object("GET", f"/1.0/images/{image}")
         except exceptions.APIError as ex:
             if ex.status_code == 404:
                 return False
@@ -67,7 +67,7 @@ class LXDImage(base.LXDBase):
     # image info
     def image_info(self, image):
         try:
-            (state, data) = self.connection.get_object("GET", "/1.0/images/%s" % image)
+            (state, data) = self.connection.get_object("GET", f"/1.0/images/{image}")
             image = {
                 "image_upload_date": self.get_image_date(
                     image, data.get("metadata"), "uploaded_at"
@@ -79,7 +79,7 @@ class LXDImage(base.LXDBase):
                     image, data.get("metadata"), "expires_at"
                 ),
                 "image_public": self.get_image_permission(image, data.get("metadata")),
-                "image_size": "%sMB" % self.get_image_size(image, data.get("metadata")),
+                "image_size": f"{self.get_image_size(image, data.get('metadata'))}MB",
                 "image_fingerprint": self.get_image_fingerprint(
                     image, data.get("metadata")
                 ),
@@ -97,7 +97,7 @@ class LXDImage(base.LXDBase):
         try:
             if data is None:
                 (state, data) = self.connection.get_object(
-                    "GET", "/1.0/images/%s" % image
+                    "GET", f"/1.0/images/{image}"
                 )
                 data = data.get("metadata")
             if data[key] != 0:
@@ -114,7 +114,7 @@ class LXDImage(base.LXDBase):
         try:
             if data is None:
                 (state, data) = self.connection.get_object(
-                    "GET", "/1.0/images/%s" % image
+                    "GET", f"/1.0/images/{image}"
                 )
                 data = data.get("metadata")
             return True if data["public"] == 1 else False
@@ -126,7 +126,7 @@ class LXDImage(base.LXDBase):
         try:
             if data is None:
                 (state, data) = self.connection.get_object(
-                    "GET", "/1.0/images/%s" % image
+                    "GET", f"/1.0/images/{image}"
                 )
                 data = data.get("metadata")
             image_size = data["size"]
@@ -141,7 +141,7 @@ class LXDImage(base.LXDBase):
         try:
             if data is None:
                 (state, data) = self.connection.get_object(
-                    "GET", "/1.0/images/%s" % image
+                    "GET", f"/1.0/images/{image}"
                 )
                 data = data.get("metadata")
             return data["fingerprint"]
@@ -153,7 +153,7 @@ class LXDImage(base.LXDBase):
         try:
             if data is None:
                 (state, data) = self.connection.get_object(
-                    "GET", "/1.0/images/%s" % image
+                    "GET", f"/1.0/images/{image}"
                 )
                 data = data.get("metadata")
             return image_architecture[data["architecture"]]
@@ -172,14 +172,14 @@ class LXDImage(base.LXDBase):
 
     def image_delete(self, image):
         try:
-            return self.connection.get_status("DELETE", "/1.0/images/%s" % image)
+            return self.connection.get_status("DELETE", f"/1.0/images/{image}")
         except Exception as e:
             print(f"Unable to delete image - {e}")
             raise
 
     def image_export(self, image):
         try:
-            return self.connection.get_raw("GET", "/1.0/images/%s/export" % image)
+            return self.connection.get_raw("GET", f"/1.0/images/{image}/export")
         except Exception as e:
             print(f"Unable to export image - {e}")
             raise
@@ -187,7 +187,7 @@ class LXDImage(base.LXDBase):
     def image_update(self, image, data):
         try:
             return self.connection.get_status(
-                "PUT", "/1.0/images/%s" % image, json.dumps(data)
+                "PUT", f"/1.0/images/{image}", json.dumps(data)
             )
         except Exception as e:
             print(f"Unable to update image - {e}")
@@ -196,7 +196,7 @@ class LXDImage(base.LXDBase):
     def image_rename(self, image, data):
         try:
             return self.connection.get_status(
-                "POST", "/1.0/images/%s" % image, json.dumps(data)
+                "POST", f"/1.0/images/{image}", json.dumps(data)
             )
         except Exception as e:
             print(f"Unable to rename image - {e}")
@@ -209,19 +209,19 @@ class LXDAlias(base.LXDBase):
         return [alias.split("/1.0/images/aliases/")[-1] for alias in data["metadata"]]
 
     def alias_defined(self, alias):
-        return self.connection.get_status("GET", "/1.0/images/aliases/%s" % alias)
+        return self.connection.get_status("GET", f"/1.0/images/aliases/{alias}")
 
     def alias_show(self, alias):
-        return self.connection.get_object("GET", "/1.0/images/aliases/%s" % alias)
+        return self.connection.get_object("GET", f"/1.0/images/aliases/{alias}")
 
     def alias_update(self, alias, data):
         return self.connection.get_status(
-            "PUT", "/1.0/images/aliases/%s" % alias, json.dumps(data)
+            "PUT", f"/1.0/images/aliases/{alias}", json.dumps(data)
         )
 
     def alias_rename(self, alias, data):
         return self.connection.get_status(
-            "POST", "/1.0/images/aliases/%s" % alias, json.dumps(data)
+            "POST", f"/1.0/images/aliases/{alias}", json.dumps(data)
         )
 
     def alias_create(self, data):
@@ -230,4 +230,4 @@ class LXDAlias(base.LXDBase):
         )
 
     def alias_delete(self, alias):
-        return self.connection.get_status("DELETE", "/1.0/images/aliases/%s" % alias)
+        return self.connection.get_status("DELETE", f"/1.0/images/aliases/{alias}")
