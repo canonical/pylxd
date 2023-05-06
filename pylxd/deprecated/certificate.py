@@ -26,7 +26,7 @@ class LXDCertificate(base.LXDBase):
         ]
 
     def certificate_show(self, fingerprint):
-        return self.connection.get_object("GET", "/1.0/certificates/%s" % fingerprint)
+        return self.connection.get_object("GET", f"/1.0/certificates/{fingerprint}")
 
     def certificate_create(self, certificate):
         return self.connection.get_status(
@@ -34,6 +34,4 @@ class LXDCertificate(base.LXDBase):
         )
 
     def certificate_delete(self, fingerprint):
-        return self.connection.get_status(
-            "DELETE", "/1.0/certificates/%s" % fingerprint
-        )
+        return self.connection.get_status("DELETE", f"/1.0/certificates/{fingerprint}")

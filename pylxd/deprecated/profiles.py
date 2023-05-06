@@ -28,24 +28,24 @@ class LXDProfile(base.LXDBase):
 
     def profile_show(self, profile):
         """Display the LXD profile"""
-        return self.connection.get_object("GET", "/1.0/profiles/%s" % profile)
+        return self.connection.get_object("GET", f"/1.0/profiles/{profile}")
 
     def profile_defined(self, profile):
         """Check for an LXD profile"""
-        return self.connection.get_status("GET", "/1.0/profiles/%s" % profile)
+        return self.connection.get_status("GET", f"/1.0/profiles/{profile}")
 
     def profile_update(self, profile, config):
         """Update the LXD profile (not implemented)"""
         return self.connection.get_status(
-            "PUT", "/1.0/profiles/%s" % profile, json.dumps(config)
+            "PUT", f"/1.0/profiles/{profile}", json.dumps(config)
         )
 
     def profile_rename(self, profile, config):
         """Rename the LXD profile"""
         return self.connection.get_status(
-            "POST", "/1.0/profiles/%s" % profile, json.dumps(config)
+            "POST", f"/1.0/profiles/{profile}", json.dumps(config)
         )
 
     def profile_delete(self, profile):
         """Delete the LXD profile"""
-        return self.connection.get_status("DELETE", "/1.0/profiles/%s" % profile)
+        return self.connection.get_status("DELETE", f"/1.0/profiles/{profile}")

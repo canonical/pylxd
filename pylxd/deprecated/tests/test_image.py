@@ -64,7 +64,7 @@ class LXDAPIImageTestObject(LXDAPITestBase):
     )
     def test_image_defined_fail(self, tag, side_effect, expected, ms):
         ms.side_effect = side_effect
-        self.assertRaises(expected, self.lxd.image_defined, ("test-image",))
+        self.assertRaises(expected, self.lxd.image_defined, "test-image")
         ms.assert_called_once_with("GET", "/1.0/images/test-image")
 
     def test_image_info(self, ms):
@@ -89,9 +89,7 @@ class LXDAPIImageTestObject(LXDAPITestBase):
 
     def test_image_info_fail(self, ms):
         ms.side_effect = exceptions.PyLXDException
-        self.assertRaises(
-            exceptions.PyLXDException, self.lxd.image_info, ("test-image",)
-        )
+        self.assertRaises(exceptions.PyLXDException, self.lxd.image_info, "test-image")
         ms.assert_called_once_with("GET", "/1.0/images/test-image")
 
     dates_data = (
@@ -107,7 +105,7 @@ class LXDAPIImageTestObject(LXDAPITestBase):
     def test_image_date(self, method, expected, ms):
         self.assertEqual(
             expected,
-            getattr(self.lxd, "image_{}_date".format(method))("test-image", data=None),
+            getattr(self.lxd, f"image_{method}_date")("test-image", data=None),
         )
         ms.assert_called_once_with("GET", "/1.0/images/test-image")
 
@@ -116,7 +114,7 @@ class LXDAPIImageTestObject(LXDAPITestBase):
         ms.side_effect = exceptions.PyLXDException
         self.assertRaises(
             exceptions.PyLXDException,
-            getattr(self.lxd, "image_{}_date".format(method)),
+            getattr(self.lxd, f"image_{method}_date"),
             "test-image",
             data=None,
         )
@@ -237,7 +235,7 @@ class LXDAPIImageInfoTest(TestCase):
         *[
             ("architecture_" + v, "architecture", {"architecture": k}, v)
             for k, v in image.image_architecture.items()
-        ]
+        ],
     )
     def test_info_data(self, tag, method, metadata, expected, mc):
         self.assertEqual(

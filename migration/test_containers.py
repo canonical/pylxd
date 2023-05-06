@@ -19,12 +19,12 @@ class TestContainer(IntegrationTestCase):
     """Tests for Client.Container."""
 
     def setUp(self):
-        super(TestContainer, self).setUp()
+        super().setUp()
         name = self.create_container()
         self.container = self.client.containers.get(name)
 
     def tearDown(self):
-        super(TestContainer, self).tearDown()
+        super().tearDown()
         self.delete_container(self.container.name)
 
     def test_migrate_running(self):

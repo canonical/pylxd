@@ -22,7 +22,7 @@ from integration.testing import IntegrationTestCase
 
 class StorageTestCase(IntegrationTestCase):
     def setUp(self):
-        super(StorageTestCase, self).setUp()
+        super().setUp()
 
         if not self.client.has_api_extension("storage"):
             self.skipTest("Required LXD API extension not available!")

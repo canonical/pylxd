@@ -58,12 +58,12 @@ class TestImage(IntegrationTestCase):
     """Tests for Image."""
 
     def setUp(self):
-        super(TestImage, self).setUp()
+        super().setUp()
         fingerprint, _ = self.create_image()
         self.image = self.client.images.get(fingerprint)
 
     def tearDown(self):
-        super(TestImage, self).tearDown()
+        super().tearDown()
         self.delete_image(self.image.fingerprint)
 
     def test_save(self):

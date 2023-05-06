@@ -53,8 +53,8 @@ class Busybox:
             "properties": {
                 "os": "Busybox",
                 "architecture": os.uname()[4],
-                "description": "Busybox %s" % os.uname()[4],
-                "name": "busybox-%s" % os.uname()[4],
+                "description": f"Busybox {os.uname()[4]}",
+                "name": f"busybox-{os.uname()[4]}",
                 # Don't overwrite actual busybox images.
                 "obfuscate": str(uuid.uuid4()),
             },
@@ -90,10 +90,10 @@ class Busybox:
             symlink_file.type = tarfile.SYMTYPE
             symlink_file.linkname = "/bin/busybox"
             if split:
-                symlink_file.name = "%s" % path.strip()
+                symlink_file.name = f"{path.strip()}"
                 target_tarball_rootfs.addfile(symlink_file)
             else:
-                symlink_file.name = "rootfs/%s" % path.strip()
+                symlink_file.name = f"rootfs/{path.strip()}"
                 target_tarball.addfile(symlink_file)
 
         # Add directories
@@ -101,10 +101,10 @@ class Busybox:
             directory_file = tarfile.TarInfo()
             directory_file.type = tarfile.DIRTYPE
             if split:
-                directory_file.name = "%s" % path
+                directory_file.name = f"{path}"
                 target_tarball_rootfs.addfile(directory_file)
             else:
-                directory_file.name = "rootfs/%s" % path
+                directory_file.name = f"rootfs/{path}"
                 target_tarball.addfile(directory_file)
 
         # Add the metadata file
@@ -141,12 +141,12 @@ class Busybox:
         # Compress the tarball
         r = subprocess.call([xz, "-9", destination_tar])
         if r:
-            raise Exception("Failed to compress: %s" % destination_tar)
+            raise Exception(f"Failed to compress: {destination_tar}")
 
         if split:
             r = subprocess.call([xz, "-9", destination_tar_rootfs])
             if r:
-                raise Exception("Failed to compress: %s" % destination_tar_rootfs)
+                raise Exception(f"Failed to compress: {destination_tar_rootfs}")
             return destination_tar + ".xz", destination_tar_rootfs + ".xz"
         else:
             return destination_tar + ".xz"
