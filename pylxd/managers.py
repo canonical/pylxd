@@ -53,6 +53,10 @@ class NetworkForwardManager(BaseManager):
     manager_for = "pylxd.models.NetworkForward"
 
 
+class NetworkACLManager(BaseManager):
+    manager_for = "pylxd.models.NetworkACL"
+
+
 class OperationManager(BaseManager):
     manager_for = "pylxd.models.Operation"
 

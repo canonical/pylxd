@@ -119,7 +119,7 @@ class _APINode:
         :rtype: _APINode
         """
         # '-' can't be used in variable names
-        if name in ("storage_pools", "virtual_machines"):
+        if name in ("storage_pools", "virtual_machines", "network_acls"):
             name = name.replace("_", "-")
         return self.__class__(
             f"{self._api_endpoint}/{name}",
@@ -435,6 +435,7 @@ class Client:
         self.virtual_machines = managers.VirtualMachineManager(self)
         self.images = managers.ImageManager(self)
         self.networks = managers.NetworkManager(self)
+        self.network_acls = managers.NetworkACLManager(self)
         self.operations = managers.OperationManager(self)
         self.profiles = managers.ProfileManager(self)
         self.projects = managers.ProjectManager(self)
