@@ -56,6 +56,7 @@ class NetworkForward(model.Model):
 
         return f"{self.__class__.__name__}({', '.join(sorted(attrs))})"
 
+
 class NetworkACL(model.Model):
     """Model representing a LXD network ACL."""
 
@@ -123,7 +124,9 @@ class NetworkACL(model.Model):
         return acls
 
     @classmethod
-    def create(cls, client, name, description=None, egress=None, ingress=None, config=None):
+    def create(
+        cls, client, name, description=None, egress=None, ingress=None, config=None
+    ):
         """
         Create a network ACL.
 
