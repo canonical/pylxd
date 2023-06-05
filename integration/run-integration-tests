@@ -31,3 +31,6 @@ fi
 
 # finally run the integration tests
 tox -e integration
+
+lxc config unset core.trust_password || true
+lxc config unset core.https_address || true
