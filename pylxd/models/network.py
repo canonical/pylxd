@@ -56,6 +56,146 @@ class NetworkForward(model.Model):
 
         return f"{self.__class__.__name__}({', '.join(sorted(attrs))})"
 
+class NetworkACL(model.Model):
+    """Model representing a LXD network ACL."""
+
+    name = model.Attribute()
+    description = model.Attribute()
+    egress = model.Attribute()
+    ingress = model.Attribute()
+    config = model.Attribute()
+    used_by = model.Attribute(readonly=True)
+    _endpoint = "network-acls"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @classmethod
+    def exists(cls, client, name):
+        """
+        Determine whether network ACL with provided name exists.
+
+        :param client: client instance
+        :type client: :class:`~pylxd.client.Client`
+        :param name: name of the network ACL
+        :type name: str
+        :returns: `True` if network ACL exists, `False` otherwise
+        :rtype: bool
+        """
+        try:
+            client.network_acls.get(name)
+            return True
+        except cls.NotFound:
+            return False
+
+    @classmethod
+    def get(cls, client, name):
+        """
+        Get a network ACL by name.
+
+        :param client: client instance
+        :type client: :class:`~pylxd.client.Client`
+        :param name: name of the network ACL
+        :type name: str
+        :returns: network ACL instance (if exists)
+        :rtype: :class:`NetworkACL`
+        :raises: :class:`~pylxd.exceptions.NotFound` if network ACL does not exist
+        """
+        response = client.api.network_acls[name].get()
+
+        return cls(client, **response.json()["metadata"])
+
+    @classmethod
+    def all(cls, client):
+        """
+        Get all network ACLs.
+
+        :param client: client instance
+        :type client: :class:`~pylxd.client.Client`
+        :rtype: list[:class:`NetworkACL`]
+        """
+        response = client.api.network_acls.get()
+
+        acls = []
+        for url in response.json()["metadata"]:
+            name = url.split("/")[-1]
+            acls.append(cls(client, name=name))
+        return acls
+
+    @classmethod
+    def create(cls, client, name, description=None, egress=None, ingress=None, config=None):
+        """
+        Create a network ACL.
+
+        :param client: client instance
+        :type client: :class:`~pylxd.client.Client`
+        :param name: name of the network ACL
+        :type name: str
+        :param description: description of the network ACL
+        :type description: str
+        :param egress: egress of the network ACL
+        :type egress: list
+        :param ingress: ingress of the network ACL
+        :type ingress: list
+        :param config: additional configuration
+        :type config: dict
+        """
+        client.assert_has_api_extension("network_acl")
+
+        acl = {"name": name}
+        if description is not None:
+            acl["description"] = description
+        if egress is not None:
+            acl["egress"] = egress
+        if ingress is not None:
+            acl["ingress"] = ingress
+        if config is not None:
+            acl["config"] = config
+        client.api.network_acls.post(json=acl)
+        return cls.get(client, name)
+
+    def rename(self, new_name):
+        """
+        Rename a network ACL.
+
+        :param new_name: new name of the network ACL
+        :type new_name: str
+        :return: Renamed network ACL instance
+        :rtype: :class:`NetworkACL`
+        """
+        self.client.assert_has_api_extension("network_acl")
+        self.client.api.network_acls[self.name].post(json={"name": new_name})
+        return NetworkACL.get(self.client, new_name)
+
+    def save(self, *args, **kwargs):
+        self.client.assert_has_api_extension("network_acl")
+        super().save(*args, **kwargs)
+
+    def log(self):
+        """Get network acl log."""
+        response = self.api.log.get()
+        pring(response.json()["metadata"])
+        log = NetworkACLLog(response.json()["metadata"])
+        return log
+
+    @property
+    def api(self):
+        return self.client.api.network_acls[self.name]
+
+    def __str__(self):
+        return json.dumps(self.marshall(skip_readonly=False), indent=2)
+
+    def __repr__(self):
+        attrs = []
+        for attribute, value in self.marshall().items():
+            attrs.append(f"{attribute}={json.dumps(value, sort_keys=True)}")
+
+        return f"{self.__class__.__name__}({', '.join(sorted(attrs))})"
+
+
+class NetworkACLLog(model.AttributeDict):
+    """A simple object for representing a network state."""
+
 
 class NetworkState(model.AttributeDict):
     """A simple object for representing a network state."""
