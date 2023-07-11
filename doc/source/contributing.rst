@@ -108,5 +108,5 @@ Integration testing requires a running LXD system.  They can be tested locally
 in LXD container with nesting support; ``tox -e integration-in-lxd``.
 
 .. _Github: https://github.com/lxc/pylxd
-.. _Tox: https://tox.readthedocs.io/en/latest/
+.. _Tox: https://documentation.ubuntu.com/lxd/en/latest/clustering/
 .. _Multipass: https://github.com/canonical/multipass
