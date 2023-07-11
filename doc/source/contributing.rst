@@ -109,4 +109,4 @@ in LXD container with nesting support; ``tox -e integration-in-lxd``.
 
 .. _Github: https://github.com/lxc/pylxd
 .. _Tox: https://tox.readthedocs.io/en/latest/
-.. _Multipass: https://github.com/CanonicalLtd/multipass
+.. _Multipass: https://github.com/canonical/multipass
