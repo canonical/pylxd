@@ -35,12 +35,12 @@ If you prefer live discussions, some of us also hang out in
 LXD Documentation: `https://documentation.ubuntu.com/lxd/en/latest/
 https://documentation.ubuntu.com/lxd/en/latest/`_
 
-PyLXD API Documentation: `http://pylxd.readthedocs.io/en/latest/
-<http://pylxd.readthedocs.io/en/latest/>`_
+PyLXD API Documentation: `https://pylxd.readthedocs.io/en/latest/
+<https://pylxd.readthedocs.io/en/latest/>`_
 
 Contributing to pyLXD
 =====================
 
 If you wish to contribute to pyLXD please read the `Contributing Guide
-<http://pylxd.readthedocs.io/en/latest/contributing.html>`_, particularly
+<https://pylxd.readthedocs.io/en/latest/contributing.html>`_, particularly
 around unit tests, integration tests and signing commits.
