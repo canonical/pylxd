@@ -93,7 +93,7 @@ class TestStoragePools(StorageTestCase):
         self.assertEqual(p.description, new_desc)
 
     # can't test this as patch doesn't seem to work for storage pools.
-    # Need to wait until bug: https://github.com/lxc/lxd/issues/4709
+    # Need to wait until bug: https://github.com/canonical/lxd/issues/4709
     # fix is released.
     @unittest.skip("Can't test until fix to lxd bug #4709 is released")
     def test_patch(self):
