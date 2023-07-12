@@ -291,20 +291,31 @@ class Instance(model.Model):
         return cls(client, **response.json()["metadata"])
 
     @classmethod
-    def all(cls, client):
+    def all(cls, client, recursion=0):
         """Get all instances.
 
-        Instances returned from this method will only have the name
-        set, as that is the only property returned from LXD. If more
-        information is needed, `Instance.sync` is the method call
-        that should be used.
+        This method returns an Instance array. If recursion is unset, 
+        only the name of each instance will be set and `Instance.sync` 
+        can be used to return more information. If recursion is between 
+        1-2 this method will pre-fetch additional instance attributes for 
+        all instances in the array.
         """
-        response = client.api[cls._endpoint].get()
+        response = client.api[cls._endpoint].get(params={'recursion': recursion})
 
         instances = []
-        for url in response.json()["metadata"]:
-            name = url.split("/")[-1]
-            instances.append(cls(client, name=name))
+        for instance in response.json()["metadata"]:
+            if type(instance) == dict:
+                # User specified recursion so returning all data for each instance at once
+                instance_class = cls(client, name=instance['name'])
+                for key, data in instance.items():
+                    try:
+                        setattr(instance_class, key, data)
+                    except AttributeError:
+                        pass
+                instances.append(instance_class)
+            else:
+                name = instance.split("/")[-1]
+                instances.append(cls(client, name=name))
         return instances
 
     @classmethod
