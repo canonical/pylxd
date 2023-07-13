@@ -92,22 +92,19 @@ class TestStoragePools(StorageTestCase):
         p = self.client.storage_pools.get(name)
         self.assertEqual(p.description, new_desc)
 
-    # can't test this as patch doesn't seem to work for storage pools.
-    # Need to wait until bug: https://github.com/canonical/lxd/issues/4709
-    # fix is released.
-    @unittest.skip("Can't test until fix to lxd bug #4709 is released")
     def test_patch(self):
         name = self.create_storage_pool()
         self.addCleanup(self.delete_storage_pool, name)
 
-        desc = "My storage pool"
         storage_pool = self.client.storage_pools.get(name)
-        patch = {"description": "hello world"}
-        storage_pool.patch(patch)
-        self.assertEqual(storage_pool.description, desc)
-
+        new_desc = "new description"
+        patch_object = {
+            "description": new_desc,
+        }
+        storage_pool.patch(patch_object)
+        self.assertEqual(storage_pool.description, new_desc)
         p = self.client.storage_pools.get(name)
-        self.assertEqual(p.description, "hello world")
+        self.assertEqual(p.description, new_desc)
 
 
 class TestStorageResources(StorageTestCase):
