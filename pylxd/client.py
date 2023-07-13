@@ -29,15 +29,12 @@ from pylxd import exceptions, managers
 requests_unixsocket.monkeypatch()
 
 SNAP_ROOT = os.path.expanduser("~/snap/lxd/common/config/")
-SNAP_OLD_ROOT = os.path.expanduser("~/snap/lxd/current/.config/lxc")
 APT_ROOT = os.path.expanduser("~/.config/lxc/")
 CERT_FILE_NAME = "client.crt"
 KEY_FILE_NAME = "client.key"
 # check that the cert file and key file exist at the appropriate path
 if os.path.exists(os.path.join(SNAP_ROOT, CERT_FILE_NAME)):  # pragma: no cover
     CERTS_PATH = SNAP_ROOT  # pragma: no cover
-elif os.path.exists(os.path.join(SNAP_OLD_ROOT, CERT_FILE_NAME)):  # pragma: no cover
-    CERTS_PATH = SNAP_OLD_ROOT  # pragma: no cover
 else:  # pragma: no cover
     CERTS_PATH = APT_ROOT  # pragma: no cover
 
