@@ -12,6 +12,7 @@ concurrency:
 
 jobs:
   lint:
+    name: Lint
     runs-on: ubuntu-22.04
     steps:
     - name: Repository checkout
@@ -32,7 +33,8 @@ jobs:
       run: |
         tox -e check
 
-  coverage:
+  tests:
+    name: Tests
     strategy:
       matrix:
         python-version: ["3.8", "3.10", "3.11"]
@@ -49,14 +51,29 @@ jobs:
 
     - name: Install dependencies
       run: |
+        set -x
+
+        sudo apt-get autopurge moby-containerd docker uidmap -y
+        sudo ip link delete docker0
+        sudo nft flush ruleset
+
+        sudo snap refresh lxd
+        sudo adduser "$USER" lxd
+        sudo lxd init --auto
+
         pip install --upgrade pip tox codecov
 
-    - name: Test coverage
+    - name: Coverage
       run: |
         tox -e coverage
         codecov
 
+    - name: Integration
+      run: |
+        sudo -g lxd integration/run-integration-tests
+
   publish:
+    name: Publish
     runs-on: ubuntu-22.04
 
     permissions:
