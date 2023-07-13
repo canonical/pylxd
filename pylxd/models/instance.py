@@ -294,19 +294,19 @@ class Instance(model.Model):
     def all(cls, client, recursion=0):
         """Get all instances.
 
-        This method returns an Instance array. If recursion is unset, 
-        only the name of each instance will be set and `Instance.sync` 
-        can be used to return more information. If recursion is between 
-        1-2 this method will pre-fetch additional instance attributes for 
+        This method returns an Instance array. If recursion is unset,
+        only the name of each instance will be set and `Instance.sync`
+        can be used to return more information. If recursion is between
+        1-2 this method will pre-fetch additional instance attributes for
         all instances in the array.
         """
-        response = client.api[cls._endpoint].get(params={'recursion': recursion})
+        response = client.api[cls._endpoint].get(params={"recursion": recursion})
 
         instances = []
         for instance in response.json()["metadata"]:
             if type(instance) == dict:
                 # User specified recursion so returning all data for each instance at once
-                instance_class = cls(client, name=instance['name'])
+                instance_class = cls(client, name=instance["name"])
                 for key, data in instance.items():
                     try:
                         setattr(instance_class, key, data)
