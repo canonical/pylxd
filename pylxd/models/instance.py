@@ -862,11 +862,6 @@ class Snapshot(model.Model):
         """Publish a snapshot as an image.
 
         If wait=True, an Image is returned.
-
-        This functionality is currently broken in LXD. Please see
-        https://github.com/canonical/lxd/issues/2201 - The implementation
-        here is mostly a guess. Once that bug is fixed, we can verify
-        that this works, or file a bug to fix it appropriately.
         """
         data = {
             "public": public,
