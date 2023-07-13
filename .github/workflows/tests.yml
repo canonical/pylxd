@@ -1,19 +1,24 @@
-name: CI tests
-
+name: Tests
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  - push
+  - pull_request
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  lint-python:
+  lint:
     runs-on: ubuntu-22.04
     steps:
     - name: Repository checkout
       uses: actions/checkout@v3
+
+    - name: Lint shell files
+      uses: ludeeus/action-shellcheck@master
 
     - name: Install dependencies
       run: |
@@ -23,30 +28,11 @@ jobs:
       run: |
         tox -e lint
 
-  lint-shell:
-    runs-on: ubuntu-22.04
-    steps:
-    - name: Repository checkout
-      uses: actions/checkout@v3
-
-    - name: Lint shell files
-      uses: ludeeus/action-shellcheck@master
-
-  check:
-    runs-on: ubuntu-22.04
-    steps:
-    - name: Repository checkout
-      uses: actions/checkout@v3
-
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip tox
-
     - name: Typecheck Python files
       run: |
         tox -e check
 
-  test:
+  coverage:
     strategy:
       matrix:
         python-version: ["3.8", "3.10", "3.11"]
@@ -65,7 +51,7 @@ jobs:
       run: |
         pip install --upgrade pip tox codecov
 
-    - name: Test
+    - name: Test coverage
       run: |
         tox -e coverage
         codecov
