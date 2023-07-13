@@ -16,7 +16,7 @@ if ! command -v lxc; then
 fi
 
 lxc config set core.trust_password password
-lxc config set core.https_address "[::]"
+lxc config set core.https_address 127.0.0.1
 
 if ! lxc storage show default >/dev/null 2>&1; then
     lxc storage create default dir
