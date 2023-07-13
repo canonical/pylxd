@@ -211,10 +211,7 @@ us to use our own namespacing).
 A instance object (returned by `get` or `all`) has the following methods:
 
   - `rename` - rename a snapshot
-  - `publish` - create an image from a snapshot.  However, this may fail if the
-    image from the snapshot is bigger than the logical volume that is allocated
-    by lxc.  See https://github.com/canonical/lxd/issues/2201 for more details.  The solution
-    is to increase the `storage.lvm_volume_size` parameter in lxc.
+  - `publish` - create an image from a snapshot.
   - `restore` - restore the instance to this snapshot.
 
 .. code-block:: python
