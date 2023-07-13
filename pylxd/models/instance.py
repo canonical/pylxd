@@ -300,7 +300,10 @@ class Instance(model.Model):
         1-2 this method will pre-fetch additional instance attributes for
         all instances in the array.
         """
-        response = client.api[cls._endpoint].get(params={"recursion": recursion})
+        params = {}
+        if recursion != 0:
+            params = {"recursion": recursion}
+        response = client.api[cls._endpoint].get(params=params)
 
         instances = []
         for instance in response.json()["metadata"]:
