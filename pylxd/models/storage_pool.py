@@ -110,7 +110,7 @@ class StoragePool(model.Model):
         Note that **all** fields in the `definition` parameter are strings.
 
         For further details on the storage pool types see:
-        https://linuxcontainers.org/lxd/docs/master/storage/
+        https://documentation.ubuntu.com/lxd/en/latest/explanation/storage/
 
         The function returns the a `StoragePool` instance, if it is
         successfully created, otherwise an Exception is raised.
@@ -410,8 +410,8 @@ class StorageVolume(model.Model):
 
         Implements POST /1.0/storage-pools/<pool>/volumes/custom
 
-        See https://github.com/lxc/lxd/blob/master/doc/rest-api.md#post-19 for
-        more details on what the `definition` parameter dictionary should
+        See https://documentation.ubuntu.com/lxd/en/latest/api/#/storage/storage_pool_volumes_type_post
+        for more details on what the `definition` parameter dictionary should
         contain for various volume creation.
 
         At the moment the only type of volume that can be created is 'custom',
@@ -491,8 +491,7 @@ class StorageVolume(model.Model):
         method does not override any items in the input definition, although it
         does check that the 'name' and 'pool' parameters are set.
 
-        Please see: https://github.com/lxc/lxd/blob/master/doc/rest-api.md
-        #10storage-poolspoolvolumestypename
+        Please see: https://documentation.ubuntu.com/lxd/en/latest/api/#/storage/storage_pool_volume_type_post
         for more details.
 
         :param _input: The `input` specification for the rename.

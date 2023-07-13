@@ -24,7 +24,7 @@ from pylxd.models import _model as model
 def _image_create_from_config(client, config, wait=False):
     """Create an image from the given configuration.
 
-    See: https://github.com/lxc/lxd/blob/master/doc/rest-api.md#post-6
+    See: https://documentation.ubuntu.com/lxd/en/latest/api/#/instances/instances_post
     """
     response = client.api.images.post(json=config)
     if wait:

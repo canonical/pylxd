@@ -6,8 +6,8 @@ pyLXD development is done on `Github`_. Pull Requests and Issues should be
 filed there. We try and respond to PRs and Issues within a few days.
 
 If you would like to contribute major features or have big ideas, it's best to
-post at the `Linux Containers disucssion forum
-<https://discuss.linuxcontainers.org/>`_ to discuss your ideas before
+post at the `LXD category in Ubuntu's Discourse
+<https://discourse.ubuntu.com/c/lxd/126>`_ to discuss your ideas before
 submitting PRs.  If you use ``[pylxd]`` in the title, it'll make it clearer.
 
 Adding a Feature or Fixing a Bug
@@ -26,7 +26,7 @@ The main steps are:
    * bug/number/descriptive-name-of-bug
 
    This can be done with ``git checkout -b feature/name-of-feature`` from the
-   master branch.
+   main branch.
 4. Work on that branch, push to the personal GitHub repository and then create
    a Pull Request.  It's a good idea to create the Pull Request early,
    particularly for features, so that it can be discussed and help sought (if
@@ -42,9 +42,7 @@ In order for a Pull Request to be merged the following criteria needs to be
 met:
 
 1. All of the commits in the PR need to be `signed off using the '-s' option
-   with git commit <https://git-scm.com/docs/git-commit>`_.  This is a
-   requirement for all projects in the `Github Linux Containers projects space
-   <https://github.com/lxc>`_.
+   with git commit <https://git-scm.com/docs/git-commit>`_.
 2. Unit tests are required for the changes.  These are in the ``pylxd/tests``
    directory and follow the same directory structure as the module.
 3. The unit test code coverage for the project shouldn't drop.  This means that
@@ -93,8 +91,8 @@ Unit Testing
 ^^^^^^^^^^^^
 
 pyLXD tries to follow best practices when it comes to testing. PRs are gated
-by `GitHub Actions <https://github.com/lxc/pylxd/actions>`_ and
-`CodeCov <https://codecov.io/gh/lxc/pylxd>`_. It's best to submit tests
+by `GitHub Actions <https://github.com/canonical/pylxd/actions>`_ and
+`CodeCov <https://codecov.io/gh/canonical/pylxd>`_. It's best to submit tests
 with new changes, as your patch is unlikely to be accepted without them.
 
 To run the tests, you should use `Tox`_::
@@ -107,6 +105,6 @@ Integration Testing
 Integration testing requires a running LXD system.  They can be tested locally
 in LXD container with nesting support; ``tox -e integration-in-lxd``.
 
-.. _Github: https://github.com/lxc/pylxd
-.. _Tox: https://tox.readthedocs.io/en/latest/
-.. _Multipass: https://github.com/CanonicalLtd/multipass
+.. _Github: https://github.com/canonical/pylxd
+.. _Tox: https://documentation.ubuntu.com/lxd/en/latest/clustering/
+.. _Multipass: https://github.com/canonical/multipass

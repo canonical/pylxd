@@ -166,7 +166,7 @@ class Instance(model.Model):
 
         def delete_available(self):
             """File deletion is an extension API and may not be available.
-            https://github.com/lxc/lxd/blob/master/doc/api-extensions.md#file_delete
+            https://documentation.ubuntu.com/lxd/en/latest/api-extensions/#file-delete
             """
             return self._instance.client.has_api_extension("file_delete")
 
@@ -864,7 +864,7 @@ class Snapshot(model.Model):
         If wait=True, an Image is returned.
 
         This functionality is currently broken in LXD. Please see
-        https://github.com/lxc/lxd/issues/2201 - The implementation
+        https://github.com/canonical/lxd/issues/2201 - The implementation
         here is mostly a guess. Once that bug is fixed, we can verify
         that this works, or file a bug to fix it appropriately.
         """

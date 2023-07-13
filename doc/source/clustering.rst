@@ -10,7 +10,7 @@ The :py:class:`~pylxd.models.cluster.Cluster` object represents the json
 object that is returned from `GET /1.0/cluster`.
 
 .. note:: Please see the pylxd API documentation for more information on
-        storage pool methods and parameters.  The following is a summary.
+        cluster methods and parameters.  The following is a summary.
 
 Cluster methods
 ^^^^^^^^^^^^^^^
@@ -69,6 +69,5 @@ the `LXD Cluster REST API`_ documentation.
 
 .. links
 
-.. _LXD Storage Pools: https://linuxcontainers.org/lxd/docs/master/storage/
-.. _LXD REST API: https://github.com/lxc/lxd/blob/master/doc/rest-api.md
-.. _LXD Cluster REST API: https://github.com/lxc/lxd/blob/master/doc/rest-api.md#10cluster
+.. _LXD Clustering: https://documentation.ubuntu.com/lxd/en/latest/clustering/
+.. _LXD REST API: https://documentation.ubuntu.com/lxd/en/latest/api/
