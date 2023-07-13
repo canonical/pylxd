@@ -83,6 +83,7 @@ class TestStoragePools(StorageTestCase):
 
         storage_pool = self.client.storage_pools.get(name)
         new_desc = "new description"
+        self.assertNotEqual(storage_pool.description, new_desc)
         put_object = {
             "description": new_desc,
             "config": storage_pool.config,
@@ -98,6 +99,7 @@ class TestStoragePools(StorageTestCase):
 
         storage_pool = self.client.storage_pools.get(name)
         new_desc = "new description"
+        self.assertNotEqual(storage_pool.description, new_desc)
         patch_object = {
             "description": new_desc,
         }
