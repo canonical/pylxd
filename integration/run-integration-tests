@@ -9,6 +9,12 @@ sudo apt-get install -y --no-install-recommends \
      python3-dev \
      tox
 
+# Fail if lxc command isn't available
+if ! command -v lxc; then
+    echo "lxc command not available, aborting (hint: snap install lxd)" >&2
+    exit 1
+fi
+
 lxc config set core.trust_password password
 lxc config set core.https_address "[::]"
 
