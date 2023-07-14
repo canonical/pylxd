@@ -12,8 +12,8 @@
 DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 
 declare -A RELEASE_IMAGES=(
-    [bionic]="18.04"
     [focal]="20.04"
+    [jammy]="22.04"
 )
 
 function run_tests {
