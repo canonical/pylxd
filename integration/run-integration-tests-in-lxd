@@ -33,6 +33,13 @@ function run_tests {
     lxc delete --force "$container_name"
 }
 
+# Make sure unprivileged userns clone is enabled otherwise security.nesting=true
+# won't work.
+if [ "$(cat /proc/sys/kernel/unprivileged_userns_clone)" -eq 0 ]; then
+    echo "unpriviliged userns clone disabled, unable to run tests" >&2
+    exit 1
+fi
+
 declare -a images
 if [ $# -gt 0 ]; then
     images=("$@")
