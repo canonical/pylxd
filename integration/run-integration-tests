@@ -9,8 +9,17 @@ sudo apt-get install -y --no-install-recommends \
      python3-dev \
      tox
 
+# Fail if lxc command isn't available
+if ! command -v lxc; then
+    echo "lxc command not available, aborting (hint: snap install lxd)" >&2
+    exit 1
+fi
+
+# Make sure a client.{crt,key} exist by trying to add a bogus remote
+lxc remote add foo 127.0.0.1:1234 2>/dev/null || true
+
 lxc config set core.trust_password password
-lxc config set core.https_address "[::]"
+lxc config set core.https_address 127.0.0.1
 
 if ! lxc storage show default >/dev/null 2>&1; then
     lxc storage create default dir
@@ -21,16 +30,22 @@ fi
 if [ -e /var/snap/lxd/common/lxd/server.crt ]; then
     mkdir -p ~/snap/lxd/common/config/servercerts
     cp /var/snap/lxd/common/lxd/server.crt ~/snap/lxd/common/config/servercerts/127.0.0.1.crt
-
-    # Old snap
-    if [ -d ~/snap/lxd/current/.config/lxc ]; then
-        mkdir -p ~/snap/lxd/current/.config/lxc/servercerts
-        cp /var/snap/lxd/common/lxd/server.crt ~/snap/lxd/current/.config/lxc/servercerts/127.0.0.1.crt
-    fi
 fi
+
+# Save the list of trusted certs
+OLD_TRUST_LIST="$(mktemp)"
+lxc config trust list --format csv | awk -F, '{print $4}' | sort > "${OLD_TRUST_LIST}"
 
 # finally run the integration tests
 tox -e integration
+
+# Remove any cert added to the trusted list by the integration tests
+NEW_TRUST_LIST="$(mktemp)"
+lxc config trust list --format csv | awk -F, '{print $4}' | sort > "${NEW_TRUST_LIST}"
+for cert in $(comm -13 "${OLD_TRUST_LIST}" "${NEW_TRUST_LIST}"); do
+    lxc config trust remove "${cert}"
+done
+rm -f "${OLD_TRUST_LIST}" "${NEW_TRUST_LIST}"
 
 lxc config unset core.trust_password || true
 lxc config unset core.https_address || true
