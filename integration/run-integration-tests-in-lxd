@@ -12,29 +12,33 @@
 DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 
 declare -A RELEASE_IMAGES=(
-    [bionic]="18.04"
     [focal]="20.04"
+    [jammy]="22.04"
 )
 
 function run_tests {
     local target="$1"
     local image="${RELEASE_IMAGES[$target]}"
-    local container_name
-    container_name="pylxd-$target-$(uuidgen | cut -d- -f1)"
+    local container_name="pylxd-${target}-$$"
     local container_image="ubuntu:${image}"
     echo "Running ${image} integration tests"
 
     lxc launch --ephemeral "$container_image" "$container_name" -c security.nesting=true
-    lxc exec "$container_name" -- cloud-init status --long --wait
 
     lxc exec "$container_name" -- mkdir -p /opt/pylxd
-    # NOTE: rockstar (13 Sep 2016) - --recursive is not supported in lxd <2.1, so
-    # until we have pervasive support for that, we'll do this tar hack.
-    local ldir="$DIR/.."
-    env -C "$ldir" tar cf - ./* .git | lxc exec "$container_name" -- tar xf - -C /opt/pylxd
-    lxc exec "$container_name" -- /bin/sh -c "env -C /opt/pylxd integration/run-integration-tests"
+    { cd "$DIR/.." && git archive --format=tar HEAD; } | lxc exec "$container_name" -- tar -xf - -C /opt/pylxd
+
+    lxc exec "$container_name" -- cloud-init status --long --wait
+    lxc exec "$container_name" --cwd /opt/pylxd -- integration/run-integration-tests
     lxc delete --force "$container_name"
 }
+
+# Make sure unprivileged userns clone is enabled otherwise security.nesting=true
+# won't work.
+if [ "$(cat /proc/sys/kernel/unprivileged_userns_clone)" -eq 0 ]; then
+    echo "unpriviliged userns clone disabled, unable to run tests" >&2
+    exit 1
+fi
 
 declare -a images
 if [ $# -gt 0 ]; then
