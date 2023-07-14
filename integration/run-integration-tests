@@ -32,16 +32,27 @@ if [ -e /var/snap/lxd/common/lxd/server.crt ]; then
     cp /var/snap/lxd/common/lxd/server.crt ~/snap/lxd/common/config/servercerts/127.0.0.1.crt
 fi
 
+# LXD 4 has a different `lxc config trust list` output format
+LXD_MAJOR_VER="$(lxc version | awk -F. '/Server version:/ {print $1}' | cut -d" " -f 3)"
+save_trust_list() {
+    if [ "${LXD_MAJOR_VER}" -gt 4 ]; then
+        lxc config trust list --format csv | awk -F, '{print $4}' | sort
+    else
+        lxc config trust list --format csv | awk -F, '{print $1}' | sort
+    fi
+}
+
 # Save the list of trusted certs
 OLD_TRUST_LIST="$(mktemp)"
-lxc config trust list --format csv | awk -F, '{print $4}' | sort > "${OLD_TRUST_LIST}"
+save_trust_list > "${OLD_TRUST_LIST}"
 
 # finally run the integration tests
 tox -e integration
 
 # Remove any cert added to the trusted list by the integration tests
 NEW_TRUST_LIST="$(mktemp)"
-lxc config trust list --format csv | awk -F, '{print $4}' | sort > "${NEW_TRUST_LIST}"
+save_trust_list > "${NEW_TRUST_LIST}"
+
 for cert in $(comm -13 "${OLD_TRUST_LIST}" "${NEW_TRUST_LIST}"); do
     lxc config trust remove "${cert}"
 done
