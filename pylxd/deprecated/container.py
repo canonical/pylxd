@@ -116,8 +116,7 @@ class LXDContainer(base.LXDBase):
     def get_container_websocket(self, container):
         return self.connection.get_status(
             "GET",
-            "/1.0/operations/%s/websocket?secret=%s"
-            % (container["operation"], container["fs"]),
+            f"/1.0/operations/{container['operation']}/websocket?secret={container['fs']}",
         )
 
     def container_info(self, container):
