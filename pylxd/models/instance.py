@@ -307,7 +307,7 @@ class Instance(model.Model):
 
         instances = []
         for instance in response.json()["metadata"]:
-            if type(instance) == dict:
+            if isinstance(instance, dict):
                 # User specified recursion so returning all data for each instance at once
                 instance_class = cls(client, name=instance["name"])
                 for key, data in instance.items():
@@ -793,7 +793,7 @@ class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
         super().__init__(url, **kwargs)
 
     def _smart_encode(self, msg):
-        if type(msg) == str and self.encoding:
+        if isinstance(msg, str) and self.encoding:
             return msg.encode(self.encoding)
         return msg
 

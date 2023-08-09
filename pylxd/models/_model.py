@@ -73,10 +73,10 @@ class ModelType(type):
                 attributes.update(base.__attributes__)
 
         for key, val in attrs.items():
-            if type(val) == Attribute:
+            if isinstance(val, Attribute):
                 attributes[key] = val
                 for_removal.append(key)
-            if type(val) in (Manager, Parent):
+            if isinstance(val, Manager) or isinstance(val, Parent):
                 managers.append(key)
                 for_removal.append(key)
         for key in for_removal:
