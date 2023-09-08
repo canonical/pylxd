@@ -10,10 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from pkg_resources import get_distribution
+from importlib.metadata import version
 
 from pylxd.client import Client, EventType
 
 __all__ = ["Client", "EventType"]
 
-__version__ = get_distribution("pylxd").version
+__version__ = version("pylxd")
