@@ -36,7 +36,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "pylxd"
-copyright = "2016-2018, Canonical Ltd"
+copyright = "2016-2023, Canonical Ltd"
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 add_function_parentheses = True
