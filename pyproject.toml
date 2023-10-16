@@ -1,0 +1,45 @@
+[project]
+name = "pylxd"
+version = "2.3.2a"
+description = "python library for LXD"
+readme = "README.rst"
+authors = [
+  {name = "Paul Hummer and others (see CONTRIBUTORS.rst"},
+  {email = "lxd@lists.canonical.com"},
+]
+classifiers = [
+  "Intended Audience :: Information Technology",
+  "Intended Audience :: System Administrators",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+]
+license = {file = "LICENSE"}
+requires-python = ">=3.8"
+dependencies = [
+  "cryptography >= 3.2",
+  "python-dateutil >= 2.4.2",
+  "requests >= 2.20.0",
+  "requests-toolbelt >= 0.8.0",
+  "requests-unixsocket >= 0.1.5",
+  "urllib3 < 2",
+  "ws4py != 0.3.5, >= 0.3.4",  # 0.3.5 is broken for websocket support
+]
+
+[project.urls]
+Homepage = "https://ubuntu.com/lxd"
+Documentation = "https://pylxd.readthedocs.io/en/latest/"
+Repository = "https://github.com/canonical/pylxd"
+
+[build-system]
+requires = ["setuptools"]
+
+[tool.setuptools]
+packages = ["pylxd"]
+
+[tool.mypy]
+ignore_missing_imports = true
+install_types = true
+non_interactive = true
+warn_return_any = true
+warn_unused_configs = true
