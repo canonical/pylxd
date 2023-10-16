@@ -33,7 +33,7 @@ If you prefer live discussions, some of us also hang out in
 <https://web.libera.chat/#lxd>`_ on irc.libera.chat.
 
 LXD Documentation: `https://documentation.ubuntu.com/lxd/en/latest/
-https://documentation.ubuntu.com/lxd/en/latest/`_
+<https://documentation.ubuntu.com/lxd/en/latest/>`_
 
 PyLXD API Documentation: `https://pylxd.readthedocs.io/en/latest/
 <https://pylxd.readthedocs.io/en/latest/>`_
