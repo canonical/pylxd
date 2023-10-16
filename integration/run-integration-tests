@@ -47,7 +47,7 @@ OLD_TRUST_LIST="$(mktemp)"
 save_trust_list > "${OLD_TRUST_LIST}"
 
 # finally run the integration tests
-tox -e integration
+tox run -e integration
 
 # Remove any cert added to the trusted list by the integration tests
 NEW_TRUST_LIST="$(mktemp)"

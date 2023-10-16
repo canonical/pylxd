@@ -64,20 +64,20 @@ Code standards
 
 pyLXD formats code with Black and isort. Verify the formatting with::
 
-    tox -e lint
+    tox run -e lint
 
 If it fails, you can reformat the code with::
 
-    tox -e format
+    tox run -e format
 
 Testing
 -------
 
 Testing pyLXD is in 3 parts:
 
-1. Conformance with Black and isort, using the ``tox -e lint`` command.
-2. Unit tests using ``tox -e py`` or ``tox -e coverage``.
-3. Integration tests using the ``tox -e integration-in-lxd``.
+1. Conformance with Black and isort, using the ``tox run -e lint`` command.
+2. Unit tests using ``tox run -e py`` or ``tox run -e coverage``.
+3. Integration tests using the ``tox run -e integration-in-lxd``.
 
 .. note:: all of the tests can be run by just using the ``tox`` command on it's
           own, with the exception of the integration tests.  These are not
@@ -103,7 +103,7 @@ Integration Testing
 ^^^^^^^^^^^^^^^^^^^
 
 Integration testing requires a running LXD system.  They can be tested locally
-in LXD container with nesting support; ``tox -e integration-in-lxd``.
+in LXD container with nesting support; ``tox run -e integration-in-lxd``.
 
 .. _Github: https://github.com/canonical/pylxd
 .. _Tox: https://tox.wiki/en/latest/

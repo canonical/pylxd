@@ -70,7 +70,7 @@ lxc exec "$CONTAINER_ONE_NAME" -- mkdir -p /opt/pylxd
 # NOTE: rockstar (13 Sep 2016) - --recursive is not supported in lxd <2.1, so
 # until we have pervasive support for that, we'll do this tar hack.
 tar cf - ./* .git | lxc exec "$CONTAINER_ONE_NAME" -- tar xf - -C /opt/pylxd
-lxc exec "$CONTAINER_ONE_NAME" -- /bin/sh -c "cd /opt/pylxd && tox -emigration"
+lxc exec "$CONTAINER_ONE_NAME" -- /bin/sh -c "cd /opt/pylxd && tox run -e migration"
 
 lxc delete --force "$CONTAINER_ONE_NAME"
 lxc delete --force "$CONTAINER_TWO_NAME"
