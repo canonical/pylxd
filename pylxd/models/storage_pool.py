@@ -399,7 +399,7 @@ class StorageVolume(model.Model):
         volume = cls(
             storage_pool.client,
             storage_pool=storage_pool,
-            **response.json()["metadata"]
+            **response.json()["metadata"],
         )
         return volume
 
