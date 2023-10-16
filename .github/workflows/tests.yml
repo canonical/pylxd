@@ -27,11 +27,11 @@ jobs:
 
     - name: Lint Python files
       run: |
-        tox -e lint
+        tox run -e lint
 
     - name: Typecheck Python files
       run: |
-        tox -e check
+        tox run -e check
 
   tests:
     name: Tests
@@ -65,7 +65,7 @@ jobs:
 
     - name: Coverage
       run: |
-        tox -e coverage
+        tox run -e coverage
         codecov
 
     - name: Integration
