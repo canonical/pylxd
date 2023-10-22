@@ -51,13 +51,15 @@ class Profile(model.Model):
         return profiles
 
     @classmethod
-    def create(cls, client, name, config=None, devices=None):
+    def create(cls, client, name, config=None, devices=None, description=None):
         """Create a profile."""
         profile = {"name": name}
         if config is not None:
             profile["config"] = config
         if devices is not None:
             profile["devices"] = devices
+        if description is not None:
+            profile["description"] = description
         client.api.profiles.post(json=profile)
         return cls.get(client, name)
 
