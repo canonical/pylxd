@@ -40,11 +40,13 @@ class TestProfiles(IntegrationTestCase):
         """A profile is created."""
         name = "an-profile"
         config = {"limits.memory": "1GB"}
-        profile = self.client.profiles.create(name, config)
+        description = "Memory limiting profile"
+        profile = self.client.profiles.create(name, config, description=description)
         self.addCleanup(self.delete_profile, name)
 
         self.assertEqual(name, profile.name)
         self.assertEqual(config, profile.config)
+        self.assertEqual(description, profile.description)
 
 
 class TestProfile(IntegrationTestCase):
