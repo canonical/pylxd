@@ -38,7 +38,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8", "3.10", "3.11", "3.12"]
-    
+
     runs-on: ubuntu-22.04
     steps:
     - name: Repository checkout

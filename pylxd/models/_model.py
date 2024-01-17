@@ -144,8 +144,8 @@ class Model(metaclass=ModelType):
                 if env == "none":
                     continue
                 warnings.warn(
-                    'Attempted to set unknown attribute "{}" '
-                    'on instance of "{}"'.format(key, self.__class__.__name__)
+                    f'Attempted to set unknown attribute "{key}" '
+                    f'on instance of "{self.__class__.__name__}"'
                 )
         self.__dirty__.clear()
 
