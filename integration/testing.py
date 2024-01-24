@@ -157,6 +157,22 @@ class IntegrationTestCase(unittest.TestCase):
         except exceptions.NotFound:
             pass
 
+    def create_network_acl(self):
+        name = self.generate_object_name()
+        self.lxd.network_acls.post(
+            json={
+                "name": name,
+                "config": {},
+            }
+        )
+        return name
+
+    def delete_network_acl(self, name):
+        try:
+            self.lxd.network_acls[name].delete()
+        except exceptions.NotFound:
+            pass
+
     def assertCommon(self, response):
         """Assert common LXD responses.
 

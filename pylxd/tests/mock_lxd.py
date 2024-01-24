@@ -95,6 +95,42 @@ def networks_DELETE(_, context):
     )
 
 
+def network_acls_GET(request, _):
+    name = request.path.split("/")[-1]
+    return json.dumps(
+        {
+            "type": "sync",
+            "metadata": {
+                "config": {},
+                "name": name,
+                "description": "Network ACL description",
+                "egress": [],
+                "ingress": [
+                    {
+                        "action": "allow",
+                        "source": "@external",
+                        "description": "Allow external sources",
+                        "state": "enabled",
+                    }
+                ],
+                "used_by": [],
+            },
+        }
+    )
+
+
+def network_acls_POST(_, context):
+    context.status_code = 200
+    return json.dumps({"type": "sync", "metadata": {}})
+
+
+def network_acls_DELETE(_, context):
+    context.status_code = 202
+    return json.dumps(
+        {"type": "sync", "operation": "/1.0/operations/operation-abc?project=default"}
+    )
+
+
 def profile_GET(request, context):
     name = request.path.split("/")[-1]
     return json.dumps(
@@ -829,6 +865,55 @@ RULES = [
         "text": networks_DELETE,
         "method": "DELETE",
         "url": r"^http://pylxd.test/1.0/networks/eth0$",
+    },
+    # Network ACLs
+    {
+        "json": {
+            "type": "sync",
+            "metadata": [
+                "http://pylxd.test/1.0/network-acls/allow-external-ingress",
+                "http://pylxd.test/1.0/network-acls/allow-external-ingress1",
+            ],
+        },
+        "method": "GET",
+        "url": r"^http://pylxd.test/1.0/network-acls$",
+    },
+    {
+        "text": network_acls_POST,
+        "method": "POST",
+        "url": r"^http://pylxd.test/1.0/network-acls$",
+    },
+    {
+        "text": network_acls_GET,
+        "method": "POST",
+        "url": r"^http://pylxd.test/1.0/network-acls/allow-external-ingress$",
+    },
+    {
+        "json": {
+            "type": "sync",
+            "metadata": {
+                "name": "allow-external-ingress",
+                "type": "loopback",
+                "used_by": [],
+            },
+        },
+        "method": "GET",
+        "url": r"^http://pylxd.test/1.0/network-acls/allow-external-ingress$",
+    },
+    {
+        "text": network_acls_GET,
+        "method": "GET",
+        "url": r"^http://pylxd.test/1.0/network-acls/allow-external-ingress(1|2)?$",
+    },
+    {
+        "text": json.dumps({"type": "sync"}),
+        "method": "PUT",
+        "url": r"^http://pylxd.test/1.0/network-acls/allow-external-ingress$",
+    },
+    {
+        "text": network_acls_DELETE,
+        "method": "DELETE",
+        "url": r"^http://pylxd.test/1.0/network-acls/allow-external-ingress$",
     },
     # Network forwards
     {

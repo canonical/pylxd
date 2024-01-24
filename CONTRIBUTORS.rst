@@ -42,5 +42,6 @@ These are the contributors to pylxd according to the Github repository.
  fliiiix          Felix
  simondeziel      Simon Déziel (Canonical)
  sparkiegeek      Adam Collard (Canonical)
+ mobergeron       Marc Olivier Bergeron
  ===============  ==================================
 

@@ -283,6 +283,252 @@ class TestNetwork(testing.PyLXDTestCase):
         )
 
 
+class TestNetworkACL(testing.PyLXDTestCase):
+    """Tests for pylxd.models.NetworkACL."""
+
+    def test_get(self):
+        """A network ACL is fetched."""
+        name = "allow-external-ingress"
+        an_network = models.NetworkACL.get(self.client, name)
+
+        self.assertEqual(name, an_network.name)
+
+    def test_get_not_found(self):
+        """LXDAPIException is raised on unknown network ACL."""
+
+        def not_found(_, context):
+            context.status_code = 404
+            return json.dumps(
+                {"type": "error", "error": "Not found", "error_code": 404}
+            )
+
+        self.add_rule(
+            {
+                "text": not_found,
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/network-acls/allow-external-ingress$",
+            }
+        )
+
+        self.assertRaises(
+            exceptions.LXDAPIException,
+            models.NetworkACL.get,
+            self.client,
+            "allow-external-ingress",
+        )
+
+    def test_get_error(self):
+        """LXDAPIException is raised on error."""
+
+        def error(_, context):
+            context.status_code = 500
+            return json.dumps(
+                {
+                    "type": "error",
+                    "error": "Not found",
+                    "error_code": 500,
+                }
+            )
+
+        self.add_rule(
+            {
+                "text": error,
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/network-acls/allow-external-ingress$",
+            }
+        )
+
+        self.assertRaises(
+            exceptions.LXDAPIException,
+            models.NetworkACL.get,
+            self.client,
+            "allow-external-ingress",
+        )
+
+    def test_exists(self):
+        """True is returned if network exists."""
+        name = "allow-external-ingress"
+
+        self.assertTrue(models.NetworkACL.exists(self.client, name))
+
+    def test_not_exists(self):
+        """False is returned when network does not exist."""
+
+        def not_found(_, context):
+            context.status_code = 404
+            return json.dumps(
+                {"type": "error", "error": "Not found", "error_code": 404}
+            )
+
+        self.add_rule(
+            {
+                "text": not_found,
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/network-acls/allow-external-ingress$",
+            }
+        )
+
+        name = "allow-external-ingress"
+
+        self.assertFalse(models.NetworkACL.exists(self.client, name))
+
+    def test_all(self):
+        acls = models.NetworkACL.all(self.client)
+
+        self.assertEqual(2, len(acls))
+
+    def test_create_with_parameters(self):
+        with mock.patch.object(self.client, "assert_has_api_extension"):
+            acl = models.NetworkACL.create(
+                self.client,
+                name="allow-external-ingress1",
+                config={},
+                egress=[],
+                ingress=[
+                    {
+                        "action": "allow",
+                        "description": "Allow external sources",
+                        "source": "@external",
+                        "state": "enabled",
+                    }
+                ],
+                description="Network ACL description",
+            )
+
+        self.assertIsInstance(acl, models.NetworkACL)
+        self.assertEqual("allow-external-ingress1", acl.name)
+        self.assertEqual("Network ACL description", acl.description)
+        self.assertEqual([], acl.egress)
+        self.assertEqual(
+            [
+                {
+                    "action": "allow",
+                    "description": "Allow external sources",
+                    "source": "@external",
+                    "state": "enabled",
+                }
+            ],
+            acl.ingress,
+        )
+
+    def test_create_default(self):
+        with mock.patch.object(self.client, "assert_has_api_extension"):
+            acl = models.NetworkACL.create(self.client, "allow-external-ingress1")
+
+        self.assertIsInstance(acl, models.NetworkACL)
+        self.assertEqual("allow-external-ingress1", acl.name)
+
+    def test_create_api_not_available(self):
+        # Note, by default with the tests, no 'network_acl' extension is available.
+        with self.assertRaises(LXDAPIExtensionNotAvailable):
+            models.NetworkACL.create(
+                self.client,
+                name="allow-external-ingress1",
+                config={},
+                egress=[],
+                ingress=[],
+                description="Network ACL description",
+            )
+
+    def test_rename(self):
+        with mock.patch.object(self.client, "assert_has_api_extension"):
+            acl = models.NetworkACL.get(self.client, "allow-external-ingress")
+            renamed_acl = acl.rename("allow-external-ingress2")
+
+        self.assertEqual("allow-external-ingress2", renamed_acl.name)
+
+    def test_update(self):
+        """A network is updated."""
+        with mock.patch.object(self.client, "assert_has_api_extension"):
+            network = models.NetworkACL.get(self.client, "allow-external-ingress")
+            network.ingress = []
+            network.save()
+        self.assertEqual([], network.ingress)
+
+    def test_fetch(self):
+        """A partial network ACL is synced."""
+        acl = self.client.network_acls.all()[1]
+
+        acl.sync()
+
+        self.assertEqual("Network ACL description", acl.description)
+
+    def test_fetch_not_found(self):
+        """LXDAPIException is raised on bogus network fetch."""
+
+        def not_found(_, context):
+            context.status_code = 404
+            return json.dumps(
+                {"type": "error", "error": "Not found", "error_code": 404}
+            )
+
+        self.add_rule(
+            {
+                "text": not_found,
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/network-acls/allow-external-ingress$",
+            }
+        )
+        acl = models.NetworkACL(self.client, name="allow-external-ingress")
+
+        self.assertRaises(exceptions.LXDAPIException, acl.sync)
+
+    def test_fetch_error(self):
+        """LXDAPIException is raised on fetch error."""
+
+        def error(_, context):
+            context.status_code = 500
+            return json.dumps(
+                {"type": "error", "error": "Not found", "error_code": 500}
+            )
+
+        self.add_rule(
+            {
+                "text": error,
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/network-acls/allow-external-ingress$",
+            }
+        )
+        acl = models.NetworkACL(self.client, name="allow-external-ingress")
+
+        self.assertRaises(exceptions.LXDAPIException, acl.sync)
+
+    def test_delete(self):
+        """A network ACL is deleted."""
+        acl = models.NetworkACL(self.client, name="allow-external-ingress")
+
+        acl.delete()
+
+    def test_str(self):
+        """Network ACL is printed in JSON format."""
+        acl = models.NetworkACL.get(self.client, "allow-external-ingress")
+        self.assertEqual(
+            json.loads(str(acl)),
+            {
+                "name": "allow-external-ingress",
+                "description": "Network ACL description",
+                "egress": [],
+                "ingress": [
+                    {
+                        "action": "allow",
+                        "source": "@external",
+                        "description": "Allow external sources",
+                        "state": "enabled",
+                    }
+                ],
+                "config": {},
+                "used_by": [],
+            },
+        )
+
+    def test_repr(self):
+        acl = models.NetworkACL.get(self.client, "allow-external-ingress")
+        self.assertEqual(
+            repr(acl),
+            'NetworkACL(config={}, description="Network ACL description", egress=[], ingress=[{"action": "allow", "description": "Allow external sources", "source": "@external", "state": "enabled"}], name="allow-external-ingress")',
+        )
+
+
 class TestNetworkForward(testing.PyLXDTestCase):
     """Tests for pylxd.models.NetworkForward."""
 
