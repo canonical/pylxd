@@ -20,7 +20,7 @@ function run_tests {
     local target="$1"
     local image="${RELEASE_IMAGES[$target]}"
     local container_name="pylxd-${target}-$$"
-    local container_image="ubuntu:${image}"
+    local container_image="ubuntu-daily:${image}"
     echo "Running ${image} integration tests"
 
     lxc launch --ephemeral "$container_image" "$container_name" -c security.nesting=true
