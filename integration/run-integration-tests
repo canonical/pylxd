@@ -46,6 +46,10 @@ save_trust_list() {
 OLD_TRUST_LIST="$(mktemp)"
 save_trust_list > "${OLD_TRUST_LIST}"
 
+# Report which LXD version is being tested
+snap list lxd || true
+lxc version
+
 # finally run the integration tests
 tox -e integration
 
