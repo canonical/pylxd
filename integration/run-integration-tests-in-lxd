@@ -14,13 +14,14 @@ DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 declare -A RELEASE_IMAGES=(
     [focal]="20.04"
     [jammy]="22.04"
+    [noble]="24.04"
 )
 
 function run_tests {
     local target="$1"
     local image="${RELEASE_IMAGES[$target]}"
     local container_name="pylxd-${target}-$$"
-    local container_image="ubuntu:${image}"
+    local container_image="ubuntu-daily:${image}"
     echo "Running ${image} integration tests"
 
     lxc launch --ephemeral "$container_image" "$container_name" -c security.nesting=true
@@ -28,7 +29,8 @@ function run_tests {
     lxc exec "$container_name" -- mkdir -p /opt/pylxd
     { cd "$DIR/.." && git archive --format=tar HEAD; } | lxc exec "$container_name" -- tar -xf - -C /opt/pylxd
 
-    lxc exec "$container_name" -- cloud-init status --long --wait
+    # Workaround https://github.com/canonical/cloud-init/pull/4970
+    lxc exec "$container_name" -- cloud-init status --long --wait || true
     lxc exec "$container_name" --cwd /opt/pylxd -- integration/run-integration-tests
     lxc delete --force "$container_name"
 }
