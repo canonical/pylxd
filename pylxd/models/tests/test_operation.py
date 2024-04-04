@@ -100,6 +100,29 @@ class TestOperation(testing.PyLXDTestCase):
 
         self.assertRaises(exceptions.LXDAPIException, an_operation.wait)
 
+    def test_wait_with_error_async_without_metadata(self):
+        """If the operation errors, wait raises an exception."""
+
+        def error(request, context):
+            context.status_code = 200
+            return {"type": "async", "error": "Could not proceed", "metadata": None}
+
+        self.add_rule(
+            {
+                "json": error,
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/operations/operation-abc/wait$",
+            }
+        )
+
+        name = "/1.0/operations/operation-abc"
+
+        an_operation = models.Operation.get(self.client, name)
+
+        with self.assertRaises(exceptions.LXDAPIException) as wait_cm:
+            an_operation.wait()
+        assert str(wait_cm.exception) == "Could not proceed"
+
     def test_unknown_attribute(self):
         self.add_rule(
             {
