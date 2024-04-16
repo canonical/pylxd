@@ -87,14 +87,32 @@ class Image(model.Model):
         return cls.get(client, fingerprint)
 
     @classmethod
-    def all(cls, client):
-        """Get all images."""
-        response = client.api.images.get()
+    def all(cls, client, recursion=0):
+        """Get all images.
+
+        This method returns an Image array. If recursion is unset,
+        only the name of each instance will be set. If recursion is at least 1 this method will pre-fetch additional instance attributes for
+        all instances in the array.
+        """
+        params = {}
+        if recursion != 0:
+            params = {"recursion": recursion}
+        response = client.api.images.get(params=params)
 
         images = []
-        for url in response.json()["metadata"]:
-            fingerprint = url.split("/")[-1]
-            images.append(cls(client, fingerprint=fingerprint))
+        for image in response.json()["metadata"]:
+            if isinstance(image, dict):
+                # User specified recursion so returning all data for each image at once
+                image_class = cls(client, fingerprint=image["fingerprint"])
+                for key, data in image.items():
+                    try:
+                        setattr(image_class, key, data)
+                    except AttributeError:
+                        pass
+                images.append(image_class)
+            else:
+                fingerprint = image.split("/")[-1]
+                images.append(cls(client, fingerprint=fingerprint))
         return images
 
     @classmethod
