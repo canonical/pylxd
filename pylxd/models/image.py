@@ -98,7 +98,9 @@ class Image(model.Model):
         return images
 
     @classmethod
-    def create(cls, client, image_data, metadata=None, public=False, wait=True, vm=False):
+    def create(
+        cls, client, image_data, metadata=None, public=False, wait=True, vm=False
+    ):
         """Create an image.
 
         If metadata is provided, a multipart form data request is formed to
@@ -130,10 +132,16 @@ class Image(model.Model):
                     rootfs=("rootfs", image_data, "application/octet-stream"),
                 )
             else:
-                files = collections.OrderedDict({
-                    "metadata":("metadata", metadata, "application/octet-stream"),
-                    "rootfs.img":("rootfs.img", image_data, "application/octet-stream"),
-                })
+                files = collections.OrderedDict(
+                    {
+                        "metadata": ("metadata", metadata, "application/octet-stream"),
+                        "rootfs.img": (
+                            "rootfs.img",
+                            image_data,
+                            "application/octet-stream",
+                        ),
+                    }
+                )
             data = MultipartEncoder(files)
             headers.update({"Content-Type": data.content_type})
         else:
