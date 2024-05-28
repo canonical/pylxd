@@ -73,6 +73,14 @@ class StoragePoolManager(BaseManager):
     manager_for = "pylxd.models.StoragePool"
 
 
+class StorageResourcesManager(BaseManager):
+    manager_for = "pylxd.models.StorageResources"
+
+
+class StorageVolumeManager(BaseManager):
+    manager_for = "pylxd.models.StorageVolume"
+
+
 class ClusterMemberManager(BaseManager):
     manager_for = "pylxd.models.ClusterMember"
 

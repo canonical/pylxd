@@ -39,8 +39,8 @@ class StoragePool(model.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.resources = StorageResourcesManager(self)
-        self.volumes = StorageVolumeManager(self)
+        self.resources = managers.StorageResourcesManager(self)
+        self.volumes = managers.StorageVolumeManager(self)
 
     @classmethod
     def get(cls, client, name):
@@ -249,10 +249,6 @@ class StoragePool(model.Model):
         super().patch(patch_object, wait)
 
 
-class StorageResourcesManager(managers.BaseManager):
-    manager_for = "pylxd.models.StorageResources"
-
-
 class StorageResources(model.Model):
     """An LXD Storage Resources model.
 
@@ -286,10 +282,6 @@ class StorageResources(model.Model):
         response = storage_pool.api.resources.get()
         resources = cls(storage_pool.client, **response.json()["metadata"])
         return resources
-
-
-class StorageVolumeManager(managers.BaseManager):
-    manager_for = "pylxd.models.StorageVolume"
 
 
 class StorageVolume(model.Model):
