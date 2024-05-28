@@ -301,6 +301,8 @@ class StorageVolume(model.Model):
     used_by = model.Attribute(readonly=True)
     location = model.Attribute(readonly=True)
 
+    snapshots = model.Manager()
+
     storage_pool = model.Parent()
 
     @property
@@ -315,6 +317,11 @@ class StorageVolume(model.Model):
         :rtype: :class:`pylxd.client._APINode`
         """
         return self.storage_pool.api.volumes[self.type][self.name]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.snapshots = managers.StorageVolumeSnapshotManager(self)
 
     @classmethod
     def all(cls, storage_pool):
