@@ -591,8 +591,9 @@ class StorageVolume(model.Model):
 
         Implements: DELETE /1.0/storage-pools/<pool>/volumes/<type>/<name>
 
-        Deleting a storage volume may fail if it is being used.  See the LXD
-        documentation for further details.
+        Deleting a storage volume may fail if it is being used.
+        See https://documentation.ubuntu.com/lxd/en/latest/explanation/storage/#storage-volumes
+        for further details.
 
         :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if the
             'storage' api extension is missing.
