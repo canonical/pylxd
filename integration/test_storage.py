@@ -23,7 +23,7 @@ class StorageTestCase(IntegrationTestCase):
         super().setUp()
 
         if not self.client.has_api_extension("storage"):
-            self.skipTest("Required LXD API extension not available!")
+            self.skipTest("Required 'storage' LXD API extension not available!")
 
 
 class TestStoragePools(StorageTestCase):
