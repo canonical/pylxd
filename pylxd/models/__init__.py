@@ -7,7 +7,12 @@ from pylxd.models.network import Network, NetworkForward
 from pylxd.models.operation import Operation
 from pylxd.models.profile import Profile
 from pylxd.models.project import Project
-from pylxd.models.storage_pool import StoragePool, StorageResources, StorageVolume
+from pylxd.models.storage_pool import (
+    StoragePool,
+    StorageResources,
+    StorageVolume,
+    StorageVolumeSnapshot,
+)
 from pylxd.models.virtual_machine import VirtualMachine
 
 __all__ = [
@@ -27,5 +32,6 @@ __all__ = [
     "StoragePool",
     "StorageResources",
     "StorageVolume",
+    "StorageVolumeSnapshot",
     "VirtualMachine",
 ]
