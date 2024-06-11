@@ -633,3 +633,204 @@ class StorageVolume(model.Model):
         if wait:
             self.client.operations.wait_for_operation(response.json()["operation"])
         return response
+
+
+class StorageVolumeSnapshot(model.Model):
+    """A storage volume snapshot.
+
+    This corresponds to the LXD endpoing at
+    /1.0/storage-pools/<pool>/volumes/<type>/<volume>/snapshots
+
+    api_extension: 'storage_api_volume_snapshots'
+    """
+
+    name = model.Attribute(readonly=True)
+    description = model.Attribute()
+    config = model.Attribute()
+    content_type = model.Attribute(readonly=True)
+    # Date strings follow the ISO 8601 pattern
+    created_at = model.Attribute(readonly=True)
+    expires_at = model.Attribute()
+
+    _endpoint = "snapshots"
+
+    volume = model.Parent()
+
+    @property
+    def api(self):
+        """Provides an object with the endpoint:
+
+        /1.0/storage-pools/<volume.storage_pool.name>/volumes/<volume.type>/<volume.name>/snapshots/<self.name>
+
+        Used internally to construct endpoints.
+
+        :returns: an API node with the named endpoint
+        :rtype: :class:`pylxd.client._APINode`
+        """
+        return self.volume.api[self._endpoint][self.name]
+
+    @classmethod
+    def get(cls, volume, name):
+        """Get a :class:`pylxd.models.StorageVolumeSnapshot` by its name.
+
+        Implements GET /1.0/storage-pools/<pool>/volumes/custom/<volume_name>/snapshots/<name>
+
+        :param client: a storage pool object on which to fetch resources
+        :type storage_pool: :class:`pylxd.models.storage_pool.StoragePool`
+        :param _type: the volume type; one of 'container', 'image', 'custom'
+        :type _type: str
+        :param volume: the name of the storage volume snapshot to get
+        :type volume: pylxd.models.StorageVolume
+        :returns: a storage pool if successful, raises NotFound if not found
+        :rtype: :class:`pylxd.models.storage_pool.StorageVolume`
+        :raises: :class:`pylxd.exceptions.NotFound`
+        :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if the
+            'storage' or 'storage_api_volume_snapshots' api extension is missing.
+        :raises: :class:`pylxd.exceptions.LXDAPIException` if the the operation fails.
+        """
+        volume.client.assert_has_api_extension("storage_api_volume_snapshots")
+
+        response = volume.api.snapshots[name].get()
+
+        snapshot = cls(volume.client, volume=volume, **response.json()["metadata"])
+
+        # Getting '0001-01-01T00:00:00Z' means that the volume does not have an expiration time set.
+        if response.json()["metadata"]["expires_at"] == "0001-01-01T00:00:00Z":
+            snapshot.expires_at = None
+
+        # Snapshot names are namespaced in LXD, as volume-name/snapshot-name.
+        # We hide that implementation detail.
+        snapshot.name = snapshot.name.split("/")[-1]
+        return snapshot
+
+    @classmethod
+    def all(cls, volume, use_recursion=False):
+        """Get all :class:`pylxd.models.StorageVolumeSnapshot` objects related to a certain volume.
+        If use_recursion is unset or set to False, a list of snapshot names is returned.
+        If use_recursion is set to True, a list of :class:`pylxd.models.StorageVolumeSnapshot` objects is returned
+        containing additional information for each snapshot.
+
+        Implements GET /1.0/storage-pools/<pool>/volumes/custom/<volume_name>/snapshots/<name>
+
+        :param volume: The storage volume snapshot to get snapshots from
+        :type volume: pylxd.models.StorageVolume
+        :param use_recursion: Specifies whether 'recursion=1' should be used on the request.
+        :type use_recursion: bool
+        :returns: A list of storage volume snapshot names if use_recursion is False, otherwise
+            returns a list of :class:`pylxd.models.StorageVolumeSnapshot`
+        :rtype: list
+        :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if the
+            'storage' or 'storage_api_volume_snapshots' api extension is missing.
+        :raises: :class:`pylxd.exceptions.LXDAPIException` if the the operation fails.
+        """
+        volume.client.assert_has_api_extension("storage_api_volume_snapshots")
+
+        if use_recursion:
+            # Using recursion so returning list of StorageVolumeSnapshot objects.
+            def parse_response_item(snapshot_json):
+                snapshot_object = cls(volume.client, volume=volume, **snapshot_json)
+                snapshot_object.content_type = volume.content_type
+                # Snapshot names are namespaced in LXD, as volume-name/snapshot-name.
+                # We hide that implementation detail.
+                snapshot_object.name = snapshot_object.name.split("/")[-1]
+
+                return snapshot_object
+
+            response = volume.api.snapshots.get(params={"recursion": 1})
+
+            return [
+                parse_response_item(snapshot)
+                for snapshot in response.json()["metadata"]
+            ]
+
+        response = volume.api.snapshots.get()
+
+        return [
+            snapshot_name.split("/")[-1]
+            for snapshot_name in response.json()["metadata"]
+        ]
+
+    @classmethod
+    def create(cls, volume, name=None, expires_at=None):
+        """Create new :class:`pylxd.models.StorageVolumeSnapshot` object from the current volume state using the given attributes.
+
+        Implements POST /1.0/storage-pools/<pool>/volumes/custom/<volume_name>/snapshots
+
+        :param volume: :class:`pylxd.models.StorageVolume` object that represents the target volume to take the snapshot from
+        :type volume: :class:`pylxd.models.StorageVolume`
+        :param name: Optional parameter. Name of the created snapshot. The snapshot will be called "snap{index}" by default.
+        :type name: str
+        :param expires_at: Optional parameter. Expiration time for the created snapshot in ISO 8601 format. No expiration date by default.
+        :type name: str
+        :returns: a storage volume snapshot if successful, raises an exception otherwise.
+        :rtype: :class:`pylxd.models.StorageVolume`
+        :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if the
+            'storage_api_volume_snapshots' api extension is missing.
+        :raises: :class:`pylxd.exceptions.LXDAPIException` if the the operation fails.
+        """
+        volume.client.assert_has_api_extension("storage_api_volume_snapshots")
+
+        response = volume.api.snapshots.post(
+            json={"name": name, "expires_at": expires_at}
+        )
+
+        operation = volume.client.operations.wait_for_operation(
+            response.json()["operation"]
+        )
+
+        # Extract the snapshot name from the response JSON in case it was not provided
+        if not name:
+            name = operation.resources["storage_volume_snapshots"][0].split("/")[-1]
+
+        snapshot = volume.snapshots.get(name)
+        return snapshot
+
+    @classmethod
+    def exists(cls, volume, name):
+        """Determine whether a volume snapshot exists in LXD.
+
+        :param name: Name of the desired snapshot.
+        :type name: str
+        :returns: True if a snapshot with the given name exists, returns False otherwise.
+        :rtype: bool
+        :raises: `pylxd.exceptions.LXDAPIException` if the the operation fails.
+        """
+        try:
+            volume.snapshots.get(name)
+            return True
+        except cls.NotFound:
+            return False
+
+    def rename(self, new_name):
+        """Rename a storage volume snapshot.
+
+        Implements POST /1.0/storage-pools/<pool>/volumes/custom/<volume_name>/snapshot/<name>
+
+        Renames a storage volume snapshot, changing the endpoints that reference it.
+
+        :raises: :class:`pylxd.exceptions.LXDAPIException` if the the operation fails.
+        """
+        super().post(wait=True, json={"name": new_name})
+        self.name = new_name
+
+    def restore(self, wait=False):
+        """Restore the volume from this snapshot.
+
+        Attempts to restore a custom volume using this snapshot.
+        Equivalent to pylxd.models.StorageVolume.restore_from(this_snapshot).
+
+        :param wait: wait until the operation is completed.
+        :type wait: boolean
+        :raises: :class:`pylxd.exceptions.LXDAPIException` if the the operation fails.
+        """
+        self.volume.restore_from(self.name, wait)
+
+    def delete(self, wait=False):
+        """Delete this storage pool snapshot.
+
+        Implements: DELETE /1.0/storage-pools/<pool>/volumes/custom/<volume_name>/snapshot/<name>
+
+        :raises: :class:`pylxd.exceptions.LXDAPIException` if the storage pool
+            can't be deleted.
+        """
+        super().delete(wait=wait)
