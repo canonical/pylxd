@@ -128,3 +128,80 @@ class TestStorageVolume(StorageTestCase):
         # as we're not using ZFS (and can't in these integration tests) we
         # can't really patch anything on a dir volume.
         pass
+
+
+class TestStorageVolumeSnapshot(StorageTestCase):
+    """Tests for :py:class:`pylxd.models.storage_pool.StorageVolumeSnapshot"""
+
+    def setUp(self):
+        super().setUp()
+
+        if not self.client.has_api_extension("storage_api_volume_snapshots"):
+            self.skipTest(
+                "Required 'storage_api_volume_snapshots' LXD API extension not available!"
+            )
+
+    def test_create_get_restore_delete_volume_snapshot(self):
+        # Create pool and volume
+        pool = self.create_storage_pool()
+        self.addCleanup(self.delete_storage_pool, pool)
+
+        volume = self.create_storage_volume(pool, "vol1")
+        self.addCleanup(self.delete_storage_volume, pool, "vol1")
+
+        # Create a few snapshots
+        first_snapshot = volume.snapshots.create()
+        self.assertEqual(first_snapshot.name, "snap0")
+
+        second_snapshot = volume.snapshots.create()
+        self.assertEqual(second_snapshot.name, "snap1")
+
+        # Try restoring the volume from one of the snapshots
+        first_snapshot.restore()
+
+        # Create new snapshot with defined name and expiration date
+        custom_snapshot_name = "custom-snapshot"
+        custom_snapshot_expiry_date = "2183-06-16T00:00:00Z"
+
+        custom_snapshot = volume.snapshots.create(
+            name=custom_snapshot_name, expires_at=custom_snapshot_expiry_date
+        )
+        self.assertEqual(custom_snapshot.name, custom_snapshot_name)
+        self.assertEqual(custom_snapshot.expires_at, custom_snapshot_expiry_date)
+
+        # Get all snapshots from the volume
+        all_snapshots = volume.snapshots.all()
+        self.assertEqual(len(all_snapshots), 3)
+
+        for snapshot_name in ["snap0", "snap1", custom_snapshot_name]:
+            self.assertIn(snapshot_name, all_snapshots)
+
+        # Delete a snapshot
+        second_snapshot.delete()
+
+        self.assertFalse(volume.snapshots.exists(second_snapshot.name))
+
+        self.assertRaises(exceptions.NotFound, volume.snapshots.get, "snap1")
+
+        all_snapshots = volume.snapshots.all()
+        self.assertEqual(len(all_snapshots), 2)
+
+        for snapshot_name in ["snap0", custom_snapshot_name]:
+            self.assertIn(snapshot_name, all_snapshots)
+
+        self.assertFalse("snap1" in all_snapshots)
+
+        # Test getting all snapshots with recursion
+        all_snapshots = volume.snapshots.all(use_recursion=True)
+        self.assertIn(first_snapshot, all_snapshots)
+        self.assertIn(custom_snapshot, all_snapshots)
+
+        # Change snapshot values
+        first_snapshot.rename("first")
+        self.assertFalse(volume.snapshots.exists("snap0"))
+        self.assertRaises(exceptions.NotFound, volume.snapshots.get, "snap0")
+
+        new_description = "first snapshot"
+        first_snapshot.description = new_description
+        first_snapshot.save(wait=True)
+        self.assertEqual(volume.snapshots.get("first").description, new_description)
