@@ -13,18 +13,22 @@ Storage Pool objects
 object that is returned from `GET /1.0/storage-pools/<name>` and then the
 associated methods that are then available at the same endpoint.
 
-There are also :py:class:`~pylxd.models.storage_pool.StorageResource` and
-:py:class:`~pylxd.models.storage_pool.StorageVolume` objects that represent the
-storage resources endpoint for a pool at `GET
-/1.0/storage-pools/<pool>/resources` and a storage volume on a pool at `GET
-/1.0/storage-pools/<pool>/volumes/<type>/<name>`.  Note that these should be
-accessed from the storage pool object.  For example:
+There are also :py:class:`~pylxd.models.storage_pool.StorageResource`,
+:py:class:`~pylxd.models.storage_pool.StorageVolume` and
+:py:class:`~pylxd.models.storage_pool.StorageVolumeSnapshot` objects that
+represent, respectively, the storage resources endpoint for a pool at
+`GET /1.0/storage-pools/<pool>/resources`, a storage volume on a pool at
+`GET /1.0/storage-pools/<pool>/volumes/<type>/<name>` and a custom volume snapshot
+at `GET /1.0/storage-pools/<pool>/volumes/<type>/<volume>/snapshots/<snapshot>`.
+Note that these should be accessed from the storage pool object.  For example:
 
 .. code:: python
 
     client = pylxd.Client()
     storage_pool = client.storage_pools.get('poolname')
+    resources = storage_pool.resources.get()
     storage_volume = storage_pool.volumes.get('custom', 'volumename')
+    snapshot = storage_volume.snapshots.get('snap0')
 
 
 .. note:: For more details of the LXD documentation concerning storage pools
@@ -137,9 +141,46 @@ following methods are available:
     changes to the LXD server.
   - `delete` - delete a storage volume object.  Note that the object is,
     therefore, stale after this action.
+  - `restore_from` - Restore the volume from a snapshot using the snapshot name.
 
 .. note:: `raw_put` and `raw_patch` are availble (but not documented) to allow
         putting and patching without syncing the object back.
+
+Storage Volume Snapshots
+------------------------
+
+Storage Volume Snapshots are represented as `StorageVolumeSnapshot` objects and
+stored in `StorageVolume` objects and represent snapshots of custom storage volumes.
+On the `pylxd` API they are accessed from a storage volume object that, in turn,
+is accessed from a storage pool object:
+
+.. code:: Python
+
+    storage_pool = client.storage_pools.get('pool1')
+    volumes = storage_pool.volumes.all()
+    custom_volume = storage_pool.volumes.get('custom', 'vol1')
+    a_snapshot = custom_volume.snapshots.get('snap0')
+
+Methods available on `<storage_volume_object>.snapshots`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following methods are accessed from the `snapshots` attribute on the `StorageVolume` object:
+
+  - `all` - Get all the snapshots from the storage volume.
+  - `get` - Get a single snapshot using its name.
+  - `create` - Take a snapshot on the current stage of the storage volume. The new snapshot's
+  name and expiration date can be set, default name is in the format "snapX".
+  - `exists` - Returns True if a storage volume snapshot with the given name exists, returns False otherwise.
+
+Methods available on the storage snapshot object
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Once in possession of a `StorageVolumeSnapshot` object from the `pylxd` API via `volume.snapshots.get()`,
+the following methods are available:
+
+  - `restore` - Restore the volume from the snapshot.
+  - `delete` - Delete the snapshot. Note that the object is, therefore, stale after this action.
+  - `rename` - Renames the snapshot. The endpoints that reference this snapshot will change accordingly.
 
 .. links
 
