@@ -157,6 +157,25 @@ class IntegrationTestCase(unittest.TestCase):
         except exceptions.NotFound:
             pass
 
+    def create_storage_pool(self):
+        # create a storage pool in the form of 'xxx1' as a dir.
+        name = "".join(random.sample(string.ascii_lowercase, 3)) + "1"
+        self.lxd.storage_pools.post(
+            json={
+                "config": {},
+                "driver": "dir",
+                "name": name,
+            }
+        )
+        return name
+
+    def delete_storage_pool(self, name):
+        # delete the named storage pool
+        try:
+            self.lxd.storage_pools[name].delete()
+        except exceptions.NotFound:
+            pass
+
     def assertCommon(self, response):
         """Assert common LXD responses.
 
