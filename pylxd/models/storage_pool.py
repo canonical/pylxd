@@ -610,3 +610,26 @@ class StorageVolume(model.Model):
         """
         # Note this method exists so that it is documented via sphinx.
         super().delete()
+
+    def restore_from(self, snapshot_name, wait=False):
+        """Restore this volume from a snapshot using its name.
+
+        Attempts to restore a volume using a snapshot identified by its name.
+
+        Implements POST /1.0/storage-pools/<pool>/volumes/custom/<volume_name>/snapshot/<name>
+
+        :param snapshot_name: the name of the snapshot to restore from
+        :type snapshot_name: str
+        :param wait: wait until the operation is completed.
+        :type wait: boolean
+        :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if the
+            'storage' or 'storage_api_volume_snapshots' api extension is missing.
+        :raises: :class:`pylxd.exceptions.LXDAPIException` if the the operation fails.
+        :returns: the original response from the restore operation (not the
+            operation result)
+        :rtype: :class:`requests.Response`
+        """
+        response = self.api.put(json={"restore": snapshot_name})
+        if wait:
+            self.client.operations.wait_for_operation(response.json()["operation"])
+        return response
