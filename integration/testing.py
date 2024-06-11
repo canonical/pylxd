@@ -176,6 +176,23 @@ class IntegrationTestCase(unittest.TestCase):
         except exceptions.NotFound:
             pass
 
+    def create_storage_volume(self, pool_name, volume_name):
+        pool = self.client.storage_pools.get(pool_name)
+        vol_json = {
+            "config": {},
+            "type": "custom",
+            "name": volume_name,
+        }
+        return pool.volumes.create(vol_json)
+
+    def delete_storage_volume(self, pool_name, volume_name):
+        try:
+            pool = self.client.storage_pools.get(pool_name)
+            pool.volumes.get("custom", volume_name).delete()
+            return True
+        except exceptions.NotFound:
+            return False
+
     def assertCommon(self, response):
         """Assert common LXD responses.
 
