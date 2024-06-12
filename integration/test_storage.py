@@ -105,36 +105,12 @@ class TestStorageResources(StorageTestCase):
 class TestStorageVolume(StorageTestCase):
     """Tests for :py:class:`pylxd.models.storage_pools.StorageVolume"""
 
-    # note create and delete are tested in every method
-
-    def create_storage_volume(self, pool):
-        # note 'pool' needs to be storage_pool object or a string
-        if isinstance(pool, str):
-            pool = self.client.storage_pools.get(pool)
-        vol_input = {
-            "config": {},
-            "type": "custom",
-            # "pool": name,
-            "name": "vol1",
-        }
-        volume = pool.volumes.create(vol_input)
-        return volume
-
-    def delete_storage_volume(self, pool, volume):
-        # pool is either string or storage_pool object
-        # volume is either a string of storage_pool object
-        if isinstance(volume, str):
-            if isinstance(pool, str):
-                pool = self.client.storage_pools.get(pool)
-            volume = pool.volumes.get("custom", volume)
-        volume.delete()
-
     def test_create_and_get_and_delete(self):
         pool_name = self.create_storage_pool()
         self.addCleanup(self.delete_storage_pool, pool_name)
-
         storage_pool = self.client.storage_pools.get(pool_name)
-        volume = self.create_storage_volume(storage_pool)
+
+        volume = self.create_storage_volume(pool_name, "vol1")
         vol_copy = storage_pool.volumes.get("custom", "vol1")
         self.assertEqual(vol_copy.name, volume.name)
         volume.delete()
