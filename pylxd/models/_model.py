@@ -173,6 +173,21 @@ class Model(metaclass=ModelType):
         for attr in self.__attributes__.keys():
             yield attr, getattr(self, attr)
 
+    def __eq__(self, other):
+        if other.__class__ != self.__class__:
+            return False
+
+        for attr in self.__attributes__.keys():
+            if not hasattr(self, attr) and not hasattr(other, attr):
+                continue
+            try:
+                if self.__getattribute__(attr) != other.__getattribute__(attr):
+                    return False
+            except AttributeError:
+                return False
+
+        return True
+
     @property
     def dirty(self):
         return len(self.__dirty__) > 0
