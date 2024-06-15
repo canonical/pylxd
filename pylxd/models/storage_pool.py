@@ -295,6 +295,7 @@ class StorageVolume(model.Model):
 
     name = model.Attribute(readonly=True)
     type = model.Attribute(readonly=True)
+    content_type = model.Attribute(readonly=True)
     description = model.Attribute(readonly=True)
     config = model.Attribute()
     used_by = model.Attribute(readonly=True)
