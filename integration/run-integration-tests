@@ -18,7 +18,9 @@ fi
 # Make sure a client.{crt,key} exist by trying to add a bogus remote
 lxc remote add foo 127.0.0.1:1234 2>/dev/null || true
 
-lxc config set core.trust_password password
+if ! lxc query /1.0 | grep -q '"explicit_trust_token"$'; then
+    lxc config set core.trust_password password
+fi
 lxc config set core.https_address 127.0.0.1
 
 if ! lxc storage show default >/dev/null 2>&1; then
@@ -62,5 +64,7 @@ for cert in $(comm -13 "${OLD_TRUST_LIST}" "${NEW_TRUST_LIST}"); do
 done
 rm -f "${OLD_TRUST_LIST}" "${NEW_TRUST_LIST}"
 
-lxc config unset core.trust_password || true
+if ! lxc query /1.0 | grep -q '"explicit_trust_token"$'; then
+    lxc config unset core.trust_password || true
+fi
 lxc config unset core.https_address || true
