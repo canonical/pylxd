@@ -121,3 +121,45 @@ class TestNetwork(NetworkTestCase):
         self.assertRaises(
             exceptions.LXDAPIException, self.client.networks.get, self.network.name
         )
+
+class TestNetworkACL(NetworkTestCase):
+    """Tests for `NetworkACL`."""
+
+    def setUp(self):
+        super().setUp()
+        name = self.create_network_acl()
+        self.acl = self.client.network_acls.get(name)
+
+    def tearDown(self):
+        super().tearDown()
+        self.delete_network_acl(self.acl.name)
+
+    def test_save(self):
+        """A network ACL is updated"""
+        self.acl.ingress.insert(0, {"action":"allow","state":"enabled"})
+        self.acl.save()
+
+        acl = self.client.network_acls.get(self.acl.name)
+        self.assertEqual({"action":"allow","state":"enabled"}, acl.ingress[0])
+
+    def test_rename(self):
+        """A network ACL is renamed"""
+        oldName = self.acl.name
+        name = "allow-new-name"
+        self.addCleanup(self.delete_network_acl, name)
+
+        self.acl.rename(name)
+        acl = self.client.network_acls.get(name)
+
+        self.assertEqual(name, acl.name)
+        self.assertRaises(
+            exceptions.LXDAPIException, self.client.network_acls.get, oldName
+        )
+
+    def test_delete(self):
+        """A network ACL is deleted"""
+        self.acl.delete()
+
+        self.assertRaises(
+            exceptions.LXDAPIException, self.client.network_acls.get, self.acl.name
+        )
