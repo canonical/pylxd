@@ -249,6 +249,20 @@ class Model(metaclass=ModelType):
                     marshalled[key] = val
         return marshalled
 
+    def post(self, json=None, wait=False):
+        """Access the POST method directly for the object.
+
+        :param wait: If wait is True, then wait here until the operation
+            completes.
+        :type wait: bool
+        :param json: Dictionary that the represents the request body used on the POST method.
+        :type wait: dict
+        :raises: :class:`pylxd.exception.LXDAPIException` on error
+        """
+        response = self.api.post(json=json)
+        if response.json()["type"] == "async" and wait:
+            self.client.operations.wait_for_operation(response.json()["operation"])
+
     def put(self, put_object, wait=False):
         """Access the PUT method directly for the object.
 
