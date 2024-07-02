@@ -173,6 +173,21 @@ class Model(metaclass=ModelType):
         for attr in self.__attributes__.keys():
             yield attr, getattr(self, attr)
 
+    def __eq__(self, other):
+        if other.__class__ != self.__class__:
+            return False
+
+        for attr in self.__attributes__.keys():
+            if not hasattr(self, attr) and not hasattr(other, attr):
+                continue
+            try:
+                if self.__getattribute__(attr) != other.__getattribute__(attr):
+                    return False
+            except AttributeError:
+                return False
+
+        return True
+
     @property
     def dirty(self):
         return len(self.__dirty__) > 0
@@ -248,6 +263,20 @@ class Model(metaclass=ModelType):
                 if val is not MISSING:
                     marshalled[key] = val
         return marshalled
+
+    def post(self, json=None, wait=False):
+        """Access the POST method directly for the object.
+
+        :param wait: If wait is True, then wait here until the operation
+            completes.
+        :type wait: bool
+        :param json: Dictionary that the represents the request body used on the POST method.
+        :type wait: dict
+        :raises: :class:`pylxd.exception.LXDAPIException` on error
+        """
+        response = self.api.post(json=json)
+        if response.json()["type"] == "async" and wait:
+            self.client.operations.wait_for_operation(response.json()["operation"])
 
     def put(self, put_object, wait=False):
         """Access the PUT method directly for the object.
