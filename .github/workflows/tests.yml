@@ -37,17 +37,12 @@ jobs:
     name: Tests
     strategy:
       matrix:
-        python-version: ["3.8", "3.10", "3.11", "3.12"]
+        os: ["20.04", "22.04"]
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-${{ matrix.os }}
     steps:
     - name: Repository checkout
       uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
 
     - name: Install dependencies
       run: |
@@ -57,10 +52,12 @@ jobs:
         sudo ip link delete docker0
         sudo nft flush ruleset
 
-        sudo snap refresh lxd
+        sudo snap refresh lxd || sudo snap install lxd
         sudo adduser "$USER" lxd
         sudo lxd init --auto
 
+        sudo apt-get update
+        sudo apt-get install python3-pip
         pip install --upgrade pip tox codecov
 
     - name: Coverage
