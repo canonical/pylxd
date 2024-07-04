@@ -37,7 +37,7 @@ jobs:
     name: Tests
     strategy:
       matrix:
-        os: ["20.04", "22.04"]
+        os: ["22.04"]
 
     runs-on: ubuntu-${{ matrix.os }}
     steps:
