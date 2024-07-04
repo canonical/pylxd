@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.10", "3.11", "3.12"]
+        python-version: ["3.8", "3.10", "3.12"]
         track: ["latest/edge", "5.21/edge", "5.0/edge"]
         os: ["24.04"]
         include:
