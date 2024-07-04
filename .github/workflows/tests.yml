@@ -38,6 +38,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8", "3.10", "3.11", "3.12"]
+        track: ["latest/edge", "5.21/edge", "5.0/edge"]
 
     runs-on: ubuntu-22.04
     steps:
@@ -51,6 +52,8 @@ jobs:
 
     - name: Setup LXD
       uses: canonical/setup-lxd@main
+      with:
+        channel: ${{ matrix.track }}
 
     - name: Install dependencies
       run: |
