@@ -50,7 +50,7 @@ jobs:
 
         sudo apt-get autopurge moby-containerd docker uidmap -y
         sudo ip link delete docker0
-        sudo nft flush ruleset
+        sudo nft flush ruleset || sudo iptables -I DOCKER-USER -j ACCEPT
 
         sudo snap refresh lxd || sudo snap install lxd
         sudo adduser "$USER" lxd
