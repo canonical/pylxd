@@ -36,10 +36,16 @@ jobs:
   tests:
     name: Tests
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.8", "3.10", "3.11", "3.12"]
         track: ["latest/edge", "5.21/edge", "5.0/edge"]
         os: ["24.04"]
+        include:
+          # 4.0/* isn't supported on 24.04
+          - python-version: "3.8"
+            track: "4.0/edge"
+            os: "22.04"
 
     runs-on: ubuntu-${{ matrix.os }}
     steps:
