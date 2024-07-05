@@ -193,8 +193,8 @@ class TestStorageVolumeSnapshot(StorageTestCase):
 
         # Test getting all snapshots with recursion
         all_snapshots = volume.snapshots.all(use_recursion=True)
-        self.assertIn(first_snapshot, all_snapshots)
-        self.assertIn(custom_snapshot, all_snapshots)
+        self.assertEqual(first_snapshot, all_snapshots[0])
+        self.assertEqual(custom_snapshot, all_snapshots[1])
 
         # Change snapshot values
         first_snapshot.rename("first")
