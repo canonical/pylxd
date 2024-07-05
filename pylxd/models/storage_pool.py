@@ -780,7 +780,11 @@ class StorageVolumeSnapshot(model.Model):
 
         # Extract the snapshot name from the response JSON in case it was not provided
         if not name:
-            name = operation.resources["storage_volume_snapshots"][0].split("/")[-1]
+            if "storage_volume_snapshots" in operation.resources:
+                name = operation.resources["storage_volume_snapshots"][0].split("/")[-1]
+            else:
+                # If using LXD 4.0, the snapshot name isn't provided on the request response, so grab the latest snapshot name instead.
+                name = volume.snapshots.all()[-1].split("/")[-1]
 
         snapshot = volume.snapshots.get(name)
         return snapshot
