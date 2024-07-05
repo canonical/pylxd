@@ -38,8 +38,10 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8", "3.10", "3.11", "3.12"]
+        track: ["latest/edge", "5.21/edge", "5.0/edge"]
+        os: ["24.04"]
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-${{ matrix.os }}
     steps:
     - name: Repository checkout
       uses: actions/checkout@v4
@@ -49,18 +51,14 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Setup LXD
+      uses: canonical/setup-lxd@main
+      with:
+        channel: ${{ matrix.track }}
+
     - name: Install dependencies
       run: |
         set -x
-
-        sudo apt-get autopurge moby-containerd docker uidmap -y
-        sudo ip link delete docker0
-        sudo nft flush ruleset
-
-        sudo snap refresh lxd
-        sudo adduser "$USER" lxd
-        sudo lxd init --auto
-
         pip install --upgrade pip tox codecov
 
     - name: Coverage
@@ -70,7 +68,7 @@ jobs:
 
     - name: Integration
       run: |
-        sudo -g lxd integration/run-integration-tests
+        integration/run-integration-tests
 
   publish:
     name: Publish
