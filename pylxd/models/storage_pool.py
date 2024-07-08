@@ -732,7 +732,7 @@ class StorageVolumeSnapshot(model.Model):
         If use_recursion is set to True, a list of :class:`pylxd.models.StorageVolumeSnapshot` objects is returned
         containing additional information for each snapshot.
 
-        Implements GET /1.0/storage-pools/<pool>/volumes/custom/<volume_name>/snapshots/<name>
+        Implements GET /1.0/storage-pools/<pool>/volumes/custom/<volume_name>/snapshots
 
         :param volume: The storage volume snapshot to get snapshots from
         :type volume: pylxd.models.StorageVolume
