@@ -670,6 +670,37 @@ class StorageVolumeSnapshot(model.Model):
         return self.volume.api[self._endpoint][self.name]
 
     @classmethod
+    def __parse_snaspshot_json(cls, volume, snapshot_json):
+        snapshot_object = cls(volume.client, volume=volume, **snapshot_json)
+
+        # Snapshot names are namespaced in LXD, as volume-name/snapshot-name.
+        # We hide that implementation detail.
+        snapshot_object.name = snapshot_object.name.split("/")[-1]
+
+        # If reponse does not include expires_at sync the object to get that attribute.
+        if not snapshot_json.get("expires_at"):
+            snapshot_object.sync()
+
+        # Getting '0001-01-01T00:00:00Z' means that the volume does not have an expiration time set.
+        if snapshot_object.expires_at == "0001-01-01T00:00:00Z":
+            snapshot_object.expires_at = None
+
+        # Overriding default value for when created_at is not present on the response due to using LXD 4.0.
+        # Also having created_at as "0001-01-01T00:00:00Z" means this information is not available.
+        # This could be because the information was lost or the snapshot was created using an older LXD version.
+        if (
+            not volume.client.has_api_extension("storage_volumes_created_at")
+            or snapshot_json["created_at"] == "0001-01-01T00:00:00Z"
+        ):
+            snapshot_object.created_at = None
+
+        # This field is may empty so derive it from its volume.
+        if not snapshot_object.content_type:
+            snapshot_object.content_type = volume.content_type
+
+        return snapshot_object
+
+    @classmethod
     def get(cls, volume, name):
         """Get a :class:`pylxd.models.StorageVolumeSnapshot` by its name.
 
@@ -692,16 +723,7 @@ class StorageVolumeSnapshot(model.Model):
 
         response = volume.api.snapshots[name].get()
 
-        snapshot = cls(volume.client, volume=volume, **response.json()["metadata"])
-
-        # Getting '0001-01-01T00:00:00Z' means that the volume does not have an expiration time set.
-        if response.json()["metadata"]["expires_at"] == "0001-01-01T00:00:00Z":
-            snapshot.expires_at = None
-
-        # Snapshot names are namespaced in LXD, as volume-name/snapshot-name.
-        # We hide that implementation detail.
-        snapshot.name = snapshot.name.split("/")[-1]
-        return snapshot
+        return cls.__parse_snaspshot_json(volume, response.json()["metadata"])
 
     @classmethod
     def all(cls, volume, use_recursion=False):
@@ -710,7 +732,7 @@ class StorageVolumeSnapshot(model.Model):
         If use_recursion is set to True, a list of :class:`pylxd.models.StorageVolumeSnapshot` objects is returned
         containing additional information for each snapshot.
 
-        Implements GET /1.0/storage-pools/<pool>/volumes/custom/<volume_name>/snapshots/<name>
+        Implements GET /1.0/storage-pools/<pool>/volumes/custom/<volume_name>/snapshots
 
         :param volume: The storage volume snapshot to get snapshots from
         :type volume: pylxd.models.StorageVolume
@@ -727,19 +749,10 @@ class StorageVolumeSnapshot(model.Model):
 
         if use_recursion:
             # Using recursion so returning list of StorageVolumeSnapshot objects.
-            def parse_response_item(snapshot_json):
-                snapshot_object = cls(volume.client, volume=volume, **snapshot_json)
-                snapshot_object.content_type = volume.content_type
-                # Snapshot names are namespaced in LXD, as volume-name/snapshot-name.
-                # We hide that implementation detail.
-                snapshot_object.name = snapshot_object.name.split("/")[-1]
-
-                return snapshot_object
-
             response = volume.api.snapshots.get(params={"recursion": 1})
 
             return [
-                parse_response_item(snapshot)
+                cls.__parse_snaspshot_json(volume, snapshot)
                 for snapshot in response.json()["metadata"]
             ]
 
@@ -780,7 +793,11 @@ class StorageVolumeSnapshot(model.Model):
 
         # Extract the snapshot name from the response JSON in case it was not provided
         if not name:
-            name = operation.resources["storage_volume_snapshots"][0].split("/")[-1]
+            if "storage_volume_snapshots" in operation.resources:
+                name = operation.resources["storage_volume_snapshots"][0].split("/")[-1]
+            else:
+                # If using LXD 4.0, the snapshot name isn't provided on the request response, so grab the latest snapshot name instead.
+                name = volume.snapshots.all()[-1].split("/")[-1]
 
         snapshot = volume.snapshots.get(name)
         return snapshot
