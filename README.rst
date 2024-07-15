@@ -14,7 +14,16 @@ A Python library for interacting with the LXD REST API.
 
 Installation
 =============
-``pip install pylxd``
+.. code-block:: console
+
+  # Create a virtual environment
+  python3 -m venv myvenv
+  cd myvenv
+
+  # Activate the virtual environment
+  . bin/activate
+  # Install pyLXD in it
+  pip install pylxd
 
 Bug reports
 ===========

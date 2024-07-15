@@ -168,8 +168,7 @@ The following methods are accessed from the `snapshots` attribute on the `Storag
 
   - `all` - Get all the snapshots from the storage volume.
   - `get` - Get a single snapshot using its name.
-  - `create` - Take a snapshot on the current stage of the storage volume. The new snapshot's
-  name and expiration date can be set, default name is in the format "snapX".
+  - `create` - Take a snapshot on the current stage of the storage volume. The new snapshot's name and expiration date can be set, default name is in the format "snapX".
   - `exists` - Returns True if a storage volume snapshot with the given name exists, returns False otherwise.
 
 Methods available on the storage snapshot object
@@ -185,4 +184,4 @@ the following methods are available:
 .. links
 
 .. _LXD Storage Pools: https://documentation.ubuntu.com/lxd/en/latest/storage/
-.. _LXD REST API: https://documentation.ubuntu.com/lxd/en/latest/api/
+.. _LXD Storage Pools REST API: https://documentation.ubuntu.com/lxd/en/latest/api/#/storage
