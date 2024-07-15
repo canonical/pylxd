@@ -70,4 +70,4 @@ the `LXD Cluster REST API`_ documentation.
 .. links
 
 .. _LXD Clustering: https://documentation.ubuntu.com/lxd/en/latest/clustering/
-.. _LXD REST API: https://documentation.ubuntu.com/lxd/en/latest/api/
+.. _LXD Cluster REST API: https://documentation.ubuntu.com/lxd/en/latest/api/#/cluster
