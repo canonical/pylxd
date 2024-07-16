@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import datetime
+import os
 import time
 
 import requests
@@ -49,6 +50,11 @@ def create_and_update(client):
 if __name__ == "__main__":
     client = pylxd.Client()
     log("Authenticating...")
-    client.authenticate("password")
+    if client.has_api_extension("explicit_trust_token"):
+        secret = os.getenv("LXD_TOKEN")
+    else:
+        secret = "password"
+
+    client.authenticate(secret)
 
     create_and_update(client)
