@@ -12,7 +12,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 def log(s):
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.UTC)
     print(f"{now} - {s}")
 
 
