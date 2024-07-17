@@ -53,7 +53,7 @@ class Certificate(model.Model):
     def create(
         cls,
         client,
-        password,
+        secret,
         cert_data,
         cert_type="client",
         name="",
@@ -68,11 +68,14 @@ class Certificate(model.Model):
         data = {
             "type": cert_type,
             "certificate": base64_cert,
-            "password": password,
             "name": name,
             "restricted": restricted,
             "projects": projects,
         }
+        if client.has_api_extension("explicit_trust_token"):
+            data["trust_token"] = secret
+        else:
+            data["password"] = secret
         response = client.api.certificates.post(json=data)
         location = response.headers["Location"]
         fingerprint = location.split("/")[-1]

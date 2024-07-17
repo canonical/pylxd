@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+
 import pylxd
 from integration.testing import IntegrationTestCase
 from pylxd import exceptions
@@ -21,16 +23,16 @@ class TestClient(IntegrationTestCase):
     """Tests for `Client`."""
 
     def test_authenticate(self):
-        if self.client.has_api_extension("explicit_trust_token"):
-            self.skipTest(
-                "Required LXD support for password authentication not available!"
-            )
-
         client = pylxd.Client("https://127.0.0.1:8443/")
+
+        if client.has_api_extension("explicit_trust_token"):
+            secret = os.getenv("LXD_TOKEN")
+        else:
+            secret = "password"
 
         self.assertFalse(client.trusted)
 
-        client.authenticate("password")
+        client.authenticate(secret)
 
         self.assertTrue(client.trusted)
 
@@ -48,5 +50,10 @@ class TestClient(IntegrationTestCase):
                 self.skipTest(message)
             raise
 
-        client.authenticate("password")
+        if client.has_api_extension("explicit_trust_token"):
+            secret = os.getenv("LXD_TOKEN")
+        else:
+            secret = "password"
+
+        client.authenticate(secret)
         self.assertEqual(client.host_info["environment"]["project"], "test-project")

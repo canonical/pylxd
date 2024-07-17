@@ -191,7 +191,12 @@ class TestClient(TestCase):
         """A client is authenticated."""
         response = mock.MagicMock(status_code=200)
         response.json.side_effect = [
-            {"metadata": {"auth": "untrusted"}},
+            {
+                "metadata": {
+                    "auth": "untrusted",
+                    "api_extensions": ["explicit_trust_token"],
+                }
+            },
             {
                 "metadata": {
                     "type": "client",

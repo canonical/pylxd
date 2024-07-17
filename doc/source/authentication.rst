@@ -3,8 +3,9 @@ Client Authentication
 =====================
 
 When using LXD over https, LXD uses an asymmetric keypair for authentication.
-The keypairs are added to the authentication database after entering the LXD
-instance's "trust password".
+The keypairs are added to the authentication database after entering a secret.
+The secret can be the LXD trust password, when using LXD 5.0 or older, or a
+trust token otherwise.
 
 
 Generate a certificate
@@ -35,11 +36,11 @@ essentially meaning that the authentication has not yet occurred.
     >>> client.trusted
     False
 
-In order to authenticate the client, pass the lxd instance's trust
-password to `Client.authenticate`
+In order to authenticate the client, pass the LXD instance's trust
+password or token to `Client.authenticate`
 
 .. code-block:: python
 
-    >>> client.authenticate('a-secret-trust-password')
+    >>> client.authenticate('a-secret')
     >>> client.trusted
     >>> True

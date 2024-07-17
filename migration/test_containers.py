@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+
 from integration.testing import IntegrationTestCase
 
 
@@ -35,10 +37,20 @@ class TestContainer(IntegrationTestCase):
         second_host = "https://10.0.3.222:8443/"
 
         client1 = Client(endpoint=first_host, verify=False)
-        client1.authenticate("password")
+        if client1.has_api_extension("explicit_trust_token"):
+            secret = os.getenv("LXD_TOKEN_ONE")
+        else:
+            secret = "password"
+
+        client1.authenticate(secret)
 
         client2 = Client(endpoint=second_host, verify=False)
-        client2.authenticate("password")
+        if client2.has_api_extension("explicit_trust_token"):
+            secret = os.getenv("LXD_TOKEN_TWO")
+        else:
+            secret = "password"
+
+        client2.authenticate(secret)
         an_container = client1.containers.get(self.container.name)
         an_container.start(wait=True)
         an_container.sync()
@@ -53,7 +65,12 @@ class TestContainer(IntegrationTestCase):
 
         second_host = "https://10.0.3.222:8443/"
         client2 = Client(endpoint=second_host, verify=False)
-        client2.authenticate("password")
+        if client2.has_api_extension("explicit_trust_token"):
+            secret = os.getenv("LXD_TOKEN_TWO")
+        else:
+            secret = "password"
+
+        client2.authenticate(secret)
 
         self.assertRaises(ValueError, self.container.migrate, client2)
 
@@ -65,10 +82,20 @@ class TestContainer(IntegrationTestCase):
         second_host = "https://10.0.3.222:8443/"
 
         client1 = Client(endpoint=first_host, verify=False)
-        client1.authenticate("password")
+        if client1.has_api_extension("explicit_trust_token"):
+            secret = os.getenv("LXD_TOKEN_ONE")
+        else:
+            secret = "password"
+
+        client1.authenticate(secret)
 
         client2 = Client(endpoint=second_host, verify=False)
-        client2.authenticate("password")
+        if client2.has_api_extension("explicit_trust_token"):
+            secret = os.getenv("LXD_TOKEN_TWO")
+        else:
+            secret = "password"
+
+        client2.authenticate(secret)
         an_container = client1.containers.get(self.container.name)
         an_migrated_container = an_container.migrate(client2, wait=True)
 

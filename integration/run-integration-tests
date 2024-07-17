@@ -18,10 +18,13 @@ fi
 # Make sure a client.{crt,key} exist by trying to add a bogus remote
 lxc remote add foo 127.0.0.1:1234 2>/dev/null || true
 
-if ! lxc info | grep -qwF explicit_trust_token; then
+lxc config set core.https_address 127.0.0.1
+if lxc info | grep -qwF explicit_trust_token; then
+    LXD_TOKEN="$(lxc config trust add --name pylxd --quiet)"
+    export LXD_TOKEN
+else
     lxc config set core.trust_password password
 fi
-lxc config set core.https_address 127.0.0.1
 
 if ! lxc storage show default >/dev/null 2>&1; then
     lxc storage create default dir

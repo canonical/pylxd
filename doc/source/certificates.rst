@@ -13,9 +13,10 @@ methods:
 
   - `all()` - Retrieve all certificates.
   - `get()` - Get a specifit certificate, by its fingerprint.
-  - `create()` - Create a new certificate. This method requires
-    a first argument that is the LXD trust password, and the cert
-    data, in binary format.
+  - `create()` - Create a new certificate. This method requires a first argument
+    that is a secret and a second containing the cert data, in binary format.
+    The secret can be the LXD trust password, when using LXD 5.0 or older,
+    or a trust token otherwise.
 
 
 Certificate attributes

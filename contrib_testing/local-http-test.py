@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import datetime
+import os
 import time
 
 import requests
@@ -12,7 +13,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 def log(s):
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.UTC)
     print(f"{now} - {s}")
 
 
@@ -49,6 +50,11 @@ def create_and_update(client):
 if __name__ == "__main__":
     client = pylxd.Client("https://127.0.0.1:8443/", verify=False)
     log("Authenticating...")
-    client.authenticate("password")
+    if client.has_api_extension("explicit_trust_token"):
+        secret = os.getenv("LXD_TOKEN")
+    else:
+        secret = "password"
+
+    client.authenticate(secret)
 
     create_and_update(client)
