@@ -53,12 +53,13 @@ class Certificate(model.Model):
     def create(
         cls,
         client,
-        secret,
+        password,
         cert_data,
         cert_type="client",
         name="",
         projects=None,
         restricted=False,
+        secret="",
     ):
         """Create a new certificate."""
         cert = x509.load_pem_x509_certificate(cert_data, default_backend())
@@ -68,14 +69,18 @@ class Certificate(model.Model):
         data = {
             "type": cert_type,
             "certificate": base64_cert,
+            "password": password,
             "name": name,
             "restricted": restricted,
             "projects": projects,
         }
-        if client.has_api_extension("explicit_trust_token"):
+
+        # secret/trust_token are safer than password but support for password is kept for
+        # backward compatibility
+        if client.has_api_extension("explicit_trust_token") and secret:
             data["trust_token"] = secret
-        else:
-            data["password"] = secret
+            del data["password"]
+
         response = client.api.certificates.post(json=data)
         location = response.headers["Location"]
         fingerprint = location.split("/")[-1]
