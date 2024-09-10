@@ -478,11 +478,15 @@ class Client:
         if not self.has_api_extension(name):
             raise exceptions.LXDAPIExtensionNotAvailable(name)
 
-    def authenticate(self, secret):
+    def authenticate(self, secret, use_token_auth=True):
         if self.trusted:
             return
         cert = open(self.api.session.cert[0]).read().encode("utf-8")
-        self.certificates.create(secret, cert)
+
+        if self.has_api_extension("explicit_trust_token") and use_token_auth:
+            self.certificates.create(password="", cert_data=cert, secret=secret)
+        else:
+            self.certificates.create(password=secret, cert_data=cert)
 
         # Refresh the host info
         response = self.api.get()
