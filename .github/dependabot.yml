@@ -5,3 +5,8 @@ updates:
     labels: []
     schedule:
       interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/"
+    labels: []
+    schedule:
+      interval: "weekly"
