@@ -18,7 +18,7 @@ from urllib import parse
 
 import pytest
 import requests
-import requests_unixsocket
+import requests.adapters
 
 from pylxd import client, exceptions
 
@@ -631,13 +631,17 @@ class TestGetSessionForUrl(TestCase):
     def test_session_unix_socket(self):
         """http+unix URL return a requests_unixsocket session."""
         session = client.get_session_for_url("http+unix://test.com")
-        self.assertIsInstance(session, requests_unixsocket.Session)
+        self.assertIsInstance(
+            session.get_adapter("http+unix://"), requests.adapters.HTTPAdapter
+        )
 
     def test_session_http(self):
         """HTTP nodes return the default requests session."""
         session = client.get_session_for_url("http://test.com")
         self.assertIsInstance(session, requests.Session)
-        self.assertNotIsInstance(session, requests_unixsocket.Session)
+        self.assertRaises(
+            requests.exceptions.InvalidSchema, session.get_adapter, "http+unix://"
+        )
 
     def test_session_cert(self):
         """If certs are given, they're set on the Session."""

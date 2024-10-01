@@ -14,19 +14,20 @@
 import json
 import os
 import re
+import socket
 from enum import Enum
 from typing import NamedTuple
 from urllib import parse
 
 import requests
-import requests_unixsocket
+import requests.adapters
+import urllib3
+import urllib3.connection
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 from ws4py.client import WebSocketBaseClient
 
 from pylxd import exceptions, managers
-
-requests_unixsocket.monkeypatch()
 
 SNAP_ROOT = os.path.expanduser("~/snap/lxd/common/config/")
 APT_ROOT = os.path.expanduser("~/.config/lxc/")
@@ -51,12 +52,74 @@ DEFAULT_CERTS = Cert(
     key=os.path.join(CERTS_PATH, KEY_FILE_NAME),
 )  # pragma: no cover
 
+DEFAULT_SCHEME = "http+unix://"
+SOCKET_CONNECTION_TIMEOUT = 60
+
 
 class EventType(Enum):
     All = "all"
     Operation = "operation"
     Logging = "logging"
     Lifecycle = "lifecycle"
+
+
+class _UnixSocketHTTPConnection(urllib3.connection.HTTPConnection, object):
+    def __init__(self, unix_socket_url):
+        super(_UnixSocketHTTPConnection, self).__init__(
+            "localhost", timeout=SOCKET_CONNECTION_TIMEOUT
+        )
+        self.unix_socket_url = unix_socket_url
+        self.timeout = SOCKET_CONNECTION_TIMEOUT
+        self.sock = None
+
+    def __del__(self):
+        if self.sock:
+            self.sock.close()
+
+    def connect(self):
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock.settimeout(self.timeout)
+        socket_path = parse.unquote(parse.urlparse(self.unix_socket_url).netloc)
+        sock.connect(socket_path)
+        self.sock = sock
+
+
+class _UnixSocketHTTPConnectionPool(urllib3.HTTPConnectionPool):
+    def __init__(self, socket_path):
+        super(_UnixSocketHTTPConnectionPool, self).__init__("localhost")
+        self.socket_path = socket_path
+
+    def _new_conn(self):
+        return _UnixSocketHTTPConnection(self.socket_path)
+
+
+class _UnixAdapter(requests.adapters.HTTPAdapter):
+    def __init__(self, pool_connections=25, *args, **kwargs):
+        super(_UnixAdapter, self).__init__(*args, **kwargs)
+        self.pools = urllib3._collections.RecentlyUsedContainer(
+            pool_connections, dispose_func=lambda p: p.close()
+        )
+
+    def get_connection(self, url, proxies):
+        with self.pools.lock:
+            conn = self.pools.get(url)
+            if conn:
+                return conn
+
+            conn = _UnixSocketHTTPConnectionPool(url)
+            self.pools[url] = conn
+
+        return conn
+
+    # This method is needed fo compatibility with later requests versions.
+    def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):
+        return self.get_connection(request.url, None)
+
+    def request_url(self, request, proxies):
+        return request.path_url
+
+    def close(self):
+        self.pools.clear()
 
 
 class LXDSSLAdapter(requests.adapters.HTTPAdapter):
@@ -74,11 +137,10 @@ def get_session_for_url(url: str, verify=None, cert=None) -> requests.Session:
 
     Call sites can use this to customise the session before passing into a Client.
     """
-    session: requests.Session
-    if url.startswith("http+unix://"):
-        session = requests_unixsocket.Session()
+    session = requests.Session()
+    if url.startswith(DEFAULT_SCHEME):
+        session.mount(DEFAULT_SCHEME, _UnixAdapter())
     else:
-        session = requests.Session()
         session.cert = cert
         session.verify = verify
 
