@@ -6,6 +6,9 @@ dist/
 .coverage
 .tox
 
+# Tox tests leftovers
+build
+
 # Translations
 *.mo
 
