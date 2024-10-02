@@ -13,7 +13,7 @@ concurrency:
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Repository checkout
       uses: actions/checkout@v4
@@ -23,14 +23,18 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install --upgrade pip tox
+        python3 -m venv venv
+        . ./venv/bin/activate
+        ./venv/bin/pip install --require-virtualenv --upgrade pip tox
 
     - name: Lint Python files
       run: |
+        . ./venv/bin/activate
         tox -e lint
 
     - name: Typecheck Python files
       run: |
+        . ./venv/bin/activate
         tox -e check
 
   tests:
