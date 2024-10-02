@@ -101,20 +101,3 @@ jobs:
       run: |
         . ./venv/bin/activate
         integration/run-integration-tests
-
-  publish:
-    name: Publish
-    runs-on: ubuntu-22.04
-    if: startsWith(github.event.ref, 'refs/tags')
-
-    permissions:
-      contents: write
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Create Release
-      uses: ncipollo/release-action@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        name: Release ${{ github.ref }}
-        generateReleaseNotes: true
