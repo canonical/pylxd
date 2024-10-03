@@ -13,7 +13,7 @@ concurrency:
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Repository checkout
       uses: actions/checkout@v4
@@ -23,15 +23,37 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install --upgrade pip tox
+        python3 -m venv venv
+        . ./venv/bin/activate
+        ./venv/bin/pip install --require-virtualenv --upgrade pip tox
 
     - name: Lint Python files
       run: |
+        . ./venv/bin/activate
         tox -e lint
 
     - name: Typecheck Python files
       run: |
+        . ./venv/bin/activate
         tox -e check
+
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Repository checkout
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        python3 -m venv venv
+        . ./venv/bin/activate
+        ./venv/bin/pip install --require-virtualenv --upgrade pip tox
+
+    - name: Run unit tests
+      run: |
+        . ./venv/bin/activate
+        tox -e unit
 
   tests:
     name: Tests
@@ -65,30 +87,17 @@ jobs:
     - name: Install dependencies
       run: |
         set -x
-        pip install --upgrade pip tox codecov
+        python3 -m venv venv
+        . ./venv/bin/activate
+        ./venv/bin/pip install --require-virtualenv --upgrade pip tox codecov
 
     - name: Coverage
       run: |
+        . ./venv/bin/activate
         tox -e coverage
         codecov
 
     - name: Integration
       run: |
+        . ./venv/bin/activate
         integration/run-integration-tests
-
-  publish:
-    name: Publish
-    runs-on: ubuntu-22.04
-    if: startsWith(github.event.ref, 'refs/tags')
-
-    permissions:
-      contents: write
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Create Release
-      uses: ncipollo/release-action@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        name: Release ${{ github.ref }}
-        generateReleaseNotes: true
