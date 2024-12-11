@@ -418,13 +418,13 @@ class Client:
         Use the name of the url part as attribute or item of an api object to
         create another api object appended with the new url part name, ie:
 
-            >>> api = Client().api
             # /
-            >>> response = api.get()
+            >> api = Client().api
+            >> response = api.get()
             # Check status code and response
-            >>> print response.status_code, response.json()
+            >> print(response.status_code, response.json())
             # /instances/test/
-            >>> print api.instances['test'].get().json()
+            >> print(api.instances['test'].get().json())
     """
 
     def __init__(
