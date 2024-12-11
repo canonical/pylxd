@@ -420,7 +420,7 @@ class StorageVolume(model.Model):
         The function signature 'hides' that the first parameter to the function
         is the definition.  The function should be called as:
 
-        >>> a_storage_pool.volumes.create(definition_dict, wait=<bool>)
+        >> a_storage_pool.volumes.create(definition_dict, wait=<bool>)
 
         where `definition_dict` is mandatory, and `wait` defaults to True,
         which makes the default a synchronous function call.
