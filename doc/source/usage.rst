@@ -24,7 +24,7 @@ certificate to the `verify` argument:
 
     >>> from pylxd import Client
     >>> client = Client(
-    ...     endpoint='http://10.0.0.1:8443',
+    ...     endpoint='https://10.0.0.1:8443',
     ...     cert=('/path/to/client.crt', '/path/to/client.key'),
     ...     verify='/path/to/server.crt')
 
@@ -38,7 +38,7 @@ for TLS verification.
 
     >>> from pylxd import Client
     >>> client = Client(
-    ...     endpoint='http://10.0.0.1:8443',
+    ...     endpoint='https://10.0.0.1:8443',
     ...     cert=('/path/to/client.crt', '/path/to/client.key'),
     ...     verify=False)
 
