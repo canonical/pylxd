@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import base64
 import json
 import os
 import re
@@ -349,6 +350,32 @@ class _WebsocketClient(WebSocketBaseClient):
         self.messages.append(json_message)
 
 
+# Helper function used by Client.authenticate()
+def _is_a_token(secret):
+    """Inspect the provided secret to determine if it is a trust token.
+
+    Try to base64 decode and parse the JSON to see if it contains a "secret" key.
+
+    :param secret: The secret to inspect
+    :type secret: str
+    :returns: True if the secret is a trust token
+
+    >>> _is_a_token("password")
+    False
+    >>> _is_a_token(base64.b64encode("password".encode("utf-8")))
+    False
+    >>> token = '{"client_name":"foo","fingerprint":"abcd","addresses":["192.0.2.1:8443"],"secret":"I-am-a-secret","expires_at":"0001-01-01T00:00:00Z","type":""}'
+    >>> _is_a_token(base64.b64encode(json.dumps(token).encode("utf-8")))
+    True
+    """
+    try:
+        b64 = base64.b64decode(secret)
+        token = json.loads(b64.decode("utf-8"))
+        return "secret" in token
+    except (TypeError, ValueError, json.JSONDecodeError, base64.binascii.Error):
+        return False
+
+
 class Client:
     """Client class for LXD REST API.
 
@@ -545,7 +572,14 @@ class Client:
             return
         cert = open(self.api.session.cert[0]).read().encode("utf-8")
 
-        if self.has_api_extension("explicit_trust_token") and use_token_auth:
+        # Quirk to handle 5.21 that supports explicit trust tokens as well as
+        # password auth. We need to ascertain if the provided secret is indeed a
+        # token before trying to use it as such.
+        secret_is_a_token = False
+        if use_token_auth and self.has_api_extension("explicit_trust_token"):
+            secret_is_a_token = _is_a_token(secret)
+
+        if secret_is_a_token:
             self.certificates.create(password="", cert_data=cert, secret=secret)
         else:
             self.certificates.create(password=secret, cert_data=cert)
