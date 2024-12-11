@@ -31,7 +31,7 @@ essentially meaning that the authentication has not yet occurred.
 
     >>> from pylxd import Client
     >>> client = Client(
-    ...     endpoint='http://10.0.0.1:8443',
+    ...     endpoint='https://10.0.0.1:8443',
     ...     cert=('lxd.crt', 'lxd.key'))
     >>> client.trusted
     False
