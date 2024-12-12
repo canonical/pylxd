@@ -570,7 +570,15 @@ class Client:
     def authenticate(self, secret, use_token_auth=True):
         if self.trusted:
             return
-        cert = open(self.api.session.cert[0]).read().encode("utf-8")
+
+        if not isinstance(self.api.session.cert, tuple):
+            raise exceptions.ClientConnectionFailed("No client certificate specified")
+
+        try:
+            with open(self.api.session.cert[0]) as f:
+                cert = f.read().encode("utf-8")
+        except FileNotFoundError:
+            raise exceptions.ClientConnectionFailed("Client certificate not found")
 
         # Quirk to handle 5.21 that supports explicit trust tokens as well as
         # password auth. We need to ascertain if the provided secret is indeed a
