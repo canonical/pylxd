@@ -442,7 +442,7 @@ class Instance(model.Model):
         :returns: A tuple of `(exit_code, stdout, stderr)`
         :rtype: _InstanceExecuteResult() namedtuple
         """
-        if isinstance(commands, str):
+        if not isinstance(commands, list):
             raise TypeError("First argument must be a list.")
         if environment is None:
             environment = {}
