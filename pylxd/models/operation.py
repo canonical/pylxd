@@ -24,7 +24,7 @@ _seen_attribute_warnings = set()
 
 
 class Operation:
-    """An LXD operation.
+    """A LXD operation.
 
     If the LXD server sends attributes that this version of pylxd is unaware of
     then a warning is printed.  By default the warning is issued ONCE and then
