@@ -109,7 +109,7 @@ class TestImage(testing.PyLXDTestCase):
     def test_create(self):
         """An image is created."""
         fingerprint = hashlib.sha256(b"").hexdigest()
-        a_image = models.Image.create(self.client, b"", public=True, wait=True)
+        a_image = models.Image.create(self.client, b"", public=True)
 
         self.assertIsInstance(a_image, models.Image)
         self.assertEqual(fingerprint, a_image.fingerprint)
@@ -117,9 +117,7 @@ class TestImage(testing.PyLXDTestCase):
     def test_create_with_metadata(self):
         """An image with metadata is created."""
         fingerprint = hashlib.sha256(b"").hexdigest()
-        a_image = models.Image.create(
-            self.client, b"", metadata=b"", public=True, wait=True
-        )
+        a_image = models.Image.create(self.client, b"", metadata=b"", public=True)
 
         self.assertIsInstance(a_image, models.Image)
         self.assertEqual(fingerprint, a_image.fingerprint)
@@ -128,7 +126,7 @@ class TestImage(testing.PyLXDTestCase):
         """An image with metadata is created."""
         fingerprint = hashlib.sha256(b"").hexdigest()
         a_image = models.Image.create(
-            self.client, StringIO(""), metadata=StringIO(""), public=True, wait=True
+            self.client, StringIO(""), metadata=StringIO(""), public=True
         )
 
         self.assertIsInstance(a_image, models.Image)

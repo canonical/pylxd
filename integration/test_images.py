@@ -49,7 +49,7 @@ class TestImages(IntegrationTestCase):
 
         with open(path, "rb") as f:
             data = f.read()
-            image = self.client.images.create(data, wait=True)
+            image = self.client.images.create(data)
 
         self.assertEqual(fingerprint, image.fingerprint)
 
