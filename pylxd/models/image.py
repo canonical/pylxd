@@ -49,6 +49,9 @@ class Image(model.Model):
     size = model.Attribute(readonly=True)
     uploaded_at = model.Attribute(readonly=True)
     update_source = model.Attribute(readonly=True)
+    type = model.Attribute(readonly=True)
+    project = model.Attribute(readonly=True)
+    profiles = model.Attribute(readonly=True)
 
     @property
     def api(self):
