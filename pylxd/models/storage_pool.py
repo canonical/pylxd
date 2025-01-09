@@ -300,6 +300,10 @@ class StorageVolume(model.Model):
     config = model.Attribute()
     used_by = model.Attribute(readonly=True)
     location = model.Attribute(readonly=True)
+    # Date strings follow the ISO 8601 pattern
+    created_at = model.Attribute(readonly=True)
+    pool = model.Attribute(readonly=True)
+    project = model.Attribute(readonly=True)
 
     snapshots = model.Manager()
 
