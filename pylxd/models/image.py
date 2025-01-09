@@ -113,7 +113,7 @@ class Image(model.Model):
 
         if wait is False:  # pragma: no cover
             warnings.warn(
-                "Image.create wait parameter ignored and will be removed in " "2.3",
+                "Image.create wait parameter ignored and will be removed",
                 DeprecationWarning,
             )
 
