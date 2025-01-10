@@ -158,19 +158,38 @@ class TestContainer(IntegrationTestCase):
 
     def test_execute_no_buffer(self):
         """A command is executed on the container without buffering the output."""
-        self.container.start(wait=True)
-        self.addCleanup(self.container.stop, wait=True)
-        time.sleep(
-            1
-        )  # Wait a little to make sure the container is ready to exec since it has just been started.
-        buffer = []
+        while True:
+            self.container.start(wait=True)
+            self.addCleanup(self.container.stop, wait=True)
+            time.sleep(1)
+            buffer = []
 
-        result = self.container.execute(["echo", "test"], stdout_handler=buffer.append)
+            result = self.container.execute(["echo", "test"], stdout_handler=buffer.append)
 
-        self.assertEqual(0, result.exit_code)
-        self.assertEqual("", result.stdout)
-        self.assertEqual("", result.stderr)
-        self.assertEqual("test\n", "".join(buffer))
+            self.assertEqual(0, result.exit_code)
+            self.assertEqual("", result.stdout)
+            self.assertEqual("", result.stderr)
+            self.assertEqual("test\n", "".join(buffer))
+
+            self.container.stop(wait=True)
+            time.sleep(1)
+
+    def test_execute_no_buffer_original(self):
+        """A command is executed on the container without buffering the output."""
+        while True:
+            self.container.start(wait=True)
+            self.addCleanup(self.container.stop, wait=True)
+            buffer = []
+
+            result = self.container.execute(["echo", "test"], stdout_handler=buffer.append)
+
+            self.assertEqual(0, result.exit_code)
+            self.assertEqual("", result.stdout)
+            self.assertEqual("", result.stderr)
+            self.assertEqual("test\n", "".join(buffer))
+
+            self.container.stop(wait=True)
+            time.sleep(1)
 
     def test_execute_no_decode(self):
         """A command is executed on the container that isn't utf-8 decodable"""

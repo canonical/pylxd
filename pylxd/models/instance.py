@@ -519,6 +519,11 @@ class Instance(model.Model):
             manager.stop()
             manager.join()
 
+            print(operation.metadata)
+            if hasattr(operation, "err"): print(operation.err)
+            print(stdout.data)
+            print(stderr.data)
+
             return _InstanceExecuteResult(
                 operation.metadata["return"], stdout.data, stderr.data
             )

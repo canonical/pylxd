@@ -55,8 +55,17 @@ save_trust_list > "${OLD_TRUST_LIST}"
 snap list lxd || true
 lxc version
 
+set +eu
+
 # finally run the integration tests
 tox -e integration
+
+set -eu
+
+# LXD daemon logs
+echo "::group::lxd logs"
+journalctl --quiet --no-hostname --no-pager --boot=0 --lines=100 --unit=snap.lxd.daemon.service
+echo "::endgroup::"
 
 # Remove any cert added to the trusted list by the integration tests
 NEW_TRUST_LIST="$(mktemp)"
