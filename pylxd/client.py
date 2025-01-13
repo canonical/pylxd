@@ -16,6 +16,7 @@ import json
 import os
 import re
 import socket
+import ssl
 from enum import Enum
 from typing import NamedTuple
 from urllib import parse
@@ -612,6 +613,56 @@ class Client:
             host = parse.unquote(self.api.netloc)
         url = parse.urlunparse((scheme, host, "", "", "", ""))
         return url
+
+    # Establishes a websocket client connection with the server.
+    # Accepts as parameter a websockets.sync.client.ClientConnection type class and returns a client object.
+    def create_websocket_client(
+        self,
+        websocket_client=ClientConnection,
+        unix_socket_path=None,
+        resource=None,
+        **kwargs,  # Used to provide any additional arguments a custom websocket_client may need.
+    ):
+        def create_client(*client_args, **client_kwargs):
+            client = websocket_client(
+                *client_args,
+                **client_kwargs,
+                **kwargs,
+            )
+
+            # If resource name was provided, tweak client protocol accordingly.
+            if resource:
+                parsed = resource.split("?")
+                client.protocol.wsuri.path = parsed[0]
+                if len(parsed) > 1:
+                    client.protocol.wsuri.query = parsed[1]
+
+            return client
+
+        ssl_context = None
+
+        if self.api.scheme == "https" and self.cert:
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+
+            ssl_context.load_cert_chain(certfile=self.cert[0], keyfile=self.cert[1])
+
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+
+        # If path to unix socket was provided assume we are using a unix socket and create client object as such.
+        if unix_socket_path:
+            return unix_connect(
+                unix_socket_path,
+                ssl=ssl_context,
+                create_connection=create_client,
+            )
+
+        # Otherwise create a regular websocket.
+        return connect(
+            self.websocket_url,
+            ssl=ssl_context,
+            create_connection=create_client,
+        )
 
     def events(self, websocket_client=None, event_types=None):
         """Get a websocket client for getting events.
