@@ -9,14 +9,16 @@ web socket messages.
 .. code-block:: python
 
     >>> ws_client = client.events()
-    >>> ws_client.connect()
-    >>> ws_client.run()
+    >>> ws_client.recv() # receives one event
+    >>> ws_client.messages[-1] # get latest event
+    >>> for event in ws_client: print(event) # show all events as they come in
 
-A default client class is provided, which will block indefinitely, and
-collect all json messages in a `messages` attribute. An optional 
-`websocket_client` parameter can be provided when more functionality is
-needed. The `ws4py` library is used to establish the connection; please
-see the `ws4py` documentation for more information.
+A default client class is provided, and collect all json messages in a `messages` attribute.
+An optional `websocket_client` parameter can be provided when more functionality is needed.
+To help older users, this parameter can also be used to provide a client from the
+now deprecated `ws4py`.
+The `websockets` library is used to establish the connection; please
+see the `websockets` documentation for more information.
 
 The stream of events can be filtered to include only specific types of
 events, as defined in the LXD /endpoint `documentation <https://documentation.ubuntu.com/lxd/en/latest/events/>`_.
@@ -32,6 +34,6 @@ LXD server:
 To receive only events pertaining to the lifecycle of the containers:
 
 .. code-block:: python
-		
+
    >>> types = set([EventType.Lifecycle])
    >>> ws_client = client.events(event_types=types)
