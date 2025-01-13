@@ -26,7 +26,7 @@ import urllib3
 import urllib3.connection
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
-from ws4py.client import WebSocketBaseClient
+from websockets.sync.client import ClientConnection, connect, unix_connect
 
 from pylxd import exceptions, managers
 
@@ -331,7 +331,7 @@ class _APINode:
         return response
 
 
-class _WebsocketClient(WebSocketBaseClient):
+class _WebsocketClient(ClientConnection):
     """A basic websocket client for the LXD API.
 
     This client is intentionally barebones, and serves
@@ -340,12 +340,17 @@ class _WebsocketClient(WebSocketBaseClient):
     then be read are parsed.
     """
 
-    def handshake_ok(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.messages = []
 
-    def received_message(self, message):
-        json_message = json.loads(message.data.decode("utf-8"))
+    def recv(self):
+        message = super().recv()
+        if isinstance(message, bytes):
+            message = message.decode("utf-8")
+        json_message = json.loads(message)
         self.messages.append(json_message)
+        return message
 
 
 # Helper function used by Client.authenticate()
