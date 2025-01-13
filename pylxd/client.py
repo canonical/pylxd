@@ -381,6 +381,47 @@ def _is_a_token(secret):
         return False
 
 
+# Create a client based on websockets' ClientConnection.
+def create_client_connection(
+    websocket_client=ClientConnection,
+    websocket_url=None,
+    unix_socket_path=None,
+    resource=None,
+    ssl=None,
+    **kwargs,  # Used to provide any additional arguments a custom websocket_client may need.
+):
+    def create_client(*client_args, **client_kwargs):
+        client = websocket_client(
+            *client_args,
+            **client_kwargs,
+            **kwargs,
+        )
+
+        # If resource name was provided, tweak client protocol accordingly.
+        if resource:
+            parsed = resource.split("?")
+            client.protocol.wsuri.path = parsed[0]
+            if len(parsed) > 1:
+                client.protocol.wsuri.query = parsed[1]
+
+        return client
+
+    # If path to unix socket was provided assume we are using a unix socket and create client object as such.
+    if unix_socket_path:
+        return unix_connect(
+            unix_socket_path,
+            ssl=ssl,
+            create_connection=create_client,
+        )
+
+    # Otherwise create a regular websocket.
+    return connect(
+        websocket_url,
+        ssl=ssl,
+        create_connection=create_client,
+    )
+
+
 class Client:
     """Client class for LXD REST API.
 
