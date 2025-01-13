@@ -12,11 +12,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 import os
+import threading
+import time
+
+from websockets.sync.client import ClientConnection
+from ws4py.client import WebSocketBaseClient
 
 import pylxd
 from integration.testing import IntegrationTestCase
 from pylxd import exceptions
+from pylxd.client import EventType
 
 
 class TestClient(IntegrationTestCase):
@@ -52,3 +59,64 @@ class TestClient(IntegrationTestCase):
 
         client.authenticate(secret)
         self.assertEqual(client.host_info["environment"]["project"], "test-project")
+
+    def _provoke_event(self):
+        time.sleep(1)
+        self.client.instances.all()  # provoke an event
+
+    def test_events_default_client(self):
+        events_ws_client = self.client.events()
+
+        self.assertTrue(issubclass(type(events_ws_client), ClientConnection))
+        self.assertEqual(events_ws_client.protocol.wsuri.resource_name, "/1.0/events")
+
+        receiver = threading.Thread(target=self._provoke_event)
+        receiver.start()
+
+        message = events_ws_client.recv()
+        receiver.join()
+
+        self.assertEqual(len(events_ws_client.messages), 1)
+        self.assertEqual(type(events_ws_client.messages[0]), dict)
+        self.assertEqual(json.loads(message), events_ws_client.messages[0])
+        self.assertEqual(events_ws_client.messages[0]["type"], EventType.Logging.value)
+
+        events_ws_client.close()
+
+    def test_events_filters(self):
+        for eventType in EventType:
+            if eventType != EventType.All:
+                events_ws_client = self.client.events(event_types=[eventType])
+
+                self.assertEqual(
+                    events_ws_client.protocol.wsuri.resource_name,
+                    f"/1.0/events?type={eventType.value}",
+                )
+
+                events_ws_client.close()
+
+    def test_events_provided_client(self):
+        events_ws_client = self.client.events(websocket_client=ClientConnection)
+
+        self.assertEqual(type(events_ws_client), ClientConnection)
+        self.assertEqual(events_ws_client.protocol.wsuri.resource_name, "/1.0/events")
+
+        receiver = threading.Thread(target=self._provoke_event)
+        receiver.start()
+
+        message = events_ws_client.recv()
+        receiver.join()
+
+        self.assertEqual(type(message), str)
+        self.assertEqual(json.loads(message)["type"], EventType.Logging.value)
+
+        events_ws_client.close()
+
+    def test_events_ws4py_client(self):
+        events_ws_client = self.client.events(websocket_client=WebSocketBaseClient)
+
+        self.assertEqual(type(events_ws_client), WebSocketBaseClient)
+        self.assertEqual(events_ws_client.resource, "/1.0/events")
+
+        events_ws_client.connect()
+        events_ws_client.close()
