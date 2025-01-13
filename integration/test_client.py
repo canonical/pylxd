@@ -37,11 +37,6 @@ class TestClient(IntegrationTestCase):
         self.assertTrue(client.trusted)
 
     def test_authenticate_with_project(self):
-        if self.client.has_api_extension("explicit_trust_token"):
-            self.skipTest(
-                "Required LXD support for password authentication not available!"
-            )
-
         try:
             client = pylxd.Client("https://127.0.0.1:8443/", project="test-project")
         except exceptions.ClientConnectionFailed as e:
