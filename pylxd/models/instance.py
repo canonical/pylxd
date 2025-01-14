@@ -11,20 +11,20 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import errno
 import json
 import logging
 import os
 import stat
+import threading
 import time
 from typing import IO, NamedTuple
 from urllib import parse
 
-from ws4py.client import WebSocketBaseClient
-from ws4py.manager import WebSocketManager
-from ws4py.messaging import BinaryMessage
+from websockets.exceptions import ConnectionClosedError
+from websockets.sync.client import ClientConnection
 
 from pylxd import managers
+from pylxd.client import create_client_connection
 from pylxd.exceptions import LXDAPIException
 from pylxd.models import _model as model
 from pylxd.models.operation import Operation
@@ -465,63 +465,71 @@ class Instance(model.Model):
             self.client.api.operations[operation_id].websocket._api_endpoint
         )
 
-        with managers.web_socket_manager(WebSocketManager()) as manager:
-            stdin = _StdinWebsocket(
-                self.client.websocket_url,
-                payload=stdin_payload,
-                encoding=stdin_encoding,
-            )
-            stdin.resource = f"{parsed.path}?secret={fds['0']}"
-            stdin.connect()
-            stdout = _CommandWebsocketClient(
-                manager,
-                self.client.websocket_url,
-                encoding=encoding,
-                decode=decode,
-                handler=stdout_handler,
-            )
-            stdout.resource = f"{parsed.path}?secret={fds['1']}"
-            stdout.connect()
-            stderr = _CommandWebsocketClient(
-                manager,
-                self.client.websocket_url,
-                encoding=encoding,
-                decode=decode,
-                handler=stderr_handler,
-            )
-            stderr.resource = f"{parsed.path}?secret={fds['2']}"
-            stderr.connect()
+        is_unix_socket = "+unix" in parsed.scheme
+        unix_socket_path = (
+            parsed.hostname.replace(
+                "%2F", "/"
+            )  # urlparse fails to make sense of slashes in the hostname part.
+            if is_unix_socket
+            else None
+        )
 
-            manager.start()
+        stdin = create_client_connection(
+            _StdinWebsocket,
+            self.client.websocket_url,
+            unix_socket_path,
+            f"{parsed.path}?secret={fds['0']}",
+            payload=stdin_payload,
+            encoding=encoding,
+        )
+        stdout = create_client_connection(
+            _CommandWebsocketClient,
+            self.client.websocket_url,
+            unix_socket_path,
+            f"{parsed.path}?secret={fds['1']}",
+            decode=decode,
+            encoding=encoding,
+            handler=stdout_handler,
+        )
+        stderr = create_client_connection(
+            _CommandWebsocketClient,
+            self.client.websocket_url,
+            unix_socket_path,
+            f"{parsed.path}?secret={fds['2']}",
+            encoding=encoding,
+            decode=decode,
+            handler=stderr_handler,
+        )
 
-            # watch for the end of the command:
-            while True:
-                operation = self.client.operations.get(operation_id)
-                if "return" in operation.metadata:
-                    break
-                time.sleep(0.5)  # pragma: no cover
+        # Create threads for each socket.
+        stdout_thread = threading.Thread(target=stdout.recv_output)
+        stderr_thread = threading.Thread(target=stderr.recv_output)
+        stdin_thread = threading.Thread(target=stdin.send_payload)
 
-            try:
-                stdin.close()
-            except BrokenPipeError:
-                pass
+        # Start the threads
+        stdout_thread.start()
+        stderr_thread.start()
+        stdin_thread.start()
 
-            stdout.finish_soon()
-            stderr.finish_soon()
-            try:
-                manager.close_all()
-            except BrokenPipeError:
-                pass
+        # watch for the end of the command:
+        while True:
+            operation = self.client.operations.get(operation_id)
+            if "return" in operation.metadata:
+                break
+            time.sleep(0.5)  # pragma: no cover
 
-            while not stdout.finished or not stderr.finished:
-                time.sleep(0.1)  # progma: no cover
+        stdin.close()
+        stdin_thread.join()
 
-            manager.stop()
-            manager.join()
+        stdout.finish_soon()
+        stderr.finish_soon()
 
-            return _InstanceExecuteResult(
-                operation.metadata["return"], stdout.data, stderr.data
-            )
+        stdout_thread.join()
+        stderr_thread.join()
+
+        return _InstanceExecuteResult(
+            operation.metadata["return"], stdout.data, stderr.data
+        )
 
     def raw_interactive_execute(
         self, commands, environment=None, user=None, group=None, cwd=None
@@ -708,58 +716,54 @@ class Instance(model.Model):
         return response
 
 
-class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
+class _CommandWebsocketClient(ClientConnection):  # pragma: no cover
     """Handle a websocket for instance.execute(...) and manage decoding of the
     returned values depending on 'decode' and 'encoding' parameters.
     """
 
-    def __init__(self, manager, *args, **kwargs):
-        self.manager = manager
+    def __init__(self, *args, **kwargs):
         self.decode = kwargs.pop("decode", True)
         self.encoding = kwargs.pop("encoding", None)
         self.handler = kwargs.pop("handler", None)
-        self.message_encoding = None
         self.finish_off = False
-        self.finished = False
         self.last_message_empty = False
         self.buffer = []
         super().__init__(*args, **kwargs)
 
-    def handshake_ok(self):
-        self.manager.add(self)
-        self.buffer = []
-
-    def received_message(self, message):
-        if message.data is None or len(message.data) == 0:
-            self.last_message_empty = True
-            if self.finish_off:
-                self.finished = True
-            return
-        else:
-            self.last_message_empty = False
-        if message.encoding and self.message_encoding is None:
-            self.message_encoding = message.encoding
-        if self.handler:
-            self.handler(self._maybe_decode(message.data))
-        else:
-            self.buffer.append(message.data)
-        if self.finish_off and isinstance(message, BinaryMessage):
-            self.finished = True
-
-    def closed(self, code, reason=None):
-        self.finished = True
+    def recv_output(self):
+        try:
+            for message in self:
+                if message is None or len(message) == 0:
+                    self.last_message_empty = True
+                    if self.finish_off:
+                        self.close()
+                    return
+                else:
+                    self.last_message_empty = False
+                if self.handler:
+                    self.handler(self._maybe_decode(message))
+                else:
+                    self.buffer.append(message)
+                if self.finish_off and isinstance(message, bytes):
+                    self.close()
+        except ConnectionClosedError:  # LXD doesn't send a close frame as expected.
+            logging.getLogger("websockets").exception(
+                "Connection severed by server during receive"
+            )
+            pass
 
     def finish_soon(self):
         self.finish_off = True
         if self.last_message_empty:
-            self.finished = True
+            self.close()
 
     def _maybe_decode(self, buffer):
+        if isinstance(buffer, str):
+            buffer = buffer.encode("utf-8")
+
         if self.decode and buffer is not None:
             if self.encoding:
                 return buffer.decode(self.encoding)
-            if self.message_encoding:
-                return buffer.decode(self.message_encoding)
             # This is the backwards compatible "always decode to utf-8"
             return buffer.decode("utf-8")
         return buffer
@@ -769,43 +773,39 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         buffer = b"".join(self.buffer)
         return self._maybe_decode(buffer)
 
-    def unhandled_error(self, error):
-        """
-        Handles the unfriendly socket closures on the server side
-        without showing a confusing error message
-        """
-        if hasattr(error, "errno") and error.errno == errno.ECONNRESET:
-            pass
-        else:
-            logger = logging.getLogger("ws4py")
-            logger.exception("Failed to receive data")
 
-
-class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
+class _StdinWebsocket(ClientConnection):  # pragma: no cover
     """A websocket client for handling stdin.
 
     Allow comunicate with instance commands via stdin
     """
 
-    def __init__(self, url, payload=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.encoding = kwargs.pop("encoding", None)
-        self.payload = payload
-        super().__init__(url, **kwargs)
+        self.payload = kwargs.pop("payload", None)
+        super().__init__(*args, **kwargs)
 
     def _smart_encode(self, msg):
         if isinstance(msg, str) and self.encoding:
             return msg.encode(self.encoding)
         return msg
 
-    def handshake_ok(self):
-        if self.payload:
-            if hasattr(self.payload, "read"):
-                self.send(
-                    (self._smart_encode(line) for line in self.payload), binary=True
-                )
-            else:
-                self.send(self._smart_encode(self.payload), binary=True)
-        self.send(b"", binary=False)
+    def send_payload(self):
+        try:
+            if self.payload:
+                # Check if payload is a file
+                if hasattr(self.payload, "read"):
+                    self.send(
+                        (self._smart_encode(line) for line in self.payload), text=False
+                    )
+                else:
+                    self.send(self._smart_encode(self.payload), text=False)
+            self.send("")
+        except ConnectionClosedError:  # LXD doesn't send a
+            logging.getLogger("websockets").exception(
+                "Connection severed by server during send"
+            )
+            pass
 
 
 class Snapshot(model.Model):

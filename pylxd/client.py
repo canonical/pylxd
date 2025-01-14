@@ -16,6 +16,8 @@ import json
 import os
 import re
 import socket
+import ssl
+import warnings
 from enum import Enum
 from typing import NamedTuple
 from urllib import parse
@@ -26,7 +28,7 @@ import urllib3
 import urllib3.connection
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
-from ws4py.client import WebSocketBaseClient
+from websockets.sync.client import ClientConnection, connect, unix_connect
 
 from pylxd import exceptions, managers
 
@@ -333,7 +335,7 @@ class _APINode:
         return response
 
 
-class _WebsocketClient(WebSocketBaseClient):
+class _WebsocketClient(ClientConnection):
     """A basic websocket client for the LXD API.
 
     This client is intentionally barebones, and serves
@@ -342,12 +344,17 @@ class _WebsocketClient(WebSocketBaseClient):
     then be read are parsed.
     """
 
-    def handshake_ok(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.messages = []
 
-    def received_message(self, message):
-        json_message = json.loads(message.data.decode("utf-8"))
+    def recv(self):
+        message = super().recv()
+        if isinstance(message, bytes):
+            message = message.decode("utf-8")
+        json_message = json.loads(message)
         self.messages.append(json_message)
+        return message
 
 
 # Helper function used by Client.authenticate()
@@ -374,6 +381,47 @@ def _is_a_token(secret):
         return "secret" in token
     except (TypeError, ValueError, json.JSONDecodeError, base64.binascii.Error):
         return False
+
+
+# Create a client based on websockets' ClientConnection.
+def create_client_connection(
+    websocket_client=ClientConnection,
+    websocket_url=None,
+    unix_socket_path=None,
+    resource=None,
+    ssl=None,
+    **kwargs,  # Used to provide any additional arguments a custom websocket_client may need.
+):
+    def create_client(*client_args, **client_kwargs):
+        client = websocket_client(
+            *client_args,
+            **client_kwargs,
+            **kwargs,
+        )
+
+        # If resource name was provided, tweak client protocol accordingly.
+        if resource:
+            parsed = resource.split("?")
+            client.protocol.wsuri.path = parsed[0]
+            if len(parsed) > 1:
+                client.protocol.wsuri.query = parsed[1]
+
+        return client
+
+    # If path to unix socket was provided assume we are using a unix socket and create client object as such.
+    if unix_socket_path:
+        return unix_connect(
+            unix_socket_path,
+            ssl=ssl,
+            create_connection=create_client,
+        )
+
+    # Otherwise create a regular websocket.
+    return connect(
+        websocket_url,
+        ssl=ssl,
+        create_connection=create_client,
+    )
 
 
 class Client:
@@ -624,7 +672,7 @@ class Client:
 
         :param websocket_client: Optional websocket client can be specified for
          implementation-specific handling of events as they occur.
-        :type websocket_client: ws4py.client import WebSocketBaseClient
+        :type websocket_client: websockets.sync.client.ClientConnection or ws4py.client.WebSocketBaseClient
 
         :param event_types: Optional set of event types to propagate. Omit this
          argument or specify {EventTypes.All} to receive all events.
@@ -637,10 +685,6 @@ class Client:
             websocket_client = _WebsocketClient
 
         use_ssl = self.api.scheme == "https" and self.cert
-        ssl_options = (
-            {"certfile": self.cert[0], "keyfile": self.cert[1]} if use_ssl else None
-        )
-        client = websocket_client(self.websocket_url, ssl_options=ssl_options)
         parsed = parse.urlparse(self.api.events._api_endpoint)
 
         resource = parsed.path
@@ -650,6 +694,56 @@ class Client:
             query.update({"type": ",".join(t.value for t in event_types)})
             resource = f"{resource}?{parse.urlencode(query)}"
 
-        client.resource = resource
+        # First try handling it as a websockets' ClientConnection
+        if issubclass(websocket_client, ClientConnection):
+            ssl_context = (
+                ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT).load_cert_chain(
+                    certfile=self.cert[0], keyfile=self.cert[1]
+                )
+                if use_ssl
+                else None
+            )
+
+            is_unix_socket = "+unix" in parsed.scheme
+
+            return create_client_connection(
+                websocket_client=websocket_client,
+                websocket_url=self.websocket_url,
+                unix_socket_path=(
+                    parsed.hostname.replace(
+                        "%2F", "/"
+                    )  # urlparse fails to make sense of slashes in the hostname part.
+                    if is_unix_socket
+                    else None
+                ),
+                resource=resource,
+                ssl=ssl_context,
+            )
+
+        # If not a ClientConnection, assume it is a ws4py client and handle it accordingly, for backwards compatibility.
+        else:
+            try:
+                ssl_options = (
+                    {"certfile": self.cert[0], "keyfile": self.cert[1]}
+                    if use_ssl
+                    else None
+                )
+
+                client = websocket_client(
+                    self.websocket_url, resource, ssl_options=ssl_options
+                )
+
+                client.resource = resource
+
+                warnings.warn(
+                    "The ws4py client API is deprecated and should not be supported in the future",
+                    DeprecationWarning,
+                )
+            except (TypeError, ValueError, AttributeError):
+                warnings.warn(
+                    "Could not create client object since provided client follows neither websockets' nor ws4py's client APIs"
+                )
+
+                return None
 
         return client
