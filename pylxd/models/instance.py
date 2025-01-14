@@ -764,31 +764,38 @@ class _CommandWebsocketClient(ClientConnection):  # pragma: no cover
         return self._maybe_decode(buffer)
 
 
-class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
+class _StdinWebsocket(ClientConnection):  # pragma: no cover
     """A websocket client for handling stdin.
 
     Allow comunicate with instance commands via stdin
     """
 
-    def __init__(self, url, payload=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.encoding = kwargs.pop("encoding", None)
-        self.payload = payload
-        super().__init__(url, **kwargs)
+        self.payload = kwargs.pop("payload", None)
+        super().__init__(*args, **kwargs)
 
     def _smart_encode(self, msg):
         if isinstance(msg, str) and self.encoding:
             return msg.encode(self.encoding)
         return msg
 
-    def handshake_ok(self):
-        if self.payload:
-            if hasattr(self.payload, "read"):
-                self.send(
-                    (self._smart_encode(line) for line in self.payload), binary=True
-                )
-            else:
-                self.send(self._smart_encode(self.payload), binary=True)
-        self.send(b"", binary=False)
+    def send_payload(self):
+        try:
+            if self.payload:
+                # Check if payload is a file
+                if hasattr(self.payload, "read"):
+                    self.send(
+                        (self._smart_encode(line) for line in self.payload), text=False
+                    )
+                else:
+                    self.send(self._smart_encode(self.payload), text=False)
+            self.send("")
+        except ConnectionClosedError:  # LXD doesn't send a
+            logging.getLogger("websockets").exception(
+                "Connection severed by server during send"
+            )
+            pass
 
 
 class Snapshot(model.Model):
