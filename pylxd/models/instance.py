@@ -11,7 +11,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import errno
 import json
 import logging
 import os
@@ -20,9 +19,8 @@ import time
 from typing import IO, NamedTuple
 from urllib import parse
 
-from ws4py.client import WebSocketBaseClient
-from ws4py.manager import WebSocketManager
-from ws4py.messaging import BinaryMessage
+from websockets.exceptions import ConnectionClosedError
+from websockets.sync.client import ClientConnection
 
 from pylxd import managers
 from pylxd.exceptions import LXDAPIException
@@ -708,58 +706,54 @@ class Instance(model.Model):
         return response
 
 
-class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
+class _CommandWebsocketClient(ClientConnection):  # pragma: no cover
     """Handle a websocket for instance.execute(...) and manage decoding of the
     returned values depending on 'decode' and 'encoding' parameters.
     """
 
-    def __init__(self, manager, *args, **kwargs):
-        self.manager = manager
+    def __init__(self, *args, **kwargs):
         self.decode = kwargs.pop("decode", True)
         self.encoding = kwargs.pop("encoding", None)
         self.handler = kwargs.pop("handler", None)
-        self.message_encoding = None
         self.finish_off = False
-        self.finished = False
         self.last_message_empty = False
         self.buffer = []
         super().__init__(*args, **kwargs)
 
-    def handshake_ok(self):
-        self.manager.add(self)
-        self.buffer = []
-
-    def received_message(self, message):
-        if message.data is None or len(message.data) == 0:
-            self.last_message_empty = True
-            if self.finish_off:
-                self.finished = True
-            return
-        else:
-            self.last_message_empty = False
-        if message.encoding and self.message_encoding is None:
-            self.message_encoding = message.encoding
-        if self.handler:
-            self.handler(self._maybe_decode(message.data))
-        else:
-            self.buffer.append(message.data)
-        if self.finish_off and isinstance(message, BinaryMessage):
-            self.finished = True
-
-    def closed(self, code, reason=None):
-        self.finished = True
+    def recv_output(self):
+        try:
+            for message in self:
+                if message is None or len(message) == 0:
+                    self.last_message_empty = True
+                    if self.finish_off:
+                        self.close()
+                    return
+                else:
+                    self.last_message_empty = False
+                if self.handler:
+                    self.handler(self._maybe_decode(message))
+                else:
+                    self.buffer.append(message)
+                if self.finish_off and isinstance(message, bytes):
+                    self.close()
+        except ConnectionClosedError:  # LXD doesn't send a close frame as expected.
+            logging.getLogger("websockets").exception(
+                "Connection severed by server during receive"
+            )
+            pass
 
     def finish_soon(self):
         self.finish_off = True
         if self.last_message_empty:
-            self.finished = True
+            self.close()
 
     def _maybe_decode(self, buffer):
+        if isinstance(buffer, str):
+            buffer = buffer.encode("utf-8")
+
         if self.decode and buffer is not None:
             if self.encoding:
                 return buffer.decode(self.encoding)
-            if self.message_encoding:
-                return buffer.decode(self.message_encoding)
             # This is the backwards compatible "always decode to utf-8"
             return buffer.decode("utf-8")
         return buffer
@@ -768,17 +762,6 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
     def data(self):
         buffer = b"".join(self.buffer)
         return self._maybe_decode(buffer)
-
-    def unhandled_error(self, error):
-        """
-        Handles the unfriendly socket closures on the server side
-        without showing a confusing error message
-        """
-        if hasattr(error, "errno") and error.errno == errno.ECONNRESET:
-            pass
-        else:
-            logger = logging.getLogger("ws4py")
-            logger.exception("Failed to receive data")
 
 
 class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
