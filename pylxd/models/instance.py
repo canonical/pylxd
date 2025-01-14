@@ -15,6 +15,7 @@ import json
 import logging
 import os
 import stat
+import threading
 import time
 from typing import IO, NamedTuple
 from urllib import parse
@@ -463,63 +464,68 @@ class Instance(model.Model):
             self.client.api.operations[operation_id].websocket._api_endpoint
         )
 
-        with managers.web_socket_manager(WebSocketManager()) as manager:
-            stdin = _StdinWebsocket(
-                self.client.websocket_url,
-                payload=stdin_payload,
-                encoding=stdin_encoding,
-            )
-            stdin.resource = f"{parsed.path}?secret={fds['0']}"
-            stdin.connect()
-            stdout = _CommandWebsocketClient(
-                manager,
-                self.client.websocket_url,
-                encoding=encoding,
-                decode=decode,
-                handler=stdout_handler,
-            )
-            stdout.resource = f"{parsed.path}?secret={fds['1']}"
-            stdout.connect()
-            stderr = _CommandWebsocketClient(
-                manager,
-                self.client.websocket_url,
-                encoding=encoding,
-                decode=decode,
-                handler=stderr_handler,
-            )
-            stderr.resource = f"{parsed.path}?secret={fds['2']}"
-            stderr.connect()
+        is_unix_socket = "+unix" in parsed.scheme
+        unix_socket_path = (
+            parsed.hostname.replace(
+                "%2F", "/"
+            )  # urlparse fails to make sense of slashes in the hostname part.
+            if is_unix_socket
+            else None
+        )
 
-            manager.start()
+        stdin = self.client.create_websocket_client(
+            _StdinWebsocket,
+            unix_socket_path,
+            f"{parsed.path}?secret={fds['0']}",
+            payload=stdin_payload,
+            encoding=encoding,
+        )
+        stdout = self.client.create_websocket_client(
+            _CommandWebsocketClient,
+            unix_socket_path,
+            f"{parsed.path}?secret={fds['1']}",
+            decode=decode,
+            encoding=encoding,
+            handler=stdout_handler,
+        )
+        stderr = self.client.create_websocket_client(
+            _CommandWebsocketClient,
+            unix_socket_path,
+            f"{parsed.path}?secret={fds['2']}",
+            decode=decode,
+            encoding=encoding,
+            handler=stderr_handler,
+        )
 
-            # watch for the end of the command:
-            while True:
-                operation = self.client.operations.get(operation_id)
-                if "return" in operation.metadata:
-                    break
-                time.sleep(0.5)  # pragma: no cover
+        # Create threads for each socket.
+        stdout_thread = threading.Thread(target=stdout.recv_output)
+        stderr_thread = threading.Thread(target=stderr.recv_output)
+        stdin_thread = threading.Thread(target=stdin.send_payload)
 
-            try:
-                stdin.close()
-            except BrokenPipeError:
-                pass
+        # Start the threads
+        stdout_thread.start()
+        stderr_thread.start()
+        stdin_thread.start()
 
-            stdout.finish_soon()
-            stderr.finish_soon()
-            try:
-                manager.close_all()
-            except BrokenPipeError:
-                pass
+        # watch for the end of the command:
+        while True:
+            operation = self.client.operations.get(operation_id)
+            if "return" in operation.metadata:
+                break
+            time.sleep(0.5)  # pragma: no cover
 
-            while not stdout.finished or not stderr.finished:
-                time.sleep(0.1)  # progma: no cover
+        stdin.close()
+        stdin_thread.join()
 
-            manager.stop()
-            manager.join()
+        stdout.finish_soon()
+        stderr.finish_soon()
 
-            return _InstanceExecuteResult(
-                operation.metadata["return"], stdout.data, stderr.data
-            )
+        stdout_thread.join()
+        stderr_thread.join()
+
+        return _InstanceExecuteResult(
+            operation.metadata["return"], stdout.data, stderr.data
+        )
 
     def raw_interactive_execute(
         self, commands, environment=None, user=None, group=None, cwd=None
