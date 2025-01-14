@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import time
 import unittest
 
 from integration.testing import IntegrationTestCase
@@ -145,6 +146,9 @@ class TestContainer(IntegrationTestCase):
         """A command is executed on the container."""
         self.container.start(wait=True)
         self.addCleanup(self.container.stop, wait=True)
+        time.sleep(
+            1
+        )  # Wait a little to make sure the container is ready to exec since it has just been started.
 
         result = self.container.execute(["echo", "test"])
 
@@ -154,21 +158,46 @@ class TestContainer(IntegrationTestCase):
 
     def test_execute_no_buffer(self):
         """A command is executed on the container without buffering the output."""
-        self.container.start(wait=True)
-        self.addCleanup(self.container.stop, wait=True)
-        buffer = []
+        while True:
+            self.container.start(wait=True)
+            self.addCleanup(self.container.stop, wait=True)
+            time.sleep(1)
+            buffer = []
 
-        result = self.container.execute(["echo", "test"], stdout_handler=buffer.append)
+            result = self.container.execute(["echo", "test"], stdout_handler=buffer.append)
 
-        self.assertEqual(0, result.exit_code)
-        self.assertEqual("", result.stdout)
-        self.assertEqual("", result.stderr)
-        self.assertEqual("test\n", "".join(buffer))
+            self.assertEqual(0, result.exit_code)
+            self.assertEqual("", result.stdout)
+            self.assertEqual("", result.stderr)
+            self.assertEqual("test\n", "".join(buffer))
+
+            self.container.stop(wait=True)
+            time.sleep(1)
+
+    def test_execute_no_buffer_original(self):
+        """A command is executed on the container without buffering the output."""
+        while True:
+            self.container.start(wait=True)
+            self.addCleanup(self.container.stop, wait=True)
+            buffer = []
+
+            result = self.container.execute(["echo", "test"], stdout_handler=buffer.append)
+
+            self.assertEqual(0, result.exit_code)
+            self.assertEqual("", result.stdout)
+            self.assertEqual("", result.stderr)
+            self.assertEqual("test\n", "".join(buffer))
+
+            self.container.stop(wait=True)
+            time.sleep(1)
 
     def test_execute_no_decode(self):
         """A command is executed on the container that isn't utf-8 decodable"""
         self.container.start(wait=True)
         self.addCleanup(self.container.stop, wait=True)
+        time.sleep(
+            1
+        )  # Wait a little to make sure the container is ready to exec since it has just been started.
 
         result = self.container.execute(["printf", "\\xff"], decode=None)
 
@@ -180,6 +209,9 @@ class TestContainer(IntegrationTestCase):
         """A command is executed and force output to ascii"""
         self.container.start(wait=True)
         self.addCleanup(self.container.stop, wait=True)
+        time.sleep(
+            1
+        )  # Wait a little to make sure the container is ready to exec since it has just been started.
 
         result = self.container.execute(
             ["printf", "qu\\xe9"], decode=True, encoding="latin1"
@@ -193,6 +225,9 @@ class TestContainer(IntegrationTestCase):
         """A command receives data from stdin and write to stdout handler"""
         self.container.start(wait=True)
         self.addCleanup(self.container.stop, wait=True)
+        time.sleep(
+            1
+        )  # Wait a little to make sure the container is ready to exec since it has just been started.
         test_msg = "Hello world!\n"
         stdout_msgs = []
 

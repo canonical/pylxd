@@ -442,7 +442,7 @@ class Instance(model.Model):
         :returns: A tuple of `(exit_code, stdout, stderr)`
         :rtype: _InstanceExecuteResult() namedtuple
         """
-        if isinstance(commands, str):
+        if not isinstance(commands, list):
             raise TypeError("First argument must be a list.")
         if environment is None:
             environment = {}
@@ -518,6 +518,11 @@ class Instance(model.Model):
 
             manager.stop()
             manager.join()
+
+            print(operation.metadata)
+            if hasattr(operation, "err"): print(operation.err)
+            print(stdout.data)
+            print(stderr.data)
 
             return _InstanceExecuteResult(
                 operation.metadata["return"], stdout.data, stderr.data
