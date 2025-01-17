@@ -3,8 +3,8 @@ pylxd
 
 .. image:: http://img.shields.io/pypi/v/pylxd.svg
     :target: https://pypi.python.org/pypi/pylxd
-.. image:: https://github.com/canonical/pylxd/workflows/CI%20tests/badge.svg
-    :target: https://github.com/canonical/pylxd/actions?query=workflow%3A%22CI+tests%22
+.. image:: https://github.com/canonical/pylxd/actions/workflows/tests.yml/badge.svg
+    :target: https://github.com/canonical/pylxd
 .. image:: https://codecov.io/github/canonical/pylxd/coverage.svg?branch=main
     :target: https://codecov.io/github/canonical/pylxd
 .. image:: https://readthedocs.org/projects/pylxd/badge/?version=latest
