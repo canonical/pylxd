@@ -18,10 +18,21 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - name: Repository checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        # A non-shallow clone is needed for the Differential ShellCheck
+        fetch-depth: 0
 
-    - name: Lint shell files
-      uses: ludeeus/action-shellcheck@master
+    - name: Require GHA pinning
+      uses: canonical/lxd/.github/actions/require-gha-pinning@main
+
+    - id: ShellCheck
+      name: Differential ShellCheck
+      uses: redhat-plumbers-in-action/differential-shellcheck@dd551ce780d8af741f8cd8bab6982667b906b457 # v5.5.3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        strict-check-on-push: true
+      if: github.event_name == 'pull_request'
 
     - name: Install dependencies
       run: |
@@ -44,7 +55,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - name: Repository checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
     - name: Install dependencies
       run: |
@@ -74,10 +85,10 @@ jobs:
     runs-on: ubuntu-${{ matrix.os }}
     steps:
     - name: Repository checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
       with:
         python-version: ${{ matrix.python-version }}
 
