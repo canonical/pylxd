@@ -76,7 +76,6 @@ class Operation:
             except AttributeError:
                 # ignore attributes we don't know about -- prevent breakage
                 # in the future if new attributes are added.
-                global _seen_attribute_warnings
                 env = os.environ.get("PYLXD_WARNINGS", "").lower()
                 if env != "always" and key in _seen_attribute_warnings:
                     continue
