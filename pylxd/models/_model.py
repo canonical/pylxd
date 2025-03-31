@@ -135,7 +135,6 @@ class Model(metaclass=ModelType):
             try:
                 setattr(self, key, val)
             except AttributeError:
-                global _seen_attribute_warnings
                 env = os.environ.get("PYLXD_WARNINGS", "").lower()
                 item = f"{self.__class__.__name__}.{key}"
                 if env != "always" and item in _seen_attribute_warnings:
