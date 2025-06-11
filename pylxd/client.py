@@ -64,11 +64,9 @@ class EventType(Enum):
     Lifecycle = "lifecycle"
 
 
-class _UnixSocketHTTPConnection(urllib3.connection.HTTPConnection, object):
+class _UnixSocketHTTPConnection(urllib3.connection.HTTPConnection):
     def __init__(self, unix_socket_url):
-        super(_UnixSocketHTTPConnection, self).__init__(
-            "localhost", timeout=SOCKET_CONNECTION_TIMEOUT
-        )
+        super().__init__("localhost", timeout=SOCKET_CONNECTION_TIMEOUT)
         self.unix_socket_url = unix_socket_url
         self.timeout = SOCKET_CONNECTION_TIMEOUT
         self.sock = None
@@ -87,7 +85,7 @@ class _UnixSocketHTTPConnection(urllib3.connection.HTTPConnection, object):
 
 class _UnixSocketHTTPConnectionPool(urllib3.HTTPConnectionPool):
     def __init__(self, socket_path):
-        super(_UnixSocketHTTPConnectionPool, self).__init__("localhost")
+        super().__init__("localhost")
         self.socket_path = socket_path
 
     def _new_conn(self):
@@ -96,7 +94,7 @@ class _UnixSocketHTTPConnectionPool(urllib3.HTTPConnectionPool):
 
 class _UnixAdapter(requests.adapters.HTTPAdapter):
     def __init__(self, pool_connections=25, *args, **kwargs):
-        super(_UnixAdapter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.pools = urllib3._collections.RecentlyUsedContainer(
             pool_connections, dispose_func=lambda p: p.close()
         )
