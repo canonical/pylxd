@@ -27,7 +27,7 @@ function run_tests {
     lxc launch --ephemeral "$container_image" "$container_name" -c security.nesting=true
 
     lxc exec "$container_name" -- mkdir -p /opt/pylxd
-    { cd "$DIR/.." && git archive --format=tar HEAD; } | lxc exec "$container_name" -- tar -xf - -C /opt/pylxd
+    tar -cf - --exclude-vcs --exclude-vcs-ignores -C "${DIR}/.." . | lxc exec "$container_name" -- tar -xf - -C /opt/pylxd
 
     lxc exec "$container_name" -- cloud-init status --long --wait
     lxc exec "$container_name" --cwd /opt/pylxd -- integration/run-integration-tests
