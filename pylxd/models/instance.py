@@ -102,8 +102,9 @@ class Instance(model.Model):
             :type data: bytes or str
             :param mode: The unit mode to store the file with.  The default of
                 None stores the file with the current mask of 0700, which is
-                the lxd default.
-            :type mode: Union[oct, int, str]
+                the lxd default. If mode is True, preserve the file permissions
+                from filepath.
+            :type mode: Union[oct, int, str, bool]
             :param uid: The uid to use inside the instance. Default of None
                 results in 0 (root).
             :type uid: int
@@ -112,6 +113,8 @@ class Instance(model.Model):
             :type gid: int
             :raises: LXDAPIException if something goes wrong
             """
+            if isinstance(mode, bool):
+                mode = os.stat(filepath).st_mode if mode else None
             headers = self._resolve_headers(mode=mode, uid=uid, gid=gid)
             response = self._endpoint.post(
                 params={"path": filepath}, data=data, headers=headers or None
@@ -193,8 +196,9 @@ class Instance(model.Model):
             :type dst: str
             :param mode: The unit mode to store the file with.  The default of
                 None stores the file with the current mask of 0700, which is
-                the lxd default.
-            :type mode: Union[oct, int, str]
+                the lxd default. If mode is True, preserve the file permissions
+                from src.
+            :type mode: Union[oct, int, str, bool]
             :param uid: The uid to use inside the instance. Default of None
                 results in 0 (root).
             :type uid: int
@@ -218,9 +222,12 @@ class Instance(model.Model):
                 # create directory or symlink (depending on what's there)
                 if path not in dst_items:
                     dst_items.add(path)
-                    headers = self._resolve_headers(mode=mode, uid=uid, gid=gid)
-                    # determine what the file is: a directory or a symlink
                     fmode = os.stat(path).st_mode
+                    current_mode = mode
+                    if isinstance(mode, bool):
+                        current_mode = fmode if mode else None
+                    headers = self._resolve_headers(mode=current_mode, uid=uid, gid=gid)
+                    # determine what the file is: a directory or a symlink
                     if stat.S_ISLNK(fmode):
                         headers["X-LXD-type"] = "symlink"
                     else:
@@ -232,7 +239,12 @@ class Instance(model.Model):
                     src_file = os.path.join(path, f)
                     with open(src_file, "rb") as fp:
                         filepath = os.path.join(dst_path, f)
-                        headers = self._resolve_headers(mode=mode, uid=uid, gid=gid)
+                        current_mode = mode
+                        if isinstance(mode, bool):
+                            current_mode = os.stat(src_file).st_mode if mode else None
+                        headers = self._resolve_headers(
+                            mode=current_mode, uid=uid, gid=gid
+                        )
                         response = self._endpoint.post(
                             params={"path": filepath},
                             data=fp.read(),
