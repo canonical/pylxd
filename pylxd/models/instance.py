@@ -698,7 +698,7 @@ class Instance(model.Model):
 
             return self.client.images.get(operation.metadata["fingerprint"])
 
-    def restore_snapshot(self, snapshot_name, wait=False):
+    def restore_snapshot(self, snapshot_name, wait=False, stateful=False):
         """Restore a snapshot using its name.
 
         Attempts to restore a instance using a snapshot previously made.  The
@@ -709,12 +709,14 @@ class Instance(model.Model):
         :type snapshot_name: str
         :param wait: wait until the operation is completed.
         :type wait: boolean
+        :param stateful: restore the state of the snapshot
+        :type stateful: boolean
         :raises: LXDAPIException if the the operation fails.
         :returns: the original response from the restore operation (not the
             operation result)
         :rtype: :class:`requests.Response`
         """
-        response = self.api.put(json={"restore": snapshot_name})
+        response = self.api.put(json={"restore": snapshot_name, "stateful": stateful})
         if wait:
             self.client.operations.wait_for_operation(response.json()["operation"])
         return response
@@ -907,4 +909,4 @@ class Snapshot(model.Model):
             operation result)
         :rtype: :class:`requests.Response`
         """
-        return self.instance.restore_snapshot(self.name, wait)
+        return self.instance.restore_snapshot(self.name, wait, stateful=self.stateful)
