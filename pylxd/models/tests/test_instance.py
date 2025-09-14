@@ -430,9 +430,7 @@ class TestInstance(testing.PyLXDTestCase):
     @mock.patch("pylxd.client._APINode.put")
     def test_restore_snapshot(self, put):
         """Snapshots can be restored"""
-        response = mock.Mock()
-        response.json.return_value = {}
-        response.status_code = 202
+        response = mock.MagicMock(status_code=202)
         put.return_value = response
 
         an_instance = models.Instance(self.client, name="an-instance")
@@ -619,7 +617,6 @@ class TestSnapshot(testing.PyLXDTestCase):
     @mock.patch("pylxd.models.Instance.restore_snapshot")
     def test_restore_snapshot(self, restore_snapshot):
         """Snapshots can be restored from the snapshot object"""
-        # self.instance.restore_snapshot = mock.MagicMock()
         response = mock.MagicMock(status_code=202)
         restore_snapshot.return_value = response
 
@@ -631,8 +628,7 @@ class TestSnapshot(testing.PyLXDTestCase):
 
     @mock.patch("pylxd.models.Instance.restore_snapshot")
     def test_restore_snapshot_stateful(self, restore_snapshot):
-        """Snapshots can be restored from the snapshot object"""
-        # self.instance.restore_snapshot = mock.MagicMock()
+        """Stateful Snapshots can be restored from the snapshot object"""
         response = mock.MagicMock(status_code=202)
         restore_snapshot.return_value = response
 
