@@ -709,7 +709,8 @@ class Instance(model.Model):
         :type snapshot_name: str
         :param wait: wait until the operation is completed.
         :type wait: boolean
-        :param stateful: restore the state of the snapshot
+        :param stateful: restore the instance's running state from the snapshot (if
+            available), set this to ``True`` if the snapshot is stateful
         :type stateful: boolean
         :raises: LXDAPIException if the the operation fails.
         :returns: the original response from the restore operation (not the
@@ -909,4 +910,6 @@ class Snapshot(model.Model):
             operation result)
         :rtype: :class:`requests.Response`
         """
-        return self.instance.restore_snapshot(self.name, wait, stateful=self.stateful)
+        return self.instance.restore_snapshot(
+            self.name, wait, stateful=getattr(self, "stateful", False)
+        )
