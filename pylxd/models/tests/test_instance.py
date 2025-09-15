@@ -427,10 +427,29 @@ class TestInstance(testing.PyLXDTestCase):
             image.fingerprint,
         )
 
-    def test_restore_snapshot(self):
+    @mock.patch("pylxd.client._APINode.put")
+    def test_restore_snapshot(self, put):
         """Snapshots can be restored"""
+        response = mock.MagicMock(status_code=202)
+        put.return_value = response
+
         an_instance = models.Instance(self.client, name="an-instance")
         an_instance.restore_snapshot("thing")
+
+        put.assert_called_once_with(json={"restore": "thing", "stateful": False})
+
+    @mock.patch("pylxd.client._APINode.put")
+    def test_restore_snapshot_stateful(self, put):
+        """Snapshots can be restored"""
+        response = mock.Mock()
+        response.json.return_value = {}
+        response.status_code = 202
+        put.return_value = response
+
+        an_instance = models.Instance(self.client, name="an-instance")
+        an_instance.restore_snapshot("thing", stateful=True)
+
+        put.assert_called_once_with(json={"restore": "thing", "stateful": True})
 
 
 class TestInstanceState(testing.PyLXDTestCase):
@@ -595,12 +614,29 @@ class TestSnapshot(testing.PyLXDTestCase):
             image.fingerprint,
         )
 
-    def test_restore_snapshot(self):
+    @mock.patch("pylxd.models.Instance.restore_snapshot")
+    def test_restore_snapshot(self, restore_snapshot):
         """Snapshots can be restored from the snapshot object"""
+        response = mock.MagicMock(status_code=202)
+        restore_snapshot.return_value = response
+
         snapshot = models.Snapshot(
             self.client, instance=self.instance, name="an-snapshot"
         )
         snapshot.restore(wait=True)
+        restore_snapshot.assert_called_once_with("an-snapshot", True, stateful=False)
+
+    @mock.patch("pylxd.models.Instance.restore_snapshot")
+    def test_restore_snapshot_stateful(self, restore_snapshot):
+        """Stateful Snapshots can be restored from the snapshot object"""
+        response = mock.MagicMock(status_code=202)
+        restore_snapshot.return_value = response
+
+        snapshot = models.Snapshot(
+            self.client, instance=self.instance, name="an-snapshot", stateful=True
+        )
+        snapshot.restore(wait=False)
+        restore_snapshot.assert_called_once_with("an-snapshot", False, stateful=True)
 
 
 class TestFiles(testing.PyLXDTestCase):
