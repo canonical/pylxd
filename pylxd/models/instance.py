@@ -482,6 +482,7 @@ class Instance(model.Model):
                 self.client.websocket_url,
                 payload=stdin_payload,
                 encoding=stdin_encoding,
+                ssl_options=self.client.ssl_options,
             )
             stdin.resource = f"{parsed.path}?secret={fds['0']}"
             stdin.connect()
@@ -491,6 +492,7 @@ class Instance(model.Model):
                 encoding=encoding,
                 decode=decode,
                 handler=stdout_handler,
+                ssl_options=self.client.ssl_options,
             )
             stdout.resource = f"{parsed.path}?secret={fds['1']}"
             stdout.connect()
@@ -500,6 +502,7 @@ class Instance(model.Model):
                 encoding=encoding,
                 decode=decode,
                 handler=stderr_handler,
+                ssl_options=self.client.ssl_options,
             )
             stderr.resource = f"{parsed.path}?secret={fds['2']}"
             stderr.connect()

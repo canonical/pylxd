@@ -232,6 +232,34 @@ class TestInstance(testing.PyLXDTestCase):
 
     @mock.patch("pylxd.models.instance._StdinWebsocket")
     @mock.patch("pylxd.models.instance._CommandWebsocketClient")
+    def test_execute_uses_client_ssl_options(
+        self, _CommandWebsocketClient, _StdinWebsocket
+    ):
+        """Websockets are created using the client's ssl_options."""
+        fake_websocket = mock.Mock()
+        fake_websocket.data = "test\n"
+        self.client.ssl_options = {"certfile": "/foo", "keyfile": "/bar"}
+        _StdinWebsocket.return_value = fake_websocket
+        _CommandWebsocketClient.return_value = fake_websocket
+
+        an_instance = models.Instance(self.client, name="an-instance")
+
+        result = an_instance.execute(["echo", "test"])
+
+        self.assertEqual(
+            _StdinWebsocket.call_args.kwargs["ssl_options"],
+            {"certfile": "/foo", "keyfile": "/bar"},
+        )
+        self.assertEqual(
+            _CommandWebsocketClient.call_args.kwargs["ssl_options"],
+            {"certfile": "/foo", "keyfile": "/bar"},
+        )
+
+        self.assertEqual(0, result.exit_code)
+        self.assertEqual("test\n", result.stdout)
+
+    @mock.patch("pylxd.models.instance._StdinWebsocket")
+    @mock.patch("pylxd.models.instance._CommandWebsocketClient")
     def test_execute_with_env(self, _CommandWebsocketClient, _StdinWebsocket):
         """A command is executed on a instance with custom env variables."""
         fake_websocket = mock.Mock()

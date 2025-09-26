@@ -491,6 +491,10 @@ class Client:
         self.api = _APINode(
             f"{endpoint}/{version}", session, timeout=timeout, project=project
         )
+        use_ssl = self.api.scheme == "https" and self.cert
+        self.ssl_options = (
+            {"certfile": self.cert[0], "keyfile": self.cert[1]} if use_ssl else None
+        )
 
         # Verify the connection is valid.
         try:
@@ -634,11 +638,7 @@ class Client:
         if websocket_client is None:
             websocket_client = _WebsocketClient
 
-        use_ssl = self.api.scheme == "https" and self.cert
-        ssl_options = (
-            {"certfile": self.cert[0], "keyfile": self.cert[1]} if use_ssl else None
-        )
-        client = websocket_client(self.websocket_url, ssl_options=ssl_options)
+        client = websocket_client(self.websocket_url, ssl_options=self.ssl_options)
         parsed = parse.urlparse(self.api.events._api_endpoint)
 
         resource = parsed.path
