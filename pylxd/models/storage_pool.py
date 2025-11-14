@@ -91,7 +91,7 @@ class StoragePool(model.Model):
         return storage_pools
 
     @classmethod
-    def create(cls, client, definition):
+    def create(cls, client, definition, wait=True):
         """Create a storage_pool from config.
 
         Implements POST /1.0/storage-pools
@@ -119,6 +119,8 @@ class StoragePool(model.Model):
         :type client: :class:`pylxd.client.Client`
         :param definition: the fields to pass to the LXD API endpoint
         :type definition: dict
+        :param wait: Whether to wait for async operations to complete.
+        :type wait: bool
         :returns: a storage pool if successful, raises NotFound if not found
         :rtype: :class:`pylxd.models.storage_pool.StoragePool`
         :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if the
@@ -127,8 +129,10 @@ class StoragePool(model.Model):
             couldn't be created.
         """
         client.assert_has_api_extension("storage")
-        client.api.storage_pools.post(json=definition)
+        response = client.api.storage_pools.post(json=definition)
 
+        # Use helper method for async handling
+        cls._handle_async_response_for_client(client, response, wait)
         storage_pool = cls.get(client, definition["name"])
         return storage_pool
 
@@ -184,13 +188,15 @@ class StoragePool(model.Model):
         LXD. An :class:`~pylxd.exceptions.LXDAPIException` will be generated in
         that case.
 
+        :param wait: Whether to wait for async operations to complete.
+        :type wait: bool
         :raises: :class:`pylxd.exceptions.LXDAPIException` if the storage pool
             can't be deleted.
         """
         # Note this method exists so that it is documented via sphinx.
         super().save(wait=wait)
 
-    def delete(self):
+    def delete(self, wait=False):
         """Delete the storage pool.
 
         Implements DELETE /1.0/storage-pools/<self.name>
@@ -198,11 +204,12 @@ class StoragePool(model.Model):
         Deleting a storage pool may fail if it is being used.  See the LXD
         documentation for further details.
 
+        :param wait: Whether to wait for async operations to complete.
         :raises: :class:`pylxd.exceptions.LXDAPIException` if the storage pool
             can't be deleted.
         """
         # Note this method exists so that it is documented via sphinx.
-        super().delete()
+        super().delete(wait=wait)
 
     def put(self, put_object, wait=False):
         """Put the storage pool.
@@ -467,10 +474,8 @@ class StorageVolume(model.Model):
         assert "name" in definition
         response = storage_pool.api.volumes.custom.post(json=definition)
 
-        if response.json()["type"] == "async" and wait:
-            storage_pool.client.operations.wait_for_operation(
-                response.json()["operation"]
-            )
+        # Use class method helper for async handling
+        cls._handle_async_response_for_client(storage_pool.client, response, wait)
 
         volume = cls.get(storage_pool, "custom", definition["name"])
         return volume
@@ -515,11 +520,11 @@ class StorageVolume(model.Model):
         assert "pool" in _input
         response = self.api.post(json=_input)
 
-        response_json = response.json()
-        if wait:
-            self.client.operations.wait_for_operation(response_json["operation"])
+        # Use instance method helper for async handling
+        self._handle_async_response(response, wait)
+
         self.name = _input["name"]
-        return response_json["metadata"]
+        return response.json()["metadata"]
 
     def put(self, put_object, wait=False):
         """Put the storage volume.
@@ -593,12 +598,12 @@ class StorageVolume(model.Model):
         :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if the
             'storage' api extension is missing.
         :raises: :class:`pylxd.exceptions.LXDAPIException` if the storage
-            volume can't be deleted.
+            volume can't be saved.
         """
         # Note this method exists so that it is documented via sphinx.
         super().save(wait=wait)
 
-    def delete(self):
+    def delete(self, wait=False):
         """Delete the storage pool.
 
         Implements: DELETE /1.0/storage-pools/<pool>/volumes/<type>/<name>
@@ -607,13 +612,15 @@ class StorageVolume(model.Model):
         See https://documentation.ubuntu.com/lxd/en/latest/explanation/storage/#storage-volumes
         for further details.
 
+        :param wait: Whether to wait for async operations to complete.
+        :type wait: bool
         :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if the
             'storage' api extension is missing.
         :raises: :class:`pylxd.exceptions.LXDAPIException` if the storage pool
             can't be deleted.
         """
         # Note this method exists so that it is documented via sphinx.
-        super().delete()
+        super().delete(wait=wait)
 
     def restore_from(self, snapshot_name, wait=False):
         """Restore this volume from a snapshot using its name.
@@ -634,8 +641,12 @@ class StorageVolume(model.Model):
         :rtype: :class:`requests.Response`
         """
         response = self.api.put(json={"restore": snapshot_name})
+
+        # Handle both sync and async responses for endpoint changing from sync to async
         if wait:
-            self.client.operations.wait_for_operation(response.json()["operation"])
+            response_json = response.json()
+            if response_json["type"] == "async":
+                self.client.operations.wait_for_operation(response_json["operation"])
         return response
 
 
@@ -768,7 +779,7 @@ class StorageVolumeSnapshot(model.Model):
         ]
 
     @classmethod
-    def create(cls, volume, name=None, expires_at=None):
+    def create(cls, volume, name=None, expires_at=None, wait=True):
         """Create new :class:`pylxd.models.StorageVolumeSnapshot` object from the current volume state using the given attributes.
 
         Implements POST /1.0/storage-pools/<pool>/volumes/custom/<volume_name>/snapshots
@@ -778,7 +789,9 @@ class StorageVolumeSnapshot(model.Model):
         :param name: Optional parameter. Name of the created snapshot. The snapshot will be called "snap{index}" by default.
         :type name: str
         :param expires_at: Optional parameter. Expiration time for the created snapshot in ISO 8601 format. No expiration date by default.
-        :type name: str
+        :type expires_at: str
+        :param wait: Whether to wait for async operations to complete.
+        :type wait: bool
         :returns: a storage volume snapshot if successful, raises an exception otherwise.
         :rtype: :class:`pylxd.models.StorageVolume`
         :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if the
@@ -791,16 +804,28 @@ class StorageVolumeSnapshot(model.Model):
             json={"name": name, "expires_at": expires_at}
         )
 
-        operation = volume.client.operations.wait_for_operation(
-            response.json()["operation"]
-        )
+        operation = None
+
+        # Only parse JSON if we need to wait for async responses
+        if wait:
+            response_json = response.json()
+
+            # Handle both sync and async responses
+            if response_json["type"] == "async":
+                operation = volume.client.operations.wait_for_operation(
+                    response_json["operation"]
+                )
+            else:
+                # Return the snapshot immediately without waiting for completion
+                return volume.snapshots.get(name)
 
         # Extract the snapshot name from the response JSON in case it was not provided
         if not name:
-            if "storage_volume_snapshots" in operation.resources:
+            if operation and "storage_volume_snapshots" in operation.resources:
                 name = operation.resources["storage_volume_snapshots"][0].split("/")[-1]
             else:
-                # If using LXD 4.0, the snapshot name isn't provided on the request response, so grab the latest snapshot name instead.
+                # If using LXD 4.0, the snapshot name isn't provided on the request response
+                # so grab the latest snapshot name instead.
                 name = volume.snapshots.all()[-1].split("/")[-1]
 
         snapshot = volume.snapshots.get(name)
@@ -822,16 +847,24 @@ class StorageVolumeSnapshot(model.Model):
         except cls.NotFound:
             return False
 
-    def rename(self, new_name):
+    def rename(self, new_name, wait=True):
         """Rename a storage volume snapshot.
 
         Implements POST /1.0/storage-pools/<pool>/volumes/custom/<volume_name>/snapshot/<name>
 
         Renames a storage volume snapshot, changing the endpoints that reference it.
 
+        :param new_name: The new name for the snapshot
+        :type new_name: str
+        :param wait: Whether to wait for async operations to complete
+        :type wait: bool
         :raises: :class:`pylxd.exceptions.LXDAPIException` if the the operation fails.
         """
-        super().post(wait=True, json={"name": new_name})
+        response = self.api.post(json={"name": new_name})
+
+        # Use instance method helper for async handling
+        self._handle_async_response(response, wait)
+
         self.name = new_name
 
     def restore(self, wait=False):
