@@ -674,14 +674,14 @@ class StorageVolumeSnapshot(model.Model):
         return self.volume.api[self._endpoint][self.name]
 
     @classmethod
-    def __parse_snaspshot_json(cls, volume, snapshot_json):
+    def __parse_snapshot_json(cls, volume, snapshot_json):
         snapshot_object = cls(volume.client, volume=volume, **snapshot_json)
 
         # Snapshot names are namespaced in LXD, as volume-name/snapshot-name.
         # We hide that implementation detail.
         snapshot_object.name = snapshot_object.name.split("/")[-1]
 
-        # If reponse does not include expires_at sync the object to get that attribute.
+        # If response does not include expires_at sync the object to get that attribute.
         if not snapshot_json.get("expires_at"):
             snapshot_object.sync()
 
@@ -727,7 +727,7 @@ class StorageVolumeSnapshot(model.Model):
 
         response = volume.api.snapshots[name].get()
 
-        return cls.__parse_snaspshot_json(volume, response.json()["metadata"])
+        return cls.__parse_snapshot_json(volume, response.json()["metadata"])
 
     @classmethod
     def all(cls, volume, use_recursion=False):
@@ -756,7 +756,7 @@ class StorageVolumeSnapshot(model.Model):
             response = volume.api.snapshots.get(params={"recursion": 1})
 
             return [
-                cls.__parse_snaspshot_json(volume, snapshot)
+                cls.__parse_snapshot_json(volume, snapshot)
                 for snapshot in response.json()["metadata"]
             ]
 
