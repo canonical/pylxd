@@ -471,8 +471,9 @@ class Instance(model.Model):
             }
         )
 
-        fds = response.json()["metadata"]["metadata"]["fds"]
-        operation_id = Operation.extract_operation_id(response.json()["operation"])
+        response_json = response.json()
+        fds = response_json["metadata"]["metadata"]["fds"]
+        operation_id = Operation.extract_operation_id(response_json["operation"])
         parsed = parse.urlparse(
             self.client.api.operations[operation_id].websocket._api_endpoint
         )
