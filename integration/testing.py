@@ -13,6 +13,7 @@
 #    under the License.
 import random
 import string
+import time
 import unittest
 import uuid
 
@@ -173,8 +174,14 @@ class IntegrationTestCase(unittest.TestCase):
         # delete the named storage pool
         try:
             self.lxd.storage_pools[name].delete()
-        except exceptions.NotFound:
-            pass
+        except exceptions.LXDAPIException as e:
+            if "currently in use" in str(e):
+                # If pool is still in use, wait and retry
+                time.sleep(5)  # Longer delay for pool operations
+                try:
+                    self.lxd.storage_pools[name].delete()
+                except exceptions.NotFound:
+                    pass
 
     def create_storage_volume(self, pool_name, volume_name):
         pool = self.client.storage_pools.get(pool_name)
@@ -192,6 +199,15 @@ class IntegrationTestCase(unittest.TestCase):
             return True
         except exceptions.NotFound:
             return False
+        except exceptions.LXDAPIException as e:
+            if "currently in use" in str(e):
+                # If volume is still in use, wait and retry
+                time.sleep(3)
+                try:
+                    pool.volumes.get("custom", volume_name).delete()
+                    return True
+                except exceptions.NotFound:
+                    return False
 
     def assertCommon(self, response):
         """Assert common LXD responses.
