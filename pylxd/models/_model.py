@@ -225,6 +225,37 @@ class Model(metaclass=ModelType):
         """Reset the object from the server."""
         return self.sync(rollback=True)
 
+    def _handle_async_response(self, response, wait):
+        """Handle async response if wait is True.
+
+        :param response: The HTTP response object
+        :param wait: If True, wait for async operations to complete
+        """
+        if not wait:
+            return
+
+        response_json = response.json()
+        if response_json["type"] == "async":
+            self.client.operations.wait_for_operation(response_json["operation"])
+
+    @classmethod
+    def _handle_async_response_for_client(cls, client, response, wait):
+        """Handle async response if wait is True - class method version.
+
+        :param client: The LXD client instance
+        :param response: The HTTP response object
+        :param wait: If True, wait for async operations to complete
+        """
+        if not wait:
+            # If not waiting, just validate the response was accepted
+            if response.status_code not in (200, 201, 202):
+                raise exceptions.LXDAPIException(response)
+            return
+
+        response_json = response.json()
+        if response_json["type"] == "async":
+            client.operations.wait_for_operation(response_json["operation"])
+
     def save(self, wait=False):
         """Save data to the server.
 
