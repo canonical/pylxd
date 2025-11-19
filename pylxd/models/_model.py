@@ -225,6 +225,37 @@ class Model(metaclass=ModelType):
         """Reset the object from the server."""
         return self.sync(rollback=True)
 
+    def _handle_async_response(self, response, wait):
+        """Handle async response if wait is True.
+
+        :param response: The HTTP response object
+        :param wait: If True, wait for async operations to complete
+        """
+        if not wait:
+            return
+
+        response_json = response.json()
+        if response_json["type"] == "async":
+            self.client.operations.wait_for_operation(response_json["operation"])
+
+    @classmethod
+    def _handle_async_response_for_client(cls, client, response, wait):
+        """Handle async response if wait is True - class method version.
+
+        :param client: The LXD client instance
+        :param response: The HTTP response object
+        :param wait: If True, wait for async operations to complete
+        """
+        if not wait:
+            # If not waiting, just validate the response was accepted
+            if response.status_code not in (200, 201, 202):
+                raise exceptions.LXDAPIException(response)
+            return
+
+        response_json = response.json()
+        if response_json["type"] == "async":
+            client.operations.wait_for_operation(response_json["operation"])
+
     def save(self, wait=False):
         """Save data to the server.
 
@@ -235,16 +266,16 @@ class Model(metaclass=ModelType):
         marshalled = self.marshall()
         response = self.api.put(json=marshalled)
 
-        if response.json()["type"] == "async" and wait:
-            self.client.operations.wait_for_operation(response.json()["operation"])
+        # Use helper method for JSON parsing
+        self._handle_async_response(response, wait)
         self.__dirty__.clear()
 
     def delete(self, wait=False):
         """Delete an object from the server."""
         response = self.api.delete()
 
-        if response.json()["type"] == "async" and wait:
-            self.client.operations.wait_for_operation(response.json()["operation"])
+        # Use helper method for JSON parsing
+        self._handle_async_response(response, wait)
         self.client = None
 
     def marshall(self, skip_readonly=True):
@@ -274,8 +305,9 @@ class Model(metaclass=ModelType):
         :raises: :class:`pylxd.exception.LXDAPIException` on error
         """
         response = self.api.post(json=json)
-        if response.json()["type"] == "async" and wait:
-            self.client.operations.wait_for_operation(response.json()["operation"])
+
+        # Use helper method for JSON parsing
+        self._handle_async_response(response, wait)
 
     def put(self, put_object, wait=False):
         """Access the PUT method directly for the object.
@@ -319,8 +351,8 @@ class Model(metaclass=ModelType):
         """
         response = self.api.put(json=put_object)
 
-        if response.json()["type"] == "async" and wait:
-            self.client.operations.wait_for_operation(response.json()["operation"])
+        # Use helper method for JSON parsing
+        self._handle_async_response(response, wait)
 
     def patch(self, patch_object, wait=False):
         """Access the PATCH method directly for the object.
@@ -365,5 +397,5 @@ class Model(metaclass=ModelType):
         """
         response = self.api.patch(json=patch_object)
 
-        if response.json()["type"] == "async" and wait:
-            self.client.operations.wait_for_operation(response.json()["operation"])
+        # Use helper method for JSON parsing
+        self._handle_async_response(response, wait)
