@@ -64,7 +64,7 @@ class TestProfile(IntegrationTestCase):
     def test_save(self):
         """A profile is updated."""
         self.profile.config["limits.memory"] = "16GB"
-        self.profile.save()
+        self.profile.save(wait=True)
 
         profile = self.client.profiles.get(self.profile.name)
         self.assertEqual("16GB", profile.config["limits.memory"])
@@ -74,14 +74,14 @@ class TestProfile(IntegrationTestCase):
         name = "a-other-profile"
         self.addCleanup(self.delete_profile, name)
 
-        self.profile.rename(name)
+        self.profile.rename(name, wait=True)
         profile = self.client.profiles.get(name)
 
         self.assertEqual(name, profile.name)
 
     def test_delete(self):
         """A profile is deleted."""
-        self.profile.delete()
+        self.profile.delete(wait=True)
 
         self.assertRaises(
             exceptions.LXDAPIException, self.client.profiles.get, self.profile.name
