@@ -113,7 +113,7 @@ class TestStorageVolume(StorageTestCase):
         volume = self.create_storage_volume(pool_name, "vol1")
         vol_copy = storage_pool.volumes.get("custom", "vol1")
         self.assertEqual(vol_copy.name, volume.name)
-        volume.delete()
+        volume.delete(wait=True)
 
     @unittest.skip("Can't test PUT on volumes as it doesn't make sense yet")
     def test_put(self):
@@ -150,21 +150,21 @@ class TestStorageVolumeSnapshot(StorageTestCase):
         self.addCleanup(self.delete_storage_volume, pool, "vol1")
 
         # Create a few snapshots
-        first_snapshot = volume.snapshots.create()
+        first_snapshot = volume.snapshots.create(wait=True)
         self.assertEqual(first_snapshot.name, "snap0")
 
-        second_snapshot = volume.snapshots.create()
+        second_snapshot = volume.snapshots.create(wait=True)
         self.assertEqual(second_snapshot.name, "snap1")
 
         # Try restoring the volume from one of the snapshots
-        first_snapshot.restore()
+        first_snapshot.restore(wait=True)
 
         # Create new snapshot with defined name and expiration date
         custom_snapshot_name = "custom-snapshot"
         custom_snapshot_expiry_date = "2183-06-16T00:00:00Z"
 
         custom_snapshot = volume.snapshots.create(
-            name=custom_snapshot_name, expires_at=custom_snapshot_expiry_date
+            name=custom_snapshot_name, expires_at=custom_snapshot_expiry_date, wait=True
         )
         self.assertEqual(custom_snapshot.name, custom_snapshot_name)
         self.assertEqual(custom_snapshot.expires_at, custom_snapshot_expiry_date)
@@ -177,8 +177,7 @@ class TestStorageVolumeSnapshot(StorageTestCase):
             self.assertIn(snapshot_name, all_snapshots)
 
         # Delete a snapshot
-        second_snapshot.delete()
-
+        second_snapshot.delete(wait=True)
         self.assertFalse(volume.snapshots.exists(second_snapshot.name))
 
         self.assertRaises(exceptions.NotFound, volume.snapshots.get, "snap1")
@@ -197,7 +196,7 @@ class TestStorageVolumeSnapshot(StorageTestCase):
         self.assertEqual(custom_snapshot, all_snapshots[1])
 
         # Change snapshot values
-        first_snapshot.rename("first")
+        first_snapshot.rename("first", wait=True)
         self.assertFalse(volume.snapshots.exists("snap0"))
         self.assertRaises(exceptions.NotFound, volume.snapshots.get, "snap0")
 
