@@ -215,8 +215,9 @@ class IntegrationTestCase(unittest.TestCase):
         LXD responses are relatively standard. This function makes assertions
         to all those standards.
         """
-        self.assertEqual(response.status_code, response.json()["status_code"])
+        response_json = response.json()
+        self.assertEqual(response.status_code, response_json["status_code"])
         self.assertEqual(
             ["metadata", "operation", "status", "status_code", "type"],
-            sorted(response.json().keys()),
+            sorted(response_json.keys()),
         )

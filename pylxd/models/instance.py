@@ -471,8 +471,9 @@ class Instance(model.Model):
             }
         )
 
-        fds = response.json()["metadata"]["metadata"]["fds"]
-        operation_id = Operation.extract_operation_id(response.json()["operation"])
+        response_json = response.json()
+        fds = response_json["metadata"]["metadata"]["fds"]
+        operation_id = Operation.extract_operation_id(response_json["operation"])
         parsed = parse.urlparse(
             self.client.api.operations[operation_id].websocket._api_endpoint
         )
@@ -578,8 +579,9 @@ class Instance(model.Model):
             }
         )
 
-        fds = response.json()["metadata"]["metadata"]["fds"]
-        operation_id = response.json()["operation"].split("/")[-1].split("?")[0]
+        response_json = response.json()
+        fds = response_json["metadata"]["metadata"]["fds"]
+        operation_id = response_json["operation"].split("/")[-1].split("?")[0]
         parsed = parse.urlparse(
             self.client.api.operations[operation_id].websocket._api_endpoint
         )
@@ -655,9 +657,10 @@ class Instance(model.Model):
         if live:
             _json["live"] = True
         response = self.api.post(json=_json)
-        operation = self.client.operations.get(response.json()["operation"])
+        response_json = response.json()
+        operation = self.client.operations.get(response_json["operation"])
         operation_url = self.client.api.operations[operation.id]._api_endpoint
-        secrets = response.json()["metadata"]["metadata"]
+        secrets = response_json["metadata"]["metadata"]
         cert = self.client.host_info["environment"]["certificate"]
 
         return {
