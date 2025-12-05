@@ -887,7 +887,7 @@ class TestFiles(testing.PyLXDTestCase):
         response = requests.models.Response()
         response.status_code = 200
         response.headers["X-LXD-type"] = "directory"
-        response.headers["X-LXD-mode"] = "664"
+        response.headers["X-LXD-mode"] = "750"
         response._content = json.dumps({"metadata": ["file1", "file2"]}).encode("utf-8")
 
         response1 = requests.models.Response()
@@ -915,9 +915,9 @@ class TestFiles(testing.PyLXDTestCase):
 
             self.instance.files.recursive_get("/tmp/getted", "/tmp")
 
-            mkdir_mocked.assert_called_once_with("/tmp", 0o664)
+            mkdir_mocked.assert_called_once_with("/tmp", 0o750)
 
-            flags = os.O_WRONLY | os.O_CREAT
+            flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
             mock_os_open.assert_any_call("/tmp/file1", flags, mode=0o762)
             mock_os_open.assert_any_call("/tmp/file2", flags, mode=0o744)
             self.assertEqual(mock_os_open.call_count, 2)

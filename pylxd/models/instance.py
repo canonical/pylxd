@@ -281,7 +281,9 @@ class Instance(model.Model):
                             )
                 elif response.headers["X-LXD-type"] == "file":
                     fd = os.open(
-                        local_path, os.O_CREAT | os.O_WRONLY, mode=unix_permissions
+                        local_path,
+                        os.O_CREAT | os.O_WRONLY | os.O_TRUNC,
+                        mode=unix_permissions,
                     )
                     with open(fd, "wb") as f:
                         f.write(response.content)
