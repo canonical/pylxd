@@ -271,7 +271,7 @@ class Instance(model.Model):
             if "X-LXD-type" in response.headers and "X-LXD-mode" in response.headers:
                 unix_permissions = int(response.headers["X-LXD-mode"], 8)
                 if response.headers["X-LXD-type"] == "directory":
-                    os.mkdir(local_path, unix_permissions)
+                    os.makedirs(local_path, unix_permissions, exist_ok=True)
                     content = json.loads(response.content)
                     if "metadata" in content and content["metadata"]:
                         for file in content["metadata"]:
