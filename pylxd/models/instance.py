@@ -268,12 +268,10 @@ class Instance(model.Model):
             """
             response = self._endpoint.get(params={"path": remote_path}, is_api=False)
 
-            if "X-LXD-type" in response.headers:
+            if "X-LXD-type" in response.headers and "X-LXD-mode" in response.headers:
+                unix_permissions = int(response.headers["X-LXD-mode"], 8)
                 if response.headers["X-LXD-type"] == "directory":
-                    # TODO: We considered using the X-LXD-uid, X-LXD-gid,
-                    #       and X-LXD-mode header information, but it was
-                    #       beyond the scope of this change.
-                    os.mkdir(local_path)
+                    os.makedirs(local_path, unix_permissions, exist_ok=True)
                     content = json.loads(response.content)
                     if "metadata" in content and content["metadata"]:
                         for file in content["metadata"]:
@@ -282,8 +280,12 @@ class Instance(model.Model):
                                 os.path.join(local_path, file),
                             )
                 elif response.headers["X-LXD-type"] == "file":
-                    with open(local_path, "wb") as f:
-                        # TODO: Same thoughts on file permissions as above.
+                    fd = os.open(
+                        local_path,
+                        os.O_CREAT | os.O_WRONLY | os.O_TRUNC,
+                        mode=unix_permissions,
+                    )
+                    with open(fd, "wb") as f:
                         f.write(response.content)
 
     @classmethod

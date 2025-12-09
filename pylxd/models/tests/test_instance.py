@@ -887,28 +887,40 @@ class TestFiles(testing.PyLXDTestCase):
         response = requests.models.Response()
         response.status_code = 200
         response.headers["X-LXD-type"] = "directory"
-        response._content = json.dumps({"metadata": ["file1", "file2"]})
+        response.headers["X-LXD-mode"] = "750"
+        response._content = json.dumps({"metadata": ["file1", "file2"]}).encode("utf-8")
 
         response1 = requests.models.Response()
         response1.status_code = 200
         response1.headers["X-LXD-type"] = "file"
-        response1._content = "This is file1"
+        response1.headers["X-LXD-mode"] = "762"
+        response1._content = b"This is file1"
 
         response2 = requests.models.Response()
         response2.status_code = 200
         response2.headers["X-LXD-type"] = "file"
-        response2._content = "This is file2"
+        response2.headers["X-LXD-mode"] = "744"
+        response2._content = b"This is file2"
 
         return_values = [response, response1, response2]
 
-        with mock.patch("pylxd.client._APINode.get") as get_mocked:
+        with mock.patch("pylxd.client._APINode.get") as get_mocked, mock.patch(
+            "os.makedirs"
+        ) as makedirs_mocked, mock.patch("os.open") as mock_os_open, mock.patch(
+            "builtins.open", mock.mock_open()
+        ):
             get_mocked.side_effect = return_values
-            with mock.patch("os.mkdir") as mkdir_mocked:
-                mock_open = mock.mock_open()
-                with mock.patch("pylxd.models.instance.open", mock_open):
-                    self.instance.files.recursive_get("/tmp/getted", "/tmp")
-                    assert mkdir_mocked.call_count == 1
-                    assert mock_open.call_count == 2
+            # Return dummy file descriptors
+            mock_os_open.side_effect = [11, 12]
+
+            self.instance.files.recursive_get("/tmp/getted", "/tmp")
+
+            makedirs_mocked.assert_called_once_with("/tmp", 0o750, exist_ok=True)
+
+            flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+            mock_os_open.assert_any_call("/tmp/file1", flags, mode=0o762)
+            mock_os_open.assert_any_call("/tmp/file2", flags, mode=0o744)
+            self.assertEqual(mock_os_open.call_count, 2)
 
     def test_get_not_found(self):
         """LXDAPIException is raised on bogus filenames."""
