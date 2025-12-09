@@ -905,8 +905,8 @@ class TestFiles(testing.PyLXDTestCase):
         return_values = [response, response1, response2]
 
         with mock.patch("pylxd.client._APINode.get") as get_mocked, mock.patch(
-            "os.mkdir"
-        ) as mkdir_mocked, mock.patch("os.open") as mock_os_open, mock.patch(
+            "os.makedirs"
+        ) as makedirs_mocked, mock.patch("os.open") as mock_os_open, mock.patch(
             "builtins.open", mock.mock_open()
         ):
             get_mocked.side_effect = return_values
@@ -915,7 +915,7 @@ class TestFiles(testing.PyLXDTestCase):
 
             self.instance.files.recursive_get("/tmp/getted", "/tmp")
 
-            mkdir_mocked.assert_called_once_with("/tmp", 0o750)
+            makedirs_mocked.assert_called_once_with("/tmp", 0o750, exist_ok=True)
 
             flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
             mock_os_open.assert_any_call("/tmp/file1", flags, mode=0o762)
