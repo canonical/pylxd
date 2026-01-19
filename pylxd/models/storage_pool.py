@@ -361,7 +361,7 @@ class StorageVolume(model.Model):
 
         volumes = []
         for volume in response.json()["metadata"]:
-            (_type, name) = volume.split("/")[-2:]
+            _type, name = volume.split("/")[-2:]
             # for each type, convert to the string that will work with GET
             if _type == "container":
                 _type = "container"
