@@ -4,6 +4,7 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,24 +16,21 @@ concurrency:
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     steps:
     - name: Repository checkout
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      with:
-        # A non-shallow clone is needed for the Differential ShellCheck
-        fetch-depth: 0
 
     - name: Require GHA pinning
       uses: canonical/lxd/.github/actions/require-gha-pinning@main
 
-    - id: ShellCheck
-      name: Differential ShellCheck
-      uses: redhat-plumbers-in-action/differential-shellcheck@d965e66ec0b3b2f821f75c8eff9b12442d9a7d1e # v5.5.6
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        strict-check-on-push: true
-      if: github.event_name == 'pull_request'
+    - name: ShellCheck
+      run: |
+        set -eux
+        # Lint the integration tests (the only shell scripts in the repository).
+        shellcheck integration/run-integration-tests*
+        # Just in case some `.sh` files are added in the future.
+        find . -type f -name "*.sh" -exec shellcheck {} +
 
     - name: Install dependencies
       run: |
@@ -52,7 +50,7 @@ jobs:
 
   unit-tests:
     name: Unit tests
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     steps:
     - name: Repository checkout
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -74,7 +72,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.12"]
-        track: ["latest/edge", "5.21/edge", "5.0/edge"]
+        track: ["6/edge", "5.21/edge", "5.0/edge"]
         os: ["24.04"]
         include:
           # 4.0/* isn't supported on 24.04
