@@ -17,4 +17,4 @@ from pylxd.models import Instance
 class VirtualMachine(Instance):
     """Flavour of :class:`models.Instance <pylxd.models.Instance>` for VMs."""
 
-    _endpoint = "virtual-machines"
+    _endpoint = "instances"

@@ -50,7 +50,7 @@ class IntegrationTestCase(unittest.TestCase):
             "config": {"limits.cpu": "2"},
             "source": {"type": "image", "alias": alias},
         }
-        result = self.lxd["containers"].post(json=machine)
+        result = self.lxd["instances"].post(json=machine)
         operation_uuid = result.json()["operation"].split("/")[-1]
         result = self.lxd.operations[operation_uuid].wait.get()
 
@@ -63,14 +63,14 @@ class IntegrationTestCase(unittest.TestCase):
         # To ensure we don't get an infinite loop, let's count.
         count = 0
         try:
-            result = self.lxd["containers"][name].delete()
+            result = self.lxd["instances"][name].delete()
         except exceptions.LXDAPIException as e:
             if e.response.status_code in (400, 404):
                 return
             raise
         while enforce and result.status_code == 404 and count < 10:
             try:
-                result = self.lxd["containers"][name].delete()
+                result = self.lxd["instances"][name].delete()
             except exceptions.LXDAPIException as e:
                 if e.response.status_code in (400, 404):
                     return
