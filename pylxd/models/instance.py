@@ -664,6 +664,9 @@ class Instance(model.Model):
         operation_url = self.client.api.operations[operation.id]._api_endpoint
         secrets = response_json["metadata"]["metadata"]
         cert = self.client.host_info["environment"]["certificate"]
+        if self.config.get("volatile.vsock_id", False):
+            # Delete key/value for volatile.vsock_id as this will be different on new host. Throws an 'Unknown configuration key: volatile.vsock_id' error if we don't delete it
+            del self.config["volatile.vsock_id"]
 
         return {
             "name": self.name,
@@ -671,7 +674,8 @@ class Instance(model.Model):
             "config": self.config,
             "devices": self.devices,
             "epehemeral": self.ephemeral,
-            "default": self.profiles,
+            "profiles": self.profiles,
+            "type": self.type,
             "source": {
                 "type": "migration",
                 "operation": operation_url,
