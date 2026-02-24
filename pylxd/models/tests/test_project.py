@@ -1,4 +1,5 @@
 import json
+from unittest import mock
 
 from pylxd import exceptions, models
 from pylxd.tests import testing
@@ -166,3 +167,46 @@ class TestProject(testing.PyLXDTestCase):
         a_project = self.client.projects.all()[0]
 
         a_project.delete()
+
+
+class TestProjectAsync(testing.PyLXDTestCase):
+    """Tests for async operations in Project."""
+
+    def setUp(self):
+        super().setUp()
+        self.mock_wait = mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ).start()
+        self.addCleanup(mock.patch.stopall)
+
+    def _mock_async_delete(self, name="test-project"):
+        self.add_rule(
+            {
+                "json": {
+                    "type": "async",
+                    "status_code": 202,
+                    "operation": "/1.0/operations/test-op",
+                },
+                "status_code": 202,
+                "method": "DELETE",
+                "url": rf"^http://pylxd.test/1.0/projects/{name}$",
+            }
+        )
+
+    def test_delete_async_with_wait(self):
+        """Async project delete with wait=True waits for the operation."""
+        a_project = models.Project(self.client, name="test-project")
+        self._mock_async_delete()
+
+        a_project.delete(wait=True)
+
+        self.mock_wait.assert_called_once_with("/1.0/operations/test-op")
+
+    def test_delete_async_without_wait(self):
+        """Async project delete with wait=False does not wait."""
+        a_project = models.Project(self.client, name="test-project")
+        self._mock_async_delete()
+
+        a_project.delete(wait=False)
+
+        self.mock_wait.assert_not_called()
