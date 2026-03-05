@@ -21,6 +21,156 @@ class TestInstance(testing.PyLXDTestCase):
 
         self.assertEqual(1, len(instances))
 
+    def test_all_with_fields_uses_selective_recursion(self):
+        """When the extension is present and fields is given, the selective
+        recursion URL (recursion=2;fields=...) is used."""
+        testing.add_api_extension_helper(self, ["instances_state_selective_recursion"])
+        self.add_rule(
+            {
+                "json": {
+                    "type": "sync",
+                    "metadata": [
+                        {
+                            "name": "an-instance",
+                            "status": "Running",
+                            "status_code": 103,
+                            "state": {"disk": {}},
+                        }
+                    ],
+                },
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/instances\?recursion=2%3Bfields%3Dstate\.disk$",
+            }
+        )
+
+        instances = models.Instance.all(self.client, recursion=2, fields=["state.disk"])
+
+        self.assertEqual(1, len(instances))
+        self.assertEqual("an-instance", instances[0].name)
+
+    def test_all_with_fields_multiple_uses_selective_recursion(self):
+        """Multiple fields are comma-joined in the selective recursion URL."""
+        testing.add_api_extension_helper(self, ["instances_state_selective_recursion"])
+        self.add_rule(
+            {
+                "json": {
+                    "type": "sync",
+                    "metadata": [
+                        {
+                            "name": "an-instance",
+                            "status": "Running",
+                            "status_code": 103,
+                            "state": {"disk": {}, "network": {}},
+                        }
+                    ],
+                },
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/instances\?recursion=2%3Bfields%3Dstate\.disk%2Cstate\.network$",
+            }
+        )
+
+        instances = models.Instance.all(
+            self.client, recursion=2, fields=["state.disk", "state.network"]
+        )
+
+        self.assertEqual(1, len(instances))
+        self.assertEqual("an-instance", instances[0].name)
+
+    def test_all_with_fields_empty_suppresses_state(self):
+        """An empty fields list produces recursion=2;fields= (no state sub-fields)."""
+        testing.add_api_extension_helper(self, ["instances_state_selective_recursion"])
+        self.add_rule(
+            {
+                "json": {
+                    "type": "sync",
+                    "metadata": [
+                        {
+                            "name": "an-instance",
+                            "status": "Running",
+                            "status_code": 103,
+                        }
+                    ],
+                },
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/instances\?recursion=2%3Bfields%3D$",
+            }
+        )
+
+        instances = models.Instance.all(self.client, recursion=2, fields=[])
+
+        self.assertEqual(1, len(instances))
+        self.assertEqual("an-instance", instances[0].name)
+
+    def test_all_with_fields_falls_back_without_extension(self):
+        """When the extension is absent, fields is ignored and plain recursion=2 is used."""
+        # Extension is NOT added → has_api_extension returns False
+        self.add_rule(
+            {
+                "json": {
+                    "type": "sync",
+                    "metadata": [
+                        {
+                            "name": "an-instance",
+                            "status": "Running",
+                            "status_code": 103,
+                        }
+                    ],
+                },
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/instances\?recursion=2$",
+            }
+        )
+
+        instances = models.Instance.all(self.client, recursion=2, fields=["state.disk"])
+
+        self.assertEqual(1, len(instances))
+        self.assertEqual("an-instance", instances[0].name)
+
+    def test_all_with_fields_ignored_for_recursion_1(self):
+        """fields is silently ignored when recursion is not 2."""
+        self.add_rule(
+            {
+                "json": {
+                    "type": "sync",
+                    "metadata": [
+                        {
+                            "name": "an-instance",
+                            "status": "Running",
+                            "status_code": 103,
+                        }
+                    ],
+                },
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/instances\?recursion=1$",
+            }
+        )
+
+        instances = models.Instance.all(self.client, recursion=1, fields=["state.disk"])
+
+        self.assertEqual(1, len(instances))
+        self.assertEqual("an-instance", instances[0].name)
+
+    def test_all_with_fields_str_raises_type_error(self):
+        """Passing a bare string for fields raises TypeError (string is iterable of chars)."""
+        testing.add_api_extension_helper(self, ["instances_state_selective_recursion"])
+
+        with self.assertRaises(TypeError):
+            models.Instance.all(self.client, recursion=2, fields="state.disk")
+
+    def test_all_with_fields_bytes_raises_type_error(self):
+        """Passing bytes for fields raises TypeError."""
+        testing.add_api_extension_helper(self, ["instances_state_selective_recursion"])
+
+        with self.assertRaises(TypeError):
+            models.Instance.all(self.client, recursion=2, fields=b"state.disk")
+
+    def test_all_with_fields_non_string_element_raises_type_error(self):
+        """Passing an iterable containing a non-string element raises TypeError."""
+        testing.add_api_extension_helper(self, ["instances_state_selective_recursion"])
+
+        with self.assertRaises(TypeError):
+            models.Instance.all(self.client, recursion=2, fields=["state.disk", 42])
+
     def test_get(self):
         """Return a instance."""
         name = "an-instance"

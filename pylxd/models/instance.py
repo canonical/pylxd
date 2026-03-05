@@ -305,7 +305,7 @@ class Instance(model.Model):
         return cls(client, **response.json()["metadata"])
 
     @classmethod
-    def all(cls, client, recursion=0):
+    def all(cls, client, recursion=0, fields=None):
         """Get all instances.
 
         This method returns an Instance array. If recursion is unset,
@@ -313,10 +313,41 @@ class Instance(model.Model):
         can be used to return more information. If recursion is between
         1-2 this method will pre-fetch additional instance attributes for
         all instances in the array.
+
+        If `fields` is provided and the server supports the
+        ``instances_state_selective_recursion`` extension, only the
+        specified state sub-fields are fetched (for example:
+        ``state.disk``, ``state.network``; additional values may be
+        supported by LXD).  Pass an empty list to suppress all
+        expensive state fields.  ``fields`` is only meaningful when
+        ``recursion=2``; it is silently ignored otherwise, or when the
+        extension is unavailable (in which case the server returns all
+        state fields as usual).
+
+        :param recursion: Recursion level (0, 1, or 2).
+        :type recursion: int
+        :param fields: Selective state fields to fetch (requires
+            ``instances_state_selective_recursion`` extension).
+        :type fields: list[str] or None
         """
         params = {}
         if recursion != 0:
-            params = {"recursion": recursion}
+            if (
+                recursion == 2
+                and fields is not None
+                and client.has_api_extension("instances_state_selective_recursion")
+            ):
+                if isinstance(fields, (str, bytes)):
+                    raise TypeError(
+                        "fields must be an iterable of strings, not str or bytes"
+                    )
+                for field in fields:
+                    if not isinstance(field, str):
+                        raise TypeError("fields must be an iterable of strings")
+                fields_str = ",".join(fields)
+                params = {"recursion": f"2;fields={fields_str}"}
+            else:
+                params = {"recursion": recursion}
         response = client.api[cls._endpoint].get(params=params)
 
         instances = []
