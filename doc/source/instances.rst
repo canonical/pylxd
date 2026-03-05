@@ -18,7 +18,17 @@ Instances can be queried through the following client manager
 methods:
 
   - `exists(name)` - Returns `boolean` indicating if the instance exists.
-  - `all()` - Retrieve all instances.
+  - `all(recursion=0, fields=None)` - Retrieve all instances.
+    - `recursion` controls how much data is pre-fetched: ``0`` returns names
+      only, ``1`` returns basic attributes, ``2`` returns full state including
+      network and disk information.
+    - `fields` is an optional list of state sub-fields to fetch selectively
+      (e.g. ``["state.disk"]``, ``["state.disk", "state.network"]``).  Only
+      meaningful with ``recursion=2`` and requires the
+      ``instances_state_selective_recursion`` LXD API extension.  When the
+      extension is absent the parameter is silently ignored and the full state
+      is returned.  Pass an empty list (``fields=[]``) to suppress all
+      expensive state fields.
   - `get()` - Get a specific instance, by its name.
   - `create(config, wait=False, target='lxd-cluster-member')` - Create a new instance.
     - This method requires the instance config as the first parameter.
@@ -100,6 +110,33 @@ get a list of all LXD instances with `all`.
 
     >>> client.instances.all()
     [<instance.Instance at 0x7f95d8af72b0>,]
+
+
+To pre-fetch full instance data in a single request, use ``recursion=2``.
+
+.. code-block:: python
+
+    >>> instances = client.instances.all(recursion=2)
+
+
+If the LXD server supports the ``instances_state_selective_recursion``
+extension, you can request only specific state sub-fields to reduce data
+transfer.  This is useful when, for example, you only need disk usage and
+want to avoid the cost of enumerating network interfaces.
+
+.. code-block:: python
+
+    # Only fetch disk state
+    >>> instances = client.instances.all(recursion=2, fields=["state.disk"])
+
+    # Fetch both disk and network state
+    >>> instances = client.instances.all(recursion=2, fields=["state.disk", "state.network"])
+
+    # Avoid fetching all expensive state fields
+    >>> instances = client.instances.all(recursion=2, fields=[])
+
+If the extension is not available the call falls back gracefully to a
+standard ``recursion=2`` request.
 
 
 In order to create a new :class:`~instance.Instance`, an instance
