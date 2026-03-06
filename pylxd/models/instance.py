@@ -383,10 +383,21 @@ class Instance(model.Model):
         :rtype: :class:`Instance`
         """
         response = client.api[cls._endpoint].post(json=config, target=target)
+        instance_name = config.get("name")
 
-        if wait:
-            client.operations.wait_for_operation(response.json()["operation"])
-        return cls(client, name=config["name"])
+        # Only decode JSON if we need to fetch the auto-generated name or wait for the operation
+        if instance_name is None or wait:
+            response_json = response.json()
+
+            if instance_name is None:
+                # LXD may assign a name if not provided, so we need to get it from the metadata.
+                instance_name = os.path.basename(
+                    response_json["metadata"]["resources"]["instances"][0]
+                )
+
+            if wait:
+                client.operations.wait_for_operation(response_json["operation"])
+        return cls(client, name=instance_name)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

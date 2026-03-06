@@ -227,11 +227,21 @@ class TestInstance(testing.PyLXDTestCase):
 
     def test_create(self):
         """A new instance is created."""
-        config = {"name": "an-new-instance"}
+        # parametrization (native parametrize doesn't work with unittest.TestCase, so we do it manually)
+        for name in ("an-new-instance", None):
+            for wait in (True, False):
+                with self.subTest(name=name, wait=wait):
+                    config = {"name": name} if name else {}
 
-        an_new_instance = models.Instance.create(self.client, config, wait=True)
+                    an_new_instance = models.Instance.create(
+                        self.client, config, wait=wait
+                    )
 
-        self.assertEqual(config["name"], an_new_instance.name)
+                    if name:
+                        self.assertEqual(config["name"], an_new_instance.name)
+                    else:
+                        # Creating an instance without a name should still work (a random name is assigned).
+                        self.assertEqual("an-instance-generated", an_new_instance.name)
 
     def test_create_remote_location(self):
         """A new instance is created at target."""
