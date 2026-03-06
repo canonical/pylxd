@@ -233,6 +233,12 @@ class TestInstance(testing.PyLXDTestCase):
 
         self.assertEqual(config["name"], an_new_instance.name)
 
+    def test_create_no_name(self):
+        """Creating an instance without a name should still work (a random name is assigned)."""
+        an_new_instance = models.Instance.create(self.client, {}, wait=True)
+
+        self.assertIsNotNone(an_new_instance.name)
+
     def test_create_remote_location(self):
         """A new instance is created at target."""
         config = {"name": "an-new-remote-instance"}

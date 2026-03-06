@@ -3,8 +3,18 @@ import json
 
 def instances_POST(request, context):
     context.status_code = 202
+    instance_name = request.json().get("name") or "an-instance"
     return json.dumps(
-        {"type": "async", "operation": "/1.0/operations/operation-abc?project=default"}
+        {
+            "type": "async",
+            "operation": "/1.0/operations/operation-abc?project=default",
+            "metadata": {
+                "resources": {
+                    "containers": [f"/1.0/containers/{instance_name}"],
+                    "instances": [f"/1.0/instances/{instance_name}"],
+                }
+            },
+        }
     )
 
 
