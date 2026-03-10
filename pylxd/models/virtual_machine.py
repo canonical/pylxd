@@ -18,3 +18,4 @@ class VirtualMachine(Instance):
     """Flavour of :class:`models.Instance <pylxd.models.Instance>` for VMs."""
 
     _endpoint = "instances"
+    _instance_type = "virtual-machine"
