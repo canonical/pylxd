@@ -17,7 +17,7 @@ import logging
 import os
 import stat
 import time
-from typing import IO, NamedTuple
+from typing import IO, NamedTuple, Optional
 from urllib import parse
 
 from ws4py.client import WebSocketBaseClient
@@ -70,6 +70,7 @@ class Instance(model.Model):
     files = model.Manager()
 
     _endpoint = "instances"
+    _instance_type: Optional[str] = None
 
     def __setattr__(self, name, value):
         if name == "location" and not self.client.server_clustered:
@@ -351,6 +352,8 @@ class Instance(model.Model):
         :returns: an instance if successful
         :rtype: :class:`Instance`
         """
+        if cls._instance_type is not None and "type" not in config:
+            config = {**config, "type": cls._instance_type}
         response = client.api[cls._endpoint].post(json=config, target=target)
 
         if wait:
