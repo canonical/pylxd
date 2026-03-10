@@ -18,3 +18,4 @@ class Container(Instance):
     """Flavour of :class:`models.Instance <pylxd.models.Instance>` for containers."""
 
     _endpoint = "instances"
+    _instance_type = "container"
