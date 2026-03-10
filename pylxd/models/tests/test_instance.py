@@ -104,6 +104,109 @@ class TestInstance(testing.PyLXDTestCase):
 
         self.assertIsNone(instance.location)
 
+    def test_create_does_not_inject_type(self):
+        """Instance.create() with _instance_type=None does not add 'type' to the payload."""
+        posted_json = {}
+
+        def capture(request, context):
+            posted_json.update(json.loads(request.body))
+            context.status_code = 202
+            return json.dumps(
+                {
+                    "type": "async",
+                    "operation": "/1.0/operations/operation-abc?project=default",
+                }
+            )
+
+        self.add_rule(
+            {
+                "text": capture,
+                "method": "POST",
+                "url": r"^http://pylxd.test/1.0/instances$",
+            }
+        )
+        models.Instance.create(self.client, {"name": "an-new-instance"})
+        self.assertNotIn("type", posted_json)
+
+    def test_create_container_injects_type(self):
+        """Container.create() injects type='container' into the POST payload."""
+        posted_json = {}
+
+        def capture(request, context):
+            posted_json.update(json.loads(request.body))
+            context.status_code = 202
+            return json.dumps(
+                {
+                    "type": "async",
+                    "operation": "/1.0/operations/operation-abc?project=default",
+                }
+            )
+
+        self.add_rule(
+            {
+                "text": capture,
+                "method": "POST",
+                "url": r"^http://pylxd.test/1.0/instances$",
+            }
+        )
+        models.Container.create(self.client, {"name": "an-new-instance"})
+        self.assertEqual("container", posted_json["type"])
+
+    def test_create_virtual_machine_injects_type(self):
+        """VirtualMachine.create() injects type='virtual-machine' into the POST payload."""
+        posted_json = {}
+
+        def capture(request, context):
+            posted_json.update(json.loads(request.body))
+            context.status_code = 202
+            return json.dumps(
+                {
+                    "type": "async",
+                    "operation": "/1.0/operations/operation-abc?project=default",
+                }
+            )
+
+        self.add_rule(
+            {
+                "text": capture,
+                "method": "POST",
+                "url": r"^http://pylxd.test/1.0/instances$",
+            }
+        )
+        models.VirtualMachine.create(self.client, {"name": "an-new-instance"})
+        self.assertEqual("virtual-machine", posted_json["type"])
+
+    def test_create_preserves_caller_type(self):
+        """Container.create() does not overwrite a 'type' already in the caller's config."""
+        posted_json = {}
+        original_config = {"name": "an-new-instance", "type": "virtual-machine"}
+
+        def capture(request, context):
+            posted_json.update(json.loads(request.body))
+            context.status_code = 202
+            return json.dumps(
+                {
+                    "type": "async",
+                    "operation": "/1.0/operations/operation-abc?project=default",
+                }
+            )
+
+        self.add_rule(
+            {
+                "text": capture,
+                "method": "POST",
+                "url": r"^http://pylxd.test/1.0/instances$",
+            }
+        )
+        models.Container.create(self.client, original_config)
+        self.assertEqual("virtual-machine", posted_json["type"])
+
+    def test_create_does_not_mutate_caller_config(self):
+        """Container.create() does not mutate the caller's config dict."""
+        config = {"name": "an-new-instance"}
+        models.Container.create(self.client, config)
+        self.assertNotIn("type", config)
+
     def test_exists(self):
         """A instance exists."""
         name = "an-instance"
