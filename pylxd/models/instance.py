@@ -726,7 +726,7 @@ class Instance(model.Model):
             },
         }
 
-    def publish(self, public=False, wait=False):
+    def publish(self, public=False, wait=False, compression_algorithm=None):
         """Publish a instance as an image.
 
         The instance must be stopped in order publish it as an image. This
@@ -742,6 +742,8 @@ class Instance(model.Model):
                 "name": self.name,
             },
         }
+        if compression_algorithm:
+            data["compression_algorithm"] = compression_algorithm
 
         response = self.client.api.images.post(json=data)
         if wait:
