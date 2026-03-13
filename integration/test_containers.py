@@ -55,6 +55,23 @@ class TestContainers(IntegrationTestCase):
 
         self.assertEqual(config["name"], container.name)
 
+    def test_create_no_name(self):
+        """Creating a container without a name should still succeed."""
+        _, alias = self.create_image()
+        canary_value = self.generate_object_name()
+        config = {
+            "architecture": "2",
+            "profiles": ["default"],
+            "ephemeral": True,
+            "config": {"limits.cpu": "2"},
+            "source": {"type": "image", "alias": alias},
+            "description": canary_value,
+        }
+
+        container = self.client.containers.create(config, wait=True)
+        self.addCleanup(self.delete_container, container.name)
+        self.assertEqual(canary_value, container.description)
+
 
 class TestContainer(IntegrationTestCase):
     """Tests for Client.Container."""

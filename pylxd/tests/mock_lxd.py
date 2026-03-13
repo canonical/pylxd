@@ -10,9 +10,11 @@ def instances_POST(request, context):
             "operation": "/1.0/operations/operation-abc?project=default",
             "metadata": {
                 "resources": {
-                    "containers": [f"/1.0/containers/{instance_name}"],
-                    "instances": [f"/1.0/instances/{instance_name}"],
-                }
+                    "project": ["/1.0/projects/default"],
+                },
+                "metadata": {
+                    "entity_url": f"/1.0/instances/{instance_name}",
+                },
             },
         }
     )
