@@ -17,6 +17,7 @@ import logging
 import os
 import stat
 import time
+import warnings
 from typing import IO, NamedTuple, Optional
 from urllib import parse
 
@@ -394,12 +395,33 @@ class Instance(model.Model):
 
             if instance_name is None:
                 # LXD may assign a name if not provided, so we need to get it from the metadata.
-                instance_name = os.path.basename(
-                    response_json["metadata"]["resources"]["instances"][0]
-                )
+                instance_metadata = (
+                    response_json["metadata"].get("metadata") or {}
+                )  # metadata.metadata sometimes can be "null" and .get(..., {}) will still return None in this case. That's why we use `... or {}`
+                instance_url = instance_metadata.get("entity_url")
+                instance_name = os.path.basename(instance_url) if instance_url else None
+                if instance_name is None and not wait:
+                    wait = True
+                    warnings.warn(
+                        "LXD did not return the instance name in the response. "
+                        "pylxd is setting wait=True to retrieve the name from the completed operation. "
+                        "Please pass wait=True explicitly to create(...) to suppress this warning.",
+                        stacklevel=2,
+                    )
 
             if wait:
-                client.operations.wait_for_operation(response_json["operation"])
+                operation_response = client.operations.wait_for_operation(
+                    response_json["operation"]
+                )
+                if instance_name is None:
+                    instance_name = os.path.basename(
+                        operation_response.resources["instances"][0]
+                    )
+
+            if instance_name is None:
+                raise ValueError(
+                    "Could not automatically determine instance name from LXD response. Please include the 'name' field in the config."
+                )
         return cls(client, name=instance_name)
 
     def __init__(self, *args, **kwargs):
