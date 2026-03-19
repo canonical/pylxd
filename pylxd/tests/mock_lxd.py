@@ -1170,6 +1170,12 @@ RULES = [
         "text": json.dumps(
             {
                 "type": "sync",
+                "metadata": {
+                    "id": "operation-abc",
+                    "status": "Success",
+                    "status_code": 200,
+                    "metadata": {"return": 0},
+                },
             }
         ),
         "method": "GET",
