@@ -68,14 +68,12 @@ class Operation:
         response = client.api.operations[operation_id].get()
         return cls(_client=client, **response.json()["metadata"])
 
-    def __init__(self, **kwargs):
-        super().__init__()
-        for key, value in kwargs.items():
+    def _set_attributes(self, attributes):
+        """Set attributes on self, warning about unknown ones per PYLXD_WARNINGS."""
+        for key, value in attributes.items():
             try:
                 setattr(self, key, value)
             except AttributeError:
-                # ignore attributes we don't know about -- prevent breakage
-                # in the future if new attributes are added.
                 env = os.environ.get("PYLXD_WARNINGS", "").lower()
                 if env != "always" and key in _seen_attribute_warnings:
                     continue
@@ -86,7 +84,10 @@ class Operation:
                     f'Attempted to set unknown attribute "{key}" '
                     f'on instance of "{self.__class__.__name__}"'
                 )
-                pass
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self._set_attributes(kwargs)
 
     def wait(self):
         """Wait for the operation to complete and return."""
