@@ -353,9 +353,11 @@ def _is_a_token(secret):
     """Inspect the provided secret to determine if it is a trust token.
 
     Try to base64 decode and parse the JSON to see if it contains a "secret" key.
+    Leading/trailing whitespace (newlines, spaces) are stripped before decoding,
+    since tokens are often copy-pasted with surrounding whitespace.
 
     :param secret: The secret to inspect
-    :type secret: str
+    :type secret: str or bytes
     :returns: True if the secret is a trust token
 
     >>> _is_a_token("password")
