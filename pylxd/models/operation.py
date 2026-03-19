@@ -54,8 +54,12 @@ class Operation:
     def wait_for_operation(cls, client, operation_id):
         """Get an operation and wait for it to complete."""
         operation = cls.get(client, operation_id)
-        operation.wait()
-        return cls.get(client, operation.id)
+        # wait() returns True when it received and applied metadata from the
+        # /wait response. When /wait returns no metadata it returns False and
+        # we fall back to a second GET to retrieve the final operation state.
+        if not operation.wait():
+            return cls.get(client, operation.id)
+        return operation
 
     @classmethod
     def extract_operation_id(cls, s):
