@@ -82,6 +82,7 @@ class TestOperation(testing.PyLXDTestCase):
                 "type": "sync",
                 "metadata": {
                     "status": "Failure",
+                    "status_code": 400,
                     "err": "Keep your foot off the blasted samoflange.",
                 },
             }
