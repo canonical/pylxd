@@ -90,12 +90,38 @@ class Operation:
         self._set_attributes(kwargs)
 
     def wait(self):
-        """Wait for the operation to complete and return."""
+        """Wait for the operation to complete.
+
+        Returns True if the /wait response included an operation object that
+        was applied to self, or False if the response contained no metadata.
+        Raises LXDAPIException on operation failure.
+        """
         response = self._client.api.operations[self.id].wait.get()
 
         try:
-            if response.json()["metadata"]["status"] == "Failure":
+            body = response.json()
+            metadata = body["metadata"]
+
+            # If metadata is absent/null but a top-level error is present
+            # (e.g. {"type": "async", "error": "...", "metadata": null}),
+            # treat it as a failure.
+            if not metadata and body.get("error"):
                 raise exceptions.LXDAPIException(response)
+
+            if metadata:
+                # Failure can be indicated by status string or status_code.
+                if metadata.get("status") == "Failure" or (
+                    metadata.get("status_code") is not None
+                    and not (200 <= metadata["status_code"] < 300)
+                ):
+                    raise exceptions.LXDAPIException(response)
+
+                # Update self with the final state so callers don't need
+                # a second GET (which could race with LXD cleaning up the operation).
+                self._set_attributes(metadata)
+                return True
         except KeyError:
-            # Support for legacy LXD
+            # /wait response does not contain an operation object
             pass
+
+        return False
