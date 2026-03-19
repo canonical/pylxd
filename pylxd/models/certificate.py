@@ -72,8 +72,9 @@ class Certificate(model.Model):
             "password": password,
             "name": name,
             "restricted": restricted,
-            "projects": projects,
         }
+        if projects is not None:
+            data["projects"] = projects
 
         # secret/trust_token are safer than password but support for password is kept for
         # backward compatibility
@@ -102,8 +103,9 @@ class Certificate(model.Model):
             "token": True,
             "name": name,
             "restricted": restricted,
-            "projects": projects,
         }
+        if projects is not None:
+            data["projects"] = projects
         response = client.api.certificates.post(json=data)
         metadata = response.json()["metadata"]["metadata"]
 
