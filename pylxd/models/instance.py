@@ -590,12 +590,11 @@ class Instance(model.Model):
 
             manager.start()
 
-            # watch for the end of the command:
-            while True:
-                operation = self.client.operations.get(operation_id)
-                if "return" in operation.metadata:
-                    break
-                time.sleep(0.5)  # pragma: no cover
+            # Block until the exec operation completes by using the
+            # /wait endpoint, which is efficient and race-free.
+            operation = self.client.operations.wait_for_operation(
+                response_json["operation"]
+            )
 
             try:
                 stdin.close()
