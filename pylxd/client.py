@@ -367,7 +367,11 @@ def _is_a_token(secret):
     True
     """
     try:
-        b64 = base64.b64decode(secret)
+        # Strip surrounding whitespace (newlines, spaces) that are common when
+        # tokens are copy-pasted, before strict decoding.
+        if isinstance(secret, (str, bytes)):
+            secret = secret.strip()
+        b64 = base64.b64decode(secret, validate=True)
         token = json.loads(b64.decode("utf-8"))
         return "secret" in token
     except (TypeError, ValueError, json.JSONDecodeError, base64.binascii.Error):
