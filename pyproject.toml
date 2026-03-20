@@ -43,6 +43,7 @@ testing = [
 format = ["black", "flake8", "flake8-pyproject", "isort"]
 check = ["mypy"]
 doc = ["Sphinx"]
+release = ["build", "twine>=6.0.0"]
 
 [tool.setuptools.packages.find]
 include = ["pylxd*"]
