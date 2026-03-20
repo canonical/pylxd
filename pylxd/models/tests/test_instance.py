@@ -1202,10 +1202,11 @@ class TestFiles(testing.PyLXDTestCase):
         response1.headers["X-LXD-mode"] = "644"
         response1._content = b"safe content"
 
-        with mock.patch("pylxd.client._APINode.get") as get_mocked, mock.patch(
-            "os.makedirs"
-        ), mock.patch("os.open") as mock_os_open, mock.patch(
-            "builtins.open", mock.mock_open()
+        with (
+            mock.patch("pylxd.client._APINode.get") as get_mocked,
+            mock.patch("os.makedirs"),
+            mock.patch("os.open") as mock_os_open,
+            mock.patch("builtins.open", mock.mock_open()),
         ):
             get_mocked.side_effect = [response, response1]
             mock_os_open.return_value = 11
