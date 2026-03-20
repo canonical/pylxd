@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pylxd"
-version = "2.3.9"
+version = "2.4.0"
 description = "Python library for interacting with the LXD REST API"
 readme = { file = "README.rst", content-type = "text/x-rst" }
 requires-python = ">=3.10"
@@ -43,6 +43,7 @@ testing = [
 format = ["black", "flake8", "flake8-pyproject", "isort"]
 check = ["mypy"]
 doc = ["Sphinx"]
+release = ["build", "twine>=6.0.0"]
 
 [tool.setuptools.packages.find]
 include = ["pylxd*"]
