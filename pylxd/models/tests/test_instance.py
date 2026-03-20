@@ -1167,10 +1167,11 @@ class TestFiles(testing.PyLXDTestCase):
 
         return_values = [response, response1, response2]
 
-        with mock.patch("pylxd.client._APINode.get") as get_mocked, mock.patch(
-            "os.makedirs"
-        ) as makedirs_mocked, mock.patch("os.open") as mock_os_open, mock.patch(
-            "builtins.open", mock.mock_open()
+        with (
+            mock.patch("pylxd.client._APINode.get") as get_mocked,
+            mock.patch("os.makedirs") as makedirs_mocked,
+            mock.patch("os.open") as mock_os_open,
+            mock.patch("builtins.open", mock.mock_open()),
         ):
             get_mocked.side_effect = return_values
             # Return dummy file descriptors

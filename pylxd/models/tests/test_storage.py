@@ -400,6 +400,7 @@ class TestStoragePoolAsync(testing.PyLXDTestCase):
 
         # Note: The endpoint path is empty string "" as PUT is directly on the pool URL
         self._setup_async_operation_rule("PUT", "", operation_id)
+        self._setup_create_mocks("async", operation_id)
 
         with mock.patch.object(
             self.client.operations, "wait_for_operation"
@@ -413,6 +414,7 @@ class TestStoragePoolAsync(testing.PyLXDTestCase):
         operation_id = "/1.0/operations/save-op"
 
         self._setup_async_operation_rule("PUT", "", operation_id)
+        self._setup_create_mocks("async", operation_id)
 
         with mock.patch.object(
             self.client.operations, "wait_for_operation"
