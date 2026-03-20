@@ -39,7 +39,6 @@ testing = [
     "pytest-cov>=7.0.0",
     "pytest>=9.0.2",
     "requests-mock>=1.2",
-    "setuptools>=78.1.1",
 ]
 format = ["black", "flake8", "flake8-pyproject", "isort"]
 check = ["mypy"]
