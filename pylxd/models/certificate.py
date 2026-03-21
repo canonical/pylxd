@@ -15,7 +15,6 @@ import json
 from base64 import b64encode
 
 from cryptography import x509
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import Encoding
 
 from pylxd.models import _model as model
@@ -62,7 +61,7 @@ class Certificate(model.Model):
         secret="",
     ):
         """Create a new certificate."""
-        cert = x509.load_pem_x509_certificate(cert_data, default_backend())
+        cert = x509.load_pem_x509_certificate(cert_data)
         base64_cert = cert.public_bytes(Encoding.PEM).decode("utf-8")
         # STRIP OUT CERT META "-----BEGIN CERTIFICATE-----"
         base64_cert = "\n".join(base64_cert.split("\n")[1:-2])
@@ -72,8 +71,9 @@ class Certificate(model.Model):
             "password": password,
             "name": name,
             "restricted": restricted,
-            "projects": projects,
         }
+        if projects is not None:
+            data["projects"] = projects
 
         # secret/trust_token are safer than password but support for password is kept for
         # backward compatibility
@@ -102,8 +102,9 @@ class Certificate(model.Model):
             "token": True,
             "name": name,
             "restricted": restricted,
-            "projects": projects,
         }
+        if projects is not None:
+            data["projects"] = projects
         response = client.api.certificates.post(json=data)
         metadata = response.json()["metadata"]["metadata"]
 

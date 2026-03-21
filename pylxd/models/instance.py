@@ -277,6 +277,11 @@ class Instance(model.Model):
                     content = json.loads(response.content)
                     if "metadata" in content and content["metadata"]:
                         for file in content["metadata"]:
+                            # Reject entries that are empty, are dot-dirs, are
+                            # absolute paths, or contain path separators. Any
+                            # of these could escape the intended local directory.
+                            if not file or file in (".", "..") or "/" in file:
+                                continue
                             self.recursive_get(
                                 os.path.join(remote_path, file),
                                 os.path.join(local_path, file),
