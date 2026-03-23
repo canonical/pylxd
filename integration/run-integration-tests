@@ -2,12 +2,15 @@
 
 sudo apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-     build-essential \
      busybox-static \
-     libffi-dev \
-     libssl-dev \
-     python3-dev \
-     tox
+     python3-venv
+
+if ! command -v tox >/dev/null 2>&1; then
+    python3 -m venv venv
+    venv/bin/pip install "tox>=4.22"
+    # shellcheck source=/dev/null
+    . venv/bin/activate
+fi
 
 # Fail if lxc command isn't available
 if ! command -v lxc; then
