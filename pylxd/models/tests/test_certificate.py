@@ -205,3 +205,20 @@ class TestCertificate(testing.PyLXDTestCase):
         posted_json = mock_post.call_args.kwargs["json"]
         self.assertIn("projects", posted_json)
         self.assertEqual(["default"], posted_json["projects"])
+
+    def test_create_with_trust_token(self):
+        """create() uses trust_token instead of password when secret is provided."""
+        with (
+            mock.patch.object(self.client, "has_api_extension", return_value=True),
+            mock.patch.object(
+                self.client.api.session, "post", return_value=self._mock_post_response()
+            ) as mock_post,
+        ):
+            self.client.certificates.create(
+                "test-password", self._cert_data(), secret="my-token"
+            )
+
+        posted_json = mock_post.call_args.kwargs["json"]
+        self.assertIn("trust_token", posted_json)
+        self.assertEqual("my-token", posted_json["trust_token"])
+        self.assertNotIn("password", posted_json)
