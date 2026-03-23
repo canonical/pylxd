@@ -13,6 +13,7 @@
 #    under the License.
 import json
 import os
+from unittest import mock
 
 from pylxd import models
 from pylxd.tests import testing
@@ -123,3 +124,101 @@ class TestCertificate(testing.PyLXDTestCase):
         an_certificate = models.Certificate(self.client, fingerprint="an-certificate")
 
         an_certificate.delete()
+
+    def _cert_data(self):
+        with open(
+            os.path.join(os.path.dirname(__file__), "../../tests", "lxd.crt")
+        ) as f:
+            return f.read().encode("utf-8")
+
+    def _mock_post_response(
+        self,
+        fingerprint="eaf55b72fc23aa516d709271df9b0116064bf8cfa009cf34c67c33ad32c2320c",
+    ):
+        resp = mock.MagicMock()
+        resp.status_code = 201
+        resp.headers = {"Location": f"/1.0/certificates/{fingerprint}"}
+        return resp
+
+    def test_create_omits_projects_when_none(self):
+        """create() does not include 'projects' in the POST payload when projects=None."""
+        with mock.patch.object(
+            self.client.api.session, "post", return_value=self._mock_post_response()
+        ) as mock_post:
+            self.client.certificates.create("test-password", self._cert_data())
+
+        posted_json = mock_post.call_args.kwargs["json"]
+        self.assertNotIn("projects", posted_json)
+
+    def test_create_includes_projects_when_provided(self):
+        """create() includes 'projects' in the POST payload when projects is given."""
+        with mock.patch.object(
+            self.client.api.session, "post", return_value=self._mock_post_response()
+        ) as mock_post:
+            self.client.certificates.create(
+                "test-password", self._cert_data(), projects=["default"]
+            )
+
+        posted_json = mock_post.call_args.kwargs["json"]
+        self.assertIn("projects", posted_json)
+        self.assertEqual(["default"], posted_json["projects"])
+
+    def test_create_token_omits_projects_when_none(self):
+        """create_token() does not include 'projects' in the POST payload when projects=None."""
+        mock_resp = mock.MagicMock()
+        mock_resp.status_code = 201
+        mock_resp.json.return_value = {
+            "metadata": {
+                "metadata": {
+                    "addresses": ["192.0.2.1:8443"],
+                    "fingerprint": "abc123",
+                    "secret": "some-secret",
+                },
+            },
+        }
+        with mock.patch.object(
+            self.client.api.session, "post", return_value=mock_resp
+        ) as mock_post:
+            self.client.certificates.create_token(name="foo")
+
+        posted_json = mock_post.call_args.kwargs["json"]
+        self.assertNotIn("projects", posted_json)
+
+    def test_create_token_includes_projects_when_provided(self):
+        """create_token() includes 'projects' in the POST payload when projects is given."""
+        mock_resp = mock.MagicMock()
+        mock_resp.status_code = 201
+        mock_resp.json.return_value = {
+            "metadata": {
+                "metadata": {
+                    "addresses": ["192.0.2.1:8443"],
+                    "fingerprint": "abc123",
+                    "secret": "some-secret",
+                },
+            },
+        }
+        with mock.patch.object(
+            self.client.api.session, "post", return_value=mock_resp
+        ) as mock_post:
+            self.client.certificates.create_token(name="foo", projects=["default"])
+
+        posted_json = mock_post.call_args.kwargs["json"]
+        self.assertIn("projects", posted_json)
+        self.assertEqual(["default"], posted_json["projects"])
+
+    def test_create_with_trust_token(self):
+        """create() uses trust_token instead of password when secret is provided."""
+        with (
+            mock.patch.object(self.client, "has_api_extension", return_value=True),
+            mock.patch.object(
+                self.client.api.session, "post", return_value=self._mock_post_response()
+            ) as mock_post,
+        ):
+            self.client.certificates.create(
+                "test-password", self._cert_data(), secret="my-token"
+            )
+
+        posted_json = mock_post.call_args.kwargs["json"]
+        self.assertIn("trust_token", posted_json)
+        self.assertEqual("my-token", posted_json["trust_token"])
+        self.assertNotIn("password", posted_json)

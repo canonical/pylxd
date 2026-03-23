@@ -1186,6 +1186,40 @@ class TestFiles(testing.PyLXDTestCase):
             mock_os_open.assert_any_call("/tmp/file2", flags, mode=0o744)
             self.assertEqual(mock_os_open.call_count, 2)
 
+    def test_recursive_get_sanitizes_traversal_entries(self):
+        """Path traversal entries in directory listings are skipped."""
+        response = requests.models.Response()
+        response.status_code = 200
+        response.headers["X-LXD-type"] = "directory"
+        response.headers["X-LXD-mode"] = "750"
+        response._content = json.dumps(
+            {"metadata": ["safe_file", "..", ".", "/etc/passwd", "../evil"]}
+        ).encode("utf-8")
+
+        response1 = requests.models.Response()
+        response1.status_code = 200
+        response1.headers["X-LXD-type"] = "file"
+        response1.headers["X-LXD-mode"] = "644"
+        response1._content = b"safe content"
+
+        with (
+            mock.patch("pylxd.client._APINode.get") as get_mocked,
+            mock.patch("os.makedirs"),
+            mock.patch("os.open") as mock_os_open,
+            mock.patch("builtins.open", mock.mock_open()),
+        ):
+            get_mocked.side_effect = [response, response1]
+            mock_os_open.return_value = 11
+
+            self.instance.files.recursive_get("/tmp/dir", "/local/dir")
+
+            # Only safe_file should be fetched; traversal entries must be skipped.
+            self.assertEqual(mock_os_open.call_count, 1)
+            flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+            mock_os_open.assert_called_once_with(
+                "/local/dir/safe_file", flags, mode=0o644
+            )
+
     def test_get_not_found(self):
         """LXDAPIException is raised on bogus filenames."""
 
