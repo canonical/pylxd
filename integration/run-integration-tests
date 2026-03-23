@@ -1,4 +1,6 @@
-#!/bin/bash -ex
+#!/bin/bash
+set -eux
+set -o pipefail
 
 sudo apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
