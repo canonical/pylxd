@@ -331,6 +331,29 @@ class _APINode:
         return response
 
 
+def _ws_exclude_origin(kwargs):
+    """Ensure the WebSocket handshake never sends an Origin header.
+
+    PyLXD is a non-browser client.  ws4py always generates an Origin header
+    from the connection URL.  For Unix-socket connections the URL scheme is
+    ``ws+unix://``, which produces ``Origin: ws+unix://localhost`` while the
+    Host header becomes ``localhost:None`` (ws4py renders the Python ``None``
+    port literally).  gorilla/websocket's default CheckOrigin compares the
+    Origin host against the full Host header value and rejects the mismatch
+    with HTTP 403, so LXD times out waiting for the WebSocket to connect.
+
+    The function mutates *kwargs* in place so callers can pass it straight to
+    the ws4py ``WebSocketBaseClient.__init__``.  Existing excluded headers
+    supplied by the caller are preserved; the comparison is case-insensitive
+    because ws4py itself lowercases all entries before using them.
+    """
+    existing = kwargs.get("exclude_headers")
+    if existing is None:
+        kwargs["exclude_headers"] = ["origin"]
+    elif not any(h.lower() == "origin" for h in existing):
+        kwargs["exclude_headers"] = list(existing) + ["origin"]
+
+
 class _WebsocketClient(WebSocketBaseClient):
     """A basic websocket client for the LXD API.
 
@@ -339,6 +362,10 @@ class _WebsocketClient(WebSocketBaseClient):
     all json messages to a messages attribute, which can
     then be read are parsed.
     """
+
+    def __init__(self, *args, **kwargs):
+        _ws_exclude_origin(kwargs)
+        super().__init__(*args, **kwargs)
 
     def handshake_ok(self):
         self.messages = []
