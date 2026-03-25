@@ -26,6 +26,7 @@ from ws4py.manager import WebSocketManager
 from ws4py.messaging import BinaryMessage
 
 from pylxd import managers
+from pylxd.client import _ws_exclude_origin
 from pylxd.exceptions import LXDAPIException
 from pylxd.models import _model as model
 from pylxd.models.operation import Operation
@@ -825,6 +826,7 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         self.finished = False
         self.last_message_empty = False
         self.buffer = []
+        _ws_exclude_origin(kwargs)
         super().__init__(*args, **kwargs)
 
     def handshake_ok(self):
@@ -892,6 +894,7 @@ class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
     def __init__(self, url, payload=None, **kwargs):
         self.encoding = kwargs.pop("encoding", None)
         self.payload = payload
+        _ws_exclude_origin(kwargs)
         super().__init__(url, **kwargs)
 
     def _smart_encode(self, msg):
