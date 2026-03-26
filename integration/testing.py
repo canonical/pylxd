@@ -161,8 +161,8 @@ class IntegrationTestCase(unittest.TestCase):
     def create_storage_pool(self):
         # create a storage pool in the form of 'xxx1' as a dir.
         name = "".join(random.sample(string.ascii_lowercase, 3)) + "1"
-        self.lxd.storage_pools.post(
-            json={
+        self.client.storage_pools.create(
+            {
                 "config": {},
                 "driver": "dir",
                 "name": name,
@@ -173,15 +173,17 @@ class IntegrationTestCase(unittest.TestCase):
     def delete_storage_pool(self, name):
         # delete the named storage pool
         try:
-            self.lxd.storage_pools[name].delete()
+            self.client.storage_pools.get(name).delete(wait=True)
         except exceptions.LXDAPIException as e:
             if "currently in use" in str(e):
                 # If pool is still in use, wait and retry
                 time.sleep(5)  # Longer delay for pool operations
                 try:
-                    self.lxd.storage_pools[name].delete()
+                    self.client.storage_pools.get(name).delete(wait=True)
                 except exceptions.NotFound:
                     pass
+        except exceptions.NotFound:
+            pass
 
     def create_storage_volume(self, pool_name, volume_name):
         pool = self.client.storage_pools.get(pool_name)
