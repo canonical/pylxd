@@ -375,19 +375,31 @@ class Model(metaclass=ModelType):
 
         This method allows arbitrary patches to be attempted on the object
         (thus by passing the API attributes), but syncs the object overwriting
-        any changes that may have been made to it.  For a raw object return,
-        see `raw_patch`, which does not modify the object, and returns nothing.
+        any changes that may have been made to it.  For a fire-and-forget PATCH
+        with no sync back, see `raw_patch`.
 
         The `patch_object` is the dictionary keys in the json object that is
         sent to the server for the API endpoint for the model.
 
-        :param wait: If wait is True, then wait here until the operation
-            completes.
-        :type wait: bool
-        :param patch_object: jsonable dictionary to use as the PUT json object.
+        .. note::
+            When the server supports the ``storage_and_network_operations`` API
+            extension, operations may be asynchronous.  In that case the
+            operation is always awaited before :meth:`sync` re-fetches the
+            object state, regardless of the ``wait`` argument.
+
+        :param patch_object: jsonable dictionary to use as the PATCH json object.
         :type patch_object: dict
+        :param wait: If ``True``, wait for any async operation to complete
+            before returning.  On LXD servers that support the
+            ``storage_and_network_operations`` extension this is always
+            forced to ``True`` so that :meth:`sync` retrieves accurate state.
+        :type wait: bool
         :raises: :class:`pylxd.exception.LXDAPIException` on error
         """
+        # When the server may return async operations we must always wait
+        # before syncing, otherwise we'd fetch stale state.
+        if self.client.has_api_extension("storage_and_network_operations"):
+            wait = True
         self.raw_patch(patch_object, wait)
         self.sync(rollback=True)
 
