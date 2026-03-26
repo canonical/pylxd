@@ -157,7 +157,10 @@ class Network(model.Model):
             network["type"] = type
         if config is not None:
             network["config"] = config
-        client.api.networks.post(json=network)
+        response = client.api.networks.post(json=network)
+        # Handle async response: storage_and_network_operations extension
+        # makes this endpoint return a background operation.
+        cls._handle_async_response_for_client(client, response, True)
         return cls.get(client, name)
 
     def rename(self, new_name):
