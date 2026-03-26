@@ -144,17 +144,12 @@ class IntegrationTestCase(unittest.TestCase):
     def create_network(self):
         # get interface name in format xxx0
         name = "".join(random.sample(string.ascii_lowercase, 3)) + "0"
-        self.lxd.networks.post(
-            json={
-                "name": name,
-                "config": {},
-            }
-        )
+        self.client.networks.create(name=name)
         return name
 
     def delete_network(self, name):
         try:
-            self.lxd.networks[name].delete()
+            self.client.networks.get(name).delete(wait=True)
         except exceptions.NotFound:
             pass
 
