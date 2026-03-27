@@ -13,9 +13,14 @@
 #    under the License.
 
 import json
+import re
+import unittest
 from unittest import mock
 
+import requests_mock
+
 from pylxd import exceptions, models
+from pylxd.client import Client
 from pylxd.exceptions import LXDAPIExtensionNotAvailable
 from pylxd.tests import testing
 
@@ -451,3 +456,248 @@ class TestNetworkForward(testing.PyLXDTestCase):
             ' location="eth0", ports=[{"description": "Port description", "listen_port": "80",'
             ' "target_address": "192.0.2.2", "target_port": "80"}])',
         )
+
+
+class TestNetworkAsync(unittest.TestCase):
+    """Tests for async operations in pylxd.models.Network.
+
+    Uses requests_mock directly (no mock_services wrapper) to exercise the
+    behaviour introduced by the storage_and_network_operations API extension
+    (LXD PRs #17955 / #17978) and the corresponding pylxd adaptation (PR #719):
+      - Network.create() waits for the async operation before fetching.
+      - Network.create() with a synchronous response stays backward-compatible.
+      - Network.delete() respects the wait parameter on async responses.
+      - Network.put() / Network.patch() are forced to wait when the extension
+        is present, regardless of the wait argument passed by the caller.
+    """
+
+    _NETWORK_ETH0 = {
+        "type": "sync",
+        "metadata": {
+            "config": {
+                "ipv4.address": "10.80.100.1/24",
+                "ipv4.nat": "true",
+                "ipv6.address": "none",
+                "ipv6.nat": "false",
+            },
+            "name": "eth0",
+            "description": "Network description",
+            "type": "bridge",
+            "managed": True,
+            "used_by": [],
+        },
+    }
+
+    _NETWORK_ETH1 = {
+        "type": "sync",
+        "metadata": {
+            "config": {},
+            "name": "eth1",
+            "description": "",
+            "type": "bridge",
+            "managed": True,
+            "used_by": [],
+        },
+    }
+
+    def setUp(self):
+        self.mocker = requests_mock.Mocker()
+        self.mocker.start()
+        self.addCleanup(self.mocker.stop)
+
+        # Required for Client.__init__ and has_api_extension("network") checks.
+        self.mocker.get(
+            re.compile(r"http://pylxd\.test/1\.0$"),
+            json={
+                "type": "sync",
+                "metadata": {
+                    "auth": "trusted",
+                    "environment": {"certificate": "an-pem-cert"},
+                    "api_extensions": ["network"],
+                },
+            },
+        )
+        # Used by Network.create() → cls.get() and by put()/patch() → sync().
+        self.mocker.get(
+            re.compile(r"http://pylxd\.test/1\.0/networks/eth0$"),
+            json=self._NETWORK_ETH0,
+        )
+        self.mocker.get(
+            re.compile(r"http://pylxd\.test/1\.0/networks/eth1$"),
+            json=self._NETWORK_ETH1,
+        )
+
+        self.client = Client(endpoint="http://pylxd.test")
+
+    def _enable_extension(self, *extensions):
+        """Directly add API extensions to host_info without an HTTP round-trip."""
+        self.client.host_info["api_extensions"].extend(extensions)
+
+    # ------------------------------------------------------------------
+    # Network.create() — async handling
+    # ------------------------------------------------------------------
+
+    def test_create_async_waits_for_operation(self):
+        """Network.create() calls wait_for_operation when the server returns 202."""
+        operation_id = "/1.0/operations/net-create-op"
+        self.mocker.post(
+            re.compile(r"http://pylxd\.test/1\.0/networks$"),
+            json={"type": "async", "operation": operation_id},
+            status_code=202,
+        )
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            network = models.Network.create(self.client, "eth1")
+            mock_wait.assert_called_once_with(operation_id)
+
+        self.assertIsInstance(network, models.Network)
+        self.assertEqual("eth1", network.name)
+
+    def test_create_sync_does_not_wait(self):
+        """Network.create() does not call wait_for_operation on a sync 200 response
+        (old LXD backward-compatibility)."""
+        self.mocker.post(
+            re.compile(r"http://pylxd\.test/1\.0/networks$"),
+            json={"type": "sync", "metadata": {}},
+            status_code=200,
+        )
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            network = models.Network.create(self.client, "eth1")
+            mock_wait.assert_not_called()
+
+        self.assertIsInstance(network, models.Network)
+
+    # ------------------------------------------------------------------
+    # Network.delete() — async handling
+    # ------------------------------------------------------------------
+
+    def test_delete_async_with_wait(self):
+        """Network.delete(wait=True) waits for the async operation to complete."""
+        operation_id = "/1.0/operations/net-delete-op"
+        self.mocker.delete(
+            re.compile(r"http://pylxd\.test/1\.0/networks/eth0$"),
+            json={"type": "async", "operation": operation_id},
+            status_code=202,
+        )
+        network = models.Network(self.client, name="eth0")
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            network.delete(wait=True)
+            mock_wait.assert_called_once_with(operation_id)
+
+    def test_delete_async_without_wait(self):
+        """Network.delete(wait=False) does not block on the async operation."""
+        operation_id = "/1.0/operations/net-delete-op-nowait"
+        self.mocker.delete(
+            re.compile(r"http://pylxd\.test/1\.0/networks/eth0$"),
+            json={"type": "async", "operation": operation_id},
+            status_code=202,
+        )
+        network = models.Network(self.client, name="eth0")
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            network.delete(wait=False)
+            mock_wait.assert_not_called()
+
+    # ------------------------------------------------------------------
+    # Network.put() / patch() — extension-forced wait
+    # ------------------------------------------------------------------
+
+    def test_put_async_forced_by_extension(self):
+        """When storage_and_network_operations is present, Network.put() waits
+        for the async operation even when wait=False is passed."""
+        self._enable_extension("storage_and_network_operations")
+        operation_id = "/1.0/operations/net-put-op"
+        self.mocker.put(
+            re.compile(r"http://pylxd\.test/1\.0/networks/eth0$"),
+            json={"type": "async", "operation": operation_id},
+            status_code=202,
+        )
+        network = models.Network(self.client, name="eth0")
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            # wait=False must be overridden by the extension being present
+            network.put({"config": {}}, wait=False)
+            mock_wait.assert_called_once_with(operation_id)
+
+    def test_patch_async_forced_by_extension(self):
+        """When storage_and_network_operations is present, Network.patch() waits
+        for the async operation even when wait=False is passed."""
+        self._enable_extension("storage_and_network_operations")
+        operation_id = "/1.0/operations/net-patch-op"
+        self.mocker.patch(
+            re.compile(r"http://pylxd\.test/1\.0/networks/eth0$"),
+            json={"type": "async", "operation": operation_id},
+            status_code=202,
+        )
+        network = models.Network(self.client, name="eth0")
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            # wait=False must be overridden by the extension being present
+            network.patch({"config": {}}, wait=False)
+            mock_wait.assert_called_once_with(operation_id)
+
+    def test_put_without_extension_respects_wait_false(self):
+        """Without the extension, Network.put(wait=False) does NOT wait."""
+        operation_id = "/1.0/operations/net-put-op-noext"
+        self.mocker.put(
+            re.compile(r"http://pylxd\.test/1\.0/networks/eth0$"),
+            json={"type": "async", "operation": operation_id},
+            status_code=202,
+        )
+        network = models.Network(self.client, name="eth0")
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            network.put({"config": {}}, wait=False)
+            mock_wait.assert_not_called()
+
+    def test_patch_without_extension_respects_wait_false(self):
+        """Without the extension, Network.patch(wait=False) does NOT wait."""
+        operation_id = "/1.0/operations/net-patch-op-noext"
+        self.mocker.patch(
+            re.compile(r"http://pylxd\.test/1\.0/networks/eth0$"),
+            json={"type": "async", "operation": operation_id},
+            status_code=202,
+        )
+        network = models.Network(self.client, name="eth0")
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            network.patch({"config": {}}, wait=False)
+            mock_wait.assert_not_called()
+
+    def test_create_extension_forces_wait_even_when_caller_passes_false(self):
+        """When storage_and_network_operations is present, Network.create() waits
+        for the async operation even when the caller explicitly passes wait=False."""
+        self._enable_extension("storage_and_network_operations")
+        operation_id = "/1.0/operations/net-create-op-forced"
+        self.mocker.post(
+            re.compile(r"http://pylxd\.test/1\.0/networks$"),
+            json={"type": "async", "operation": operation_id},
+            status_code=202,
+        )
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            network = models.Network.create(self.client, "eth1", wait=False)
+            mock_wait.assert_called_once_with(operation_id)
+
+        self.assertIsInstance(network, models.Network)
+        self.assertEqual("eth1", network.name)
