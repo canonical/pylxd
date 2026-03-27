@@ -13,9 +13,14 @@
 #    under the License.
 
 import json
+import re
+import unittest
 from unittest import mock
 
+import requests_mock
+
 from pylxd import exceptions, models
+from pylxd.client import Client
 from pylxd.tests import testing
 
 
@@ -420,6 +425,195 @@ class TestStoragePoolAsync(testing.PyLXDTestCase):
             self.client.operations, "wait_for_operation"
         ) as mock_wait:
             self.storage_pool.save(wait=False)
+            mock_wait.assert_not_called()
+
+    def test_delete_async_without_wait(self):
+        """Test async storage pool deletion with wait=False should not wait."""
+        operation_id = "/1.0/operations/delete-op-nowait"
+        self._setup_async_operation_rule("DELETE", "", operation_id)
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            self.storage_pool.delete(wait=False)
+            mock_wait.assert_not_called()
+
+    def test_patch_async_with_wait(self):
+        """Test async storage pool patch with wait=True (via inherited Model.patch)"""
+        operation_id = "/1.0/operations/patch-op"
+        self._setup_async_operation_rule("PATCH", "", operation_id)
+
+        # patch() calls raw_patch then sync; mock GET for the sync call
+        self._setup_create_mocks("sync")
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            self.storage_pool.patch({"config": {"new": "value"}}, wait=True)
+            mock_wait.assert_called_once_with(operation_id)
+
+    def test_patch_async_without_wait(self):
+        """Test async storage pool patch with wait=False should not wait."""
+        operation_id = "/1.0/operations/patch-op-nowait"
+        self._setup_async_operation_rule("PATCH", "", operation_id)
+
+        # patch() calls raw_patch then sync; mock GET for the sync call
+        self._setup_create_mocks("sync")
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            self.storage_pool.patch({"config": {"new": "value"}}, wait=False)
+            mock_wait.assert_not_called()
+
+    def test_put_async_with_wait(self):
+        """Test async storage pool put() with wait=True (via inherited Model.put)"""
+        operation_id = "/1.0/operations/put-op"
+        self._setup_async_operation_rule("PUT", "", operation_id)
+
+        # put() calls raw_put then sync(rollback=True); mock GET for the sync call
+        self._setup_create_mocks("sync")
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            self.storage_pool.put({"config": {"new": "value"}}, wait=True)
+            mock_wait.assert_called_once_with(operation_id)
+
+    def test_put_async_without_wait(self):
+        """Test async storage pool put() with wait=False should not wait."""
+        operation_id = "/1.0/operations/put-op-nowait"
+        self._setup_async_operation_rule("PUT", "", operation_id)
+
+        # put() calls raw_put then sync(rollback=True); mock GET for the sync call
+        self._setup_create_mocks("sync")
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            self.storage_pool.put({"config": {"new": "value"}}, wait=False)
+            mock_wait.assert_not_called()
+
+
+class TestStoragePoolOperationsExtension(unittest.TestCase):
+    """Tests for storage_and_network_operations extension on StoragePool.
+
+    Uses requests_mock directly (no mock_services wrapper) to verify that
+    StoragePool.put() and StoragePool.patch() are forced to wait for async
+    responses when the storage_and_network_operations extension is present
+    (introduced by LXD PR #17955 and pylxd PR #719).
+    """
+
+    _POOL_NAME = "test-pool"
+    _POOL_METADATA = {
+        "config": {"size": "0"},
+        "description": "",
+        "name": "test-pool",
+        "driver": "zfs",
+        "used_by": [],
+        "status": "Created",
+        "managed": True,
+        "locations": [],
+    }
+
+    def setUp(self):
+        self.mocker = requests_mock.Mocker()
+        self.mocker.start()
+        self.addCleanup(self.mocker.stop)
+
+        # Required for Client.__init__ and has_api_extension() checks.
+        self.mocker.get(
+            re.compile(r"http://pylxd\.test/1\.0$"),
+            json={
+                "type": "sync",
+                "metadata": {
+                    "auth": "trusted",
+                    "environment": {"certificate": "an-pem-cert"},
+                    "api_extensions": ["storage"],
+                },
+            },
+        )
+        # Used by put()/patch() → sync(rollback=True) and save()'s dirty sync.
+        self.mocker.get(
+            re.compile(rf"http://pylxd\.test/1\.0/storage-pools/{self._POOL_NAME}$"),
+            json={"type": "sync", "metadata": self._POOL_METADATA},
+        )
+
+        self.client = Client(endpoint="http://pylxd.test")
+        self.storage_pool = models.StoragePool(self.client, name=self._POOL_NAME)
+
+    def _enable_extension(self, *extensions):
+        """Directly add API extensions to host_info without an HTTP round-trip."""
+        self.client.host_info["api_extensions"].extend(extensions)
+
+    def test_put_async_forced_by_extension(self):
+        """StoragePool.put(wait=False) still waits when storage_and_network_operations
+        is present, because _model.py overrides wait to True."""
+        self._enable_extension("storage_and_network_operations")
+        operation_id = "/1.0/operations/put-ext-forced"
+        self.mocker.put(
+            re.compile(rf"http://pylxd\.test/1\.0/storage-pools/{self._POOL_NAME}$"),
+            json={"type": "async", "operation": operation_id},
+            status_code=202,
+        )
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            self.storage_pool.put({"config": {"new": "value"}}, wait=False)
+            mock_wait.assert_called_once_with(operation_id)
+
+    def test_patch_async_forced_by_extension(self):
+        """StoragePool.patch(wait=False) still waits when storage_and_network_operations
+        is present."""
+        self._enable_extension("storage_and_network_operations")
+        operation_id = "/1.0/operations/patch-ext-forced"
+        self.mocker.patch(
+            re.compile(rf"http://pylxd\.test/1\.0/storage-pools/{self._POOL_NAME}$"),
+            json={"type": "async", "operation": operation_id},
+            status_code=202,
+        )
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            self.storage_pool.patch({"config": {"new": "value"}}, wait=False)
+            mock_wait.assert_called_once_with(operation_id)
+
+    def test_save_async_not_forced_by_extension(self):
+        """StoragePool.save(wait=False) does NOT force wait even when
+        storage_and_network_operations is present — PR #719 only adds forced-wait
+        to put() and patch(), preserving save()'s explicit-wait contract."""
+        self._enable_extension("storage_and_network_operations")
+        self.storage_pool.config = {"new": "config"}
+        operation_id = "/1.0/operations/save-ext-not-forced"
+        self.mocker.put(
+            re.compile(rf"http://pylxd\.test/1\.0/storage-pools/{self._POOL_NAME}$"),
+            json={"type": "async", "operation": operation_id},
+            status_code=202,
+        )
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            self.storage_pool.save(wait=False)
+            mock_wait.assert_not_called()
+
+    def test_put_without_extension_respects_wait_false(self):
+        """Without the storage_and_network_operations extension,
+        StoragePool.put(wait=False) does NOT call wait_for_operation."""
+        # setUp adds only "storage" — no storage_and_network_operations.
+        operation_id = "/1.0/operations/put-no-ext"
+        self.mocker.put(
+            re.compile(rf"http://pylxd\.test/1\.0/storage-pools/{self._POOL_NAME}$"),
+            json={"type": "async", "operation": operation_id},
+            status_code=202,
+        )
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            self.storage_pool.put({"config": {"new": "value"}}, wait=False)
             mock_wait.assert_not_called()
 
 
