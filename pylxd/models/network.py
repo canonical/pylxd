@@ -182,7 +182,8 @@ class Network(model.Model):
         :rtype: :class:`Network`
         """
         self.client.assert_has_api_extension("network")
-        self.client.api.networks.post(json={"name": new_name})
+        response = self.api.post(json={"name": new_name})
+        self._handle_async_response(response, true)
         return Network.get(self.client, new_name)
 
     def save(self, *args, **kwargs):
