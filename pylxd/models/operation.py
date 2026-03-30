@@ -98,30 +98,26 @@ class Operation:
         """
         response = self._client.api.operations[self.id].wait.get()
 
-        try:
-            body = response.json()
-            metadata = body["metadata"]
+        body = response.json()
+        metadata = body.get("metadata")
 
-            # If metadata is absent/null but a top-level error is present
-            # (e.g. {"type": "async", "error": "...", "metadata": null}),
-            # treat it as a failure.
-            if not metadata and body.get("error"):
+        # If metadata is absent/null but a top-level error is present
+        # (e.g. {"type": "async", "error": "...", "metadata": null}),
+        # treat it as a failure.
+        if not metadata and body.get("error"):
+            raise exceptions.LXDAPIException(response)
+
+        if metadata:
+            # Failure can be indicated by status_code or status string.
+            status_code = metadata.get("status_code")
+            if (status_code is not None and not (200 <= status_code < 300)) or (
+                metadata.get("status") == "Failure"
+            ):
                 raise exceptions.LXDAPIException(response)
 
-            if metadata:
-                # Failure can be indicated by status string or status_code.
-                if metadata.get("status") == "Failure" or (
-                    metadata.get("status_code") is not None
-                    and not (200 <= metadata["status_code"] < 300)
-                ):
-                    raise exceptions.LXDAPIException(response)
-
-                # Update self with the final state so callers don't need
-                # a second GET (which could race with LXD cleaning up the operation).
-                self._set_attributes(metadata)
-                return True
-        except KeyError:
-            # /wait response does not contain an operation object
-            pass
+            # Update self with the final state so callers don't need
+            # a second GET (which could race with LXD cleaning up the operation).
+            self._set_attributes(metadata)
+            return True
 
         return False
