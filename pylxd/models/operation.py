@@ -54,8 +54,12 @@ class Operation:
     def wait_for_operation(cls, client, operation_id):
         """Get an operation and wait for it to complete."""
         operation = cls.get(client, operation_id)
-        operation.wait()
-        return cls.get(client, operation.id)
+        # wait() returns True when it received and applied metadata from the
+        # /wait response. When /wait returns no metadata it returns False and
+        # we fall back to a second GET to retrieve the final operation state.
+        if not operation.wait():
+            return cls.get(client, operation.id)
+        return operation
 
     @classmethod
     def extract_operation_id(cls, s):
@@ -68,14 +72,12 @@ class Operation:
         response = client.api.operations[operation_id].get()
         return cls(_client=client, **response.json()["metadata"])
 
-    def __init__(self, **kwargs):
-        super().__init__()
-        for key, value in kwargs.items():
+    def _set_attributes(self, attributes):
+        """Set attributes on self, warning about unknown ones per PYLXD_WARNINGS."""
+        for key, value in attributes.items():
             try:
                 setattr(self, key, value)
             except AttributeError:
-                # ignore attributes we don't know about -- prevent breakage
-                # in the future if new attributes are added.
                 env = os.environ.get("PYLXD_WARNINGS", "").lower()
                 if env != "always" and key in _seen_attribute_warnings:
                     continue
@@ -86,15 +88,40 @@ class Operation:
                     f'Attempted to set unknown attribute "{key}" '
                     f'on instance of "{self.__class__.__name__}"'
                 )
-                pass
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self._set_attributes(kwargs)
 
     def wait(self):
-        """Wait for the operation to complete and return."""
+        """Wait for the operation to complete.
+
+        Returns True if the /wait response included an operation object that
+        was applied to self, or False if the response contained no metadata.
+        Raises LXDAPIException on operation failure.
+        """
         response = self._client.api.operations[self.id].wait.get()
 
-        try:
-            if response.json()["metadata"]["status"] == "Failure":
+        body = response.json()
+        metadata = body.get("metadata")
+
+        # If metadata is absent/null but a top-level error is present
+        # (e.g. {"type": "async", "error": "...", "metadata": null}),
+        # treat it as a failure.
+        if not metadata and body.get("error"):
+            raise exceptions.LXDAPIException(response)
+
+        if metadata:
+            # Failure can be indicated by status_code or status string.
+            status_code = metadata.get("status_code")
+            if (status_code is not None and not (200 <= status_code < 300)) or (
+                metadata.get("status") == "Failure"
+            ):
                 raise exceptions.LXDAPIException(response)
-        except KeyError:
-            # Support for legacy LXD
-            pass
+
+            # Update self with the final state so callers don't need
+            # a second GET (which could race with LXD cleaning up the operation).
+            self._set_attributes(metadata)
+            return True
+
+        return False

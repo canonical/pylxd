@@ -82,6 +82,7 @@ class TestOperation(testing.PyLXDTestCase):
                 "type": "sync",
                 "metadata": {
                     "status": "Failure",
+                    "status_code": 400,
                     "err": "Keep your foot off the blasted samoflange.",
                 },
             }
@@ -142,3 +143,75 @@ class TestOperation(testing.PyLXDTestCase):
         )
         url = "/1.0/operations/operation-unknown"
         models.Operation.get(self.client, url)
+
+    def test_wait_for_operation_modern(self):
+        """wait_for_operation() uses /wait metadata and avoids a second GET."""
+        # The default mock returns full metadata from /wait, simulating a modern LXD server.
+        with mock.patch.object(
+            models.Operation, "get", wraps=models.Operation.get
+        ) as mock_get:
+            op = models.Operation.wait_for_operation(self.client, "operation-abc")
+
+        # One GET for the initial fetch, zero additional GETs (no legacy fallback).
+        self.assertEqual(1, mock_get.call_count)
+        # The /wait metadata was applied to self: status should be "Success".
+        self.assertEqual("Success", op.status)
+
+    def test_wait_for_operation_legacy_fallback(self):
+        """wait_for_operation() falls back to a second GET when /wait returns no metadata."""
+        self.add_rule(
+            {
+                "text": json.dumps({"type": "sync", "metadata": None}),
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/operations/operation-abc/wait$",
+            }
+        )
+
+        with mock.patch.object(
+            models.Operation, "get", wraps=models.Operation.get
+        ) as mock_get:
+            op = models.Operation.wait_for_operation(self.client, "operation-abc")
+
+        # Two GETs: the initial fetch + the legacy fallback after /wait returns no metadata.
+        self.assertEqual(2, mock_get.call_count)
+        self.assertEqual("operation-abc", op.id)
+
+    def test_wait_status_code_failure(self):
+        """wait() raises LXDAPIException when status_code is non-2xx even without status=Failure."""
+        self.add_rule(
+            {
+                "text": json.dumps(
+                    {
+                        "type": "sync",
+                        "metadata": {
+                            "id": "operation-abc",
+                            "status": "Running",
+                            "status_code": 500,
+                        },
+                    }
+                ),
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/operations/operation-abc/wait$",
+            }
+        )
+
+        op = models.Operation.get(self.client, "operation-abc")
+        self.assertRaises(exceptions.LXDAPIException, op.wait)
+
+    def test_wait_for_operation_missing_metadata_key(self):
+        """wait_for_operation() falls back to a second GET when /wait response has no metadata key."""
+        self.add_rule(
+            {
+                "text": json.dumps({"type": "sync"}),
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/operations/operation-abc/wait$",
+            }
+        )
+
+        with mock.patch.object(
+            models.Operation, "get", wraps=models.Operation.get
+        ) as mock_get:
+            op = models.Operation.wait_for_operation(self.client, "operation-abc")
+
+        self.assertEqual(2, mock_get.call_count)
+        self.assertEqual("operation-abc", op.id)

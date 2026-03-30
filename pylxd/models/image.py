@@ -192,12 +192,12 @@ class Image(model.Model):
         """Export the image.
 
         Because the image itself may be quite large, we stream the download
-        in 1kb chunks, and write it to a temporary file on disk. Once that
+        in chunks, and write it to a temporary file on disk. Once that
         file is closed, it is deleted from the disk.
         """
         on_disk = tempfile.TemporaryFile()
         with contextlib.closing(self.api.export.get(stream=True)) as response:
-            for chunk in response.iter_content(chunk_size=1024):
+            for chunk in response.iter_content(chunk_size=65536):
                 on_disk.write(chunk)
         on_disk.seek(0)
         return on_disk
