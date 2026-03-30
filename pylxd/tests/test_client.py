@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import base64
 import json
 import os
 from unittest import TestCase, mock
@@ -676,3 +677,52 @@ class TestWsExcludeOrigin:
     def test_ws_exclude_origin(self, input_kwargs, expected):
         client._ws_exclude_origin(input_kwargs)
         assert input_kwargs["exclude_headers"] == expected
+
+
+class TestIsAToken(TestCase):
+    """Tests for pylxd.client._is_a_token."""
+
+    def _make_token(self):
+        token = json.dumps(
+            {
+                "client_name": "test",
+                "fingerprint": "abcd",
+                "addresses": ["192.0.2.1:8443"],
+                "secret": "I-am-a-secret",
+                "expires_at": "0001-01-01T00:00:00Z",
+                "type": "",
+            }
+        )
+        return base64.b64encode(token.encode("utf-8"))
+
+    def test_plain_password_is_not_a_token(self):
+        """A plain password string is not a token."""
+        self.assertFalse(client._is_a_token("password"))
+
+    def test_b64_non_json_is_not_a_token(self):
+        """Base64-encoded non-JSON data is not a token."""
+        self.assertFalse(client._is_a_token(base64.b64encode(b"password")))
+
+    def test_valid_token_bytes_is_a_token(self):
+        """A valid base64-encoded token (bytes) is recognised as a token."""
+        self.assertTrue(client._is_a_token(self._make_token()))
+
+    def test_valid_token_str_is_a_token(self):
+        """A valid base64-encoded token (str) is recognised as a token."""
+        self.assertTrue(client._is_a_token(self._make_token().decode("utf-8")))
+
+    def test_token_with_surrounding_whitespace_is_a_token(self):
+        """A token with surrounding whitespace (copy-paste artefact) is still detected."""
+        token_str = self._make_token().decode("utf-8")
+        self.assertTrue(client._is_a_token(f"\n  {token_str}  \n"))
+
+    def test_token_bytes_with_surrounding_whitespace_is_a_token(self):
+        """A token bytes value with surrounding whitespace is still detected."""
+        token_bytes = b"\n  " + self._make_token() + b"  \n"
+        self.assertTrue(client._is_a_token(token_bytes))
+
+    def test_invalid_base64_characters_returns_false(self):
+        """Data containing non-base64 characters (caught by validate=True) returns False."""
+        # These characters are never valid in strict base64 but b64decode without
+        # validate=True would silently ignore them.
+        self.assertFalse(client._is_a_token("not!valid@base64#"))
