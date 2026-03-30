@@ -842,6 +842,11 @@ RULES = [
         "method": "DELETE",
         "url": r"^http://pylxd.test/1.0/networks/eth0$",
     },
+    {
+        "text": json.dumps({"type": "sync", "metadata": {}}),
+        "method": "POST",
+        "url": r"^http://pylxd.test/1.0/networks/eth0$",
+    },
     # Network forwards
     {
         "json": {

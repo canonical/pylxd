@@ -311,7 +311,47 @@ class TestModel(testing.PyLXDTestCase):
         item = Item(self.client, name="an-item", age=15, data={"key": "val"})
         item.put({"age": 69}, wait=True)
 
-    def test_patch(self):
+    def test_put_async_forced_by_extension(self):
+        """When storage_and_network_operations is present, put() waits even if
+        wait=False."""
+        testing.add_api_extension_helper(self, ["storage_and_network_operations"])
+        self.add_rule(
+            {
+                "json": {
+                    "type": "async",
+                    "metadata": {},
+                    "operation": "/1.0/items/123456789",
+                },
+                "status_code": 202,
+                "method": "put",
+                "url": r"^http://pylxd.test/1.0/items/an-item$",
+            }
+        )
+        self.add_rule(
+            {
+                "json": {
+                    "status": "Running",
+                    "status_code": 103,
+                    "type": "sync",
+                    "metadata": {
+                        "id": "123456789",
+                        "secret": "some-long-string-of-digits",
+                    },
+                },
+                "method": "get",
+                "url": r"^http://pylxd.test/1.0/operations/123456789$",
+            }
+        )
+        self.add_rule(
+            {
+                "json": {"type": "sync"},
+                "method": "get",
+                "url": r"^http://pylxd.test/1.0/operations/123456789/wait$",
+            }
+        )
+        item = Item(self.client, name="an-item", age=15, data={"key": "val"})
+        # wait=False is overridden by the extension presence
+        item.put({"age": 69}, wait=False)
         item = Item(self.client, name="an-item", age=15, data={"key": "val"})
 
         item.patch({"age": 69})
@@ -357,3 +397,45 @@ class TestModel(testing.PyLXDTestCase):
         )
         item = Item(self.client, name="an-item", age=15, data={"key": "val"})
         item.patch({"age": 69}, wait=True)
+
+    def test_patch_async_forced_by_extension(self):
+        """When storage_and_network_operations is present, patch() waits even
+        if wait=False."""
+        testing.add_api_extension_helper(self, ["storage_and_network_operations"])
+        self.add_rule(
+            {
+                "json": {
+                    "type": "async",
+                    "metadata": {},
+                    "operation": "/1.0/items/123456789",
+                },
+                "status_code": 202,
+                "method": "patch",
+                "url": r"^http://pylxd.test/1.0/items/an-item$",
+            }
+        )
+        self.add_rule(
+            {
+                "json": {
+                    "status": "Running",
+                    "status_code": 103,
+                    "type": "sync",
+                    "metadata": {
+                        "id": "123456789",
+                        "secret": "some-long-string-of-digits",
+                    },
+                },
+                "method": "get",
+                "url": r"^http://pylxd.test/1.0/operations/123456789$",
+            }
+        )
+        self.add_rule(
+            {
+                "json": {"type": "sync"},
+                "method": "get",
+                "url": r"^http://pylxd.test/1.0/operations/123456789/wait$",
+            }
+        )
+        item = Item(self.client, name="an-item", age=15, data={"key": "val"})
+        # wait=False is overridden by the extension presence
+        item.patch({"age": 69}, wait=False)

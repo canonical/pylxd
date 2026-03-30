@@ -133,7 +133,7 @@ class Network(model.Model):
         return networks
 
     @classmethod
-    def create(cls, client, name, description=None, type=None, config=None):
+    def create(cls, client, name, description=None, type=None, config=None, wait=True):
         """
         Create a network.
 
@@ -147,6 +147,12 @@ class Network(model.Model):
         :type type: str
         :param config: additional configuration
         :type config: dict
+        :param wait: If ``True``, wait for any async operation to complete
+            before returning.  On LXD servers that support the
+            ``storage_and_network_operations`` extension this is always
+            forced to ``True`` so that the subsequent :meth:`get` retrieves
+            accurate state.
+        :type wait: bool
         """
         client.assert_has_api_extension("network")
 
@@ -157,20 +163,38 @@ class Network(model.Model):
             network["type"] = type
         if config is not None:
             network["config"] = config
-        client.api.networks.post(json=network)
+        response = client.api.networks.post(json=network)
+        # When the server may return async operations we must always wait
+        # before fetching the newly created network, otherwise we'd race
+        # against an in-progress background operation.
+        if client.has_api_extension("storage_and_network_operations"):
+            wait = True
+        cls._handle_async_response_for_client(client, response, wait)
         return cls.get(client, name)
 
-    def rename(self, new_name):
+    def rename(self, new_name, wait=True):
         """
         Rename a network.
 
         :param new_name: new name of the network
         :type new_name: str
+        :param wait: If ``True``, wait for any async operation to complete
+            before returning.  On LXD servers that support the
+            ``storage_and_network_operations`` extension this is always
+            forced to ``True`` so that the subsequent :meth:`get` retrieves
+            accurate state.
+        :type wait: bool
         :return: Renamed network instance
         :rtype: :class:`Network`
         """
         self.client.assert_has_api_extension("network")
-        self.client.api.networks.post(json={"name": new_name})
+        response = self.api.post(json={"name": new_name})
+        # When the server may return async operations we must always wait
+        # before fetching the renamed network, otherwise we'd race against
+        # an in-progress background operation.
+        if self.client.has_api_extension("storage_and_network_operations"):
+            wait = True
+        self._handle_async_response(response, wait)
         return Network.get(self.client, new_name)
 
     def save(self, *args, **kwargs):
