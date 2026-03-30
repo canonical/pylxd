@@ -15,6 +15,54 @@
 from integration.testing import IntegrationTestCase
 
 
+class TestInstanceWebSocket(IntegrationTestCase):
+    """Tests that exercise WebSocket upgrade paths.
+
+    These tests validate that the WebSocket handshake succeeds against
+    LXD regardless of how it handles the ``Origin`` header.  They are
+    the regression tests for the breakage introduced when LXD tightened
+    its WebSocket ``CheckOrigin`` policy (PR #17950): ws4py sends an
+    ``Origin`` header with scheme ``ws+unix://localhost`` whose host
+    portion does not match the ``Host: localhost:None`` header it also
+    generates for Unix-socket connections, causing LXD to return HTTP
+    403 and the operation to time out.
+    """
+
+    def setUp(self):
+        super().setUp()
+        name = self.create_container()
+        self.instance = self.client.instances.get(name)
+        self.instance.start(wait=True)
+        self.addCleanup(self.instance.stop, wait=True)
+
+    def test_execute_websocket_handshake(self):
+        """execute() completes the WebSocket upgrade and returns a result.
+
+        This covers the _CommandWebsocketClient (stdout/stderr) and
+        _StdinWebsocket paths.  If the Origin header causes HTTP 403 the
+        ws4py handshake raises HandshakeError and the call never returns
+        (LXD times out with "Timed out waiting for websockets to connect").
+        """
+        result = self.instance.execute(["echo", "websocket-origin-test"])
+
+        self.assertEqual(0, result.exit_code)
+        self.assertEqual("websocket-origin-test\n", result.stdout)
+
+    def test_execute_stdin_websocket_handshake(self):
+        """execute() with stdin_payload completes the WebSocket upgrade.
+
+        This specifically exercises the _StdinWebsocket path with a
+        non-empty payload, ensuring the stdin WebSocket also connects
+        successfully.
+        """
+        result = self.instance.execute(
+            ["cat", "-"], stdin_payload="websocket-stdin-test\n"
+        )
+
+        self.assertEqual(0, result.exit_code)
+        self.assertEqual("websocket-stdin-test\n", result.stdout)
+
+
 class TestInstances(IntegrationTestCase):
     """Tests for `Client.instances`."""
 
