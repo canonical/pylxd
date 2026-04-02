@@ -197,9 +197,13 @@ class Network(model.Model):
         self._handle_async_response(response, wait)
         return Network.get(self.client, new_name)
 
-    def save(self, *args, **kwargs):
+    def save(self, wait=False):
         self.client.assert_has_api_extension("network")
-        super().save(*args, **kwargs)
+        # When the server may return async operations we must always wait
+        # before returning, otherwise the caller may observe stale state.
+        if self.client.has_api_extension("storage_and_network_operations"):
+            wait = True
+        super().save(wait=wait)
 
     def state(self):
         """Get network state."""
