@@ -701,3 +701,93 @@ class TestNetworkAsync(unittest.TestCase):
 
         self.assertIsInstance(network, models.Network)
         self.assertEqual("eth1", network.name)
+
+    # ------------------------------------------------------------------
+    # Network.rename() — async handling
+    # ------------------------------------------------------------------
+    _NETWORK_ETH2 = {
+        "type": "sync",
+        "metadata": {
+            "config": {},
+            "name": "eth2",
+            "description": "",
+            "type": "bridge",
+            "managed": True,
+            "used_by": [],
+        },
+    }
+
+    def test_rename_sync_does_not_wait(self):
+        """Network.rename() does not call wait_for_operation on a sync 200 response
+        (old LXD backward-compatibility)."""
+        self.mocker.post(
+            re.compile(r"http://pylxd\.test/1\.0/networks/eth0$"),
+            json={"type": "sync", "metadata": {}},
+            status_code=200,
+        )
+        self.mocker.get(
+            re.compile(r"http://pylxd\.test/1\.0/networks/eth2$"),
+            json=self._NETWORK_ETH2,
+        )
+        network = models.Network(self.client, name="eth0")
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            renamed = network.rename("eth2")
+            mock_wait.assert_not_called()
+
+        self.assertIsInstance(renamed, models.Network)
+        self.assertEqual("eth2", renamed.name)
+
+    def test_rename_async_waits_for_operation(self):
+        """Network.rename() calls wait_for_operation when the server returns 202."""
+        operation_id = "/1.0/operations/net-rename-op"
+        self.mocker.post(
+            re.compile(r"http://pylxd\.test/1\.0/networks/eth0$"),
+            json={"type": "async", "operation": operation_id},
+            status_code=202,
+        )
+        self.mocker.get(
+            re.compile(r"http://pylxd\.test/1\.0/networks/eth2$"),
+            json=self._NETWORK_ETH2,
+        )
+        network = models.Network(self.client, name="eth0")
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            renamed = network.rename("eth2")
+            mock_wait.assert_called_once_with(operation_id)
+
+        self.assertIsInstance(renamed, models.Network)
+        self.assertEqual("eth2", renamed.name)
+
+    # ------------------------------------------------------------------
+    # Network.rename() — extension-forced wait
+    # ------------------------------------------------------------------
+    def test_rename_extension_forces_wait_even_when_caller_passes_false(self):
+        """When storage_and_network_operations is present, Network.rename() waits
+        for the async operation even when the caller explicitly passes wait=False."""
+        self._enable_extension("storage_and_network_operations")
+        operation_id = "/1.0/operations/net-rename-op-forced"
+        self.mocker.post(
+            re.compile(r"http://pylxd\.test/1\.0/networks/eth0$"),
+            json={"type": "async", "operation": operation_id},
+            status_code=202,
+        )
+        self.mocker.get(
+            re.compile(r"http://pylxd\.test/1\.0/networks/eth2$"),
+            json=self._NETWORK_ETH2,
+        )
+        network = models.Network(self.client, name="eth0")
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            renamed = network.rename("eth2", wait=False)
+            mock_wait.assert_called_once_with(operation_id)
+
+        self.assertIsInstance(renamed, models.Network)
+        self.assertEqual("eth2", renamed.name)
+
