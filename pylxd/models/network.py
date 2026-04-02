@@ -206,7 +206,6 @@ class Network(model.Model):
         super().save(wait=wait)
 
     def delete(self, wait=False):
-        self.client.assert_has_api_extension("network")
         # When the server may return async operations we must always wait
         # before returning, so callers do not race against in-progress
         # background operations (e.g. immediately recreating the network).
