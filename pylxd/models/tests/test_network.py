@@ -791,3 +791,40 @@ class TestNetworkAsync(unittest.TestCase):
         self.assertIsInstance(renamed, models.Network)
         self.assertEqual("eth2", renamed.name)
 
+    # ------------------------------------------------------------------
+    # Network.save() — extension-forced wait
+    # ------------------------------------------------------------------
+    def test_save_extension_forces_wait_even_when_caller_passes_false(self):
+        """When storage_and_network_operations is present, Network.save() waits
+        for the async operation even when the caller explicitly passes wait=False."""
+        self._enable_extension("storage_and_network_operations")
+        operation_id = "/1.0/operations/net-save-op-forced"
+        self.mocker.put(
+            re.compile(r"http://pylxd\.test/1\.0/networks/eth0$"),
+            json={"type": "async", "operation": operation_id},
+            status_code=202,
+        )
+        network = models.Network(self.client, name="eth0")
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            network.save(wait=False)
+            mock_wait.assert_called_once_with(operation_id)
+
+    def test_save_without_extension_respects_wait_false(self):
+        """Without the extension, Network.save(wait=False) does NOT wait."""
+        operation_id = "/1.0/operations/net-save-op-noext"
+        self.mocker.put(
+            re.compile(r"http://pylxd\.test/1\.0/networks/eth0$"),
+            json={"type": "async", "operation": operation_id},
+            status_code=202,
+        )
+        network = models.Network(self.client, name="eth0")
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            network.save(wait=False)
+            mock_wait.assert_not_called()
+
