@@ -535,9 +535,11 @@ class TestNetworkAsync(unittest.TestCase):
         self.client.host_info["api_extensions"].extend(extensions)
 
     # ------------------------------------------------------------------
-    # Network.create() — async handling
+    # Network.create() - When the server returns an async response (202) the
+    # create() flow should wait on the returned operation so subsequent
+    # fetches observe the final state rather than racing against an in-flight
+    # background operation.
     # ------------------------------------------------------------------
-
     def test_create_async_waits_for_operation(self):
         """Network.create() calls wait_for_operation when the server returns 202."""
         operation_id = "/1.0/operations/net-create-op"
@@ -574,7 +576,10 @@ class TestNetworkAsync(unittest.TestCase):
         self.assertIsInstance(network, models.Network)
 
     # ------------------------------------------------------------------
-    # Network.delete() — async handling
+    # Network.delete() - Handling async vs sync responses from DELETE.
+    # Verify both the legacy synchronous (200) behaviour and the newer
+    # asynchronous (202) responses are handled according to the `wait`
+    # parameter semantics.
     # ------------------------------------------------------------------
     def test_delete_sync_does_not_wait(self):
         """Network.delete() does not call wait_for_operation on a sync 200 response
@@ -625,9 +630,10 @@ class TestNetworkAsync(unittest.TestCase):
             mock_wait.assert_not_called()
 
     # ------------------------------------------------------------------
-    # Network.put() / patch() — extension-forced wait
+    # Network.put() / patch() - When the `storage_and_network_operations`
+    # extension is present, `put()` and `patch()` must force waiting for
+    # the operation to complete (even if callers pass `wait=False`).
     # ------------------------------------------------------------------
-
     def test_put_async_forced_by_extension(self):
         """When storage_and_network_operations is present, Network.put() waits
         for the async operation even when wait=False is passed."""
@@ -719,7 +725,9 @@ class TestNetworkAsync(unittest.TestCase):
         self.assertEqual("eth1", network.name)
 
     # ------------------------------------------------------------------
-    # Network.rename() — async handling
+    # Network.rename() - When the server returns async operations for rename
+    # the client must wait for operation completion before fetching the
+    # renamed resource to avoid races.
     # ------------------------------------------------------------------
     _NETWORK_ETH2 = {
         "type": "sync",
@@ -780,7 +788,8 @@ class TestNetworkAsync(unittest.TestCase):
         self.assertEqual("eth2", renamed.name)
 
     # ------------------------------------------------------------------
-    # Network.rename() — extension-forced wait
+    # Network.rename() - When storage_and_network_operations extension is present,
+    # the rename operation should wait for completion instead of returning immediately
     # ------------------------------------------------------------------
     def test_rename_extension_forces_wait_even_when_caller_passes_false(self):
         """When storage_and_network_operations is present, Network.rename() waits
@@ -808,7 +817,9 @@ class TestNetworkAsync(unittest.TestCase):
         self.assertEqual("eth2", renamed.name)
 
     # ------------------------------------------------------------------
-    # Network.save() — extension-forced wait
+    # Network.save() - When the `storage_and_network_operations` extension is
+    # present, saving (PUT) should wait for the async operation to complete
+    # so subsequent state reads are accurate.
     # ------------------------------------------------------------------
     def test_save_extension_forces_wait_even_when_caller_passes_false(self):
         """When storage_and_network_operations is present, Network.save() waits
@@ -845,7 +856,9 @@ class TestNetworkAsync(unittest.TestCase):
             mock_wait.assert_not_called()
 
     # ------------------------------------------------------------------
-    # Network.delete() — extension-forced wait
+    # Network.delete() - When the `storage_and_network_operations` extension
+    # is present, a delete that would otherwise return an async operation
+    # should block until the operation completes when callers expect it to.
     # ------------------------------------------------------------------
     def test_delete_extension_forces_wait_even_when_caller_passes_false(self):
         """When storage_and_network_operations is present, Network.delete() waits

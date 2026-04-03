@@ -101,6 +101,11 @@ def networks_POST(_, context):
 
 
 def networks_DELETE(_, context):
+    # This mock returns the synchronous (200) response used as the
+    # backward-compatible fallback path. Newer LXD servers may return
+    # async operations for network deletes; tests that exercise the
+    # legacy/fallback behaviour should see a sync response here so the
+    # client-side backward-compatibility code paths are exercised.
     context.status_code = 200
     return json.dumps({"type": "sync", "metadata": {}})
 
