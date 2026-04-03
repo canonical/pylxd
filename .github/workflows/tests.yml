@@ -23,9 +23,6 @@ jobs:
       with:
         persist-credentials: false
 
-    - name: Require GHA pinning
-      uses: canonical/lxd/.github/actions/require-gha-pinning@main
-
     - name: ShellCheck
       run: |
         set -eux
@@ -70,12 +67,24 @@ jobs:
         . ./venv/bin/activate
         tox -e unit
 
+    - name: Coverage
+      run: |
+        . ./venv/bin/activate
+        tox -e coverage
+
+    - name: Upload coverage to Codecov
+      if: github.ref == 'refs/heads/main'
+      run: |
+        . ./venv/bin/activate
+        pip install --require-virtualenv codecov
+        codecov
+
   tests:
     name: Tests
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.12"]
+        python-version: ["3.10", "3.12", "3.14"]
         track: ["6/edge", "5.21/edge", "5.0/edge"]
         os: ["24.04"]
         include:
@@ -97,7 +106,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Setup LXD
-      uses: canonical/setup-lxd@main
+      uses: canonical/setup-lxd@d492474f6c8ceed1b716bb34c8f575a428871c70 # main
       with:
         channel: ${{ matrix.track }}
 
@@ -106,13 +115,7 @@ jobs:
         set -x
         python3 -m venv venv
         . ./venv/bin/activate
-        ./venv/bin/pip install --require-virtualenv --upgrade pip tox codecov
-
-    - name: Coverage
-      run: |
-        . ./venv/bin/activate
-        tox -e coverage
-        codecov
+        ./venv/bin/pip install --require-virtualenv --upgrade pip tox
 
     - name: Integration
       run: |

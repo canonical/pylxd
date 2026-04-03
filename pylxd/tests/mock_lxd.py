@@ -101,10 +101,8 @@ def networks_POST(_, context):
 
 
 def networks_DELETE(_, context):
-    context.status_code = 202
-    return json.dumps(
-        {"type": "sync", "operation": "/1.0/operations/operation-abc?project=default"}
-    )
+    context.status_code = 200
+    return json.dumps({"type": "sync", "metadata": {}})
 
 
 def profile_GET(request, context):
