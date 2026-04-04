@@ -75,7 +75,6 @@ env_list = [
     "format",
     "integration",
     "integration-in-lxd",
-    "migration",
     "unit",
 ]
 skipsdist = true
@@ -141,10 +140,6 @@ commands = [["pytest", "integration", { replace = "posargs", extend = true }]]
 
 [tool.tox.env.integration-in-lxd]
 commands = [["{toxinidir}/integration/run-integration-tests-in-lxd"]]
-
-[tool.tox.env.migration]
-deps = ".[testing]"
-commands = [["pytest", "migration", { replace = "posargs", extend = true }]]
 
 [tool.tox.env.doc]
 deps = ".[doc]"
