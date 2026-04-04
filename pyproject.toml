@@ -144,12 +144,3 @@ commands = [["{toxinidir}/integration/run-integration-tests-in-lxd"]]
 [tool.tox.env.doc]
 deps = ".[doc]"
 commands = [["{envpython}", "-m", "sphinx", "-a", "doc/source", "doc/build"]]
-
-[tool.tox.env.i18n]
-commands = [
-    [
-        "{envpython}",
-        "-c",
-        'raise RuntimeError("This recipe is no longer available")',
-    ],
-]
