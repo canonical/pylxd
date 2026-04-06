@@ -53,8 +53,8 @@ New versions of pyLXD are published to `PyPI <https://pypi.org/project/pylxd/>`_
 
    .. code-block:: console
 
-       python3 -m venv .venv-release
-       source .venv-release/bin/activate
+       python3 -m venv venv
+       . venv/bin/activate
        pip install '.[release]'
 
 3. Build the source and wheel archives:
