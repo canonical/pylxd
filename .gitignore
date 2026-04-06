@@ -1,6 +1,7 @@
 *.py[cod]
 *.egg-info
 dist/
+venv/
 
 # Unit test / coverage reports
 .coverage
