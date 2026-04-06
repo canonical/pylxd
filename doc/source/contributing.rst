@@ -85,6 +85,8 @@ New versions of pyLXD are published to `PyPI <https://pypi.org/project/pylxd/>`_
    .. code-block:: console
 
        twine upload dist/*
+       # or if there are multiple repositories configured, specify the repository
+       twine upload --repository pylxd dist/*
 
    After a successful upload the new release is visible at
    https://pypi.org/project/pylxd/.
