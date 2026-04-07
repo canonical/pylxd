@@ -17,8 +17,8 @@ Installation
 .. code-block:: console
 
   # Create a virtual environment
-  python3 -m venv myvenv
-  cd myvenv
+  python3 -m venv venv
+  cd venv
 
   # Activate the virtual environment
   . bin/activate
