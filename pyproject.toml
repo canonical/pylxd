@@ -112,7 +112,6 @@ commands = [
 ]
 
 [tool.tox.env.unit]
-use_develop = true
 set_env = { "PYLXD_WARNINGS" = "none" }
 deps = ".[testing]"
 commands = [
