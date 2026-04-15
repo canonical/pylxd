@@ -66,6 +66,13 @@ non_interactive = true
 warn_return_any = true
 warn_unused_configs = true
 
+[tool.check-manifest]
+ignore = [
+    ".git-blame-ignore-revs",
+    ".readthedocs.yml",
+    "contrib_testing/**",
+]
+
 [tool.tox]
 requires = ["tox>=4.21"]
 env_list = [
@@ -80,7 +87,7 @@ env_list = [
 skipsdist = true
 
 [tool.tox.env.lint]
-deps = ".[format]"
+deps = [".[format]", "check-manifest"]
 commands = [
     [
         "black",
@@ -96,6 +103,10 @@ commands = [
     ],
     [
         "flake8",
+        "{toxinidir}",
+    ],
+    [
+        "check-manifest",
         "{toxinidir}",
     ],
 ]

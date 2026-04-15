@@ -1,3 +1,9 @@
 include CONTRIBUTORS.rst
 include README.rst
 include LICENSE
+recursive-include doc *.py *.rst
+recursive-include integration *.py
+include integration/run-integration-tests
+include integration/run-integration-tests-in-lxd
+include pylxd/tests/*.crt
+include pylxd/tests/*.key
