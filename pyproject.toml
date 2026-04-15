@@ -149,6 +149,7 @@ deps = ".[testing]"
 commands = [["pytest", "integration", { replace = "posargs", extend = true }]]
 
 [tool.tox.env.integration-in-lxd]
+allowlist_externals = ["{toxinidir}/integration/run-integration-tests-in-lxd"]
 commands = [["{toxinidir}/integration/run-integration-tests-in-lxd"]]
 
 [tool.tox.env.doc]
