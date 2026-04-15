@@ -5,8 +5,6 @@ pylxd
     :target: https://pypi.python.org/pypi/pylxd
 .. image:: https://github.com/canonical/pylxd/actions/workflows/tests.yml/badge.svg
     :target: https://github.com/canonical/pylxd
-.. image:: https://codecov.io/github/canonical/pylxd/coverage.svg?branch=main
-    :target: https://codecov.io/github/canonical/pylxd
 .. image:: https://readthedocs.org/projects/pylxd/badge/?version=latest
     :target: https://pylxd.readthedocs.io/en/latest/?badge=latest
 
