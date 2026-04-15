@@ -139,6 +139,15 @@ commands = [
     ],
 ]
 
+[tool.tox.env.release]
+deps = [".[release]", "check-manifest"]
+commands = [
+    ["check-manifest", "{toxinidir}"],
+    ["{envpython}", "-c", "import shutil; shutil.rmtree('dist', ignore_errors=True)"],  # equivalent to rm -rf dist/
+    ["{envpython}", "-m", "build"],
+    ["twine", "check", "--strict", "dist/*"],
+]
+
 [tool.tox.env.format]
 deps = ".[format]"
 commands = [["isort", "{toxinidir}"], ["black", "{toxinidir}"]]
