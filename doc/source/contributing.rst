@@ -148,8 +148,7 @@ Unit Testing
 ^^^^^^^^^^^^
 
 pyLXD tries to follow best practices when it comes to testing. PRs are gated
-by `GitHub Actions <https://github.com/canonical/pylxd/actions>`_ and
-`CodeCov <https://codecov.io/gh/canonical/pylxd>`_. It's best to submit tests
+by `GitHub Actions <https://github.com/canonical/pylxd/actions>`_. It's best to submit tests
 with new changes, as your patch is unlikely to be accepted without them.
 
 To run the tests, you should use `Tox`_::
