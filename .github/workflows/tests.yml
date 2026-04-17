@@ -72,13 +72,6 @@ jobs:
         . ./venv/bin/activate
         tox -e coverage
 
-    - name: Upload coverage to Codecov
-      if: github.ref == 'refs/heads/main'
-      run: |
-        . ./venv/bin/activate
-        pip install --require-virtualenv codecov
-        codecov
-
   tests:
     name: Tests
     strategy:

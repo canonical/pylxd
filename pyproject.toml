@@ -66,6 +66,13 @@ non_interactive = true
 warn_return_any = true
 warn_unused_configs = true
 
+[tool.check-manifest]
+ignore = [
+    ".git-blame-ignore-revs",
+    ".readthedocs.yml",
+    "contrib_testing/**",
+]
+
 [tool.tox]
 requires = ["tox>=4.21"]
 env_list = [
@@ -80,7 +87,7 @@ env_list = [
 skipsdist = true
 
 [tool.tox.env.lint]
-deps = ".[format]"
+deps = [".[format]", "check-manifest"]
 commands = [
     [
         "black",
@@ -98,10 +105,13 @@ commands = [
         "flake8",
         "{toxinidir}",
     ],
+    [
+        "check-manifest",
+        "{toxinidir}",
+    ],
 ]
 
 [tool.tox.env.unit]
-use_develop = true
 set_env = { "PYLXD_WARNINGS" = "none" }
 deps = ".[testing]"
 commands = [
@@ -129,6 +139,15 @@ commands = [
     ],
 ]
 
+[tool.tox.env.release]
+deps = [".[release]", "check-manifest"]
+commands = [
+    ["check-manifest", "{toxinidir}"],
+    ["{envpython}", "-c", "import shutil; shutil.rmtree('dist', ignore_errors=True)"],  # equivalent to rm -rf dist/
+    ["{envpython}", "-m", "build"],
+    ["twine", "check", "--strict", "dist/*"],
+]
+
 [tool.tox.env.format]
 deps = ".[format]"
 commands = [["isort", "{toxinidir}"], ["black", "{toxinidir}"]]
@@ -139,6 +158,7 @@ deps = ".[testing]"
 commands = [["pytest", "integration", { replace = "posargs", extend = true }]]
 
 [tool.tox.env.integration-in-lxd]
+allowlist_externals = ["{toxinidir}/integration/run-integration-tests-in-lxd"]
 commands = [["{toxinidir}/integration/run-integration-tests-in-lxd"]]
 
 [tool.tox.env.doc]
