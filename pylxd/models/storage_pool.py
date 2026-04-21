@@ -42,6 +42,13 @@ class StoragePool(model.Model):
         self.resources = managers.StorageResourcesManager(self)
         self.volumes = managers.StorageVolumeManager(self)
 
+    def __eq__(self, other):
+        if not isinstance(other, StoragePool):
+            return NotImplemented
+        return self.name == other.name
+
+    __hash__ = None  # type: ignore  # unhashable, consistent with defining __eq__
+
     @classmethod
     def get(cls, client, name):
         """Get a storage_pool by name.
