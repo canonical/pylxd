@@ -13,7 +13,6 @@
 #    under the License.
 import pylxd
 from integration.testing import IntegrationTestCase
-from pylxd import exceptions
 
 
 class BaseTestProject(IntegrationTestCase):
@@ -21,7 +20,7 @@ class BaseTestProject(IntegrationTestCase):
         super().setUp()
         try:
             pylxd.Client("https://127.0.0.1:8443/", project="test-project")
-        except exceptions.ClientConnectionFailed as e:
+        except pylxd.exceptions.ClientConnectionFailed as e:
             message = str(e)
             if message == "Remote server doesn't handle projects":
                 self.skipTest(message)
@@ -102,5 +101,7 @@ class TestProject(BaseTestProject):
         self.project.delete()
 
         self.assertRaises(
-            exceptions.LXDAPIException, self.client.projects.get, self.project.name
+            pylxd.exceptions.LXDAPIException,
+            self.client.projects.get,
+            self.project.name,
         )
