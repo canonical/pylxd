@@ -16,7 +16,6 @@ import os
 
 import pylxd
 from integration.testing import IntegrationTestCase
-from pylxd import exceptions
 
 
 class TestClient(IntegrationTestCase):
@@ -39,7 +38,7 @@ class TestClient(IntegrationTestCase):
     def test_authenticate_with_project(self):
         try:
             client = pylxd.Client("https://127.0.0.1:8443/", project="test-project")
-        except exceptions.ClientConnectionFailed as e:
+        except pylxd.exceptions.ClientConnectionFailed as e:
             message = str(e)
             if message == "Remote server doesn't handle projects":
                 self.skipTest(message)
