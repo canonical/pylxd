@@ -293,12 +293,11 @@ class Instance(model.Model):
                                 os.path.join(local_path, file),
                             )
                 elif response.headers["X-LXD-type"] == "file":
-                    fd = os.open(
-                        local_path,
-                        os.O_CREAT | os.O_WRONLY | os.O_TRUNC,
-                        mode=unix_permissions,
-                    )
-                    with open(fd, "wb") as f:
+
+                    def opener(path, flags):
+                        return os.open(path, flags, mode=unix_permissions)
+
+                    with open(local_path, "wb", opener=opener) as f:
                         f.write(response.content)
 
     @classmethod
