@@ -783,6 +783,7 @@ class Instance(model.Model):
             )
 
             return self.client.images.get(operation.metadata["fingerprint"])
+        return None
 
     def restore_snapshot(self, snapshot_name, wait=False, stateful=False):
         """Restore a snapshot using its name.
