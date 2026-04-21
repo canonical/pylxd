@@ -52,7 +52,7 @@ class IntegrationTestCase(unittest.TestCase):
         }
         result = self.lxd["instances"].post(json=machine)
         operation_uuid = result.json()["operation"].split("/")[-1]
-        result = self.lxd.operations[operation_uuid].wait.get()
+        self.lxd.operations[operation_uuid].wait.get()
 
         self.addCleanup(self.delete_container, name)
         return name
@@ -78,7 +78,7 @@ class IntegrationTestCase(unittest.TestCase):
             count += 1
         try:
             operation_uuid = result.json()["operation"].split("/")[-1]
-            result = self.lxd.operations[operation_uuid].wait.get()
+            self.lxd.operations[operation_uuid].wait.get()
         except KeyError:
             pass  # 404 cases are okay.
 
@@ -94,7 +94,7 @@ class IntegrationTestCase(unittest.TestCase):
         self.lxd.operations[operation_uuid].wait.get()
 
         alias = self.generate_object_name()
-        response = self.lxd.images.aliases.post(
+        self.lxd.images.aliases.post(
             json={"description": "", "target": fingerprint, "name": alias}
         )
 
