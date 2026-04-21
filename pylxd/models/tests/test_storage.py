@@ -14,8 +14,7 @@
 
 import json
 import re
-import unittest
-from unittest import mock
+from unittest import TestCase, mock
 
 import requests_mock
 
@@ -495,7 +494,7 @@ class TestStoragePoolAsync(testing.PyLXDTestCase):
             mock_wait.assert_not_called()
 
 
-class TestStoragePoolOperationsExtension(unittest.TestCase):
+class TestStoragePoolOperationsExtension(TestCase):
     """Tests for storage_and_network_operations extension on StoragePool.
 
     Uses requests_mock directly (no mock_services wrapper) to verify that
