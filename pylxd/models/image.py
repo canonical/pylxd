@@ -50,8 +50,17 @@ class Image(model.Model):
     uploaded_at = model.Attribute(readonly=True)
     update_source = model.Attribute(readonly=True)
     type = model.Attribute(readonly=True)
-    project = model.Attribute(readonly=True)
+    project = model.Attribute(readonly=True, optional=True)
     profiles = model.Attribute(readonly=True)
+
+    def __eq__(self, other):
+        if not isinstance(other, Image):
+            return NotImplemented
+        return self.fingerprint == other.fingerprint and self._raw_attr(
+            "project"
+        ) == other._raw_attr("project")
+
+    __hash__ = None  # type: ignore  # unhashable, consistent with defining __eq__
 
     @property
     def api(self):
