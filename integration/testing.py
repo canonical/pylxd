@@ -151,6 +151,7 @@ class IntegrationTestCase(unittest.TestCase):
         try:
             self.client.networks.get(name).delete(wait=True)
         except exceptions.NotFound:
+            # If network is already deleted, that's fine
             pass
 
     def create_storage_pool(self):
@@ -197,14 +198,15 @@ class IntegrationTestCase(unittest.TestCase):
         except exceptions.NotFound:
             return False
         except exceptions.LXDAPIException as e:
-            if "currently in use" in str(e):
-                # If volume is still in use, wait and retry
-                time.sleep(3)
-                try:
-                    pool.volumes.get("custom", volume_name).delete()
-                    return True
-                except exceptions.NotFound:
-                    return False
+            if "currently in use" not in str(e):
+                raise
+            # If volume is still in use, wait and retry
+            time.sleep(3)
+            try:
+                pool.volumes.get("custom", volume_name).delete()
+                return True
+            except exceptions.NotFound:
+                return False
 
     def assertCommon(self, response):
         """Assert common LXD responses.
