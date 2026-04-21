@@ -984,6 +984,7 @@ class Snapshot(model.Model):
                 response.json()["operation"]
             )
             return self.client.images.get(operation.metadata["fingerprint"])
+        return None
 
     def restore(self, wait=False):
         """Restore this snapshot.
