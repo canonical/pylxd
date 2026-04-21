@@ -690,6 +690,13 @@ class StorageVolumeSnapshot(model.Model):
 
     volume = model.Parent()
 
+    def __eq__(self, other):
+        if not isinstance(other, StorageVolumeSnapshot):
+            return NotImplemented
+        return self.name == other.name and self.volume == other.volume
+
+    __hash__ = None  # type: ignore  # unhashable, consistent with defining __eq__
+
     @property
     def api(self):
         """Provides an object with the endpoint:
