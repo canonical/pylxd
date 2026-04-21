@@ -317,7 +317,7 @@ class StorageVolume(model.Model):
     # Date strings follow the ISO 8601 pattern
     created_at = model.Attribute(readonly=True)
     pool = model.Attribute(readonly=True)
-    project = model.Attribute(readonly=True)
+    project = model.Attribute(readonly=True, optional=True)
 
     snapshots = model.Manager()
 
@@ -340,6 +340,18 @@ class StorageVolume(model.Model):
         super().__init__(*args, **kwargs)
 
         self.snapshots = managers.StorageVolumeSnapshotManager(self)
+
+    def __eq__(self, other):
+        if not isinstance(other, StorageVolume):
+            return NotImplemented
+        return (
+            self.name == other.name
+            and self.type == other.type
+            and self._raw_attr("project") == other._raw_attr("project")
+            and self.storage_pool == other.storage_pool
+        )
+
+    __hash__ = None  # type: ignore  # unhashable, consistent with defining __eq__
 
     @classmethod
     def all(cls, storage_pool):
