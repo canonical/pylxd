@@ -265,3 +265,4 @@ class Image(model.Model):
 
         if wait:
             return new_client.images.get(self.fingerprint)
+        return None
