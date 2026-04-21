@@ -930,6 +930,13 @@ class Snapshot(model.Model):
 
     instance = model.Parent()
 
+    def __eq__(self, other):
+        if not isinstance(other, Snapshot):
+            return NotImplemented
+        return self.name == other.name and self.instance == other.instance
+
+    __hash__ = None  # type: ignore  # unhashable, consistent with defining __eq__
+
     @property
     def api(self):
         return self.client.api[self.instance._endpoint][self.instance.name].snapshots[
