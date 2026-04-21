@@ -31,6 +31,13 @@ class Cluster(model.Model):
         self.members = managers.ClusterMemberManager(self.client, self)
         self.certificate = managers.ClusterCertificateManager(self.client, self)
 
+    def __eq__(self, other):
+        if not isinstance(other, Cluster):
+            return NotImplemented
+        return self.server_name == other.server_name
+
+    __hash__ = None  # type: ignore  # unhashable, consistent with defining __eq__
+
     @property
     def api(self):
         return self.client.api.cluster
