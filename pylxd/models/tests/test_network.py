@@ -14,8 +14,7 @@
 
 import json
 import re
-import unittest
-from unittest import mock
+from unittest import TestCase, mock
 
 import requests_mock
 
@@ -459,7 +458,7 @@ class TestNetworkForward(testing.PyLXDTestCase):
         )
 
 
-class TestNetworkAsync(unittest.TestCase):
+class TestNetworkAsync(TestCase):
     """Tests for async operations in pylxd.models.Network.
 
     Uses requests_mock directly (no mock_services wrapper) to exercise the
