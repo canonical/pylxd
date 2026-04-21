@@ -80,6 +80,15 @@ class Instance(model.Model):
             value = None
         super().__setattr__(name, value)
 
+    def __eq__(self, other):
+        if not isinstance(other, Instance):
+            return NotImplemented
+        return self.name == other.name and self._raw_attr("project") == other._raw_attr(
+            "project"
+        )
+
+    __hash__ = None  # type: ignore  # unhashable, consistent with defining __eq__
+
     @property
     def api(self):
         return self.client.api[self._endpoint][self.name]
