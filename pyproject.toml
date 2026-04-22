@@ -164,3 +164,11 @@ commands = [["{toxinidir}/integration/run-integration-tests-in-lxd"]]
 [tool.tox.env.doc]
 deps = ".[doc]"
 commands = [["{envpython}", "-m", "sphinx", "-a", "doc/source", "doc/build"]]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    # Hide the known pylxd runtime warning about unknown "unsupportedbypylxd" attributes so
+    # pytest doesn't print them in the summary while tests that explicitly
+    # assert those warnings using `assertWarns` still work.
+    "ignore:Attempted to set unknown attribute \"unsupportedbypylxd\" on instance of \"Instance\":UserWarning:^pylxd.models",
+]
