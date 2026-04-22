@@ -226,12 +226,8 @@ class Image(model.Model):
         """Delete an alias from the image."""
         self.client.api.images.aliases[name].delete()
 
-        # Update current aliases list
-        la = [a["name"] for a in self.aliases]
-        try:
-            del self.aliases[la.index(name)]
-        except ValueError:
-            pass
+        # Rebuild the list without the deleted alias
+        self.aliases = [a for a in self.aliases if a.get("name") != name]
 
     def copy(self, new_client, public=None, auto_update=None, wait=False):
         """Copy an image to a another LXD.
