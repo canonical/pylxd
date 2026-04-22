@@ -2,7 +2,7 @@
 Contributing
 ============
 
-pyLXD development is done on `Github`_. Pull Requests and Issues should be
+pyLXD development is done on `GitHub`_. Pull Requests and Issues should be
 filed there. We try and respond to PRs and Issues within a few days.
 
 If you would like to contribute major features or have big ideas, it's best to
@@ -15,10 +15,10 @@ Adding a Feature or Fixing a Bug
 
 The main steps are:
 
-1. There needs to be a bug filed on the `Github`_ repository.  This is also for
+1. There needs to be a bug filed on the `GitHub`_ repository.  This is also for
    a feature, so it's clear what is being proposed prior to somebody starting
    work on it.
-2. The pyLXD repository must be forked on Github to the developer's own
+2. The pyLXD repository must be forked on GitHub to the developer's own
    account.
 3. The developer should create a personal branch, with either:
 
