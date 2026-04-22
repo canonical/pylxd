@@ -127,11 +127,8 @@ class TestModel(testing.PyLXDTestCase):
         """Unknown attributes aren't set."""
         item = Item(self.client, name="an-item", nonexistent="SRSLY")
 
-        try:
+        with self.assertRaises(AttributeError):
             item.nonexistent
-            self.fail("item.nonexistent did not raise AttributeError")
-        except AttributeError:
-            pass
 
     def test_init_sets_attributes_on_child_class(self):
         """Ensure that .__attributes__ is set on a child class."""
