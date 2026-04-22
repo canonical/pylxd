@@ -436,3 +436,122 @@ class TestModel(testing.PyLXDTestCase):
         item = Item(self.client, name="an-item", age=15, data={"key": "val"})
         # wait=False is overridden by the extension presence
         item.patch({"age": 69}, wait=False)
+
+    def test_raw_attr_set(self):
+        """_raw_attr returns the value when the attribute is set."""
+        item = Item(self.client, name="an-item", age=15, data={"key": "val"})
+
+        self.assertEqual("an-item", item._raw_attr("name"))
+
+    def test_raw_attr_unset_returns_default(self):
+        """_raw_attr returns default when the slot has never been set."""
+        item = Item(self.client, name="an-item")
+
+        self.assertIsNone(item._raw_attr("age"))
+        self.assertEqual("fallback", item._raw_attr("age", default="fallback"))
+
+    def test_raw_attr_missing_sentinel_returns_default(self):
+        """_raw_attr returns default when the slot holds MISSING."""
+        item = Item(self.client, name="an-item")
+        object.__setattr__(item, "age", model.MISSING)
+
+        self.assertIsNone(item._raw_attr("age"))
+
+    def test_raw_attr_does_not_trigger_sync(self):
+        """_raw_attr must not call sync() when the attribute is unset."""
+        item = Item(self.client, name="an-item")
+
+        with mock.patch.object(Item, "sync") as mock_sync:
+            item._raw_attr("age")
+            mock_sync.assert_not_called()
+
+    def test_eq_same_class_and_attributes(self):
+        """Models of the same class with same attributes are equal."""
+        a = Item(self.client, name="a", age=10, data={"k": "v"})
+        b = Item(self.client, name="a", age=10, data={"k": "v"})
+
+        self.assertEqual(a, b)
+
+    def test_eq_different_class_returns_false(self):
+        """Different classes (even subclass) are not equal."""
+        a = Item(self.client, name="a", age=10)
+        b = ChildItem(self.client, name="a", age=10)
+
+        self.assertNotEqual(a, b)
+
+    def test_eq_with_unrelated_type_returns_false(self):
+        """Model.__eq__ returns False when compared to unrelated types."""
+        a = Item(self.client, name="a", age=10)
+
+        self.assertIs(a.__eq__(42), False)
+
+    def test_eq_handles_attributeerror_during_compare(self):
+        """If attribute access raises AttributeError during compare, __eq__ returns False."""
+        # Use the registered item fixture name so sync() has mocked GET available
+        a = Item(self.client, name="an-item", age=10, data={"k": "v"})
+        b = Item(self.client, name="an-item", age=10)
+
+        original_getattribute = Item.__getattribute__
+
+        def patched_getattribute(self, name):
+            # Simulate AttributeError for 'data' on instance b only
+            if self is b and name == "data":
+                raise AttributeError
+            return original_getattribute(self, name)
+
+        with mock.patch.object(Item, "__getattribute__", new=patched_getattribute):
+            self.assertNotEqual(a, b)
+
+    def test_post_sync_does_not_wait(self):
+        """Model.post with sync response should not call wait_for_operation."""
+        self.add_rule(
+            {
+                "json": {"type": "sync", "metadata": {}},
+                "status_code": 200,
+                "method": "post",
+                "url": r"^http://pylxd.test/1.0/items/an-item$",
+            }
+        )
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            item = Item(self.client, name="an-item")
+            item.post(json={"foo": "bar"}, wait=True)
+            mock_wait.assert_not_called()
+
+    def test_post_async_wait_true_calls_wait(self):
+        """Model.post for async response and wait=True calls wait_for_operation."""
+        self.add_rule(
+            {
+                "json": {"type": "async", "operation": "/1.0/operations/abc123"},
+                "status_code": 202,
+                "method": "post",
+                "url": r"^http://pylxd.test/1.0/items/an-item$",
+            }
+        )
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            item = Item(self.client, name="an-item")
+            item.post(json={"foo": "bar"}, wait=True)
+            mock_wait.assert_called_once_with("/1.0/operations/abc123")
+
+    def test_post_async_wait_false_does_not_wait(self):
+        """Model.post for async response and wait=False does not call wait_for_operation."""
+        self.add_rule(
+            {
+                "json": {"type": "async", "operation": "/1.0/operations/abc123"},
+                "status_code": 202,
+                "method": "post",
+                "url": r"^http://pylxd.test/1.0/items/an-item$",
+            }
+        )
+
+        with mock.patch.object(
+            self.client.operations, "wait_for_operation"
+        ) as mock_wait:
+            item = Item(self.client, name="an-item")
+            item.post(json={"foo": "bar"}, wait=False)
+            mock_wait.assert_not_called()
