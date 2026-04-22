@@ -136,7 +136,7 @@ Testing pyLXD is in 3 parts:
 2. Unit tests using ``tox -e py`` or ``tox -e coverage``.
 3. Integration tests using the ``tox -e integration-in-lxd``.
 
-.. note:: all of the tests can be run by just using the ``tox`` command on it's
+.. note:: all of the tests can be run by just using the ``tox`` command on its
           own, with the exception of the integration tests.  These are not
           automatically run as they require a working LXD environment.
 
