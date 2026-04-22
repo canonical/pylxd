@@ -18,6 +18,7 @@ import os
 import stat
 import time
 import warnings
+from contextlib import suppress
 from typing import IO, NamedTuple, Optional
 from urllib import parse
 
@@ -604,17 +605,16 @@ class Instance(model.Model):
                 response_json["operation"]
             )
 
-            try:
+            # Suppress the error if the server already closed the pipe
+            with suppress(BrokenPipeError):
                 stdin.close()
-            except BrokenPipeError:
-                pass
 
             stdout.finish_soon()
             stderr.finish_soon()
-            try:
+
+            # Suppress the error if the server already closed the pipe
+            with suppress(BrokenPipeError):
                 manager.close_all()
-            except BrokenPipeError:
-                pass
 
             while not stdout.finished or not stderr.finished:
                 time.sleep(0.1)  # progma: no cover
