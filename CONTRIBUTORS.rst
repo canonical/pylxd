@@ -2,7 +2,7 @@ Contributors to pylxd
 ~~~~~~~~~~~~~~~~~~~~~
 
 
-These are the contributors to pylxd according to the Github repository.
+These are the contributors to pylxd according to the GitHub repository.
 
  ===============  ==================================
  GHsername        Name
