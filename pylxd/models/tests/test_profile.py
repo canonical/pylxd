@@ -286,7 +286,7 @@ class TestProfileAsync(testing.PyLXDTestCase):
             }
         )
 
-    def _mock_profiles_list(self, profiles=None):
+    def _mock_profile_list(self, profiles=None):
         """Mock the profiles list response."""
         if profiles is None:
             profiles = [self.profile_name]
@@ -303,6 +303,26 @@ class TestProfileAsync(testing.PyLXDTestCase):
                 "url": r"^http://pylxd.test/1.0/profiles$",
             }
         )
+
+    def test_mock_profile_list_default(self):
+        """The helper without args returns the default profile list."""
+        self._mock_profile_list()
+
+        profiles = models.Profile.all(self.client)
+
+        self.assertEqual(1, len(profiles))
+        self.assertEqual(self.profile_name, profiles[0].name)
+
+    def test_mock_profile_list_custom(self):
+        """The helper accepts a custom list of profile names."""
+        names = ["alpha", "beta"]
+        self._mock_profile_list(profiles=names)
+
+        profiles = models.Profile.all(self.client)
+
+        self.assertEqual(2, len(profiles))
+        self.assertEqual("alpha", profiles[0].name)
+        self.assertEqual("beta", profiles[1].name)
 
     def _create_test_profile(self, name=None, **kwargs):
         """Helper to create a test profile instance."""
