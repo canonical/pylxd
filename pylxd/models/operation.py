@@ -41,6 +41,7 @@ class Operation:
         "description",
         "err",
         "id",
+        "secret",
         "location",
         "may_cancel",
         "metadata",
