@@ -735,7 +735,7 @@ class StorageVolumeSnapshot(model.Model):
         ):
             snapshot_object.created_at = None
 
-        # This field is may empty so derive it from its volume.
+        # This field is maybe empty so derive it from its volume.
         if not snapshot_object.content_type:
             snapshot_object.content_type = volume.content_type
 
