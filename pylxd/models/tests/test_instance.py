@@ -371,7 +371,12 @@ class TestInstance(testing.PyLXDTestCase):
         """A instance exists."""
         name = "an-instance"
 
-        self.assertTrue(models.Instance.exists(self.client, name))
+        # The mock response contains an unknown attribute; ensure the
+        # module-level seen-warning set is reset so the warning is emitted
+        # and can be asserted without depending on test ordering.
+        with mock.patch("pylxd.models._model._seen_attribute_warnings", new=set()):
+            with self.assertWarns(UserWarning):
+                self.assertTrue(models.Instance.exists(self.client, name))
 
     def test_not_exists(self):
         """A instance exists."""
