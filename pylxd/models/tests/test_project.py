@@ -168,6 +168,26 @@ class TestProject(testing.PyLXDTestCase):
 
         a_project.delete()
 
+    def test_rename_posts_and_returns_new_project(self):
+        """Renaming a project posts the new name and returns the new project."""
+        a_project = models.Project(self.client, name="test-project")
+        expected = object()
+
+        with mock.patch.object(
+            models.Project, "api", new_callable=mock.PropertyMock
+        ) as mock_api_prop:
+            mock_api = mock.Mock()
+            mock_api_prop.return_value = mock_api
+
+            with mock.patch.object(
+                models.Project, "get", return_value=expected
+            ) as mock_get:
+                result = a_project.rename("new-project")
+
+                mock_api.post.assert_called_once_with(json={"name": "new-project"})
+                mock_get.assert_called_once_with(self.client, "new-project")
+                self.assertIs(result, expected)
+
 
 class TestProjectAsync(testing.PyLXDTestCase):
     """Tests for async operations in Project."""
