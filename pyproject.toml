@@ -112,7 +112,10 @@ commands = [
 ]
 
 [tool.tox.env.unit]
-set_env = { "PYLXD_WARNINGS" = "none" }
+# Ensure tests run with default warning behaviour unless individual tests
+# override it. Set to an empty string so code paths that consult
+# `PYLXD_WARNINGS` still emit warnings by default.
+set_env = { "PYLXD_WARNINGS" = "" }
 deps = ".[testing]"
 commands = [
     [
