@@ -173,13 +173,15 @@ class IntegrationTestCase(unittest.TestCase):
         except exceptions.NotFound:
             pass
         except exceptions.LXDAPIException as e:
-            if "currently in use" in str(e):
-                # If pool is still in use, wait and retry
-                time.sleep(5)  # Longer delay for pool operations
-                try:
-                    self.client.storage_pools.get(name).delete(wait=True)
-                except exceptions.NotFound:
-                    pass
+            if "currently in use" not in str(e):
+                raise
+            # If pool is still in use, wait and retry
+            time.sleep(5)  # Longer delay for pool operations
+            try:
+                self.client.storage_pools.get(name).delete(wait=True)
+            except exceptions.NotFound:
+                # If pool is already deleted, that's fine
+                pass
 
     def create_storage_volume(self, pool_name, volume_name):
         pool = self.client.storage_pools.get(pool_name)
