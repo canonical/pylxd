@@ -188,7 +188,7 @@ class TestStorageVolumeSnapshot(StorageTestCase):
         for snapshot_name in ["snap0", custom_snapshot_name]:
             self.assertIn(snapshot_name, all_snapshots)
 
-        self.assertFalse("snap1" in all_snapshots)
+        self.assertNotIn("snap1", all_snapshots)
 
         # Test getting all snapshots with recursion
         all_snapshots = volume.snapshots.all(use_recursion=True)

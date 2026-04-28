@@ -371,7 +371,12 @@ class TestInstance(testing.PyLXDTestCase):
         """A instance exists."""
         name = "an-instance"
 
-        self.assertTrue(models.Instance.exists(self.client, name))
+        # The mock response contains an unknown attribute; ensure the
+        # module-level seen-warning set is reset so the warning is emitted
+        # and can be asserted without depending on test ordering.
+        with mock.patch("pylxd.models._model._seen_attribute_warnings", new=set()):
+            with self.assertWarns(UserWarning):
+                self.assertTrue(models.Instance.exists(self.client, name))
 
     def test_not_exists(self):
         """A instance exists."""
@@ -742,6 +747,33 @@ class TestInstance(testing.PyLXDTestCase):
 
         put.assert_called_once_with(json={"restore": "thing", "stateful": True})
 
+    def test_eq_same_name_no_project(self):
+        """Two instances with same name and no project are equal."""
+        a = models.Instance(self.client, name="an-instance")
+        b = models.Instance(self.client, name="an-instance")
+        self.assertEqual(a, b)
+
+    def test_eq_same_name_same_project(self):
+        """Two instances with same name and project are equal."""
+        a = models.Instance(self.client, name="an-instance", project="myproj")
+        b = models.Instance(self.client, name="an-instance", project="myproj")
+        self.assertEqual(a, b)
+
+    def test_eq_different_project(self):
+        """Two instances with same name but different projects are not equal."""
+        a = models.Instance(self.client, name="an-instance", project="p1")
+        b = models.Instance(self.client, name="an-instance", project="p2")
+        self.assertNotEqual(a, b)
+
+    def test_eq_does_not_trigger_sync(self):
+        """__eq__ must not call sync() when project is unset."""
+        a = models.Instance(self.client, name="an-instance")
+        b = models.Instance(self.client, name="an-instance")
+        with mock.patch.object(models.Instance, "sync") as mock_sync:
+            result = a == b
+            self.assertTrue(result)
+            mock_sync.assert_not_called()
+
 
 class TestInstanceState(testing.PyLXDTestCase):
     """Tests for pylxd.models.InstanceState."""
@@ -936,6 +968,15 @@ class TestFiles(testing.PyLXDTestCase):
     def setUp(self):
         super().setUp()
         self.instance = models.Instance.get(self.client, "an-instance")
+
+    @staticmethod
+    def _mock_open_side_effect(path, mode="r", **kwargs):
+        """Mock open that invokes the opener if provided."""
+        opener = kwargs.pop("opener", None)
+        if opener is not None:
+            # Call the opener to get the file descriptor
+            _ = opener(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+        return mock.mock_open()(path, mode, **kwargs)
 
     def test_put_delete(self):
         """A file is put on the instance and then deleted"""
@@ -1171,7 +1212,7 @@ class TestFiles(testing.PyLXDTestCase):
             mock.patch("pylxd.client._APINode.get") as get_mocked,
             mock.patch("os.makedirs") as makedirs_mocked,
             mock.patch("os.open") as mock_os_open,
-            mock.patch("builtins.open", mock.mock_open()),
+            mock.patch("builtins.open", side_effect=self._mock_open_side_effect),
         ):
             get_mocked.side_effect = return_values
             # Return dummy file descriptors
@@ -1206,7 +1247,7 @@ class TestFiles(testing.PyLXDTestCase):
             mock.patch("pylxd.client._APINode.get") as get_mocked,
             mock.patch("os.makedirs"),
             mock.patch("os.open") as mock_os_open,
-            mock.patch("builtins.open", mock.mock_open()),
+            mock.patch("builtins.open", side_effect=self._mock_open_side_effect),
         ):
             get_mocked.side_effect = [response, response1]
             mock_os_open.return_value = 11
@@ -1265,3 +1306,43 @@ class TestFiles(testing.PyLXDTestCase):
     def test_get_json_file(self):
         data = self.instance.files.get("/tmp/json-get")
         self.assertEqual(b'{"some": "value"}', data)
+
+
+class TestSnapshotEquality(testing.PyLXDTestCase):
+    """Tests for Snapshot equality semantics."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        super().setUp()
+        self.instance = models.Instance.get(self.client, "an-instance")
+
+    def test_equal_snapshots_same_name_and_instance(self):
+        """Two snapshots with same name and instance are equal."""
+        snap1 = models.Snapshot(self.client, name="snap1", instance=self.instance)
+        snap2 = models.Snapshot(self.client, name="snap1", instance=self.instance)
+
+        self.assertEqual(snap1, snap2)
+
+    def test_unequal_snapshots_different_name(self):
+        """Two snapshots with different names are not equal."""
+        snap1 = models.Snapshot(self.client, name="snap1", instance=self.instance)
+        snap2 = models.Snapshot(self.client, name="snap2", instance=self.instance)
+
+        self.assertNotEqual(snap1, snap2)
+
+    def test_unequal_snapshots_different_instance(self):
+        """Two snapshots with different instances are not equal."""
+        instance2 = models.Instance(self.client, name="another-instance")
+        snap1 = models.Snapshot(self.client, name="snap1", instance=self.instance)
+        snap2 = models.Snapshot(self.client, name="snap1", instance=instance2)
+
+        self.assertNotEqual(snap1, snap2)
+
+    def test_not_equal_to_unrelated_type(self):
+        """Snapshot compared to other types returns NotImplemented."""
+        snap = models.Snapshot(self.client, name="snap1", instance=self.instance)
+
+        # Comparison with other types should return NotImplemented (which makes != True)
+        self.assertNotEqual(snap, "string")
+        self.assertNotEqual(snap, 123)
+        self.assertNotEqual(snap, None)

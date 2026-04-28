@@ -174,6 +174,33 @@ class TestProfile(testing.PyLXDTestCase):
 
         an_profile.delete()
 
+    def test_eq_same_name_no_project(self):
+        """Two profiles with same name and no project are equal."""
+        a = self.client.profiles.get("an-profile")
+        b = self.client.profiles.get("an-profile")
+        self.assertEqual(a, b)
+
+    def test_eq_different_project(self):
+        """Two profiles with same name but different projects are not equal."""
+        a = models.Profile(self.client, name="an-profile", project="p1")
+        b = models.Profile(self.client, name="an-profile", project="p2")
+        self.assertNotEqual(a, b)
+
+    def test_eq_does_not_trigger_sync(self):
+        """__eq__ must not call sync() when project is unset."""
+        a = models.Profile(self.client, name="an-profile")
+        b = models.Profile(self.client, name="an-profile")
+        with mock.patch.object(models.Profile, "sync") as mock_sync:
+            result = a == b
+            self.assertTrue(result)
+            mock_sync.assert_not_called()
+
+    def test_eq_with_unrelated_type_returns_not_implemented(self):
+        """Profile.__eq__ should return NotImplemented for unrelated types."""
+        profile = models.Profile(self.client, name="an-profile")
+        # Direct __eq__ call should return NotImplemented for unrelated types
+        self.assertIs(profile.__eq__(42), NotImplemented)
+
 
 class TestProfileAsync(testing.PyLXDTestCase):
     """Tests for async operations in Profile."""
@@ -259,7 +286,7 @@ class TestProfileAsync(testing.PyLXDTestCase):
             }
         )
 
-    def _mock_profiles_list(self, profiles=None):
+    def _mock_profile_list(self, profiles=None):
         """Mock the profiles list response."""
         if profiles is None:
             profiles = [self.profile_name]
@@ -276,6 +303,26 @@ class TestProfileAsync(testing.PyLXDTestCase):
                 "url": r"^http://pylxd.test/1.0/profiles$",
             }
         )
+
+    def test_mock_profile_list_default(self):
+        """The helper without args returns the default profile list."""
+        self._mock_profile_list()
+
+        profiles = models.Profile.all(self.client)
+
+        self.assertEqual(1, len(profiles))
+        self.assertEqual(self.profile_name, profiles[0].name)
+
+    def test_mock_profile_list_custom(self):
+        """The helper accepts a custom list of profile names."""
+        names = ["alpha", "beta"]
+        self._mock_profile_list(profiles=names)
+
+        profiles = models.Profile.all(self.client)
+
+        self.assertEqual(2, len(profiles))
+        self.assertEqual("alpha", profiles[0].name)
+        self.assertEqual("beta", profiles[1].name)
 
     def _create_test_profile(self, name=None, **kwargs):
         """Helper to create a test profile instance."""

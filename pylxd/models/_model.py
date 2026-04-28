@@ -172,6 +172,21 @@ class Model(metaclass=ModelType):
         for attr in self.__attributes__.keys():
             yield attr, getattr(self, attr)
 
+    def _raw_attr(self, name, default=None):
+        """Read a model attribute slot without triggering sync.
+
+        Unlike normal attribute access, this bypasses Model.__getattribute__
+        so it never calls sync(). Returns default when the slot is unset or
+        holds the MISSING sentinel.
+        """
+        try:
+            value = object.__getattribute__(self, name)
+        except AttributeError:
+            return default
+        if value is MISSING:
+            return default
+        return value
+
     def __eq__(self, other):
         if other.__class__ != self.__class__:
             return False

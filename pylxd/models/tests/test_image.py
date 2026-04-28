@@ -1,6 +1,7 @@
 import hashlib
 import json
 from io import StringIO
+from unittest import mock
 
 from pylxd import exceptions, models
 from pylxd.tests import testing
@@ -74,6 +75,12 @@ class TestImage(testing.PyLXDTestCase):
         fingerprint = hashlib.sha256(b"").hexdigest()
 
         self.assertTrue(models.Image.exists(self.client, fingerprint))
+
+    def test_eq_with_unrelated_type_returns_not_implemented(self):
+        """Image.__eq__ should return NotImplemented for unrelated types."""
+        fingerprint = hashlib.sha256(b"").hexdigest()
+        img = models.Image(self.client, fingerprint=fingerprint)
+        self.assertIs(img.__eq__(object()), NotImplemented)
 
     def test_exists_by_alias(self):
         """An image is fetched."""
@@ -396,3 +403,27 @@ class TestImage(testing.PyLXDTestCase):
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             image.fingerprint,
         )
+
+    def test_eq_same_fingerprint_no_project(self):
+        """Two images with same fingerprint and no project are equal."""
+        fp = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        a = models.Image(self.client, fingerprint=fp)
+        b = models.Image(self.client, fingerprint=fp)
+        self.assertEqual(a, b)
+
+    def test_eq_different_project(self):
+        """Two images with same fingerprint but different projects differ."""
+        fp = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        a = models.Image(self.client, fingerprint=fp, project="p1")
+        b = models.Image(self.client, fingerprint=fp, project="p2")
+        self.assertNotEqual(a, b)
+
+    def test_eq_does_not_trigger_sync(self):
+        """__eq__ must not call sync() when project is unset."""
+        fp = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        a = models.Image(self.client, fingerprint=fp)
+        b = models.Image(self.client, fingerprint=fp)
+        with mock.patch.object(models.Image, "sync") as mock_sync:
+            result = a == b
+            self.assertTrue(result)
+            mock_sync.assert_not_called()

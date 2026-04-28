@@ -14,8 +14,7 @@
 
 import json
 import re
-import unittest
-from unittest import mock
+from unittest import TestCase, mock
 
 import requests_mock
 
@@ -288,6 +287,33 @@ class TestNetwork(testing.PyLXDTestCase):
             'description="Network description", name="eth0", type="bridge")',
         )
 
+    def test_eq_same_name_no_project(self):
+        """Two networks with same name and no project are equal."""
+        a = models.Network(self.client, name="eth0")
+        b = models.Network(self.client, name="eth0")
+        self.assertEqual(a, b)
+
+    def test_eq_different_project(self):
+        """Two networks with same name but different projects are not equal."""
+        a = models.Network(self.client, name="eth0", project="p1")
+        b = models.Network(self.client, name="eth0", project="p2")
+        self.assertNotEqual(a, b)
+
+    def test_eq_does_not_trigger_sync(self):
+        """__eq__ must not call sync() when project is unset."""
+        a = models.Network(self.client, name="eth0")
+        b = models.Network(self.client, name="eth0")
+        with mock.patch.object(models.Network, "sync") as mock_sync:
+            result = a == b
+            self.assertTrue(result)
+            mock_sync.assert_not_called()
+
+    def test_eq_with_unrelated_type_returns_not_implemented(self):
+        """Network.__eq__ should return NotImplemented for unrelated types."""
+        a = models.Network(self.client, name="eth0")
+        # Direct __eq__ call should return NotImplemented for unrelated types
+        self.assertIs(a.__eq__(42), NotImplemented)
+
 
 class TestNetworkForward(testing.PyLXDTestCase):
     """Tests for pylxd.models.NetworkForward."""
@@ -459,7 +485,7 @@ class TestNetworkForward(testing.PyLXDTestCase):
         )
 
 
-class TestNetworkAsync(unittest.TestCase):
+class TestNetworkAsync(TestCase):
     """Tests for async operations in pylxd.models.Network.
 
     Uses requests_mock directly (no mock_services wrapper) to exercise the

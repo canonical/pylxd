@@ -22,6 +22,16 @@ class Profile(model.Model):
     devices = model.Attribute()
     name = model.Attribute(readonly=True)
     used_by = model.Attribute(readonly=True)
+    project = model.Attribute(readonly=True, optional=True)
+
+    def __eq__(self, other):
+        if not isinstance(other, Profile):
+            return NotImplemented
+        return self.name == other.name and self._raw_attr("project") == other._raw_attr(
+            "project"
+        )
+
+    __hash__ = None  # type: ignore  # unhashable, consistent with defining __eq__
 
     @classmethod
     def exists(cls, client, name):

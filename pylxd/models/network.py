@@ -72,6 +72,7 @@ class Network(model.Model):
     locations = model.Attribute(readonly=True)
     managed = model.Attribute(readonly=True)
     used_by = model.Attribute(readonly=True)
+    project = model.Attribute(readonly=True, optional=True)
     _endpoint = "networks"
 
     forwards = model.Manager()
@@ -79,6 +80,15 @@ class Network(model.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.forwards = managers.NetworkForwardManager(self.client, self)
+
+    def __eq__(self, other):
+        if not isinstance(other, Network):
+            return NotImplemented
+        return self.name == other.name and self._raw_attr("project") == other._raw_attr(
+            "project"
+        )
+
+    __hash__ = None  # type: ignore  # unhashable, consistent with defining __eq__
 
     @classmethod
     def exists(cls, client, name):

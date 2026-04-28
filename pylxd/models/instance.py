@@ -18,6 +18,7 @@ import os
 import stat
 import time
 import warnings
+from contextlib import suppress
 from typing import IO, NamedTuple, Optional
 from urllib import parse
 
@@ -79,6 +80,15 @@ class Instance(model.Model):
             # LXD reports "none" as location when not in a cluster
             value = None
         super().__setattr__(name, value)
+
+    def __eq__(self, other):
+        if not isinstance(other, Instance):
+            return NotImplemented
+        return self.name == other.name and self._raw_attr("project") == other._raw_attr(
+            "project"
+        )
+
+    __hash__ = None  # type: ignore  # unhashable, consistent with defining __eq__
 
     @property
     def api(self):
@@ -293,12 +303,11 @@ class Instance(model.Model):
                                 os.path.join(local_path, file),
                             )
                 elif response.headers["X-LXD-type"] == "file":
-                    fd = os.open(
-                        local_path,
-                        os.O_CREAT | os.O_WRONLY | os.O_TRUNC,
-                        mode=unix_permissions,
-                    )
-                    with open(fd, "wb") as f:
+
+                    def opener(path, flags):
+                        return os.open(path, flags, mode=unix_permissions)
+
+                    with open(local_path, "wb", opener=opener) as f:
                         f.write(response.content)
 
     @classmethod
@@ -596,17 +605,16 @@ class Instance(model.Model):
                 response_json["operation"]
             )
 
-            try:
+            # Suppress the error if the server already closed the pipe
+            with suppress(BrokenPipeError):
                 stdin.close()
-            except BrokenPipeError:
-                pass
 
             stdout.finish_soon()
             stderr.finish_soon()
-            try:
+
+            # Suppress the error if the server already closed the pipe
+            with suppress(BrokenPipeError):
                 manager.close_all()
-            except BrokenPipeError:
-                pass
 
             while not stdout.finished or not stderr.finished:
                 time.sleep(0.1)  # progma: no cover
@@ -784,6 +792,7 @@ class Instance(model.Model):
             )
 
             return self.client.images.get(operation.metadata["fingerprint"])
+        return None
 
     def restore_snapshot(self, snapshot_name, wait=False, stateful=False):
         """Restore a snapshot using its name.
@@ -921,6 +930,13 @@ class Snapshot(model.Model):
 
     instance = model.Parent()
 
+    def __eq__(self, other):
+        if not isinstance(other, Snapshot):
+            return NotImplemented
+        return self.name == other.name and self.instance == other.instance
+
+    __hash__ = None  # type: ignore  # unhashable, consistent with defining __eq__
+
     @property
     def api(self):
         return self.client.api[self.instance._endpoint][self.instance.name].snapshots[
@@ -984,6 +1000,7 @@ class Snapshot(model.Model):
                 response.json()["operation"]
             )
             return self.client.images.get(operation.metadata["fingerprint"])
+        return None
 
     def restore(self, wait=False):
         """Restore this snapshot.

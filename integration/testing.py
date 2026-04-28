@@ -52,7 +52,7 @@ class IntegrationTestCase(unittest.TestCase):
         }
         result = self.lxd["instances"].post(json=machine)
         operation_uuid = result.json()["operation"].split("/")[-1]
-        result = self.lxd.operations[operation_uuid].wait.get()
+        self.lxd.operations[operation_uuid].wait.get()
 
         self.addCleanup(self.delete_container, name)
         return name
@@ -78,7 +78,7 @@ class IntegrationTestCase(unittest.TestCase):
             count += 1
         try:
             operation_uuid = result.json()["operation"].split("/")[-1]
-            result = self.lxd.operations[operation_uuid].wait.get()
+            self.lxd.operations[operation_uuid].wait.get()
         except KeyError:
             pass  # 404 cases are okay.
 
@@ -94,7 +94,7 @@ class IntegrationTestCase(unittest.TestCase):
         self.lxd.operations[operation_uuid].wait.get()
 
         alias = self.generate_object_name()
-        response = self.lxd.images.aliases.post(
+        self.lxd.images.aliases.post(
             json={"description": "", "target": fingerprint, "name": alias}
         )
 
@@ -151,6 +151,7 @@ class IntegrationTestCase(unittest.TestCase):
         try:
             self.client.networks.get(name).delete(wait=True)
         except exceptions.NotFound:
+            # If network is already deleted, that's fine
             pass
 
     def create_storage_pool(self):
@@ -169,16 +170,18 @@ class IntegrationTestCase(unittest.TestCase):
         # delete the named storage pool
         try:
             self.client.storage_pools.get(name).delete(wait=True)
-        except exceptions.LXDAPIException as e:
-            if "currently in use" in str(e):
-                # If pool is still in use, wait and retry
-                time.sleep(5)  # Longer delay for pool operations
-                try:
-                    self.client.storage_pools.get(name).delete(wait=True)
-                except exceptions.NotFound:
-                    pass
         except exceptions.NotFound:
             pass
+        except exceptions.LXDAPIException as e:
+            if "currently in use" not in str(e):
+                raise
+            # If pool is still in use, wait and retry
+            time.sleep(5)  # Longer delay for pool operations
+            try:
+                self.client.storage_pools.get(name).delete(wait=True)
+            except exceptions.NotFound:
+                # If pool is already deleted, that's fine
+                pass
 
     def create_storage_volume(self, pool_name, volume_name):
         pool = self.client.storage_pools.get(pool_name)
@@ -197,14 +200,15 @@ class IntegrationTestCase(unittest.TestCase):
         except exceptions.NotFound:
             return False
         except exceptions.LXDAPIException as e:
-            if "currently in use" in str(e):
-                # If volume is still in use, wait and retry
-                time.sleep(3)
-                try:
-                    pool.volumes.get("custom", volume_name).delete()
-                    return True
-                except exceptions.NotFound:
-                    return False
+            if "currently in use" not in str(e):
+                raise
+            # If volume is still in use, wait and retry
+            time.sleep(3)
+            try:
+                pool.volumes.get("custom", volume_name).delete()
+                return True
+            except exceptions.NotFound:
+                return False
 
     def assertCommon(self, response):
         """Assert common LXD responses.

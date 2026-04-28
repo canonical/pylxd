@@ -142,7 +142,11 @@ class TestOperation(testing.PyLXDTestCase):
             }
         )
         url = "/1.0/operations/operation-unknown"
-        models.Operation.get(self.client, url)
+        # Reset module-level seen-warning set so the warning is emitted
+        # for this test regardless of previous tests' side effects.
+        with mock.patch("pylxd.models.operation._seen_attribute_warnings", new=set()):
+            with self.assertWarns(UserWarning):
+                models.Operation.get(self.client, url)
 
     def test_wait_for_operation_modern(self):
         """wait_for_operation() uses /wait metadata and avoids a second GET."""
