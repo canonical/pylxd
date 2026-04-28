@@ -270,9 +270,16 @@ class TestStorageVolume(testing.PyLXDTestCase):
         testing.add_api_extension_helper(self, ["storage"])
         a_storage_pool = models.StoragePool(self.client, name="lxd")
         a_volume = a_storage_pool.volumes.get("custom", "cu1")
-        patch_object = {"config": {"size": 1}}
+        patch_object = {"config": {"size": "1048576"}}  # 1 MiB in bytes
         with mock.patch.object(self.client, "assert_has_api_extension"):
             a_volume.patch(patch_object)
+        # Verify the PATCH request was made with the expected payload
+        req = self._last_matching_request(
+            "PATCH",
+            "http://pylxd.test/1.0/storage-pools/lxd/volumes/custom/cu1",
+        )
+        patch_body = json.loads(req.text)
+        self.assertEqual(patch_body["config"]["size"], "1048576")
 
     def test_save(self):
         testing.add_api_extension_helper(self, ["storage"])
