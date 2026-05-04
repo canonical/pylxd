@@ -36,6 +36,16 @@ class PyLXDTestCase(unittest.TestCase):
         for rule in rules:
             self.add_rule(rule)
 
+    def _last_matching_request(self, method, url):
+        """Return the last request matching *method* and *url*, or fail the test."""
+        matching = [
+            r
+            for r in self.requests_mock.request_history
+            if r.method == method and r.url == url
+        ]
+        self.assertTrue(matching, f"No {method} request to {url} found")
+        return matching[-1]
+
 
 def add_api_extension_helper(obj, extensions):
     obj.add_rule(

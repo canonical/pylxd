@@ -171,6 +171,7 @@ class IntegrationTestCase(unittest.TestCase):
         try:
             self.client.storage_pools.get(name).delete(wait=True)
         except exceptions.NotFound:
+            # Ignore if the pool is already deleted
             pass
         except exceptions.LXDAPIException as e:
             if "currently in use" not in str(e):

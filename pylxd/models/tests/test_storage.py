@@ -256,29 +256,72 @@ class TestStorageVolume(testing.PyLXDTestCase):
         testing.add_api_extension_helper(self, ["storage"])
         a_storage_pool = models.StoragePool(self.client, name="lxd")
         a_volume = a_storage_pool.volumes.get("custom", "cu1")
-        put_object = {"config": {"size": 1}}
+        put_object = {"config": {"size": "1048576"}}  # 1 MiB in bytes
         a_volume.put(put_object)
+        # Verify the PUT request was made with the expected payload
+        req = self._last_matching_request(
+            "PUT",
+            "http://pylxd.test/1.0/storage-pools/lxd/volumes/custom/cu1",
+        )
+        put_body = json.loads(req.text)
+        self.assertEqual(put_body["config"]["size"], "1048576")
 
     def test_patch(self):
         testing.add_api_extension_helper(self, ["storage"])
         a_storage_pool = models.StoragePool(self.client, name="lxd")
         a_volume = a_storage_pool.volumes.get("custom", "cu1")
-        patch_object = {"config": {"size": 1}}
+        patch_object = {"config": {"size": "1048576"}}  # 1 MiB in bytes
         with mock.patch.object(self.client, "assert_has_api_extension"):
             a_volume.patch(patch_object)
+        # Verify the PATCH request was made with the expected payload
+        req = self._last_matching_request(
+            "PATCH",
+            "http://pylxd.test/1.0/storage-pools/lxd/volumes/custom/cu1",
+        )
+        patch_body = json.loads(req.text)
+        self.assertEqual(patch_body["config"]["size"], "1048576")
 
     def test_save(self):
         testing.add_api_extension_helper(self, ["storage"])
         a_storage_pool = models.StoragePool(self.client, name="lxd")
         a_volume = a_storage_pool.volumes.get("custom", "cu1")
-        a_volume.config = {"size": 2}
+        a_volume.config = {"size": "2097152"}  # 2 MiB in bytes
         a_volume.save()
+        # Verify the PUT request was made with the expected payload
+        req = self._last_matching_request(
+            "PUT",
+            "http://pylxd.test/1.0/storage-pools/lxd/volumes/custom/cu1",
+        )
+        put_body = json.loads(req.text)
+        self.assertEqual(put_body["config"]["size"], "2097152")
 
     def test_delete(self):
         testing.add_api_extension_helper(self, ["storage"])
         a_storage_pool = models.StoragePool(self.client, name="lxd")
         a_volume = a_storage_pool.volumes.get("custom", "cu1")
         a_volume.delete()
+        # Verify the DELETE request was made
+        self._last_matching_request(
+            "DELETE",
+            "http://pylxd.test/1.0/storage-pools/lxd/volumes/custom/cu1",
+        )
+
+        # After deletion, GET should return 404
+        def volume_not_found(request, context):
+            context.status_code = 404
+            return json.dumps(
+                {"type": "error", "error": "Not found", "error_code": 404}
+            )
+
+        self.add_rule(
+            {
+                "text": volume_not_found,
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/storage-pools/lxd/volumes/custom/cu1$",
+            }
+        )
+        with self.assertRaises(exceptions.NotFound):
+            a_storage_pool.volumes.get("custom", "cu1")
 
     def test_eq_same_name_type_pool(self):
         """Two volumes with same name, type, and pool (no project) are equal."""
