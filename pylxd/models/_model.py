@@ -98,7 +98,7 @@ class ModelType(type):
 
 # Global used to record which warnings have been issues already for unknown
 # attributes.
-_seen_attribute_warnings = set()
+_seen_attribute_warnings: set[str] = set()
 
 
 class Model(metaclass=ModelType):
