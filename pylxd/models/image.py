@@ -117,7 +117,7 @@ class Image(model.Model):
 
         If metadata is provided, a multipart form data request is formed to
         push metadata and image together in a single request. The metadata must
-        be a tar achive.
+        be a tar archive.
 
         `wait` parameter is now ignored, as the image fingerprint cannot be
         reliably determined consistently until after the image is indexed.
