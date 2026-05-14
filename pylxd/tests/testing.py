@@ -56,7 +56,7 @@ def add_api_extension_helper(obj, extensions):
                     "metadata": {
                         "auth": "trusted",
                         "environment": {
-                            "certificate": "an-pem-cert",
+                            "certificate": "a-pem-cert",
                         },
                         "api_extensions": extensions,
                     },

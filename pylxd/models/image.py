@@ -112,7 +112,7 @@ class Image(model.Model):
     @classmethod
     def create(
         cls, client, image_data, metadata=None, public=False, wait=True, vm=False
-    ):
+    ) -> "Image":
         """Create an image.
 
         If metadata is provided, a multipart form data request is formed to

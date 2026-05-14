@@ -20,7 +20,7 @@ from pylxd import exceptions
 
 # Global used to record which warnings have been issues already for unknown
 # attributes.
-_seen_attribute_warnings = set()
+_seen_attribute_warnings: set[str] = set()
 
 
 class Operation:
