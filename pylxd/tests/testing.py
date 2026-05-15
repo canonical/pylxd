@@ -37,7 +37,12 @@ class PyLXDTestCase(unittest.TestCase):
             self.add_rule(rule)
 
     def _last_matching_request(self, method, url):
-        """Return the last request matching *method* and *url*, or fail the test."""
+        """Return the last request matching *method* and *url*, or fail the test.
+
+        Parameters:
+            method (str): The expected HTTP method (for example, ``"GET"``).
+            url (str): The expected full request URL to match.
+        """
         matching = [
             r
             for r in self.requests_mock.request_history
@@ -48,6 +53,16 @@ class PyLXDTestCase(unittest.TestCase):
 
 
 def add_api_extension_helper(obj, extensions):
+    """Add a mocked API extensions response and refresh cached host metadata.
+
+    Parameters:
+        obj: Test helper object that provides ``add_rule`` and ``client``.
+        extensions: Iterable of API extension names to expose in ``metadata``.
+
+    Side effects:
+        - Registers a new mock ``GET /1.0`` rule on ``obj``.
+        - Updates ``obj.client.host_info`` from ``obj.client.api.get()``.
+    """
     obj.add_rule(
         {
             "text": json.dumps(
