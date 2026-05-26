@@ -7,7 +7,7 @@ filed there. We try and respond to PRs and Issues within a few days.
 
 If you would like to contribute major features or have big ideas, it's best to
 post at the `LXD category in Ubuntu's Discourse
-<https://discourse.ubuntu.com/c/lxd/126>`_ to discuss your ideas before
+<https://discourse.ubuntu.com/c/project/lxd/126>`_ to discuss your ideas before
 submitting PRs.  If you use ``[pylxd]`` in the title, it'll make it clearer.
 
 Adding a Feature or Fixing a Bug
