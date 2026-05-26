@@ -33,11 +33,7 @@ Support and discussions
 =======================
 
 We use the `LXD category on Ubuntu's Discourse
-<https://discourse.ubuntu.com/c/lxd/126>`_.
-
-If you prefer live discussions, some of us also hang out in
-`#lxd
-<https://web.libera.chat/#lxd>`_ on irc.libera.chat.
+<https://discourse.ubuntu.com/c/project/lxd/126>`_.
 
 LXD Documentation: `https://documentation.ubuntu.com/lxd/en/latest/
 <https://documentation.ubuntu.com/lxd/en/latest/>`_
