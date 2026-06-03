@@ -259,7 +259,7 @@ class TestStorageVolume(testing.PyLXDTestCase):
         put_object = {"config": {"size": "1048576"}}  # 1 MiB in bytes
         a_volume.put(put_object)
         # Verify the PUT request was made with the expected payload
-        req = self._last_matching_request(
+        req = self.last_matching_request(
             "PUT",
             "http://pylxd.test/1.0/storage-pools/lxd/volumes/custom/cu1",
         )
@@ -274,7 +274,7 @@ class TestStorageVolume(testing.PyLXDTestCase):
         with mock.patch.object(self.client, "assert_has_api_extension"):
             a_volume.patch(patch_object)
         # Verify the PATCH request was made with the expected payload
-        req = self._last_matching_request(
+        req = self.last_matching_request(
             "PATCH",
             "http://pylxd.test/1.0/storage-pools/lxd/volumes/custom/cu1",
         )
@@ -288,7 +288,7 @@ class TestStorageVolume(testing.PyLXDTestCase):
         a_volume.config = {"size": "2097152"}  # 2 MiB in bytes
         a_volume.save()
         # Verify the PUT request was made with the expected payload
-        req = self._last_matching_request(
+        req = self.last_matching_request(
             "PUT",
             "http://pylxd.test/1.0/storage-pools/lxd/volumes/custom/cu1",
         )
@@ -301,7 +301,7 @@ class TestStorageVolume(testing.PyLXDTestCase):
         a_volume = a_storage_pool.volumes.get("custom", "cu1")
         a_volume.delete()
         # Verify the DELETE request was made
-        self._last_matching_request(
+        self.last_matching_request(
             "DELETE",
             "http://pylxd.test/1.0/storage-pools/lxd/volumes/custom/cu1",
         )

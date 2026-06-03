@@ -36,7 +36,7 @@ class PyLXDTestCase(unittest.TestCase):
         for rule in rules:
             self.add_rule(rule)
 
-    def _last_matching_request(self, method, url):
+    def last_matching_request(self, method, url):
         """Return the last request matching *method* and *url*, or fail the test.
 
         Parameters:
