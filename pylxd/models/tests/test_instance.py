@@ -1007,7 +1007,7 @@ class TestFiles(testing.PyLXDTestCase):
             }
         )
 
-        # Update hostinfo
+        # Update host_info
         self.client.host_info = self.client.api.get().json()["metadata"]
 
         self.assertEqual(True, self.instance.files.delete_available())

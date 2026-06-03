@@ -81,5 +81,5 @@ def add_api_extension_helper(obj, extensions):
             "url": r"^http://pylxd.test/1.0$",
         }
     )
-    # Update hostinfo
+    # Update host_info
     obj.client.host_info = obj.client.api.get().json()["metadata"]
