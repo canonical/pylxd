@@ -183,5 +183,5 @@ the following methods are available:
 
 .. links
 
-.. _LXD Storage Pools: https://documentation.ubuntu.com/lxd/en/latest/storage/
-.. _LXD Storage Pools REST API: https://documentation.ubuntu.com/lxd/en/latest/api/#/storage
+.. _LXD Storage Pools: https://canonical.com/lxd/docs/latest/storage/
+.. _LXD Storage Pools REST API: https://canonical.com/lxd/docs/latest/api/#/storage

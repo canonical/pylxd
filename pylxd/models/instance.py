@@ -182,7 +182,7 @@ class Instance(model.Model):
 
         def delete_available(self):
             """File deletion is an extension API and may not be available.
-            https://documentation.ubuntu.com/lxd/en/latest/api-extensions/#file-delete
+            https://canonical.com/lxd/docs/latest/api-extensions/#file-delete
             """
             return self._instance.client.has_api_extension("file_delete")
 
