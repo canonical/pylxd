@@ -49,7 +49,7 @@ the `LXD documentation`_.
   - `uploaded_at` - The date and time the image was uploaded
   - `update_source` - A dict of update informations
 
-.. _LXD documentation: https://documentation.ubuntu.com/lxd/en/latest/api/#/images/image_get
+.. _LXD documentation: https://canonical.com/lxd/docs/latest/api/#/images/image_get
 
 Image methods
 -------------

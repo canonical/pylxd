@@ -35,8 +35,8 @@ Support and discussions
 We use the `LXD category on Ubuntu's Discourse
 <https://discourse.ubuntu.com/c/project/lxd/126>`_.
 
-LXD Documentation: `https://documentation.ubuntu.com/lxd/en/latest/
-<https://documentation.ubuntu.com/lxd/en/latest/>`_
+LXD Documentation: `https://canonical.com/lxd/docs/latest/
+<https://canonical.com/lxd/docs/latest/>`_
 
 PyLXD API Documentation: `https://pylxd.readthedocs.io/en/latest/
 <https://pylxd.readthedocs.io/en/latest/>`_

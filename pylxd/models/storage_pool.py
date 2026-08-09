@@ -117,7 +117,7 @@ class StoragePool(model.Model):
         Note that **all** fields in the `definition` parameter are strings.
 
         For further details on the storage pool types see:
-        https://documentation.ubuntu.com/lxd/en/latest/explanation/storage/
+        https://canonical.com/lxd/docs/latest/explanation/storage/
 
         The function returns the a `StoragePool` instance, if it is
         successfully created, otherwise an Exception is raised.
@@ -440,7 +440,7 @@ class StorageVolume(model.Model):
 
         Implements POST /1.0/storage-pools/<pool>/volumes/custom
 
-        See https://documentation.ubuntu.com/lxd/en/latest/api/#/storage/storage_pool_volumes_type_post
+        See https://canonical.com/lxd/docs/latest/api/#/storage/storage_pool_volumes_type_post
         for more details on what the `definition` parameter dictionary should
         contain for various volume creation.
 
@@ -519,7 +519,7 @@ class StorageVolume(model.Model):
         method does not override any items in the input definition, although it
         does check that the 'name' and 'pool' parameters are set.
 
-        Please see: https://documentation.ubuntu.com/lxd/en/latest/api/#/storage/storage_pool_volume_type_post
+        Please see: https://canonical.com/lxd/docs/latest/api/#/storage/storage_pool_volume_type_post
         for more details.
 
         :param _input: The `input` specification for the rename.
@@ -628,7 +628,7 @@ class StorageVolume(model.Model):
         Implements: DELETE /1.0/storage-pools/<pool>/volumes/<type>/<name>
 
         Deleting a storage volume may fail if it is being used.
-        See https://documentation.ubuntu.com/lxd/en/latest/explanation/storage/#storage-volumes
+        See https://canonical.com/lxd/docs/latest/explanation/storage/#storage-volumes
         for further details.
 
         :param wait: Whether to wait for async operations to complete.
