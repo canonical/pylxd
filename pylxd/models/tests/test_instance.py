@@ -723,6 +723,30 @@ class TestInstance(testing.PyLXDTestCase):
             image.fingerprint,
         )
 
+    def test_publish_raises_clear_error_when_type_unknown_locally(self):
+        """Regression test for #404.
+
+        publish() previously sent self.type/self.name directly into the
+        JSON request body. If the last sync() response for this instance
+        didn't include "type" (as is the case for the default mocked
+        "an-instance" GET response used throughout this test module --
+        see the "Hack to get around mocked data" workaround in
+        test_publish above), self.type silently held the internal MISSING
+        sentinel, which is not JSON-serializable, and json.dumps() failed
+        with an opaque:
+
+            TypeError: Object of type 'object' is not JSON serializable
+
+        publish() should instead raise a clear, actionable error.
+        """
+        an_instance = models.Instance.get(self.client, "an-instance")
+
+        with self.assertRaises(ValueError) as cm:
+            an_instance.publish(wait=True)
+
+        self.assertIn("name", str(cm.exception))
+        self.assertIn("type", str(cm.exception))
+
     @mock.patch("pylxd.client._APINode.put")
     def test_restore_snapshot(self, put):
         """Snapshots can be restored"""

@@ -775,11 +775,27 @@ class Instance(model.Model):
 
         If wait=True, an Image is returned.
         """
+        name = self._raw_attr("name")
+        instance_type = self._raw_attr("type")
+        if name is None or instance_type is None:
+            # These are readonly attributes that the server is expected to
+            # always report. If either is unset locally (e.g. the last
+            # sync() response for this instance didn't include it), sending
+            # the raw request anyway would silently leak the internal
+            # "unset" sentinel into the JSON body, producing an opaque
+            # TypeError: Object of type 'object' is not JSON serializable
+            # instead of an actionable error.
+            raise ValueError(
+                "Cannot publish instance: its 'name' and/or 'type' are "
+                "not known locally. Call sync() to refresh the instance "
+                "from the server before publishing."
+            )
+
         data = {
             "public": public,
             "source": {
-                "type": self.type,
-                "name": self.name,
+                "type": instance_type,
+                "name": name,
             },
         }
         if compression_algorithm:
