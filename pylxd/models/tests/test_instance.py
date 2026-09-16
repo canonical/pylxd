@@ -723,6 +723,65 @@ class TestInstance(testing.PyLXDTestCase):
             image.fingerprint,
         )
 
+    def test_publish_raises_clear_error_when_type_unknown_locally(self):
+        """Regression test for #404.
+
+        publish() previously sent self.type/self.name directly into the
+        JSON request body. If the last sync() response for this instance
+        didn't include "type" (as is the case for the default mocked
+        "an-instance" GET response used throughout this test module --
+        see the "Hack to get around mocked data" workaround in
+        test_publish above), self.type silently held the internal MISSING
+        sentinel, which is not JSON-serializable, and json.dumps() failed
+        with an opaque:
+
+            TypeError: Object of type 'object' is not JSON serializable
+
+        publish() should instead raise a clear, actionable error.
+        """
+        an_instance = models.Instance.get(self.client, "an-instance")
+
+        with self.assertRaises(ValueError) as cm:
+            an_instance.publish(wait=True)
+
+        self.assertIn("name", str(cm.exception))
+        self.assertIn("type", str(cm.exception))
+
+
+    def test_publish_syncs_first_when_never_synced_and_type_is_known_on_server(self):
+        """A bare, never-synced Instance (e.g. from Instance.all()) should
+        still successfully publish when the server actually knows the
+        type. The fix for #404 reads name/type via _raw_attr to avoid
+        leaking the MISSING sentinel, but _raw_attr bypasses Model's
+        normal lazy sync() -- so publish() must still fall back to a
+        regular sync() for attributes that were never fetched at all,
+        rather than treating "never synced" the same as "genuinely
+        missing from the server"."""
+        self.add_rule(
+            {
+                "json": {
+                    "type": "sync",
+                    "metadata": {
+                        "name": "a-typed-instance",
+                        "type": "container",
+                    },
+                },
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/instances/a-typed-instance$",
+            }
+        )
+
+        an_instance = models.Instance(self.client, name="a-typed-instance")
+
+        # Sanity check: this instance has never been synced, so the "type"
+        # attribute slot doesn't exist on it yet -- _raw_attr must not
+        # itself trigger a sync.
+        self.assertIsNone(an_instance._raw_attr("type"))
+
+        # Should succeed by lazily syncing to pick up "type" from the
+        # server, not raise the #404 ValueError.
+        an_instance.publish(wait=False)
+
     @mock.patch("pylxd.client._APINode.put")
     def test_restore_snapshot(self, put):
         """Snapshots can be restored"""
