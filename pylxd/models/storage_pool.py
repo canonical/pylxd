@@ -480,9 +480,16 @@ class StorageVolume(model.Model):
         # right positional parameters.
         storage_pool.client.assert_has_api_extension("storage")
         wait = kwargs.get("wait", True)
+        if not args:
+            raise ValueError("missing 'definition' parameter")
+
         definition = args[-1]
-        assert isinstance(definition, dict)
-        assert "name" in definition
+        if not isinstance(definition, dict):
+            raise TypeError("'definition' parameter must be a dict")
+
+        if "name" not in definition:
+            raise ValueError("'definition' parameter must include a 'name' key")
+
         response = storage_pool.api.volumes.custom.post(json=definition)
 
         # Use class method helper for async handling
