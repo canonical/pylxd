@@ -84,7 +84,7 @@ class TestStoragePool(testing.PyLXDTestCase):
         self.assertTrue(models.StoragePool.exists(self.client, name))
 
     def test_not_exists(self):
-        """A storage pool exists."""
+        """A storage pool does not exist."""
 
         def not_found(request, context):
             context.status_code = 404
@@ -96,11 +96,11 @@ class TestStoragePool(testing.PyLXDTestCase):
             {
                 "text": not_found,
                 "method": "GET",
-                "url": r"^http://pylxd.test/1.0/storage-pools/an-missing-storage-pool$",
+                "url": r"^http://pylxd.test/1.0/storage-pools/a-missing-storage-pool$",
             }
         )
 
-        name = "an-missing-storage-pool"
+        name = "a-missing-storage-pool"
 
         with mock.patch.object(self.client, "assert_has_api_extension"):
             self.assertFalse(models.StoragePool.exists(self.client, name))
