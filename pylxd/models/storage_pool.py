@@ -533,9 +533,12 @@ class StorageVolume(model.Model):
         :raises: :class:`pylxd.exceptions.LXDAPIException` if the storage pool
             volume couldn't be renamed.
         """
-        assert isinstance(_input, dict)
-        assert "name" in _input
-        assert "pool" in _input
+        if not isinstance(_input, dict):
+            raise TypeError("'_input' must be a dict")
+        if "name" not in _input:
+            raise ValueError("'_input' parameter must include a 'name' key")
+        if "pool" not in _input:
+            raise ValueError("'_input' parameter must include a 'pool' key")
         response = self.api.post(json=_input)
 
         # Use instance method helper for async handling
