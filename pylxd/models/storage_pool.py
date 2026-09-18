@@ -382,15 +382,7 @@ class StorageVolume(model.Model):
         for volume in response.json()["metadata"]:
             _type, name = volume.split("/")[-2:]
             # for each type, convert to the string that will work with GET
-            if _type == "container":
-                _type = "container"
-            elif _type == "virtual-machine":
-                _type = "virtual-machine"
-            elif _type == "instance":
-                _type = "instance"
-            elif _type == "image":
-                _type = "image"
-            else:
+            if _type not in ("container", "virtual-machine", "instance", "image"):
                 _type = "custom"
             volumes.append(
                 cls(
