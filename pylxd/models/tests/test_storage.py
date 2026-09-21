@@ -242,7 +242,7 @@ class TestStorageVolume(testing.PyLXDTestCase):
         a_storage_pool.volumes.create(self.client, config, wait=True)
 
     def test_rename(self):
-        testing.add_api_extension_helper(self, ["storage"])
+        testing.add_api_extension_helper(self, ["storage", "storage_api_volume_rename"])
         a_storage_pool = models.StoragePool(self.client, name="lxd")
         a_volume = a_storage_pool.volumes.get("custom", "cu1")
 
@@ -268,7 +268,7 @@ class TestStorageVolume(testing.PyLXDTestCase):
         self.assertEqual(result["fs"], "secret2")
 
     def test_rename_async(self):
-        testing.add_api_extension_helper(self, ["storage"])
+        testing.add_api_extension_helper(self, ["storage", "storage_api_volume_rename"])
         a_storage_pool = models.StoragePool(self.client, name="async-lxd")
         a_volume = a_storage_pool.volumes.get("custom", "cu1")
 
@@ -815,6 +815,30 @@ class TestStorageVolumeSnapshotAsync(testing.PyLXDTestCase):
 
         self.mock_wait.assert_called_once_with("/1.0/operations/snapshot-create-op")
         self.assertEqual("snap1", snapshot.name)
+
+    def test_create_sync_with_auto_name(self):
+        """Test sync snapshot creation with auto-generated name."""
+        self.add_rule(
+            {
+                "json": {
+                    "type": "sync",
+                    "status": "Success",
+                    "status_code": 200,
+                    "metadata": {
+                        "name": "test-volume/snap-sync",
+                        "content_type": "filesystem",
+                    },
+                },
+                "status_code": 200,
+                "method": "POST",
+                "url": r"^http://pylxd.test/1.0/storage-pools/test-pool/volumes/custom/test-volume/snapshots$",
+            }
+        )
+
+        snapshot = models.StorageVolumeSnapshot.create(self.volume, wait=True)
+
+        self.mock_wait.assert_not_called()
+        self.assertEqual("snap-sync", snapshot.name)
 
     def test_rename_async_with_wait(self):
         """Test async snapshot rename with wait=True"""
