@@ -533,6 +533,8 @@ class StorageVolume(model.Model):
         :raises: :class:`pylxd.exceptions.LXDAPIException` if the storage pool
             volume couldn't be renamed.
         """
+        self.client.assert_has_api_extension("storage_api_volume_rename")
+
         if not isinstance(_input, dict):
             raise TypeError("'_input' must be a dict")
         if "name" not in _input:
