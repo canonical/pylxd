@@ -70,6 +70,7 @@ warn_unused_configs = true
 ignore = [
     ".git-blame-ignore-revs",
     ".readthedocs.yml",
+    "AGENTS.md",
     "contrib_testing/**",
 ]
 
