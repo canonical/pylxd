@@ -746,10 +746,11 @@ class TestStorageVolumeSnapshotAsync(testing.PyLXDTestCase):
             type="custom",
             storage_pool=self.storage_pool,
         )
-        self.mock_wait = mock.patch.object(
+        self.mock_wait_patcher = mock.patch.object(
             self.client.operations, "wait_for_operation"
-        ).start()
-        self.addCleanup(mock.patch.stopall)
+        )
+        self.mock_wait = self.mock_wait_patcher.start()
+        self.addCleanup(self.mock_wait_patcher.stop)
 
     def _mock_async_op(self, operation_id, method="POST", url_suffix=""):
         """Helper to mock async operation responses."""
