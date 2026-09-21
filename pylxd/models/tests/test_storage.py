@@ -84,7 +84,7 @@ class TestStoragePool(testing.PyLXDTestCase):
         self.assertTrue(models.StoragePool.exists(self.client, name))
 
     def test_not_exists(self):
-        """A storage pool exists."""
+        """A storage pool does not exist."""
 
         def not_found(request, context):
             context.status_code = 404
@@ -96,11 +96,11 @@ class TestStoragePool(testing.PyLXDTestCase):
             {
                 "text": not_found,
                 "method": "GET",
-                "url": r"^http://pylxd.test/1.0/storage-pools/an-missing-storage-pool$",
+                "url": r"^http://pylxd.test/1.0/storage-pools/a-missing-storage-pool$",
             }
         )
 
-        name = "an-missing-storage-pool"
+        name = "a-missing-storage-pool"
 
         with mock.patch.object(self.client, "assert_has_api_extension"):
             self.assertFalse(models.StoragePool.exists(self.client, name))
@@ -224,6 +224,13 @@ class TestStorageVolume(testing.PyLXDTestCase):
         # now make sure that it's available without mocking it out.
         testing.add_api_extension_helper(self, ["storage"])
 
+        with self.assertRaises(ValueError):
+            a_storage_pool.volumes.create()
+        with self.assertRaises(TypeError):
+            a_storage_pool.volumes.create("not-a-dict")
+        with self.assertRaises(ValueError):
+            a_storage_pool.volumes.create({})
+
         a_volume = a_storage_pool.volumes.create(self.client, config)
 
         self.assertEqual(config["name"], a_volume.name)
@@ -238,6 +245,22 @@ class TestStorageVolume(testing.PyLXDTestCase):
         testing.add_api_extension_helper(self, ["storage"])
         a_storage_pool = models.StoragePool(self.client, name="lxd")
         a_volume = a_storage_pool.volumes.get("custom", "cu1")
+
+        with self.assertRaises(TypeError) as cm:
+            a_volume.rename("not-a-dict")
+        self.assertEqual(str(cm.exception), "'_input' must be a dict")
+
+        with self.assertRaises(ValueError) as cm:
+            a_volume.rename({"pool": "pool3"})
+        self.assertEqual(
+            str(cm.exception), "'_input' parameter must include a 'name' key"
+        )
+
+        with self.assertRaises(ValueError) as cm:
+            a_volume.rename({"name": "vol1"})
+        self.assertEqual(
+            str(cm.exception), "'_input' parameter must include a 'pool' key"
+        )
 
         _input = {"name": "vol1", "pool": "pool3", "migration": True}
         result = a_volume.rename(_input)

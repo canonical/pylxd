@@ -382,15 +382,7 @@ class StorageVolume(model.Model):
         for volume in response.json()["metadata"]:
             _type, name = volume.split("/")[-2:]
             # for each type, convert to the string that will work with GET
-            if _type == "container":
-                _type = "container"
-            elif _type == "virtual-machine":
-                _type = "virtual-machine"
-            elif _type == "instance":
-                _type = "instance"
-            elif _type == "image":
-                _type = "image"
-            else:
+            if _type not in ("container", "virtual-machine", "instance", "image"):
                 _type = "custom"
             volumes.append(
                 cls(
@@ -488,9 +480,16 @@ class StorageVolume(model.Model):
         # right positional parameters.
         storage_pool.client.assert_has_api_extension("storage")
         wait = kwargs.get("wait", True)
+        if not args:
+            raise ValueError("missing 'definition' parameter")
+
         definition = args[-1]
-        assert isinstance(definition, dict)
-        assert "name" in definition
+        if not isinstance(definition, dict):
+            raise TypeError("'definition' parameter must be a dict")
+
+        if "name" not in definition:
+            raise ValueError("'definition' parameter must include a 'name' key")
+
         response = storage_pool.api.volumes.custom.post(json=definition)
 
         # Use class method helper for async handling
@@ -534,9 +533,12 @@ class StorageVolume(model.Model):
         :raises: :class:`pylxd.exceptions.LXDAPIException` if the storage pool
             volume couldn't be renamed.
         """
-        assert isinstance(_input, dict)
-        assert "name" in _input
-        assert "pool" in _input
+        if not isinstance(_input, dict):
+            raise TypeError("'_input' must be a dict")
+        if "name" not in _input:
+            raise ValueError("'_input' parameter must include a 'name' key")
+        if "pool" not in _input:
+            raise ValueError("'_input' parameter must include a 'pool' key")
         response = self.api.post(json=_input)
 
         # Use instance method helper for async handling
