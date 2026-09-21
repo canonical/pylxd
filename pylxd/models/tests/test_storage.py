@@ -834,6 +834,7 @@ class TestStorageVolumeSnapshotAsync(testing.PyLXDTestCase):
                 "url": r"^http://pylxd.test/1.0/storage-pools/test-pool/volumes/custom/test-volume/snapshots$",
             }
         )
+        self._mock_snapshot_get("snap-sync")
 
         snapshot = models.StorageVolumeSnapshot.create(self.volume, wait=True)
 

@@ -835,28 +835,25 @@ class StorageVolumeSnapshot(model.Model):
         )
 
         operation = None
+        response_json = response.json()
 
-        # Only parse JSON if we need to wait for async responses
-        if wait:
-            response_json = response.json()
+        # Handle async responses when waiting is requested
+        if wait and response_json.get("type") == "async":
+            operation = volume.client.operations.wait_for_operation(
+                response_json["operation"]
+            )
 
-            # Handle both sync and async responses
-            if response_json["type"] == "async":
-                operation = volume.client.operations.wait_for_operation(
-                    response_json["operation"]
-                )
-            else:
-                # Return the snapshot immediately without waiting for completion
-                return volume.snapshots.get(name)
-
-        # Extract the snapshot name from the response JSON in case it was not provided
+        # Extract the snapshot name in case it was not provided
         if not name:
+            metadata = response_json.get("metadata")
             if operation and "storage_volume_snapshots" in operation.resources:
                 name = operation.resources["storage_volume_snapshots"][0].split("/")[-1]
+            elif isinstance(metadata, dict) and "name" in metadata:
+                name = metadata["name"].split("/")[-1]
             else:
-                # If using LXD 4.0, the snapshot name isn't provided on the request response
-                # so grab the latest snapshot name instead.
-                name = volume.snapshots.all()[-1].split("/")[-1]
+                # If the name isn't provided in the response, fetch the latest snapshot name.
+                latest_snapshot = volume.snapshots.all()[-1]
+                name = getattr(latest_snapshot, "name", latest_snapshot.split("/")[-1])
 
         snapshot = volume.snapshots.get(name)
         return snapshot
