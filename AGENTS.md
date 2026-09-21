@@ -53,7 +53,7 @@ sdist and wheel; maintainers use it when cutting a release.
 
 ## Architecture
 
-1. `pylxd.Client` is the only public entry point. `client.api` is an `_APINode`
+1. `pylxd.Client` is the primary public entry point. `client.api` is an `_APINode`
    that maps attribute and item access onto REST paths:
    `client.api.instances["c1"].get()` issues `GET /1.0/instances/c1`.
 2. Managers in `pylxd/managers.py` expose each model's class methods (`get`, `all`,
