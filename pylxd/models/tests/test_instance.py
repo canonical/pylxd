@@ -192,11 +192,11 @@ class TestInstance(testing.PyLXDTestCase):
             {
                 "text": not_found,
                 "method": "GET",
-                "url": r"^http://pylxd.test/1.0/instances/an-missing-instance$",
+                "url": r"^http://pylxd.test/1.0/instances/a-missing-instance$",
             }
         )
 
-        name = "an-missing-instance"
+        name = "a-missing-instance"
 
         self.assertRaises(
             exceptions.LXDAPIException, models.Instance.get, self.client, name
@@ -215,11 +215,11 @@ class TestInstance(testing.PyLXDTestCase):
             {
                 "text": not_found,
                 "method": "GET",
-                "url": r"^http://pylxd.test/1.0/instances/an-missing-instance$",
+                "url": r"^http://pylxd.test/1.0/instances/a-missing-instance$",
             }
         )
 
-        name = "an-missing-instance"
+        name = "a-missing-instance"
 
         self.assertRaises(
             exceptions.LXDAPIException, models.Instance.get, self.client, name
@@ -391,11 +391,11 @@ class TestInstance(testing.PyLXDTestCase):
             {
                 "text": not_found,
                 "method": "GET",
-                "url": r"^http://pylxd.test/1.0/instances/an-missing-instance$",
+                "url": r"^http://pylxd.test/1.0/instances/a-missing-instance$",
             }
         )
 
-        name = "an-missing-instance"
+        name = "a-missing-instance"
 
         self.assertFalse(models.Instance.exists(self.client, name))
 
@@ -420,11 +420,11 @@ class TestInstance(testing.PyLXDTestCase):
             {
                 "text": not_found,
                 "method": "GET",
-                "url": r"^http://pylxd.test/1.0/instances/an-missing-instance$",
+                "url": r"^http://pylxd.test/1.0/instances/a-missing-instance$",
             }
         )
 
-        an_instance = models.Instance(self.client, name="an-missing-instance")
+        an_instance = models.Instance(self.client, name="a-missing-instance")
 
         self.assertRaises(exceptions.LXDAPIException, an_instance.sync)
 
@@ -441,11 +441,11 @@ class TestInstance(testing.PyLXDTestCase):
             {
                 "text": not_found,
                 "method": "GET",
-                "url": r"^http://pylxd.test/1.0/instances/an-missing-instance$",
+                "url": r"^http://pylxd.test/1.0/instances/a-missing-instance$",
             }
         )
 
-        an_instance = models.Instance(self.client, name="an-missing-instance")
+        an_instance = models.Instance(self.client, name="a-missing-instance")
 
         self.assertRaises(exceptions.LXDAPIException, an_instance.sync)
 
