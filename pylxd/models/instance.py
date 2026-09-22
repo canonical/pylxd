@@ -775,11 +775,48 @@ class Instance(model.Model):
 
         If wait=True, an Image is returned.
         """
+        # _raw_attr reads the attribute slot without triggering Model's
+        # usual lazy sync(). If this instance has never been synced at all
+        # (e.g. a bare object from Instance.all()), the slot doesn't exist
+        # yet, so fall back to normal attribute access here, which *does*
+        # trigger sync() the first time. If the slot already exists and
+        # holds the MISSING sentinel -- because a previous sync() response
+        # genuinely omitted the field -- normal access returns MISSING
+        # without raising AttributeError, so this is a no-op and we fall
+        # through to the check below.
+        if self._raw_attr("name") is None:
+            try:
+                self.name
+            except AttributeError:
+                pass
+        if self._raw_attr("type") is None:
+            try:
+                self.type
+            except AttributeError:
+                pass
+
+        name = self._raw_attr("name")
+        instance_type = self._raw_attr("type")
+        if name is None or instance_type is None:
+            # These are readonly attributes that the server is expected to
+            # always report. If either is unset locally after the sync
+            # attempt above (e.g. the last sync() response for this
+            # instance didn't include it), sending the raw request anyway
+            # would silently leak the internal "unset" sentinel into the
+            # JSON body, producing an opaque TypeError: Object of type
+            # 'object' is not JSON serializable instead of an actionable
+            # error.
+            raise ValueError(
+                "Cannot publish instance: its 'name' and/or 'type' are "
+                "not known locally. Call sync() to refresh the instance "
+                "from the server before publishing."
+            )
+
         data = {
             "public": public,
             "source": {
-                "type": self.type,
-                "name": self.name,
+                "type": instance_type,
+                "name": name,
             },
         }
         if compression_algorithm:
