@@ -481,14 +481,40 @@ class TestStoragePoolAsync(testing.PyLXDTestCase):
         """Async response with wait=False should not wait."""
         self._setup_create_mocks("async", "/1.0/operations/create-pool-nowait")
 
-        with mock.patch.object(
-            self.client.operations, "wait_for_operation"
-        ) as mock_wait:
+        with (
+            mock.patch.object(
+                self.client.operations, "wait_for_operation"
+            ) as mock_wait,
+            mock.patch.object(
+                models.StoragePool, "get", side_effect=AssertionError("unexpected GET")
+            ) as mock_get,
+        ):
             storage_pool = models.StoragePool.create(
                 self.client, self.config, wait=False
             )
             mock_wait.assert_not_called()
+            mock_get.assert_not_called()
             self.assertEqual(self.config["name"], storage_pool.name)
+
+    def test_create_volume_async_wait_false_returns_sparse_volume(self):
+        """Async volume creation should not fetch before the operation completes."""
+        storage_pool = models.StoragePool(self.client, name="test-pool")
+        config = {"name": "test-volume", "type": "custom"}
+        response = mock.Mock(status_code=202)
+
+        with (
+            mock.patch.object(type(storage_pool.api), "post", return_value=response),
+            mock.patch.object(
+                models.StorageVolume,
+                "get",
+                side_effect=AssertionError("unexpected GET"),
+            ) as mock_get,
+        ):
+            volume = storage_pool.volumes.create(self.client, config, wait=False)
+
+        mock_get.assert_not_called()
+        self.assertEqual("test-volume", volume.name)
+        self.assertIs(storage_pool, volume.storage_pool)
 
     def test_create_sync_no_wait(self):
         """Sync response should never wait, testing old LXD compatibility."""

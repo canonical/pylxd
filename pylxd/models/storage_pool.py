@@ -126,7 +126,8 @@ class StoragePool(model.Model):
         :type client: :class:`pylxd.client.Client`
         :param definition: the fields to pass to the LXD API endpoint
         :type definition: dict
-        :param wait: Whether to wait for async operations to complete.
+        :param wait: Whether to wait for async operations to complete. If
+            False, the returned object contains only its name.
         :type wait: bool
         :returns: a storage pool if successful, raises NotFound if not found
         :rtype: :class:`pylxd.models.storage_pool.StoragePool`
@@ -140,7 +141,10 @@ class StoragePool(model.Model):
 
         # Use helper method for async handling
         cls._handle_async_response_for_client(client, response, wait)
-        storage_pool = cls.get(client, definition["name"])
+        if wait:
+            storage_pool = cls.get(client, definition["name"])
+        else:
+            storage_pool = cls(client, name=definition["name"])
         return storage_pool
 
     @classmethod
@@ -355,7 +359,7 @@ class StorageVolume(model.Model):
 
     @classmethod
     def all(cls, storage_pool):
-        """Get all the volumnes for this storage pool.
+        """Get all the volumes for this storage pool.
 
         Implements GET /1.0/storage-pools/<name>/volumes
 
@@ -463,6 +467,7 @@ class StorageVolume(model.Model):
         :type definition: dict
         :param wait: wait until an async action has completed (default True)
         :type wait: bool
+        If wait is False, the returned volume contains only its name and type.
         :returns: a storage pool volume if successful, raises NotFound if not
             found
         :rtype: :class:`pylxd.models.storage_pool.StorageVolume`
@@ -495,8 +500,15 @@ class StorageVolume(model.Model):
         # Use class method helper for async handling
         cls._handle_async_response_for_client(storage_pool.client, response, wait)
 
-        volume = cls.get(storage_pool, "custom", definition["name"])
-        return volume
+        if wait:
+            return cls.get(storage_pool, "custom", definition["name"])
+
+        return cls(
+            storage_pool.client,
+            storage_pool=storage_pool,
+            type="custom",
+            name=definition["name"],
+        )
 
     def rename(self, _input, wait=False):
         """Rename a storage volume
