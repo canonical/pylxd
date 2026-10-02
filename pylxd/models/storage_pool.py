@@ -675,6 +675,8 @@ class StorageVolume(model.Model):
             operation result)
         :rtype: :class:`requests.Response`
         """
+        self.client.assert_has_api_extension("storage")
+        self.client.assert_has_api_extension("storage_api_volume_snapshots")
         response = self.api.put(json={"restore": snapshot_name})
 
         # Handle both sync and async responses for endpoint changing from sync to async
@@ -828,7 +830,8 @@ class StorageVolumeSnapshot(model.Model):
 
         :param volume: :class:`pylxd.models.StorageVolume` object that represents the target volume to take the snapshot from
         :type volume: :class:`pylxd.models.StorageVolume`
-        :param name: Optional parameter. Name of the created snapshot. The snapshot will be called "snap{index}" by default.
+        :param name: Name of the created snapshot. Required when wait is False;
+            otherwise the snapshot will be called "snap{index}" by default.
         :type name: str
         :param expires_at: Optional parameter. Expiration time for the created snapshot in ISO 8601 format. No expiration date by default.
         :type expires_at: str
@@ -839,8 +842,12 @@ class StorageVolumeSnapshot(model.Model):
         :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if the
             'storage_api_volume_snapshots' api extension is missing.
         :raises: :class:`pylxd.exceptions.LXDAPIException` if the the operation fails.
+        :raises ValueError: if wait is False and name is not provided.
         """
         volume.client.assert_has_api_extension("storage_api_volume_snapshots")
+
+        if not wait and not name:
+            raise ValueError("Snapshot name must be provided when wait=False.")
 
         response = volume.api.snapshots.post(
             json={"name": name, "expires_at": expires_at}
@@ -867,8 +874,10 @@ class StorageVolumeSnapshot(model.Model):
                 latest_snapshot = volume.snapshots.all()[-1]
                 name = getattr(latest_snapshot, "name", latest_snapshot.split("/")[-1])
 
-        snapshot = volume.snapshots.get(name)
-        return snapshot
+        if not wait:
+            return cls(volume.client, volume=volume, name=name)
+
+        return volume.snapshots.get(name)
 
     @classmethod
     def exists(cls, volume, name):
