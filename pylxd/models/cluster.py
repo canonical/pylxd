@@ -11,7 +11,9 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from pylxd import managers
+from __future__ import annotations
+
+from pylxd.client import Client, managers
 from pylxd.exceptions import LXDAPIException
 from pylxd.models import _model as model
 
@@ -31,7 +33,7 @@ class Cluster(model.Model):
         self.members = managers.ClusterMemberManager(self.client, self)
         self.certificate = managers.ClusterCertificateManager(self.client, self)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Cluster):
             return NotImplemented
         return self.server_name == other.server_name
@@ -43,7 +45,7 @@ class Cluster(model.Model):
         return self.client.api.cluster
 
     @classmethod
-    def enable(cls, client, server_name):
+    def enable(cls, client: Client, server_name: str):
         """Enable clustering on a single non-clustered LXD server."""
         client.assert_has_api_extension("clustering_join")
         response = client.api.cluster.put(
@@ -58,7 +60,7 @@ class Cluster(model.Model):
         raise LXDAPIException(response)
 
     @classmethod
-    def get(cls, client, *args):
+    def get(cls, client: Client, *args) -> Cluster:
         """Get cluster details"""
         client.assert_has_api_extension("clustering")
         response = client.api.cluster.get()
@@ -84,14 +86,14 @@ class ClusterMember(model.Model):
     cluster = model.Parent()
 
     @classmethod
-    def get(cls, client, server_name):
+    def get(cls, client: Client, server_name: str) -> ClusterMember:
         """Get a cluster member by name."""
         response = client.api.cluster.members[server_name].get()
 
         return cls(client, **response.json()["metadata"])
 
     @classmethod
-    def all(cls, client, *args):
+    def all(cls, client: Client, *args) -> list[ClusterMember]:
         """Get all cluster members."""
         response = client.api.cluster.members.get()
 
@@ -114,8 +116,10 @@ class ClusterCertificate(model.Model):
 
     cluster = model.Parent()
 
+    # This classmethod predates Model.put and is public API, so it cannot be
+    # renamed to match the base signature.
     @classmethod
-    def put(cls, client, cert, key):
+    def put(cls, client: Client, cert: str, key: str) -> None:  # type: ignore[override]
         client.assert_has_api_extension("clustering_update_cert")
 
         response = client.api.cluster.certificate.put(
