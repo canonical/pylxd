@@ -11,17 +11,22 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from __future__ import annotations
+
 import collections
 import contextlib
 import tempfile
 import warnings
+from io import BufferedRandom
+from typing import IO
 
 from requests_toolbelt import MultipartEncoder
 
+from pylxd.client import Client, _APINode
 from pylxd.models import _model as model
 
 
-def _image_create_from_config(client, config, wait=False):
+def _image_create_from_config(client: Client, config: dict, wait: bool = False):
     """Create an image from the given configuration.
 
     See: https://canonical.com/lxd/docs/latest/api/#/instances/instances_post
@@ -53,21 +58,20 @@ class Image(model.Model):
     project = model.Attribute(readonly=True, optional=True)
     profiles = model.Attribute(readonly=True)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Image):
             return NotImplemented
-        return self.fingerprint == other.fingerprint and self._raw_attr(
-            "project"
-        ) == other._raw_attr("project")
+        return self.fingerprint == other.fingerprint and self._raw_attr("project") == other._raw_attr("project")
+
 
     __hash__ = None  # type: ignore  # unhashable, consistent with defining __eq__
 
     @property
-    def api(self):
+    def api(self) -> _APINode:
         return self.client.api.images[self.fingerprint]
 
     @classmethod
-    def exists(cls, client, fingerprint, alias=False):
+    def exists(cls, client: Client, fingerprint: str, alias: bool = False) -> bool:
         """Determine whether an image exists.
 
         If `alias` is True, look up the image by its alias,
@@ -83,7 +87,7 @@ class Image(model.Model):
             return False
 
     @classmethod
-    def get(cls, client, fingerprint):
+    def get(cls, client: Client, fingerprint: str) -> Image:
         """Get an image."""
         response = client.api.images[fingerprint].get()
 
@@ -91,7 +95,7 @@ class Image(model.Model):
         return image
 
     @classmethod
-    def get_by_alias(cls, client, alias):
+    def get_by_alias(cls, client: Client, alias: str) -> Image:
         """Get an image by its alias."""
         response = client.api.images.aliases[alias].get()
 
@@ -99,7 +103,7 @@ class Image(model.Model):
         return cls.get(client, fingerprint)
 
     @classmethod
-    def all(cls, client):
+    def all(cls, client: Client) -> list[Image]:
         """Get all images."""
         response = client.api.images.get()
 
@@ -111,8 +115,14 @@ class Image(model.Model):
 
     @classmethod
     def create(
-        cls, client, image_data, metadata=None, public=False, wait=True, vm=False
-    ) -> "Image":
+        cls,
+        client: Client,
+        image_data: bytes | IO[bytes],
+        metadata: bytes | IO[bytes] | None = None,
+        public: bool = False,
+        wait: bool = True,
+        vm: bool = False,
+    ) -> Image:
         """Create an image.
 
         If metadata is provided, a multipart form data request is formed to
@@ -165,8 +175,13 @@ class Image(model.Model):
 
     @classmethod
     def create_from_simplestreams(
-        cls, client, server, alias, public=False, auto_update=False
-    ):
+        cls,
+        client: Client,
+        server: str,
+        alias: str,
+        public: bool = False,
+        auto_update: bool = False,
+    ) -> Image:
         """Copy an image from simplestreams."""
         config = {
             "public": public,
@@ -182,10 +197,12 @@ class Image(model.Model):
 
         op = _image_create_from_config(client, config, wait=True)
 
-        return client.images.get(op.metadata["fingerprint"])
+        return cls.get(client, op.metadata["fingerprint"])
 
     @classmethod
-    def create_from_url(cls, client, url, public=False, auto_update=False):
+    def create_from_url(
+        cls, client: Client, url: str, public: bool = False, auto_update: bool = False
+    ) -> Image:
         """Copy an image from an url."""
         config = {
             "public": public,
@@ -195,9 +212,9 @@ class Image(model.Model):
 
         op = _image_create_from_config(client, config, wait=True)
 
-        return client.images.get(op.metadata["fingerprint"])
+        return cls.get(client, op.metadata["fingerprint"])
 
-    def export(self):
+    def export(self) -> BufferedRandom:
         """Export the image.
 
         Because the image itself may be quite large, we stream the download
@@ -211,7 +228,7 @@ class Image(model.Model):
         on_disk.seek(0)
         return on_disk
 
-    def add_alias(self, name, description):
+    def add_alias(self, name: str, description: str):
         """Add an alias to the image."""
         self.client.api.images.aliases.post(
             json={"description": description, "target": self.fingerprint, "name": name}
@@ -222,14 +239,20 @@ class Image(model.Model):
             {"description": description, "target": self.fingerprint, "name": name}
         )
 
-    def delete_alias(self, name):
+    def delete_alias(self, name: str):
         """Delete an alias from the image."""
         self.client.api.images.aliases[name].delete()
 
         # Rebuild the list without the deleted alias
         self.aliases = [a for a in self.aliases if a.get("name") != name]
 
-    def copy(self, new_client, public=None, auto_update=None, wait=False):
+    def copy(
+        self,
+        new_client: Client,
+        public: bool | None = None,
+        auto_update: bool | None = None,
+        wait: bool = False,
+    ) -> Image | None:
         """Copy an image to a another LXD.
 
         Destination host information is contained in the client
@@ -269,5 +292,5 @@ class Image(model.Model):
         _image_create_from_config(new_client, config, wait)
 
         if wait:
-            return new_client.images.get(self.fingerprint)
+            return self.get(new_client, self.fingerprint)
         return None
