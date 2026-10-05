@@ -11,9 +11,12 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import json
+from __future__ import annotations
 
-from pylxd import managers
+import json
+from typing import Any
+
+from pylxd.client import Client, _APINode, managers
 from pylxd.models import _model as model
 
 
@@ -27,13 +30,15 @@ class NetworkForward(model.Model):
     network = model.Parent()
 
     @classmethod
-    def get(cls, client, network, listen_address):
+    def get(
+        cls, client: Client, network: Network, listen_address: str
+    ) -> NetworkForward:
         response = client.api.networks[network.name].forwards[listen_address].get()
         forward = cls(client, network=network, **response.json()["metadata"])
         return forward
 
     @classmethod
-    def create(cls, client, network, config):
+    def create(cls, client: Client, network: Network, config: dict) -> NetworkForward:
         client.api.networks[network.name].forwards.post(json=config)
 
         return cls(client, network=network, **config)
@@ -43,7 +48,7 @@ class NetworkForward(model.Model):
         super().save(*args, **kwargs)
 
     @property
-    def api(self):
+    def api(self) -> _APINode:
         return self.client.api.networks[self.network.name].forwards[self.listen_address]
 
     def __str__(self):
@@ -91,7 +96,7 @@ class Network(model.Model):
     __hash__ = None  # type: ignore  # unhashable, consistent with defining __eq__
 
     @classmethod
-    def exists(cls, client, name):
+    def exists(cls, client: Client, name: str) -> bool:
         """
         Determine whether network with provided name exists.
 
@@ -109,7 +114,7 @@ class Network(model.Model):
             return False
 
     @classmethod
-    def get(cls, client, name):
+    def get(cls, client: Client, name: str) -> Network:
         """
         Get a network by name.
 
@@ -126,7 +131,7 @@ class Network(model.Model):
         return cls(client, **response.json()["metadata"])
 
     @classmethod
-    def all(cls, client):
+    def all(cls, client: Client) -> list[Network]:
         """
         Get all networks.
 
@@ -143,7 +148,15 @@ class Network(model.Model):
         return networks
 
     @classmethod
-    def create(cls, client, name, description=None, type=None, config=None, wait=True):
+    def create(
+        cls,
+        client: Client,
+        name: str,
+        description: str | None = None,
+        type: str | None = None,
+        config: dict | None = None,
+        wait: bool = True,
+    ) -> Network:
         """
         Create a network.
 
@@ -166,7 +179,7 @@ class Network(model.Model):
         """
         client.assert_has_api_extension("network")
 
-        network = {"name": name}
+        network: dict[str, Any] = {"name": name}
         if description is not None:
             network["description"] = description
         if type is not None:
@@ -182,7 +195,7 @@ class Network(model.Model):
         cls._handle_async_response_for_client(client, response, wait)
         return cls.get(client, name)
 
-    def rename(self, new_name, wait=True):
+    def rename(self, new_name: str, wait: bool = True) -> Network:
         """
         Rename a network.
 
@@ -207,7 +220,7 @@ class Network(model.Model):
         self._handle_async_response(response, wait)
         return Network.get(self.client, new_name)
 
-    def save(self, wait=False):
+    def save(self, wait: bool = False):
         self.client.assert_has_api_extension("network")
         # When the server may return async operations we must always wait
         # before returning, otherwise the caller may observe stale state.
@@ -215,7 +228,7 @@ class Network(model.Model):
             wait = True
         super().save(wait=wait)
 
-    def delete(self, wait=False):
+    def delete(self, wait: bool = False):
         self.client.assert_has_api_extension("network")
         # When the server may return async operations we must always wait
         # before returning, so callers do not race against in-progress
@@ -224,7 +237,7 @@ class Network(model.Model):
             wait = True
         super().delete(wait=wait)
 
-    def state(self):
+    def state(self) -> NetworkState:
         """Get network state."""
         response = self.api.state.get()
         state = NetworkState(response.json()["metadata"])
