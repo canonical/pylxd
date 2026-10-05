@@ -69,7 +69,7 @@ warn_unused_configs = true
 [tool.check-manifest]
 ignore = [
     ".git-blame-ignore-revs",
-    ".readthedocs.yml",
+    ".readthedocs.yaml",
     "AGENTS.md",
     "contrib_testing/**",
 ]
