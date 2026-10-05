@@ -11,6 +11,11 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from __future__ import annotations
+
+from typing import Any
+
+from pylxd.client import Client, _APINode
 from pylxd.models import _model as model
 
 
@@ -34,7 +39,7 @@ class Profile(model.Model):
     __hash__ = None  # type: ignore  # unhashable, consistent with defining __eq__
 
     @classmethod
-    def exists(cls, client, name):
+    def exists(cls, client: Client, name: str) -> bool:
         """Determine whether a profile exists."""
         try:
             client.profiles.get(name)
@@ -43,13 +48,13 @@ class Profile(model.Model):
             return False
 
     @classmethod
-    def get(cls, client, name):
+    def get(cls, client: Client, name: str) -> Profile:
         """Get a profile."""
         response = client.api.profiles[name].get()
         return cls(client, **response.json()["metadata"])
 
     @classmethod
-    def all(cls, client):
+    def all(cls, client: Client) -> list[Profile]:
         """Get all profiles."""
         response = client.api.profiles.get()
 
@@ -62,8 +67,14 @@ class Profile(model.Model):
 
     @classmethod
     def create(
-        cls, client, name, config=None, devices=None, description=None, wait=False
-    ):
+        cls,
+        client: Client,
+        name: str,
+        config: dict | None = None,
+        devices: dict | None = None,
+        description: str | None = None,
+        wait: bool = False,
+    ) -> Profile:
         """Create a profile.
 
         :param client: The pylxd client object
@@ -83,7 +94,7 @@ class Profile(model.Model):
         :raises: :class:`pylxd.exceptions.LXDAPIException` if the profile
             couldn't be created.
         """
-        profile = {"name": name}
+        profile: dict[str, Any] = {"name": name}
         if config is not None:
             profile["config"] = config
         if devices is not None:
@@ -97,10 +108,10 @@ class Profile(model.Model):
         return cls.get(client, name)
 
     @property
-    def api(self):
+    def api(self) -> _APINode:
         return self.client.api.profiles[self.name]
 
-    def rename(self, new_name, wait=False):
+    def rename(self, new_name: str, wait: bool = False) -> Profile:
         """Rename the profile.
 
         :param new_name: The new name for the profile
@@ -118,7 +129,7 @@ class Profile(model.Model):
         self._handle_async_response(response, wait)
         return Profile.get(self.client, new_name)
 
-    def save(self, wait=False):
+    def save(self, wait: bool = False):
         """Save the profile using PUT back to the LXD server.
 
         Implements PUT /1.0/profiles/<self.name>
@@ -137,7 +148,7 @@ class Profile(model.Model):
         # but uses the parent's implementation which now handles async responses
         super().save(wait=wait)
 
-    def put(self, put_object, wait=False):
+    def put(self, put_object: dict, wait: bool = False):
         """Put the profile.
 
         Implements PUT /1.0/profiles/<self.name>
@@ -160,7 +171,7 @@ class Profile(model.Model):
         # but uses the parent's implementation which now handles async responses
         super().put(put_object, wait)
 
-    def patch(self, patch_object, wait=False):
+    def patch(self, patch_object: dict, wait: bool = False):
         """Patch the profile.
 
         Implements PATCH /1.0/profiles/<self.name>
@@ -180,7 +191,7 @@ class Profile(model.Model):
         # but uses the parent's implementation which now handles async responses
         super().patch(patch_object, wait)
 
-    def delete(self, wait=False):
+    def delete(self, wait: bool = False):
         """Delete the profile.
 
         Implements DELETE /1.0/profiles/<self.name>
