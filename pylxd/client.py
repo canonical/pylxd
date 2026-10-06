@@ -11,13 +11,17 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from __future__ import annotations
+
 import base64
+import binascii
 import json
 import os
 import re
 import socket
+from collections.abc import Mapping
 from enum import Enum
-from typing import NamedTuple
+from typing import Any, NamedTuple, cast
 from urllib import parse
 
 import requests
@@ -65,7 +69,7 @@ class EventType(Enum):
 
 
 class _UnixSocketHTTPConnection(urllib3.connection.HTTPConnection):
-    def __init__(self, unix_socket_url):
+    def __init__(self, unix_socket_url: str):
         super().__init__("localhost", timeout=SOCKET_CONNECTION_TIMEOUT)
         self.unix_socket_url = unix_socket_url
         self.timeout = SOCKET_CONNECTION_TIMEOUT
@@ -84,7 +88,7 @@ class _UnixSocketHTTPConnection(urllib3.connection.HTTPConnection):
 
 
 class _UnixSocketHTTPConnectionPool(urllib3.HTTPConnectionPool):
-    def __init__(self, socket_path):
+    def __init__(self, socket_path: str):
         super().__init__("localhost")
         self.socket_path = socket_path
 
@@ -93,13 +97,17 @@ class _UnixSocketHTTPConnectionPool(urllib3.HTTPConnectionPool):
 
 
 class _UnixAdapter(requests.adapters.HTTPAdapter):
-    def __init__(self, pool_connections=25, *args, **kwargs):
+    def __init__(self, pool_connections: int = 25, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.pools = urllib3._collections.RecentlyUsedContainer(
+        self.pools: urllib3._collections.RecentlyUsedContainer[
+            str, _UnixSocketHTTPConnectionPool
+        ] = urllib3._collections.RecentlyUsedContainer(
             pool_connections, dispose_func=lambda p: p.close()
         )
 
-    def get_connection(self, url, proxies):
+    def get_connection(
+        self, url: str, proxies: dict[str, str] | None = None
+    ) -> _UnixSocketHTTPConnectionPool:
         with self.pools.lock:
             conn = self.pools.get(url)
             if conn:
@@ -110,11 +118,20 @@ class _UnixAdapter(requests.adapters.HTTPAdapter):
 
         return conn
 
-    # This method is needed fo compatibility with later requests versions.
-    def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):
-        return self.get_connection(request.url, None)
+    # This method is needed for compatibility with later requests versions.
+    def get_connection_with_tls_context(
+        self,
+        request: requests.PreparedRequest,
+        verify: bool | str | None,
+        proxies: Mapping[str, str] | None = None,
+        cert: str | tuple[str, str] | None = None,
+    ) -> _UnixSocketHTTPConnectionPool:
+        # A prepared request always has its URL set.
+        return self.get_connection(cast(str, request.url), None)
 
-    def request_url(self, request, proxies):
+    def request_url(
+        self, request: requests.PreparedRequest, proxies: dict[str, str] | None = None
+    ) -> str:
         return request.path_url
 
     def close(self):
@@ -122,7 +139,13 @@ class _UnixAdapter(requests.adapters.HTTPAdapter):
 
 
 class LXDSSLAdapter(requests.adapters.HTTPAdapter):
-    def cert_verify(self, conn, url, verify, cert):
+    def cert_verify(
+        self,
+        conn: urllib3.HTTPSConnectionPool,
+        url: str,
+        verify: bool | str,
+        cert: str | tuple[str, str] | None,
+    ):
         with open(verify, "rb") as fd:
             servercert = x509.load_pem_x509_certificate(fd.read())
             fingerprint = servercert.fingerprint(hashes.SHA256())
@@ -131,7 +154,11 @@ class LXDSSLAdapter(requests.adapters.HTTPAdapter):
         super().cert_verify(conn, url, False, cert)
 
 
-def get_session_for_url(url: str, verify=None, cert=None) -> requests.Session:
+def get_session_for_url(
+    url: str,
+    verify: bool | str | None = None,
+    cert: str | tuple[str, str] | None = None,
+) -> requests.Session:
     """Create a Session for use with requests for the given URL.
 
     Call sites can use this to customise the session before passing into a Client.
@@ -141,7 +168,9 @@ def get_session_for_url(url: str, verify=None, cert=None) -> requests.Session:
         session.mount(DEFAULT_SCHEME, _UnixAdapter())
     else:
         session.cert = cert
-        session.verify = verify
+        # requests accepts None at runtime but its hints do not; None is kept
+        # as the default for backward compatibility.
+        session.verify = verify  # type: ignore[assignment]
 
         if isinstance(verify, str):
             session.mount(url, LXDSSLAdapter())
@@ -157,17 +186,17 @@ class _APINode:
 
     def __init__(
         self,
-        api_endpoint,
-        session,
-        timeout=None,
-        project=None,
+        api_endpoint: str,
+        session: requests.Session,
+        timeout: float | tuple[float, float] | None = None,
+        project: str | None = None,
     ):
         self._api_endpoint = api_endpoint
         self._timeout = timeout
         self._project = project
         self.session = session
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> _APINode:
         """Converts attribute lookup into the next /<segment> of an api
         url.
 
@@ -186,7 +215,7 @@ class _APINode:
             project=self._project,
         )
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> _APINode:
         """This converts python api.thing[name] -> ".../thing/name"
 
         :param item: the 'thing' in the square-braces in a python expr.
@@ -242,14 +271,14 @@ class _APINode:
                 raise exceptions.LXDAPIException(response)
 
     @property
-    def scheme(self):
+    def scheme(self) -> str:
         return parse.urlparse(self.api._api_endpoint).scheme
 
     @property
-    def netloc(self):
+    def netloc(self) -> str:
         return parse.urlparse(self.api._api_endpoint).netloc
 
-    def get(self, *args, **kwargs):
+    def get(self, *args, **kwargs) -> requests.Response:
         """Perform an HTTP GET.
 
         Note if 'is_api' is passed in the kwargs then it is popped and used to
@@ -270,7 +299,7 @@ class _APINode:
         )
         return response
 
-    def post(self, *args, **kwargs):
+    def post(self, *args, **kwargs) -> requests.Response:
         """Perform an HTTP POST."""
         kwargs["timeout"] = kwargs.get("timeout", self._timeout)
 
@@ -291,7 +320,7 @@ class _APINode:
         self._assert_response(response, allowed_status_codes=(200, 201, 202))
         return response
 
-    def put(self, *args, **kwargs):
+    def put(self, *args, **kwargs) -> requests.Response:
         """Perform an HTTP PUT."""
         kwargs["timeout"] = kwargs.get("timeout", self._timeout)
 
@@ -304,7 +333,7 @@ class _APINode:
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
 
-    def patch(self, *args, **kwargs):
+    def patch(self, *args, **kwargs) -> requests.Response:
         """Perform an HTTP PATCH."""
         kwargs["timeout"] = kwargs.get("timeout", self._timeout)
 
@@ -317,7 +346,7 @@ class _APINode:
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
 
-    def delete(self, *args, **kwargs):
+    def delete(self, *args, **kwargs) -> requests.Response:
         """Perform an HTTP delete."""
         kwargs["timeout"] = kwargs.get("timeout", self._timeout)
 
@@ -376,7 +405,7 @@ class _WebsocketClient(WebSocketBaseClient):
 
 
 # Helper function used by Client.authenticate()
-def _is_a_token(secret):
+def _is_a_token(secret) -> bool:
     """Inspect the provided secret to determine if it is a trust token.
 
     Try to base64 decode and parse the JSON to see if it contains a "secret" key.
@@ -403,7 +432,7 @@ def _is_a_token(secret):
         b64 = base64.b64decode(secret, validate=True)
         token = json.loads(b64.decode("utf-8"))
         return "secret" in token
-    except (TypeError, ValueError, json.JSONDecodeError, base64.binascii.Error):
+    except (TypeError, ValueError, json.JSONDecodeError, binascii.Error):
         return False
 
 
@@ -460,13 +489,13 @@ class Client:
 
     def __init__(
         self,
-        endpoint=None,
-        version="1.0",
-        cert=None,
-        verify=True,
-        timeout=None,
-        project=None,
-        session=None,
+        endpoint: str | None = None,
+        version: str = "1.0",
+        cert: tuple[str, str] | None = None,
+        verify: bool | str = True,
+        timeout: float | tuple[float, float] | None = None,
+        project: str | None = None,
+        session: requests.Session | None = None,
     ):
         """Constructs a LXD client
 
@@ -512,7 +541,7 @@ class Client:
                         verify = remote_cert_path
         else:
             if "LXD_DIR" in os.environ:
-                path = os.path.join(os.environ.get("LXD_DIR"), "unix.socket")
+                path = os.path.join(os.environ["LXD_DIR"], "unix.socket")
             elif os.path.exists("/var/snap/lxd/common/lxd/unix.socket"):
                 path = "/var/snap/lxd/common/lxd/unix.socket"
             else:
@@ -526,7 +555,9 @@ class Client:
         )
         use_ssl = self.api.scheme == "https" and self.cert
         self.ssl_options = (
-            {"certfile": self.cert[0], "keyfile": self.cert[1]} if use_ssl else None
+            {"certfile": self.cert[0], "keyfile": self.cert[1]}
+            if use_ssl and self.cert
+            else None
         )
 
         # Verify the connection is valid.
@@ -560,18 +591,18 @@ class Client:
         self.profiles = managers.ProfileManager(self)
         self.projects = managers.ProjectManager(self)
         self.storage_pools = managers.StoragePoolManager(self)
-        self._resource_cache = None
+        self._resource_cache: dict | None = None
 
     @property
-    def trusted(self):
+    def trusted(self) -> bool:
         return self.host_info["auth"] == "trusted"
 
     @property
-    def server_clustered(self):
-        return self.host_info["environment"].get("server_clustered", False)
+    def server_clustered(self) -> bool:
+        return self.host_info["environment"].get("server_clustered") is True
 
     @property
-    def resources(self):
+    def resources(self) -> dict:
         if self._resource_cache is None:
             self.assert_has_api_extension("resources")
             response = self.api.resources.get()
@@ -580,7 +611,7 @@ class Client:
             self._resource_cache = response.json()["metadata"]
         return self._resource_cache
 
-    def has_api_extension(self, name):
+    def has_api_extension(self, name: str) -> bool:
         """Return True if the `name` api extension exists.
 
         :param name: the api_extension to look for.
@@ -590,7 +621,7 @@ class Client:
         """
         return name in self.host_info["api_extensions"]
 
-    def assert_has_api_extension(self, name):
+    def assert_has_api_extension(self, name: str):
         """Asserts that the `name` api_extension exists.
         If not, then is raises the LXDAPIExtensionNotAvailable error.
 
@@ -602,7 +633,7 @@ class Client:
         if not self.has_api_extension(name):
             raise exceptions.LXDAPIExtensionNotAvailable(name)
 
-    def authenticate(self, secret, use_token_auth=True):
+    def authenticate(self, secret: str | bytes, use_token_auth: bool = True):
         if self.trusted:
             return
 
@@ -632,7 +663,7 @@ class Client:
         self.host_info = response.json()["metadata"]
 
     @property
-    def websocket_url(self):
+    def websocket_url(self) -> str:
         if self.api.scheme in ("http", "https"):
             host = self.api.netloc
             if self.api.scheme == "http":
@@ -645,7 +676,11 @@ class Client:
         url = parse.urlunparse((scheme, host, "", "", "", ""))
         return url
 
-    def events(self, websocket_client=None, event_types=None):
+    def events(
+        self,
+        websocket_client: WebSocketBaseClient | None = None,
+        event_types: set[EventType] | None = None,
+    ) -> WebSocketBaseClient:
         """Get a websocket client for getting events.
 
         /events is a websocket url, and so must be handled differently than
@@ -677,7 +712,7 @@ class Client:
         resource = parsed.path
 
         if event_types and EventType.All not in event_types:
-            query = parse.parse_qs(parsed.query)
+            query: dict[str, Any] = parse.parse_qs(parsed.query)
             query.update({"type": ",".join(t.value for t in event_types)})
             resource = f"{resource}?{parse.urlencode(query)}"
 

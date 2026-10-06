@@ -11,12 +11,14 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from __future__ import annotations
 
 import os
 import warnings
 from urllib import parse
 
 from pylxd import exceptions
+from pylxd.client import Client
 
 # Global used to record which warnings have been issued already for unknown
 # attributes.
@@ -51,8 +53,12 @@ class Operation:
         "updated_at",
     ]
 
+    # Set dynamically from the server response by _set_attributes().
+    _client: Client
+    id: str
+
     @classmethod
-    def wait_for_operation(cls, client, operation_id):
+    def wait_for_operation(cls, client: Client, operation_id: str) -> Operation:
         """Get an operation and wait for it to complete."""
         operation = cls.get(client, operation_id)
         # wait() returns True when it received and applied metadata from the
@@ -63,17 +69,17 @@ class Operation:
         return operation
 
     @classmethod
-    def extract_operation_id(cls, s):
+    def extract_operation_id(cls, s: str):
         return os.path.split(parse.urlparse(s).path)[-1]
 
     @classmethod
-    def get(cls, client, operation_id):
+    def get(cls, client: Client, operation_id: str) -> Operation:
         """Get an operation."""
         operation_id = cls.extract_operation_id(operation_id)
         response = client.api.operations[operation_id].get()
         return cls(_client=client, **response.json()["metadata"])
 
-    def _set_attributes(self, attributes):
+    def _set_attributes(self, attributes: dict):
         """Set attributes on self, warning about unknown ones per PYLXD_WARNINGS."""
         for key, value in attributes.items():
             try:
@@ -94,7 +100,7 @@ class Operation:
         super().__init__()
         self._set_attributes(kwargs)
 
-    def wait(self):
+    def wait(self) -> bool:
         """Wait for the operation to complete.
 
         Returns True if the /wait response included an operation object that

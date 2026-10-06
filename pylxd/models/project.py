@@ -11,6 +11,11 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from __future__ import annotations
+
+from typing import Any
+
+from pylxd.client import Client, _APINode
 from pylxd.models import _model as model
 
 
@@ -28,7 +33,7 @@ class Project(model.Model):
     used_by = model.Attribute(readonly=True)
 
     @classmethod
-    def exists(cls, client, name):
+    def exists(cls, client: Client, name: str) -> bool:
         """Determine whether a project exists."""
         try:
             client.projects.get(name)
@@ -37,13 +42,13 @@ class Project(model.Model):
             return False
 
     @classmethod
-    def get(cls, client, name):
+    def get(cls, client: Client, name: str) -> Project:
         """Get a project."""
         response = client.api.projects[name].get()
         return cls(client, **response.json()["metadata"])
 
     @classmethod
-    def all(cls, client):
+    def all(cls, client: Client) -> list[Project]:
         """Get all projects."""
         response = client.api.projects.get()
 
@@ -56,13 +61,13 @@ class Project(model.Model):
     @classmethod
     def create(
         cls,
-        client,
-        name,
-        description=None,
-        config=None,
-    ):
+        client: Client,
+        name: str,
+        description: str | None = None,
+        config: dict | None = None,
+    ) -> Project:
         """Create a project."""
-        project = {"name": name}
+        project: dict[str, Any] = {"name": name}
         if config is not None:
             project["config"] = config
         if description is not None:
@@ -71,10 +76,10 @@ class Project(model.Model):
         return cls.get(client, name)
 
     @property
-    def api(self):
+    def api(self) -> _APINode:
         return self.client.api.projects[self.name]
 
-    def rename(self, new_name):
+    def rename(self, new_name: str) -> Project:
         """Rename the project."""
         self.api.post(json={"name": new_name})
 

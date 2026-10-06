@@ -11,6 +11,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from __future__ import annotations
+
 import errno
 import json
 import logging
@@ -19,17 +21,19 @@ import stat
 import time
 import warnings
 from contextlib import suppress
-from typing import IO, NamedTuple, Optional
+from typing import IO, Any, Callable, NamedTuple, Optional, cast
 from urllib import parse
 
+import requests
 from ws4py.client import WebSocketBaseClient
 from ws4py.manager import WebSocketManager
-from ws4py.messaging import BinaryMessage
+from ws4py.messaging import BinaryMessage, Message
 
 from pylxd import managers
-from pylxd.client import _ws_exclude_origin
+from pylxd.client import Client, _APINode, _ws_exclude_origin
 from pylxd.exceptions import LXDAPIException
 from pylxd.models import _model as model
+from pylxd.models.image import Image
 from pylxd.models.operation import Operation
 
 
@@ -39,8 +43,8 @@ class InstanceState(model.AttributeDict):
 
 class _InstanceExecuteResult(NamedTuple):
     exit_code: int
-    stdout: IO
-    stderr: IO
+    stdout: str | bytes
+    stderr: str | bytes
 
 
 class Instance(model.Model):
@@ -75,35 +79,40 @@ class Instance(model.Model):
     _endpoint = "instances"
     _instance_type: Optional[str] = None
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name: str, value):
         if name == "location" and not self.client.server_clustered:
             # LXD reports "none" as location when not in a cluster
             value = None
         super().__setattr__(name, value)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Instance):
             return NotImplemented
-        return self.name == other.name and self._raw_attr("project") == other._raw_attr(
-            "project"
-        )
+        return self.name == other.name and self._raw_attr("project") == other._raw_attr("project")
 
     __hash__ = None  # type: ignore  # unhashable, consistent with defining __eq__
 
     @property
-    def api(self):
+    def api(self) -> _APINode:
         return self.client.api[self._endpoint][self.name]
 
     class FilesManager:
         """A pseudo-manager for namespacing file operations."""
 
-        def __init__(self, instance):
+        def __init__(self, instance: Instance):
             self._instance = instance
             self._endpoint = instance.client.api[instance._endpoint][
                 instance.name
             ].files
 
-        def put(self, filepath, data, mode=None, uid=None, gid=None):
+        def put(
+            self,
+            filepath: str,
+            data: bytes | str,
+            mode: int | str | bool | None = None,
+            uid: int | None = None,
+            gid: int | None = None,
+        ):
             """Push a file to the instance.
 
             This pushes a single file to the instances file system named by
@@ -136,7 +145,13 @@ class Instance(model.Model):
                 return
             raise LXDAPIException(response)
 
-        def mk_dir(self, path, mode=None, uid=None, gid=None):
+        def mk_dir(
+            self,
+            path: str,
+            mode: int | str | bool | None = None,
+            uid: int | None = None,
+            gid: int | None = None,
+        ):
             """Creates an empty directory on the container.
             This pushes an empty directory to the containers file system
             named by the `filepath`.
@@ -163,7 +178,12 @@ class Instance(model.Model):
             raise LXDAPIException(response)
 
         @staticmethod
-        def _resolve_headers(headers=None, mode=None, uid=None, gid=None):
+        def _resolve_headers(
+            headers: dict[str, str] | None = None,
+            mode: int | str | None = None,
+            uid: int | None = None,
+            gid: int | None = None,
+        ) -> dict[str, str]:
             if headers is None:
                 headers = {}
             if mode is not None:
@@ -180,23 +200,30 @@ class Instance(model.Model):
                 headers["X-LXD-gid"] = str(gid)
             return headers
 
-        def delete_available(self):
+        def delete_available(self) -> bool:
             """File deletion is an extension API and may not be available.
             https://canonical.com/lxd/docs/latest/api-extensions/#file-delete
             """
             return self._instance.client.has_api_extension("file_delete")
 
-        def delete(self, filepath):
+        def delete(self, filepath: str):
             self._instance.client.assert_has_api_extension("file_delete")
             response = self._endpoint.delete(params={"path": filepath})
             if response.status_code != 200:
                 raise LXDAPIException(response)
 
-        def get(self, filepath):
+        def get(self, filepath: str) -> bytes:
             response = self._endpoint.get(params={"path": filepath}, is_api=False)
             return response.content
 
-        def recursive_put(self, src, dst, mode=None, uid=None, gid=None):
+        def recursive_put(
+            self,
+            src: str,
+            dst: str,
+            mode: int | str | None = None,
+            uid: int | None = None,
+            gid: int | None = None,
+        ):
             """Recursively push directory to the instance.
 
             Recursively pushes directory to the instances
@@ -266,7 +293,7 @@ class Instance(model.Model):
                         if response.status_code != 200:
                             raise LXDAPIException(response)
 
-        def recursive_get(self, remote_path, local_path):
+        def recursive_get(self, remote_path: str, local_path: str):
             """Recursively pulls a directory from the container.
             Pulls the directory named `remote_path` from the container and
             creates a local folder named `local_path` with the
@@ -311,7 +338,7 @@ class Instance(model.Model):
                         f.write(response.content)
 
     @classmethod
-    def exists(cls, client, name):
+    def exists(cls, client: Client, name: str) -> bool:
         """Determine whether a instance exists."""
         try:
             getattr(client, cls._endpoint).get(name)
@@ -320,14 +347,16 @@ class Instance(model.Model):
             return False
 
     @classmethod
-    def get(cls, client, name):
+    def get(cls, client: Client, name: str) -> Instance:
         """Get a instance by name."""
         response = client.api[cls._endpoint][name].get()
 
         return cls(client, **response.json()["metadata"])
 
     @classmethod
-    def all(cls, client, recursion=0, fields=None):
+    def all(
+        cls, client: Client, recursion: int = 0, fields: list[str] | None = None
+    ) -> list[Instance]:
         """Get all instances.
 
         This method returns an Instance array. If recursion is unset,
@@ -352,7 +381,7 @@ class Instance(model.Model):
             ``instances_state_selective_recursion`` extension).
         :type fields: list[str] or None
         """
-        params = {}
+        params: dict[str, Any] = {}
         if recursion != 0:
             if (
                 recursion == 2
@@ -389,7 +418,9 @@ class Instance(model.Model):
         return instances
 
     @classmethod
-    def create(cls, client, config, wait=False, target=None):
+    def create(
+        cls, client: Client, config: dict, wait: bool = False, target: str | None = None
+    ) -> Instance:
         """Create a new instance config.
 
         :param client: client instance
@@ -450,7 +481,7 @@ class Instance(model.Model):
         self.snapshots = managers.SnapshotManager(self.client, self)
         self.files = self.FilesManager(self)
 
-    def rename(self, name, wait=False):
+    def rename(self, name: str, wait: bool = False):
         """Rename an instance."""
         response = self.api.post(json={"name": name})
 
@@ -458,7 +489,9 @@ class Instance(model.Model):
             self.client.operations.wait_for_operation(response.json()["operation"])
         self.name = name
 
-    def _set_state(self, state, timeout=30, force=True, wait=False):
+    def _set_state(
+        self, state: str, timeout: int = 30, force: bool = True, wait: bool = False
+    ):
         response = self.api.state.put(
             json={"action": state, "timeout": timeout, "force": force}
         )
@@ -467,49 +500,53 @@ class Instance(model.Model):
             if "status" in self.__dirty__:
                 self.__dirty__.remove("status")
             if self.ephemeral and state == "stop":
-                self.client = None
+                # The ephemeral instance is gone; drop the client like
+                # Model.delete() does.
+                self.client = None  # type: ignore[assignment]
             else:
                 self.sync()
 
-    def state(self):
+    def state(self) -> InstanceState:
         response = self.api.state.get()
         state = InstanceState(response.json()["metadata"])
         return state
 
-    def start(self, timeout=30, force=True, wait=False):
+    def start(self, timeout: int = 30, force: bool = True, wait: bool = False):
         """Start the instance."""
         return self._set_state("start", timeout=timeout, force=force, wait=wait)
 
-    def stop(self, timeout=30, force=True, wait=False):
+    def stop(self, timeout: int = 30, force: bool = True, wait: bool = False):
         """Stop the instance."""
         return self._set_state("stop", timeout=timeout, force=force, wait=wait)
 
-    def restart(self, timeout=30, force=True, wait=False):
+    def restart(self, timeout: int = 30, force: bool = True, wait: bool = False):
         """Restart the instance."""
         return self._set_state("restart", timeout=timeout, force=force, wait=wait)
 
-    def freeze(self, timeout=30, force=True, wait=False):
+    def freeze(self, timeout: int = 30, force: bool = True, wait: bool = False):
         """Freeze the instance."""
         return self._set_state("freeze", timeout=timeout, force=force, wait=wait)
 
-    def unfreeze(self, timeout=30, force=True, wait=False):
+    def unfreeze(self, timeout: int = 30, force: bool = True, wait: bool = False):
         """Unfreeze the instance."""
         return self._set_state("unfreeze", timeout=timeout, force=force, wait=wait)
 
     def execute(
         self,
-        commands,
-        environment=None,
-        encoding=None,
-        decode=True,
-        stdin_payload=None,
-        stdin_encoding="utf-8",
-        stdout_handler=None,
-        stderr_handler=None,
-        user=None,
-        group=None,
-        cwd=None,
-    ):
+        commands: list[str],
+        environment: dict[str, str] | None = None,
+        encoding: str | None = None,
+        decode: bool = True,
+        stdin_payload: (
+            str | bytes | bytearray | IO[str] | IO[bytes] | Message | None
+        ) = None,
+        stdin_encoding: str = "utf-8",
+        stdout_handler: Callable[[str | bytes], None] | None = None,
+        stderr_handler: Callable[[str | bytes], None] | None = None,
+        user: int | None = None,
+        group: int | None = None,
+        cwd: str | None = None,
+    ) -> _InstanceExecuteResult:
         """Execute a command on the instance. stdout and stderr are buffered if
         no handler is given.
 
@@ -627,7 +664,12 @@ class Instance(model.Model):
             )
 
     def raw_interactive_execute(
-        self, commands, environment=None, user=None, group=None, cwd=None
+        self,
+        commands: list[str],
+        environment: dict[str, str] | None = None,
+        user: int | None = None,
+        group: int | None = None,
+        cwd: str | None = None,
     ):
         """Execute a command on the instance interactively and returns
         urls to websockets. The urls contain a secret uuid, and can be accesses
@@ -678,7 +720,9 @@ class Instance(model.Model):
             "control": f"{parsed.path}?secret={fds['control']}",
         }
 
-    def migrate(self, new_client, live=False, wait=False):
+    def migrate(
+        self, new_client: Client, live: bool = False, wait: bool = False
+    ) -> Instance:
         """Migrate a instance.
 
         Destination host information is contained in the client
@@ -715,7 +759,9 @@ class Instance(model.Model):
             except LXDAPIException as e:
                 if e.response.status_code == 103:
                     self.delete()
-                    return getattr(new_client, self._endpoint).get(self.name)
+                    return cast(
+                        Instance, getattr(new_client, self._endpoint).get(self.name)
+                    )
                 else:
                     raise e
         else:
@@ -723,9 +769,9 @@ class Instance(model.Model):
                 self.generate_migration_data(live), wait=wait
             )
         self.delete()
-        return res
+        return cast(Instance, res)
 
-    def generate_migration_data(self, live=False):
+    def generate_migration_data(self, live: bool = False) -> dict[str, Any]:
         """Generate the migration data.
 
         This method can be used to handle migrations where the client
@@ -766,7 +812,12 @@ class Instance(model.Model):
             },
         }
 
-    def publish(self, public=False, wait=False, compression_algorithm=None):
+    def publish(
+        self,
+        public: bool = False,
+        wait: bool = False,
+        compression_algorithm: str | None = None,
+    ):
         """Publish a instance as an image.
 
         The instance must be stopped in order publish it as an image. This
@@ -794,7 +845,9 @@ class Instance(model.Model):
             return self.client.images.get(operation.metadata["fingerprint"])
         return None
 
-    def restore_snapshot(self, snapshot_name, wait=False, stateful=False):
+    def restore_snapshot(
+        self, snapshot_name: str, wait: bool = False, stateful: bool = False
+    ) -> requests.Response:
         """Restore a snapshot using its name.
 
         Attempts to restore a instance using a snapshot previously made.  The
@@ -841,7 +894,7 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         self.manager.add(self)
         self.buffer = []
 
-    def received_message(self, message):
+    def received_message(self, message: Message):
         if message.data is None or len(message.data) == 0:
             self.last_message_empty = True
             if self.finish_off:
@@ -858,7 +911,7 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         if self.finish_off and isinstance(message, BinaryMessage):
             self.finished = True
 
-    def closed(self, code, reason=None):
+    def closed(self, code: int, reason: str | None = None):
         self.finished = True
 
     def finish_soon(self):
@@ -866,7 +919,7 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         if self.last_message_empty:
             self.finished = True
 
-    def _maybe_decode(self, buffer):
+    def _maybe_decode(self, buffer: bytes) -> str | bytes:
         if self.decode and buffer is not None:
             if self.encoding:
                 return buffer.decode(self.encoding)
@@ -877,11 +930,11 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         return buffer
 
     @property
-    def data(self):
+    def data(self) -> str | bytes:
         buffer = b"".join(self.buffer)
         return self._maybe_decode(buffer)
 
-    def unhandled_error(self, error):
+    def unhandled_error(self, error: Exception):
         """
         Handles the unfriendly socket closures on the server side
         without showing a confusing error message
@@ -905,7 +958,9 @@ class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
         _ws_exclude_origin(kwargs)
         super().__init__(url, **kwargs)
 
-    def _smart_encode(self, msg):
+    def _smart_encode(
+        self, msg: str | bytes | bytearray | Message
+    ) -> str | bytes | bytearray | Message:
         if isinstance(msg, str) and self.encoding:
             return msg.encode(self.encoding)
         return msg
@@ -930,7 +985,7 @@ class Snapshot(model.Model):
 
     instance = model.Parent()
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Snapshot):
             return NotImplemented
         return self.name == other.name and self.instance == other.instance
@@ -938,13 +993,13 @@ class Snapshot(model.Model):
     __hash__ = None  # type: ignore  # unhashable, consistent with defining __eq__
 
     @property
-    def api(self):
+    def api(self) -> _APINode:
         return self.client.api[self.instance._endpoint][self.instance.name].snapshots[
             self.name
         ]
 
     @classmethod
-    def get(cls, client, instance, name):
+    def get(cls, client: Client, instance: Instance, name: str) -> Snapshot:
         response = client.api[instance._endpoint][instance.name].snapshots[name].get()
 
         snapshot = cls(client, instance=instance, **response.json()["metadata"])
@@ -955,7 +1010,7 @@ class Snapshot(model.Model):
         return snapshot
 
     @classmethod
-    def all(cls, client, instance):
+    def all(cls, client: Client, instance: Instance) -> list[Snapshot]:
         response = client.api[instance._endpoint][instance.name].snapshots.get()
 
         return [
@@ -964,7 +1019,14 @@ class Snapshot(model.Model):
         ]
 
     @classmethod
-    def create(cls, client, instance, name, stateful=False, wait=False):
+    def create(
+        cls,
+        client: Client,
+        instance: Instance,
+        name: str,
+        stateful: bool = False,
+        wait: bool = False,
+    ) -> Snapshot:
         response = client.api[instance._endpoint][instance.name].snapshots.post(
             json={"name": name, "stateful": stateful}
         )
@@ -974,14 +1036,14 @@ class Snapshot(model.Model):
             client.operations.wait_for_operation(response.json()["operation"])
         return snapshot
 
-    def rename(self, new_name, wait=False):
+    def rename(self, new_name: str, wait: bool = False):
         """Rename a snapshot."""
         response = self.api.post(json={"name": new_name})
         if wait:
             self.client.operations.wait_for_operation(response.json()["operation"])
         self.name = new_name
 
-    def publish(self, public=False, wait=False):
+    def publish(self, public: bool = False, wait: bool = False) -> Image | None:
         """Publish a snapshot as an image.
 
         If wait=True, an Image is returned.
@@ -999,10 +1061,10 @@ class Snapshot(model.Model):
             operation = self.client.operations.wait_for_operation(
                 response.json()["operation"]
             )
-            return self.client.images.get(operation.metadata["fingerprint"])
+            return Image.get(self.client, operation.metadata["fingerprint"])
         return None
 
-    def restore(self, wait=False):
+    def restore(self, wait: bool = False) -> requests.Response:
         """Restore this snapshot.
 
         Attempts to restore a instance using this snapshot.  The instance
@@ -1016,6 +1078,9 @@ class Snapshot(model.Model):
             operation result)
         :rtype: :class:`requests.Response`
         """
-        return self.instance.restore_snapshot(
-            self.name, wait, stateful=getattr(self, "stateful", False)
+        return cast(
+            requests.Response,
+            self.instance.restore_snapshot(
+                self.name, wait, stateful=getattr(self, "stateful", False)
+            ),
         )
