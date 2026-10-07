@@ -1,4 +1,5 @@
 import json
+from urllib.parse import unquote
 
 
 def instances_POST(request, context):
@@ -167,6 +168,45 @@ def snapshot_DELETE(request, context):
     )
 
 
+def cluster_link_GET(request, context):
+    # LXD answers with the stored name, not the escaped path segment.
+    name = unquote(request.path.split("/")[-1])
+    return json.dumps(
+        {
+            "type": "sync",
+            "metadata": {
+                "name": name,
+                "description": "",
+                "type": "public",
+                "config": {"volatile.addresses": "127.0.0.1:8443"},
+                "used_by": [],
+            },
+        }
+    )
+
+
+def cluster_links_POST(request, context):
+    body = request.json()
+    if body.get("type") == "public" and body.get("remote_address"):
+        # Pending public link: LXD returns the remote certificate fingerprint.
+        return json.dumps({"type": "sync", "metadata": {"fingerprint": "abcd1234"}})
+    if body.get("type") != "public" and not body.get("trust_token"):
+        # Pending bidirectional link: LXD returns the trust token to hand over.
+        return json.dumps(
+            {
+                "type": "sync",
+                "metadata": {
+                    "client_name": body["name"],
+                    "fingerprint": "abcd1234",
+                    "addresses": ["127.0.0.1:8443"],
+                    "secret": "s3cret",
+                    "expires_at": "0001-01-01T00:00:00Z",
+                },
+            }
+        )
+    return json.dumps({"type": "sync", "metadata": None})
+
+
 RULES = [
     # General service endpoints
     {
@@ -326,6 +366,62 @@ RULES = [
         "text": json.dumps({"type": "sync", "status": "Success", "status_code": 200}),
         "method": "PUT",
         "url": r"^http://pylxd.test/1.0/cluster/certificate$",
+    },
+    # Cluster links
+    {
+        "text": json.dumps(
+            {"type": "sync", "metadata": ["/1.0/cluster/links/an-link"]}
+        ),
+        "method": "GET",
+        "url": r"^http://pylxd.test/1.0/cluster/links$",
+    },
+    {
+        "text": cluster_link_GET,
+        "method": "GET",
+        "url": r"^http://pylxd.test/1.0/cluster/links/[^/]+$",
+    },
+    {
+        "text": json.dumps(
+            {
+                "type": "sync",
+                "metadata": {
+                    "cluster_link_members": [
+                        {
+                            "server_name": "an-member",
+                            "address": "127.0.0.1:8443",
+                            "status": "Active",
+                        }
+                    ]
+                },
+            }
+        ),
+        "method": "GET",
+        "url": r"^http://pylxd.test/1.0/cluster/links/[^/]+/state$",
+    },
+    {
+        "text": cluster_links_POST,
+        "method": "POST",
+        "url": r"^http://pylxd.test/1.0/cluster/links$",
+    },
+    {
+        "text": json.dumps({"type": "sync"}),
+        "method": "POST",
+        "url": r"^http://pylxd.test/1.0/cluster/links/an-link$",
+    },
+    {
+        "text": json.dumps({"type": "sync"}),
+        "method": "PUT",
+        "url": r"^http://pylxd.test/1.0/cluster/links/an-link$",
+    },
+    {
+        "text": json.dumps({"type": "sync"}),
+        "method": "PATCH",
+        "url": r"^http://pylxd.test/1.0/cluster/links/an-link$",
+    },
+    {
+        "text": json.dumps({"type": "sync"}),
+        "method": "DELETE",
+        "url": r"^http://pylxd.test/1.0/cluster/links/an-link$",
     },
     # Instances
     {
