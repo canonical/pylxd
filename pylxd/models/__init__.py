@@ -1,5 +1,10 @@
 from pylxd.models.certificate import Certificate
-from pylxd.models.cluster import Cluster, ClusterCertificate, ClusterMember
+from pylxd.models.cluster import (
+    Cluster,
+    ClusterCertificate,
+    ClusterLink,
+    ClusterMember,
+)
 from pylxd.models.container import Container
 from pylxd.models.image import Image
 from pylxd.models.instance import Instance, Snapshot
@@ -19,6 +24,7 @@ __all__ = [
     "Certificate",
     "Cluster",
     "ClusterCertificate",
+    "ClusterLink",
     "ClusterMember",
     "Container",
     "Image",
