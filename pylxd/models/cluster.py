@@ -29,11 +29,13 @@ class Cluster(model.Model):
 
     members = model.Manager()
     certificate = model.Manager()
+    links = model.Manager()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.members = managers.ClusterMemberManager(self.client, self)
         self.certificate = managers.ClusterCertificateManager(self.client, self)
+        self.links = managers.ClusterLinkManager(self.client)
 
     def __eq__(self, other):
         if not isinstance(other, Cluster):
