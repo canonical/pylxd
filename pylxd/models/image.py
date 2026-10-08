@@ -285,15 +285,48 @@ class Image(model.Model):
         # Rebuild the list without the deleted alias
         self.aliases = [a for a in self.aliases if a.get("name") != name]
 
-    def copy(self, new_client, public=None, auto_update=None, wait=False):
+    def copy(
+        self,
+        new_client,
+        public=None,
+        auto_update=None,
+        wait=False,
+        image_registry=None,
+        copy_aliases=False,
+    ):
         """Copy an image to a another LXD.
 
         Destination host information is contained in the client
         connection passed in.
+
+        By default the request names this server's URL, protocol and
+        certificate as the source. LXD servers with the ``image_registries``
+        extension deprecate that form and only accept it when a matching
+        registry already exists; pass ``image_registry`` instead on such
+        servers.
+
+        :param new_client: client for the destination server
+        :type new_client: :class:`~pylxd.client.Client`
+        :param public: whether the copy is public; defaults to this image's
+        :type public: bool
+        :param auto_update: whether the copy auto-updates; defaults to this
+            image's
+        :type auto_update: bool
+        :param wait: whether to wait for the copy to finish
+        :type wait: bool
+        :param image_registry: name of an image registry on the destination
+            server that points at this image's server
+        :type image_registry: str
+        :param copy_aliases: also copy this image's aliases; needs the
+            ``image_registries`` extension on the destination
+        :type copy_aliases: bool
+        :returns: the copy when ``wait`` is true, else ``None``
+        :rtype: :class:`Image` or None
+        :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if
+            ``image_registry`` or ``copy_aliases`` is given and the
+            destination lacks the ``image_registries`` extension
         """
         self.sync()  # Make sure the object isn't stale
-
-        url = "/".join(self.client.api._api_endpoint.split("/")[:-1])
 
         if public is None:
             public = self.public
@@ -301,26 +334,52 @@ class Image(model.Model):
         if auto_update is None:
             auto_update = self.auto_update
 
-        config = {
-            "filename": self.filename,
-            "public": public,
-            "auto_update": auto_update,
-            "properties": self.properties,
-            "source": {
+        if image_registry is not None:
+            new_client.assert_has_api_extension("image_registries")
+            source = {
+                "type": "image",
+                "mode": "pull",
+                "image_registry": image_registry,
+                "fingerprint": self.fingerprint,
+                "copy_aliases": copy_aliases,
+            }
+            project = self._raw_attr("project")
+            if project:
+                source["project"] = project
+        else:
+            if copy_aliases:
+                new_client.assert_has_api_extension("image_registries")
+            url = "/".join(self.client.api._api_endpoint.split("/")[:-1])
+            source = {
                 "type": "image",
                 "mode": "pull",
                 "server": url,
                 "protocol": "lxd",
                 "fingerprint": self.fingerprint,
-            },
+            }
+            if copy_aliases:
+                source["copy_aliases"] = True
+
+        config = {
+            "filename": self.filename,
+            "public": public,
+            "auto_update": auto_update,
+            "properties": self.properties,
+            "source": source,
         }
 
         if self.public is not True:
             response = self.api.secret.post(json={})
             secret = response.json()["metadata"]["metadata"]["secret"]
-            config["source"]["secret"] = secret
+            source["secret"] = secret
+
+        # Servers with image_registries match the deprecated server source to
+        # a registry's cluster link by certificate, so the legacy body with
+        # copy_aliases, which only such servers accept, needs it for public
+        # images too.
+        if image_registry is None and (copy_aliases or self.public is not True):
             cert = self.client.host_info["environment"]["certificate"]
-            config["source"]["certificate"] = cert
+            source["certificate"] = cert
 
         _image_create_from_config(new_client, config, wait)
 
