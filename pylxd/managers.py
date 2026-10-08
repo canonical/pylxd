@@ -45,6 +45,10 @@ class ImageManager(BaseManager):
     manager_for = "pylxd.models.Image"
 
 
+class ImageRegistryManager(BaseManager):
+    manager_for = "pylxd.models.ImageRegistry"
+
+
 class NetworkManager(BaseManager):
     manager_for = "pylxd.models.Network"
 
