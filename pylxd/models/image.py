@@ -167,7 +167,27 @@ class Image(model.Model):
     def create_from_simplestreams(
         cls, client, server, alias, public=False, auto_update=False
     ):
-        """Copy an image from simplestreams."""
+        """Copy an image from simplestreams.
+
+        Deprecated on LXD servers with the ``image_registries`` extension.
+        They map the ``server``/``protocol`` source this method sends to an
+        existing image registry with the same URL and otherwise create one
+        only for ``cloud-images.ubuntu.com``, ``images.lxd.canonical.com``
+        and ``cdimage.ubuntu.com``; any other URL is rejected. Such servers
+        raise a :class:`DeprecationWarning` through this method. Use
+        :meth:`create_from_registry` there.
+        """
+        if client.has_api_extension("image_registries"):
+            warnings.warn(
+                "Image.create_from_simplestreams uses the deprecated "
+                "server/protocol image source. LXD maps it to an existing "
+                "image registry with the same URL and otherwise creates one "
+                "only for cloud-images.ubuntu.com, images.lxd.canonical.com "
+                "and cdimage.ubuntu.com. Use Image.create_from_registry "
+                "instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         config = {
             "public": public,
             "auto_update": auto_update,
@@ -186,7 +206,20 @@ class Image(model.Model):
 
     @classmethod
     def create_from_url(cls, client, url, public=False, auto_update=False):
-        """Copy an image from an url."""
+        """Copy an image from an url.
+
+        Deprecated: LXD servers with the ``image_registries`` extension reject
+        client-specified URLs, so this method cannot work there and always
+        raises a :class:`DeprecationWarning`. Use :meth:`create_from_registry`
+        instead.
+        """
+        warnings.warn(
+            "Image.create_from_url is deprecated: LXD servers with the "
+            "image_registries extension reject client-specified URLs. "
+            "Use Image.create_from_registry instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         config = {
             "public": public,
             "auto_update": auto_update,
