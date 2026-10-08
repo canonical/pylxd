@@ -207,6 +207,34 @@ def cluster_links_POST(request, context):
     return json.dumps({"type": "sync", "metadata": None})
 
 
+def image_registry_GET(request, context):
+    name = request.path.split("/")[-1]
+    return json.dumps(
+        {
+            "type": "sync",
+            "metadata": {
+                "name": name,
+                "description": "",
+                "protocol": "simplestreams",
+                "public": True,
+                "builtin": name == "ubuntu",
+                "config": {"url": "https://images.example.test"},
+            },
+        }
+    )
+
+
+def image_registry_builtin_400(request, context):
+    context.status_code = 400
+    return json.dumps(
+        {
+            "type": "error",
+            "error": "Built-in image registries cannot be modified",
+            "error_code": 400,
+        }
+    )
+
+
 RULES = [
     # General service endpoints
     {
@@ -896,6 +924,90 @@ RULES = [
         },
         "method": "POST",
         "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855/secret$",
+    },
+    # Image registries
+    {
+        "json": {
+            "type": "sync",
+            "metadata": [
+                "/1.0/image-registries/ubuntu",
+                "/1.0/image-registries/my-registry",
+            ],
+        },
+        "method": "GET",
+        "url": r"^http://pylxd.test/1.0/image-registries$",
+    },
+    {
+        "text": image_registry_GET,
+        "method": "GET",
+        "url": r"^http://pylxd.test/1.0/image-registries/[^/]+$",
+    },
+    {
+        "json": {
+            "type": "sync",
+            "metadata": [
+                {
+                    "fingerprint": "abc123",
+                    "aliases": [{"name": "alpine/edge"}],
+                    "architecture": "x86_64",
+                    "public": True,
+                    "properties": {"os": "alpine"},
+                }
+            ],
+        },
+        "method": "GET",
+        "url": r"^http://pylxd.test/1.0/image-registries/[^/]+/images$",
+    },
+    {
+        "json": {"type": "async", "operation": "/1.0/operations/operation-abc"},
+        "status_code": 202,
+        "method": "POST",
+        "url": r"^http://pylxd.test/1.0/image-registries$",
+    },
+    {
+        "json": {"type": "async", "operation": "/1.0/operations/operation-abc"},
+        "status_code": 202,
+        "method": "POST",
+        "url": r"^http://pylxd.test/1.0/image-registries/my-registry$",
+    },
+    {
+        "json": {"type": "async", "operation": "/1.0/operations/operation-abc"},
+        "status_code": 202,
+        "method": "PUT",
+        "url": r"^http://pylxd.test/1.0/image-registries/my-registry$",
+    },
+    {
+        "json": {"type": "async", "operation": "/1.0/operations/operation-abc"},
+        "status_code": 202,
+        "method": "PATCH",
+        "url": r"^http://pylxd.test/1.0/image-registries/my-registry$",
+    },
+    {
+        "json": {"type": "async", "operation": "/1.0/operations/operation-abc"},
+        "status_code": 202,
+        "method": "DELETE",
+        "url": r"^http://pylxd.test/1.0/image-registries/my-registry$",
+    },
+    # Built-in registries cannot be changed.
+    {
+        "text": image_registry_builtin_400,
+        "method": "POST",
+        "url": r"^http://pylxd.test/1.0/image-registries/ubuntu$",
+    },
+    {
+        "text": image_registry_builtin_400,
+        "method": "PUT",
+        "url": r"^http://pylxd.test/1.0/image-registries/ubuntu$",
+    },
+    {
+        "text": image_registry_builtin_400,
+        "method": "PATCH",
+        "url": r"^http://pylxd.test/1.0/image-registries/ubuntu$",
+    },
+    {
+        "text": image_registry_builtin_400,
+        "method": "DELETE",
+        "url": r"^http://pylxd.test/1.0/image-registries/ubuntu$",
     },
     # Networks
     {
