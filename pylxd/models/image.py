@@ -217,6 +217,62 @@ class Image(model.Model):
 
         return cls.get(client, op.metadata["fingerprint"])
 
+    @classmethod
+    def create_from_registry(
+        cls,
+        client: Client,
+        registry: str,
+        image: str,
+        public: bool = False,
+        auto_update: bool = False,
+        copy_aliases: bool = False,
+        image_type: str | None = None,
+    ) -> Image:
+        """Copy an image from an image registry into the local image store.
+
+        Implements POST /1.0/images with an ``image_registry`` source, the
+        equivalent of ``lxc image copy <registry>:<image> local:``. LXD runs
+        the download as an operation and only reports the fingerprint once
+        it finishes, so this call always waits.
+
+        :param client: client instance
+        :type client: :class:`~pylxd.client.Client`
+        :param registry: name of the image registry, for example ``"ubuntu"``
+        :type registry: str
+        :param image: alias or fingerprint of the image in the registry
+        :type image: str
+        :param public: whether the copied image is public
+        :type public: bool
+        :param auto_update: whether LXD keeps the copied image up to date
+        :type auto_update: bool
+        :param copy_aliases: also copy the aliases the registry defines
+        :type copy_aliases: bool
+        :param image_type: ``"container"`` or ``"virtual-machine"``, to pick
+            one when the alias exists for both
+        :type image_type: str
+        :returns: the copied image
+        :rtype: :class:`Image`
+        :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if the
+            server lacks the ``image_registries`` extension
+        :raises: :class:`pylxd.exceptions.LXDAPIException` if LXD rejects
+            the request or the download fails
+        """
+        client.assert_has_api_extension("image_registries")
+        source = {
+            "type": "image",
+            "mode": "pull",
+            "image_registry": registry,
+            "fingerprint": image,
+            "copy_aliases": copy_aliases,
+        }
+        if image_type:
+            source["image_type"] = image_type
+        config = {"public": public, "auto_update": auto_update, "source": source}
+
+        op = _image_create_from_config(client, config, wait=True)
+
+        return cls.get(client, op.metadata["fingerprint"])
+
     def export(self) -> BufferedRandom:
         """Export the image.
 
