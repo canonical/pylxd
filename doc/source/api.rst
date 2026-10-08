@@ -49,6 +49,12 @@ Image
 .. autoclass:: pylxd.models.Image
    :members:
 
+Image Registry
+--------------
+
+.. autoclass:: pylxd.models.ImageRegistry
+   :members:
+
 Network
 -------
 
@@ -86,4 +92,7 @@ Cluster
    :members:
 
 .. autoclass:: pylxd.models.ClusterMember
+   :members:
+
+.. autoclass:: pylxd.models.ClusterLink
    :members:
