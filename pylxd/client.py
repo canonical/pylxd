@@ -555,6 +555,7 @@ class Client:
         self.containers = managers.ContainerManager(self)
         self.virtual_machines = managers.VirtualMachineManager(self)
         self.images = managers.ImageManager(self)
+        self.image_registries = managers.ImageRegistryManager(self)
         self.networks = managers.NetworkManager(self)
         self.operations = managers.OperationManager(self)
         self.profiles = managers.ProfileManager(self)
