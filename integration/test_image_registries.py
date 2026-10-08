@@ -111,8 +111,8 @@ class TestImageRegistries(IntegrationTestCase):
         self.assertTrue(images)
         self.assertIn("fingerprint", images[0])
 
-    def test_lxd_registry_over_self_link(self):
-        """An lxd registry over a public link to this server lists its images."""
+    def create_self_link_registry(self):
+        """Create an lxd registry over a public cluster link to this server."""
         if not self.client.has_api_extension("cluster_links_public"):
             self.skipTest("cluster_links_public extension not available")
         link_name = self.generate_object_name()
@@ -123,10 +123,14 @@ class TestImageRegistries(IntegrationTestCase):
         link = self.client.cluster.links.create(
             link_name, type="public", fingerprint=fingerprint
         )
-
         registry = self.create_registry(
             {"cluster": link_name, "source_project": "default"}
         )
+        return link, registry
+
+    def test_lxd_registry_over_self_link(self):
+        """An lxd registry over a public link to this server lists its images."""
+        link, registry = self.create_self_link_registry()
         self.assertEqual("lxd", registry.protocol)
         self.assertTrue(registry.public)
 
@@ -138,8 +142,45 @@ class TestImageRegistries(IntegrationTestCase):
         # The link is in use by the registry.
         with self.assertRaises(exceptions.LXDAPIException):
             link.delete()
-        self.assertTrue(self.client.cluster.links.exists(link_name))
+        self.assertTrue(self.client.cluster.links.exists(link.name))
 
         registry.delete()
         link.delete()
-        self.assertFalse(self.client.cluster.links.exists(link_name))
+        self.assertFalse(self.client.cluster.links.exists(link.name))
+
+    def test_create_from_registry(self):
+        """An image is copied from the built-in images registry (network)."""
+        image = self.client.images.create_from_registry("images", "alpine/edge")
+        self.addCleanup(self.delete_image, image.fingerprint)
+
+        self.assertTrue(self.client.images.exists(image.fingerprint))
+
+    def test_create_from_registry_lxd_protocol(self):
+        """An image is copied through an lxd registry by fingerprint."""
+        _, registry = self.create_self_link_registry()
+        fingerprint, _ = self.create_image()
+
+        image = self.client.images.create_from_registry(registry.name, fingerprint)
+
+        self.assertEqual(fingerprint, image.fingerprint)
+
+    def test_instance_from_registry(self):
+        """An instance is created from an alias in an lxd registry."""
+        _, registry = self.create_self_link_registry()
+        _, alias = self.create_image()
+        name = self.generate_object_name()
+        self.addCleanup(self.delete_container, name)
+
+        instance = self.client.instances.create(
+            {
+                "name": name,
+                "source": {
+                    "type": "image",
+                    "image_registry": registry.name,
+                    "alias": alias,
+                },
+            },
+            wait=True,
+        )
+
+        self.assertEqual(name, instance.name)
