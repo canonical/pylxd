@@ -177,7 +177,7 @@ class _APINode:
         :rtype: _APINode
         """
         # '-' can't be used in variable names
-        if name in ("storage_pools", "virtual_machines"):
+        if name in ("storage_pools", "virtual_machines", "image_registries"):
             name = name.replace("_", "-")
         return self.__class__(
             f"{self._api_endpoint}/{name}",
