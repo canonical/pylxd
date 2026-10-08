@@ -1,4 +1,5 @@
 import json
+from urllib.parse import unquote
 
 
 def instances_POST(request, context):
@@ -167,6 +168,73 @@ def snapshot_DELETE(request, context):
     )
 
 
+def cluster_link_GET(request, context):
+    # LXD answers with the stored name, not the escaped path segment.
+    name = unquote(request.path.split("/")[-1])
+    return json.dumps(
+        {
+            "type": "sync",
+            "metadata": {
+                "name": name,
+                "description": "",
+                "type": "public",
+                "config": {"volatile.addresses": "127.0.0.1:8443"},
+                "used_by": [],
+            },
+        }
+    )
+
+
+def cluster_links_POST(request, context):
+    body = request.json()
+    if body.get("type") == "public" and body.get("remote_address"):
+        # Pending public link: LXD returns the remote certificate fingerprint.
+        return json.dumps({"type": "sync", "metadata": {"fingerprint": "abcd1234"}})
+    if body.get("type") != "public" and not body.get("trust_token"):
+        # Pending bidirectional link: LXD returns the trust token to hand over.
+        return json.dumps(
+            {
+                "type": "sync",
+                "metadata": {
+                    "client_name": body["name"],
+                    "fingerprint": "abcd1234",
+                    "addresses": ["127.0.0.1:8443"],
+                    "secret": "s3cret",
+                    "expires_at": "0001-01-01T00:00:00Z",
+                },
+            }
+        )
+    return json.dumps({"type": "sync", "metadata": None})
+
+
+def image_registry_GET(request, context):
+    name = request.path.split("/")[-1]
+    return json.dumps(
+        {
+            "type": "sync",
+            "metadata": {
+                "name": name,
+                "description": "",
+                "protocol": "simplestreams",
+                "public": True,
+                "builtin": name == "ubuntu",
+                "config": {"url": "https://images.example.test"},
+            },
+        }
+    )
+
+
+def image_registry_builtin_400(request, context):
+    context.status_code = 400
+    return json.dumps(
+        {
+            "type": "error",
+            "error": "Built-in image registries cannot be modified",
+            "error_code": 400,
+        }
+    )
+
+
 RULES = [
     # General service endpoints
     {
@@ -326,6 +394,62 @@ RULES = [
         "text": json.dumps({"type": "sync", "status": "Success", "status_code": 200}),
         "method": "PUT",
         "url": r"^http://pylxd.test/1.0/cluster/certificate$",
+    },
+    # Cluster links
+    {
+        "text": json.dumps(
+            {"type": "sync", "metadata": ["/1.0/cluster/links/an-link"]}
+        ),
+        "method": "GET",
+        "url": r"^http://pylxd.test/1.0/cluster/links$",
+    },
+    {
+        "text": cluster_link_GET,
+        "method": "GET",
+        "url": r"^http://pylxd.test/1.0/cluster/links/[^/]+$",
+    },
+    {
+        "text": json.dumps(
+            {
+                "type": "sync",
+                "metadata": {
+                    "cluster_link_members": [
+                        {
+                            "server_name": "an-member",
+                            "address": "127.0.0.1:8443",
+                            "status": "Active",
+                        }
+                    ]
+                },
+            }
+        ),
+        "method": "GET",
+        "url": r"^http://pylxd.test/1.0/cluster/links/[^/]+/state$",
+    },
+    {
+        "text": cluster_links_POST,
+        "method": "POST",
+        "url": r"^http://pylxd.test/1.0/cluster/links$",
+    },
+    {
+        "text": json.dumps({"type": "sync"}),
+        "method": "POST",
+        "url": r"^http://pylxd.test/1.0/cluster/links/an-link$",
+    },
+    {
+        "text": json.dumps({"type": "sync"}),
+        "method": "PUT",
+        "url": r"^http://pylxd.test/1.0/cluster/links/an-link$",
+    },
+    {
+        "text": json.dumps({"type": "sync"}),
+        "method": "PATCH",
+        "url": r"^http://pylxd.test/1.0/cluster/links/an-link$",
+    },
+    {
+        "text": json.dumps({"type": "sync"}),
+        "method": "DELETE",
+        "url": r"^http://pylxd.test/1.0/cluster/links/an-link$",
     },
     # Instances
     {
@@ -800,6 +924,90 @@ RULES = [
         },
         "method": "POST",
         "url": r"^http://pylxd.test/1.0/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855/secret$",
+    },
+    # Image registries
+    {
+        "json": {
+            "type": "sync",
+            "metadata": [
+                "/1.0/image-registries/ubuntu",
+                "/1.0/image-registries/my-registry",
+            ],
+        },
+        "method": "GET",
+        "url": r"^http://pylxd.test/1.0/image-registries$",
+    },
+    {
+        "text": image_registry_GET,
+        "method": "GET",
+        "url": r"^http://pylxd.test/1.0/image-registries/[^/]+$",
+    },
+    {
+        "json": {
+            "type": "sync",
+            "metadata": [
+                {
+                    "fingerprint": "abc123",
+                    "aliases": [{"name": "alpine/edge"}],
+                    "architecture": "x86_64",
+                    "public": True,
+                    "properties": {"os": "alpine"},
+                }
+            ],
+        },
+        "method": "GET",
+        "url": r"^http://pylxd.test/1.0/image-registries/[^/]+/images$",
+    },
+    {
+        "json": {"type": "async", "operation": "/1.0/operations/operation-abc"},
+        "status_code": 202,
+        "method": "POST",
+        "url": r"^http://pylxd.test/1.0/image-registries$",
+    },
+    {
+        "json": {"type": "async", "operation": "/1.0/operations/operation-abc"},
+        "status_code": 202,
+        "method": "POST",
+        "url": r"^http://pylxd.test/1.0/image-registries/my-registry$",
+    },
+    {
+        "json": {"type": "async", "operation": "/1.0/operations/operation-abc"},
+        "status_code": 202,
+        "method": "PUT",
+        "url": r"^http://pylxd.test/1.0/image-registries/my-registry$",
+    },
+    {
+        "json": {"type": "async", "operation": "/1.0/operations/operation-abc"},
+        "status_code": 202,
+        "method": "PATCH",
+        "url": r"^http://pylxd.test/1.0/image-registries/my-registry$",
+    },
+    {
+        "json": {"type": "async", "operation": "/1.0/operations/operation-abc"},
+        "status_code": 202,
+        "method": "DELETE",
+        "url": r"^http://pylxd.test/1.0/image-registries/my-registry$",
+    },
+    # Built-in registries cannot be changed.
+    {
+        "text": image_registry_builtin_400,
+        "method": "POST",
+        "url": r"^http://pylxd.test/1.0/image-registries/ubuntu$",
+    },
+    {
+        "text": image_registry_builtin_400,
+        "method": "PUT",
+        "url": r"^http://pylxd.test/1.0/image-registries/ubuntu$",
+    },
+    {
+        "text": image_registry_builtin_400,
+        "method": "PATCH",
+        "url": r"^http://pylxd.test/1.0/image-registries/ubuntu$",
+    },
+    {
+        "text": image_registry_builtin_400,
+        "method": "DELETE",
+        "url": r"^http://pylxd.test/1.0/image-registries/ubuntu$",
     },
     # Networks
     {
