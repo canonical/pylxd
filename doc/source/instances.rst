@@ -168,14 +168,19 @@ the next example for using a remote image.
     >>> instance.delete()
 
 
-Config line with a remote image source (daily build of the latest Ubuntu LTS)
+Config line with a remote image source (daily build of the latest Ubuntu LTS,
+from the built-in `ubuntu-daily` image registry, see :doc:`image-registries`)
 and a single profile named `profilename`.
 
 .. code-block:: python
 
-    >>> config = {'name': 'my-instance', 'source': {'type': 'image', "mode": "pull", "server":
-        "https://cloud-images.ubuntu.com/daily", "protocol": "simplestreams", 'alias': 'lts/amd64'},
-        'profiles': ['profilename'] }
+    >>> config = {'name': 'my-instance', 'source': {'type': 'image', 'image_registry': 'ubuntu-daily',
+        'alias': 'lts/amd64'}, 'profiles': ['profilename'] }
+
+.. note:: Servers without the `image_registries` API extension take the
+        server address instead: `{'type': 'image', 'mode': 'pull', 'server':
+        'https://cloud-images.ubuntu.com/daily', 'protocol': 'simplestreams',
+        'alias': 'lts/amd64'}`.
 
 
 To modify instance's configuration method `

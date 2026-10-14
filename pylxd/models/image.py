@@ -167,7 +167,27 @@ class Image(model.Model):
     def create_from_simplestreams(
         cls, client, server, alias, public=False, auto_update=False
     ):
-        """Copy an image from simplestreams."""
+        """Copy an image from simplestreams.
+
+        Deprecated on LXD servers with the ``image_registries`` extension.
+        They map the ``server``/``protocol`` source this method sends to an
+        existing image registry with the same URL and otherwise create one
+        only for ``cloud-images.ubuntu.com``, ``images.lxd.canonical.com``
+        and ``cdimage.ubuntu.com``; any other URL is rejected. Such servers
+        raise a :class:`DeprecationWarning` through this method. Use
+        :meth:`create_from_registry` there.
+        """
+        if client.has_api_extension("image_registries"):
+            warnings.warn(
+                "Image.create_from_simplestreams uses the deprecated "
+                "server/protocol image source. LXD maps it to an existing "
+                "image registry with the same URL and otherwise creates one "
+                "only for cloud-images.ubuntu.com, images.lxd.canonical.com "
+                "and cdimage.ubuntu.com. Use Image.create_from_registry "
+                "instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         config = {
             "public": public,
             "auto_update": auto_update,
@@ -186,12 +206,81 @@ class Image(model.Model):
 
     @classmethod
     def create_from_url(cls, client, url, public=False, auto_update=False):
-        """Copy an image from an url."""
+        """Copy an image from an url.
+
+        Deprecated: LXD servers with the ``image_registries`` extension reject
+        client-specified URLs, so this method cannot work there and always
+        raises a :class:`DeprecationWarning`. Use :meth:`create_from_registry`
+        instead.
+        """
+        warnings.warn(
+            "Image.create_from_url is deprecated: LXD servers with the "
+            "image_registries extension reject client-specified URLs. "
+            "Use Image.create_from_registry instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         config = {
             "public": public,
             "auto_update": auto_update,
             "source": {"type": "url", "mode": "pull", "url": url},
         }
+
+        op = _image_create_from_config(client, config, wait=True)
+
+        return client.images.get(op.metadata["fingerprint"])
+
+    @classmethod
+    def create_from_registry(
+        cls,
+        client,
+        registry,
+        image,
+        public=False,
+        auto_update=False,
+        copy_aliases=False,
+        image_type=None,
+    ):
+        """Copy an image from an image registry into the local image store.
+
+        Implements POST /1.0/images with an ``image_registry`` source, the
+        equivalent of ``lxc image copy <registry>:<image> local:``. LXD runs
+        the download as an operation and only reports the fingerprint once
+        it finishes, so this call always waits.
+
+        :param client: client instance
+        :type client: :class:`~pylxd.client.Client`
+        :param registry: name of the image registry, for example ``"ubuntu"``
+        :type registry: str
+        :param image: alias or fingerprint of the image in the registry
+        :type image: str
+        :param public: whether the copied image is public
+        :type public: bool
+        :param auto_update: whether LXD keeps the copied image up to date
+        :type auto_update: bool
+        :param copy_aliases: also copy the aliases the registry defines
+        :type copy_aliases: bool
+        :param image_type: ``"container"`` or ``"virtual-machine"``, to pick
+            one when the alias exists for both
+        :type image_type: str
+        :returns: the copied image
+        :rtype: :class:`Image`
+        :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if the
+            server lacks the ``image_registries`` extension
+        :raises: :class:`pylxd.exceptions.LXDAPIException` if LXD rejects
+            the request or the download fails
+        """
+        client.assert_has_api_extension("image_registries")
+        source = {
+            "type": "image",
+            "mode": "pull",
+            "image_registry": registry,
+            "fingerprint": image,
+            "copy_aliases": copy_aliases,
+        }
+        if image_type:
+            source["image_type"] = image_type
+        config = {"public": public, "auto_update": auto_update, "source": source}
 
         op = _image_create_from_config(client, config, wait=True)
 
@@ -229,15 +318,48 @@ class Image(model.Model):
         # Rebuild the list without the deleted alias
         self.aliases = [a for a in self.aliases if a.get("name") != name]
 
-    def copy(self, new_client, public=None, auto_update=None, wait=False):
+    def copy(
+        self,
+        new_client,
+        public=None,
+        auto_update=None,
+        wait=False,
+        image_registry=None,
+        copy_aliases=False,
+    ):
         """Copy an image to a another LXD.
 
         Destination host information is contained in the client
         connection passed in.
+
+        By default the request names this server's URL, protocol and
+        certificate as the source. LXD servers with the ``image_registries``
+        extension deprecate that form and only accept it when a matching
+        registry already exists; pass ``image_registry`` instead on such
+        servers.
+
+        :param new_client: client for the destination server
+        :type new_client: :class:`~pylxd.client.Client`
+        :param public: whether the copy is public; defaults to this image's
+        :type public: bool
+        :param auto_update: whether the copy auto-updates; defaults to this
+            image's
+        :type auto_update: bool
+        :param wait: whether to wait for the copy to finish
+        :type wait: bool
+        :param image_registry: name of an image registry on the destination
+            server that points at this image's server
+        :type image_registry: str
+        :param copy_aliases: also copy this image's aliases; needs the
+            ``image_registries`` extension on the destination
+        :type copy_aliases: bool
+        :returns: the copy when ``wait`` is true, else ``None``
+        :rtype: :class:`Image` or None
+        :raises: :class:`pylxd.exceptions.LXDAPIExtensionNotAvailable` if
+            ``image_registry`` or ``copy_aliases`` is given and the
+            destination lacks the ``image_registries`` extension
         """
         self.sync()  # Make sure the object isn't stale
-
-        url = "/".join(self.client.api._api_endpoint.split("/")[:-1])
 
         if public is None:
             public = self.public
@@ -245,26 +367,52 @@ class Image(model.Model):
         if auto_update is None:
             auto_update = self.auto_update
 
-        config = {
-            "filename": self.filename,
-            "public": public,
-            "auto_update": auto_update,
-            "properties": self.properties,
-            "source": {
+        if image_registry is not None:
+            new_client.assert_has_api_extension("image_registries")
+            source = {
+                "type": "image",
+                "mode": "pull",
+                "image_registry": image_registry,
+                "fingerprint": self.fingerprint,
+                "copy_aliases": copy_aliases,
+            }
+            project = self._raw_attr("project")
+            if project:
+                source["project"] = project
+        else:
+            if copy_aliases:
+                new_client.assert_has_api_extension("image_registries")
+            url = "/".join(self.client.api._api_endpoint.split("/")[:-1])
+            source = {
                 "type": "image",
                 "mode": "pull",
                 "server": url,
                 "protocol": "lxd",
                 "fingerprint": self.fingerprint,
-            },
+            }
+            if copy_aliases:
+                source["copy_aliases"] = True
+
+        config = {
+            "filename": self.filename,
+            "public": public,
+            "auto_update": auto_update,
+            "properties": self.properties,
+            "source": source,
         }
 
         if self.public is not True:
             response = self.api.secret.post(json={})
             secret = response.json()["metadata"]["metadata"]["secret"]
-            config["source"]["secret"] = secret
+            source["secret"] = secret
+
+        # Servers with image_registries match the deprecated server source to
+        # a registry's cluster link by certificate, so the legacy body with
+        # copy_aliases, which only such servers accept, needs it for public
+        # images too.
+        if image_registry is None and (copy_aliases or self.public is not True):
             cert = self.client.host_info["environment"]["certificate"]
-            config["source"]["certificate"] = cert
+            source["certificate"] = cert
 
         _image_create_from_config(new_client, config, wait)
 
