@@ -19,6 +19,7 @@ Contents:
    certificates
    instances
    images
+   image-registries
    networks
    profiles
    projects

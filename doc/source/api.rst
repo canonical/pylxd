@@ -49,6 +49,12 @@ Image
 .. autoclass:: pylxd.models.Image
    :members:
 
+Image Registry
+--------------
+
+.. autoclass:: pylxd.models.ImageRegistry
+   :members:
+
 Network
 -------
 
