@@ -2,6 +2,7 @@ import functools
 import importlib
 import inspect
 from contextlib import contextmanager
+from typing import TYPE_CHECKING, Any
 
 
 class BaseManager:
@@ -23,6 +24,12 @@ class BaseManager:
             func = functools.partial(method, *args, **kwargs)
             setattr(self, name, func)
         return super().__init__()
+
+    if TYPE_CHECKING:
+        # __init__ copies the target model's classmethods onto the manager
+        # at runtime, so mypy cannot see them.
+        def __getattr__(self, name: str) -> Any:
+            """Return a classmethod copied from the target model."""
 
 
 class CertificateManager(BaseManager):
