@@ -775,10 +775,19 @@ class Instance(model.Model):
 
         If wait=True, an Image is returned.
         """
+        # LXD has accepted the type-agnostic source type "instance" (in
+        # place of "container"/"virtual-machine") for POST /1.0/images
+        # since LXD 4.0, and it's what `lxc publish` itself sends. Using it
+        # here means publish() no longer depends on self.type at all, so it
+        # works correctly for an instance that hasn't been synced yet (e.g.
+        # straight out of Instance.all()) instead of raising -- that sync
+        # is exactly what would have populated self.type in the first
+        # place, so requiring it up front could never actually succeed
+        # (#404).
         data = {
             "public": public,
             "source": {
-                "type": self.type,
+                "type": "instance",
                 "name": self.name,
             },
         }
