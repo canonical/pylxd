@@ -666,6 +666,64 @@ class TestGetSessionForUrl(TestCase):
         session = client.get_session_for_url("http://test.com", verify=True)
         self.assertIs(session.verify, True)
 
+    def _merged_settings(self, session, url="https://lxd.test:8443/1.0"):
+        """Return the settings requests resolves for a request on session."""
+        return session.merge_environment_settings(url, {}, None, None, None)
+
+    @mock.patch.dict(os.environ, {"REQUESTS_CA_BUNDLE": "/env/ca-bundle.crt"})
+    def test_session_verify_false_beats_requests_ca_bundle(self):
+        """verify=False is not overridden by REQUESTS_CA_BUNDLE."""
+        session = client.get_session_for_url("https://lxd.test:8443", verify=False)
+        self.assertIs(self._merged_settings(session)["verify"], False)
+
+    @mock.patch.dict(os.environ, {"CURL_CA_BUNDLE": "/env/ca-bundle.crt"})
+    def test_session_verify_path_beats_curl_ca_bundle(self):
+        """A verify path is not overridden by CURL_CA_BUNDLE."""
+        session = client.get_session_for_url(
+            "https://lxd.test:8443", verify="/path/server.crt"
+        )
+        self.assertEqual(self._merged_settings(session)["verify"], "/path/server.crt")
+
+    @mock.patch.dict(os.environ, {"REQUESTS_CA_BUNDLE": "/env/ca-bundle.crt"})
+    def test_session_verify_true_uses_requests_ca_bundle(self):
+        """verify=True still picks up the CA bundle from the environment."""
+        session = client.get_session_for_url("https://lxd.test:8443", verify=True)
+        self.assertEqual(self._merged_settings(session)["verify"], "/env/ca-bundle.crt")
+
+    @mock.patch.dict(os.environ, {"REQUESTS_CA_BUNDLE": "/env/ca-bundle.crt"})
+    def test_session_request_verify_beats_session_verify(self):
+        """A verify passed for a single request still takes precedence."""
+        session = client.get_session_for_url("https://lxd.test:8443", verify=False)
+        settings = session.merge_environment_settings(
+            "https://lxd.test:8443/1.0", {}, None, "/path/other.crt", None
+        )
+        self.assertEqual(settings["verify"], "/path/other.crt")
+
+    @mock.patch.dict(
+        os.environ,
+        {
+            "REQUESTS_CA_BUNDLE": "/env/ca-bundle.crt",
+            "HTTPS_PROXY": "http://proxy.test:3128",
+        },
+    )
+    def test_session_verify_false_keeps_env_proxies(self):
+        """An explicit verify does not stop proxies coming from the environment."""
+        session = client.get_session_for_url("https://lxd.test:8443", verify=False)
+        settings = self._merged_settings(session)
+        self.assertIs(settings["verify"], False)
+        self.assertEqual(settings["proxies"]["https"], "http://proxy.test:3128")
+
+    @mock.patch.dict(os.environ, {"REQUESTS_CA_BUNDLE": "/env/ca-bundle.crt"})
+    def test_session_verify_false_sent_to_adapter(self):
+        """The adapter is asked not to verify when verify=False."""
+        session = client.get_session_for_url("https://lxd.test:8443", verify=False)
+        response = requests.Response()
+        response.status_code = 200
+        adapter = mock.Mock(**{"send.return_value": response})
+        session.mount("https://", adapter)
+        session.get("https://lxd.test:8443/1.0")
+        self.assertIs(adapter.send.call_args.kwargs["verify"], False)
+
 
 class TestWsExcludeOrigin:
     """Tests for pylxd.client._ws_exclude_origin."""
