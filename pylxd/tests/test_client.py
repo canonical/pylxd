@@ -543,6 +543,26 @@ class TestAPINode(TestCase):
         session.post.assert_called_once_with("http://test.com", timeout=None)
 
     @mock.patch("pylxd.client.requests.Session")
+    def test_post_raw_data(self, Session):
+        """A raw request body is sent as application/octet-stream."""
+        response = mock.Mock(
+            **{
+                "status_code": 200,
+                "json.return_value": {"type": "sync"},
+            }
+        )
+        session = mock.Mock(**{"post.return_value": response})
+        Session.return_value = session
+        node = client._APINode("http://test.com", session)
+        node.post(data=b"raw")
+        session.post.assert_called_once_with(
+            "http://test.com",
+            data=b"raw",
+            headers={"Content-Type": "application/octet-stream"},
+            timeout=None,
+        )
+
+    @mock.patch("pylxd.client.requests.Session")
     def test_post_200_not_sync(self, Session):
         """A status code of 200 with async request raises an exception."""
         response = mock.Mock(
@@ -586,6 +606,26 @@ class TestAPINode(TestCase):
         session.put.assert_called_once_with("http://test.com", timeout=None)
 
     @mock.patch("pylxd.client.requests.Session")
+    def test_put_raw_data(self, Session):
+        """A raw request body is sent as application/octet-stream."""
+        response = mock.Mock(
+            **{
+                "status_code": 200,
+                "json.return_value": {"type": "sync"},
+            }
+        )
+        session = mock.Mock(**{"put.return_value": response})
+        Session.return_value = session
+        node = client._APINode("http://test.com", session)
+        node.put(data=b"raw")
+        session.put.assert_called_once_with(
+            "http://test.com",
+            data=b"raw",
+            headers={"Content-Type": "application/octet-stream"},
+            timeout=None,
+        )
+
+    @mock.patch("pylxd.client.requests.Session")
     def test_patch(self, Session):
         """Perform a session patch."""
         response = mock.Mock(
@@ -599,6 +639,26 @@ class TestAPINode(TestCase):
         node = client._APINode("http://test.com", session)
         node.patch()
         session.patch.assert_called_once_with("http://test.com", timeout=None)
+
+    @mock.patch("pylxd.client.requests.Session")
+    def test_patch_raw_data(self, Session):
+        """A raw request body is sent as application/octet-stream."""
+        response = mock.Mock(
+            **{
+                "status_code": 200,
+                "json.return_value": {"type": "sync"},
+            }
+        )
+        session = mock.Mock(**{"patch.return_value": response})
+        Session.return_value = session
+        node = client._APINode("http://test.com", session)
+        node.patch(data=b"raw")
+        session.patch.assert_called_once_with(
+            "http://test.com",
+            data=b"raw",
+            headers={"Content-Type": "application/octet-stream"},
+            timeout=None,
+        )
 
     @mock.patch("pylxd.client.requests.Session")
     def test_delete(self, Session):
@@ -685,6 +745,57 @@ class TestWsExcludeOrigin:
     def test_ws_exclude_origin(self, input_kwargs, expected):
         client._ws_exclude_origin(input_kwargs)
         assert input_kwargs["exclude_headers"] == expected
+
+
+class TestSetDefaultContentType:
+    """Tests for pylxd.client._set_default_content_type."""
+
+    @pytest.mark.parametrize(
+        "input_kwargs,expected",
+        [
+            ({}, {}),
+            ({"data": None}, {"data": None}),
+            ({"json": {"a": 1}}, {"json": {"a": 1}}),
+            (
+                {"data": b"raw"},
+                {
+                    "data": b"raw",
+                    "headers": {"Content-Type": "application/octet-stream"},
+                },
+            ),
+            (
+                {"data": "raw", "headers": None},
+                {
+                    "data": "raw",
+                    "headers": {"Content-Type": "application/octet-stream"},
+                },
+            ),
+            (
+                {"data": b"raw", "headers": {"X-LXD-mode": "0644"}},
+                {
+                    "data": b"raw",
+                    "headers": {
+                        "X-LXD-mode": "0644",
+                        "Content-Type": "application/octet-stream",
+                    },
+                },
+            ),
+            (
+                {"data": b"raw", "headers": {"content-type": "text/plain"}},
+                {"data": b"raw", "headers": {"content-type": "text/plain"}},
+            ),
+            ({"data": {"a": "1"}}, {"data": {"a": "1"}}),
+        ],
+    )
+    def test_set_default_content_type(self, input_kwargs, expected):
+        client._set_default_content_type(input_kwargs)
+        assert input_kwargs == expected
+
+    def test_does_not_mutate_caller_headers(self):
+        headers = {"X-LXD-mode": "0644"}
+        kwargs = {"data": b"raw", "headers": headers}
+        client._set_default_content_type(kwargs)
+        assert headers == {"X-LXD-mode": "0644"}
 
 
 class TestIsAToken(TestCase):
