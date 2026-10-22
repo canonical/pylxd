@@ -14,6 +14,7 @@
 import base64
 import json
 import os
+from types import MappingProxyType
 from unittest import TestCase, mock
 from urllib import parse
 
@@ -785,11 +786,35 @@ class TestSetDefaultContentType:
                 {"data": b"raw", "headers": {"content-type": "text/plain"}},
             ),
             ({"data": {"a": "1"}}, {"data": {"a": "1"}}),
+            (
+                {"data": MappingProxyType({"a": "1"})},
+                {"data": MappingProxyType({"a": "1"})},
+            ),
+            (
+                {"data": b"raw", "files": {"f": b"x"}},
+                {"data": b"raw", "files": {"f": b"x"}},
+            ),
+            (
+                {"data": b"raw", "files": {}},
+                {
+                    "data": b"raw",
+                    "files": {},
+                    "headers": {"Content-Type": "application/octet-stream"},
+                },
+            ),
         ],
     )
     def test_set_default_content_type(self, input_kwargs, expected):
         client._set_default_content_type(input_kwargs)
         assert input_kwargs == expected
+
+    def test_files_with_form_data_stay_multipart(self):
+        """requests builds the multipart Content-Type when files are sent."""
+        kwargs = {"data": MappingProxyType({"a": "1"}), "files": {"f": b"x"}}
+        client._set_default_content_type(kwargs)
+        assert "headers" not in kwargs
+        request = requests.Request("POST", "http://lxd.test", **kwargs).prepare()
+        assert request.headers["Content-Type"].startswith("multipart/form-data")
 
     def test_does_not_mutate_caller_headers(self):
         headers = {"X-LXD-mode": "0644"}

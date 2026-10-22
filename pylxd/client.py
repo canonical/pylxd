@@ -400,10 +400,13 @@ def _set_default_content_type(kwargs):
 
     The function mutates *kwargs* in place.  A ``Content-Type`` supplied by
     the caller (checked case-insensitively) is left untouched, as are form
-    bodies given as a dict, list or tuple, which ``requests`` encodes itself.
+    bodies given as a mapping, list or tuple and requests with ``files=``,
+    which ``requests`` encodes itself.
     """
     data = kwargs.get("data")
-    if data is None or isinstance(data, (dict, list, tuple)):
+    if data is None or isinstance(data, (Mapping, list, tuple)):
+        return
+    if kwargs.get("files"):
         return
 
     headers = kwargs.get("headers") or {}
