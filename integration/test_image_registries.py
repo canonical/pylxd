@@ -21,7 +21,9 @@ BUILTIN_REGISTRIES = {
     "ubuntu-minimal",
     "ubuntu-minimal-daily",
 }
-SIMPLESTREAMS_URL = "https://images.lxd.canonical.com"
+# LXD CI blocks images.lxd.canonical.com; the Ubuntu simplestreams servers stay
+# reachable, so the network tests use the ubuntu-minimal registry instead.
+SIMPLESTREAMS_URL = "https://cloud-images.ubuntu.com/minimal/releases"
 # The integration runner sets core.https_address to 127.0.0.1, so a public
 # link to the server itself backs an lxd registry without a second server.
 SELF_ADDRESS = "127.0.0.1:8443"
@@ -105,8 +107,8 @@ class TestImageRegistries(IntegrationTestCase):
         self.assertFalse(self.client.image_registries.exists(renamed))
 
     def test_images(self):
-        """The built-in images registry lists upstream images (network)."""
-        images = self.client.image_registries.get("images").images()
+        """A built-in simplestreams registry lists upstream images (network)."""
+        images = self.client.image_registries.get("ubuntu-minimal").images()
 
         self.assertTrue(images)
         self.assertIn("fingerprint", images[0])
