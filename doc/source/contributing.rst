@@ -65,8 +65,12 @@ Requirements to merge a Pull Request (PR)
 In order for a Pull Request to be merged the following criteria needs to be
 met:
 
-1. All of the commits in the PR need to be `signed off using the '-s' option
-   with git commit <https://git-scm.com/docs/git-commit>`_.
+1. All of the commits in the PR need to be cryptographically signed and signed
+   off. Use ``git commit -S -s``: ``-S`` signs the commit and ``-s`` adds the
+   ``Signed-off-by`` line (see the `git commit documentation
+   <https://git-scm.com/docs/git-commit>`_). For how to set up commit signature
+   verification, see `GitHub's documentation on commit signature verification
+   <https://docs.github.com/en/authentication/managing-commit-signature-verification>`_.
 2. Unit tests are required for the changes.  These are in the ``pylxd/tests``
    directory and follow the same directory structure as the module.
 3. The unit test code coverage for the project shouldn't drop.  This means that
