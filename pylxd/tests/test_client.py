@@ -477,6 +477,14 @@ class TestAPINode(TestCase):
         new_node = node.test.some_thing
         self.assertEqual("http://test.com/test/some_thing", new_node._api_endpoint)
 
+    def test_getattr_image_registries(self):
+        """API node with image_registries should be image-registries"""
+        node = client._APINode("http://test.com", mock.sentinel.session)
+        new_node = node.test.image_registries
+        self.assertEqual(
+            "http://test.com/test/image-registries", new_node._api_endpoint
+        )
+
     def test_getitem(self):
         """API Nodes can use dict notation for nesting."""
         node = client._APINode("http://test.com", mock.sentinel.session)
