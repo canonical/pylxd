@@ -37,5 +37,6 @@ tox -e coverage # must not drop
 ## Commit requirements
 
 Format `<area>: <lowercase imperative description>`, for example
-`pylxd/models/image: add return type hint for create`. All commits are signed off
-with `git commit -s` by the human committer; AI agents must not add `Signed-off-by`.
+`pylxd/models/image: add return type hint for create`. All commits are cryptographically
+signed and signed off with `git commit -S -s` by the human committer; AI agents must not
+add `Signed-off-by` or sign commits.

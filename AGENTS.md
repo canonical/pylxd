@@ -197,19 +197,21 @@ package without its extension. The description is lowercase and imperative.
 Keep commits small and logical: code, tests, and documentation changes are easier to
 review as separate commits than as one large one.
 
-All commits must be signed off (`git commit -s`). `Signed-off-by` is a Developer
-Certificate of Origin (DCO) certification, a legal assertion that the submitter wrote
-the code or has the right to submit it. Only a human can make that certification. AI
-agents must not add a `Signed-off-by` line; prepare the commit message and let the
-human committer run `git commit -s`.
+All commits must be cryptographically signed and signed off (`git commit -S -s`).
+`Signed-off-by` is a Developer Certificate of Origin (DCO) certification, a legal
+assertion that the submitter wrote the code or has the right to submit it. Only a
+human can make that certification. AI agents must not add a `Signed-off-by` line or
+sign commits; prepare the commit message and let the human committer sign and
+sign off with `git commit -S -s`.
 
 ### Pull requests
 
 - Features and non-trivial fixes need a GitHub issue first so the proposal can be
   discussed before the work starts.
-- A mergeable pull request has: signed-off commits, unit tests for the change, no
-  drop in coverage, integration tests when behavior against a real server changes,
-  and updated pages under `doc/source/` when the public API changes.
+- A mergeable pull request has: cryptographically signed and signed-off commits, unit
+  tests for the change, no drop in coverage, integration tests when behavior against a
+  real server changes, and updated pages under `doc/source/` when the public API
+  changes.
 - First-time contributors add themselves to `CONTRIBUTORS.rst`. That entry names the
   human, not the tool.
 - Do not bump the version in `pyproject.toml` or touch `.github/workflows/release.yml`;
