@@ -44,5 +44,6 @@ These are the contributors to pylxd according to the GitHub repository.
  sparkiegeek      Adam Collard (Canonical)
  mate-amargo      Juan Alberto Regalado Galvan
  gajeshbhat       Gajesh Bhat
+ tugbataluy       Tuğba Taluy (Canonical)
  ===============  ==================================
 
