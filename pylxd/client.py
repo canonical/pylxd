@@ -154,6 +154,22 @@ class LXDSSLAdapter(requests.adapters.HTTPAdapter):
         super().cert_verify(conn, url, False, cert)
 
 
+class _Session(requests.Session):
+    """A Session whose own `verify` is not overridden by the environment.
+
+    With `trust_env`, requests replaces a session-level `verify` with
+    REQUESTS_CA_BUNDLE or CURL_CA_BUNDLE, so `verify=False` or a path to a
+    certificate would be silently ignored. Keep an explicit `verify` (False or
+    a path) and let the environment apply only when it is True or unset.
+    Proxies and the other environment settings are still honoured.
+    """
+
+    def merge_environment_settings(self, url, proxies, stream, verify, cert):
+        if verify is None and self.verify is not None and self.verify is not True:
+            verify = self.verify
+        return super().merge_environment_settings(url, proxies, stream, verify, cert)
+
+
 def get_session_for_url(
     url: str,
     verify: bool | str | None = None,
@@ -163,7 +179,7 @@ def get_session_for_url(
 
     Call sites can use this to customise the session before passing into a Client.
     """
-    session = requests.Session()
+    session = _Session()
     if url.startswith(DEFAULT_SCHEME):
         session.mount(DEFAULT_SCHEME, _UnixAdapter())
     else:
