@@ -49,6 +49,7 @@ class Operation:
         "location",
         "may_cancel",
         "metadata",
+        "requestor",
         "resources",
         "status",
         "status_code",

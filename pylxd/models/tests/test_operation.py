@@ -62,6 +62,13 @@ class TestOperation(testing.PyLXDTestCase):
             op = models.Operation(child_count=2)
         self.assertEqual(2, op.child_count)
 
+    def test_init_requestor(self):
+        requestor = {"username": "root", "protocol": "unix", "address": "@"}
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            op = models.Operation(requestor=requestor)
+        self.assertEqual(requestor, op.requestor)
+
     def test_get(self):
         """Return an operation."""
         name = "operation-abc"
