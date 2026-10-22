@@ -158,8 +158,18 @@ commands = [["isort", "{toxinidir}"], ["black", "{toxinidir}"]]
 
 [tool.tox.env.integration]
 pass_env = ["LXD_*"]
+# Fail on pylxd warnings (e.g. attributes LXD sends that pylxd does not declare).
+set_env = { "PYLXD_WARNINGS" = "" }
 deps = ".[testing]"
-commands = [["pytest", "integration", { replace = "posargs", extend = true }]]
+commands = [
+    [
+        "pytest",
+        "integration",
+        "-W",
+        "error::UserWarning",
+        { replace = "posargs", extend = true },
+    ],
+]
 
 [tool.tox.env.integration-in-lxd]
 allowlist_externals = ["{toxinidir}/integration/run-integration-tests-in-lxd"]
