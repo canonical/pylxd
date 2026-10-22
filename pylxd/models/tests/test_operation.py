@@ -13,6 +13,7 @@
 #    under the License.
 
 import json
+import warnings
 from unittest import mock
 
 from pylxd import exceptions, models
@@ -48,6 +49,12 @@ class TestOperation(testing.PyLXDTestCase):
             mock_warn.assert_called_once_with(mock.ANY)
             models.Operation(unknown="some_value_as_well")
             self.assertEqual(len(mock_warn.call_args_list), 2)
+
+    def test_init_err_code(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            op = models.Operation(err_code=404)
+        self.assertEqual(404, op.err_code)
 
     def test_get(self):
         """Return an operation."""

@@ -42,6 +42,7 @@ class Operation:
         "created_at",
         "description",
         "err",
+        "err_code",
         "id",
         "secret",
         "location",
