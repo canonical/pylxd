@@ -56,6 +56,12 @@ class TestOperation(testing.PyLXDTestCase):
             op = models.Operation(err_code=404)
         self.assertEqual(404, op.err_code)
 
+    def test_init_child_count(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            op = models.Operation(child_count=2)
+        self.assertEqual(2, op.child_count)
+
     def test_get(self):
         """Return an operation."""
         name = "operation-abc"

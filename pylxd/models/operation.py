@@ -39,6 +39,7 @@ class Operation:
     __slots__ = [
         "_client",
         "class",
+        "child_count",
         "created_at",
         "description",
         "err",
