@@ -1068,6 +1068,7 @@ class TestFiles(testing.PyLXDTestCase):
         self.assertEqual(headers["X-LXD-mode"], "0123")
         self.assertEqual(headers["X-LXD-uid"], "1")
         self.assertEqual(headers["X-LXD-gid"], "2")
+        self.assertEqual(headers["Content-Type"], "application/octet-stream")
         # use a str mode this type
         self.instance.files.put("/tmp/putted", data, mode="456")
         headers = _capture["headers"]
