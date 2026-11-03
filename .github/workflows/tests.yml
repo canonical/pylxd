@@ -94,12 +94,12 @@ jobs:
         persist-credentials: false
 
     - name: Set up Python
-      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
       with:
         python-version: ${{ matrix.python-version }}
 
     - name: Setup LXD
-      uses: canonical/setup-lxd@e3ef25fc529b40aa403b264cdf44e7882b361164
+      uses: canonical/setup-lxd@e38f436c468900dfe2b6ca98fb8eb352bbbb917a
       with:
         channel: ${{ matrix.track }}
 
