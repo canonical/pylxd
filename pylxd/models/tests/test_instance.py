@@ -712,9 +712,20 @@ class TestInstance(testing.PyLXDTestCase):
             }
         )
 
-        an_instance = models.Instance(self.client, name="an-instance")
-        # Hack to get around mocked data
-        an_instance.type = "container"
+        # Regression test for #404: publish() used to send self.type
+        # straight into the JSON request body. The default mocked GET
+        # response for "an-instance" used throughout this test module
+        # doesn't include "type", so self.type held the internal MISSING
+        # sentinel, which isn't JSON-serializable, and json.dumps() failed
+        # with an opaque "TypeError: Object of type 'object' is not JSON
+        # serializable". publish() now sends the type-agnostic source type
+        # "instance" (supported by LXD since 4.0, and what `lxc publish`
+        # itself sends) instead of self.type, so it no longer depends on
+        # type being known locally at all -- not even requiring a sync()
+        # first, unlike the previous fix this replaced, which could never
+        # actually succeed (sync() is what would have populated type, and
+        # this server's sync response never includes it).
+        an_instance = models.Instance.get(self.client, "an-instance")
 
         image = an_instance.publish(wait=True)
 
