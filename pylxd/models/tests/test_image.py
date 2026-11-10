@@ -125,6 +125,8 @@ class TestImage(testing.PyLXDTestCase):
 
         self.assertIsInstance(a_image, models.Image)
         self.assertEqual(fingerprint, a_image.fingerprint)
+        request = self.last_matching_request("POST", "http://pylxd.test/1.0/images")
+        self.assertEqual("application/octet-stream", request.headers["Content-Type"])
 
     def test_create_with_metadata(self):
         """An image with metadata is created."""
@@ -133,6 +135,10 @@ class TestImage(testing.PyLXDTestCase):
 
         self.assertIsInstance(a_image, models.Image)
         self.assertEqual(fingerprint, a_image.fingerprint)
+        request = self.last_matching_request("POST", "http://pylxd.test/1.0/images")
+        self.assertTrue(
+            request.headers["Content-Type"].startswith("multipart/form-data; boundary=")
+        )
 
     def test_create_with_metadata_streamed(self):
         """An image with metadata is created."""

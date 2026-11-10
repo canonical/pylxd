@@ -314,6 +314,8 @@ class _APINode:
             params["project"] = self._project
             kwargs["params"] = params
 
+        _set_default_content_type(kwargs)
+
         response = self.session.post(self._api_endpoint, *args, **kwargs)
         # Prior to LXD 2.0.3, successful synchronous requests returned 200,
         # rather than 201.
@@ -329,6 +331,8 @@ class _APINode:
             params["project"] = self._project
             kwargs["params"] = params
 
+        _set_default_content_type(kwargs)
+
         response = self.session.put(self._api_endpoint, *args, **kwargs)
         self._assert_response(response, allowed_status_codes=(200, 202))
         return response
@@ -341,6 +345,8 @@ class _APINode:
             params = kwargs.get("params", {})
             params["project"] = self._project
             kwargs["params"] = params
+
+        _set_default_content_type(kwargs)
 
         response = self.session.patch(self._api_endpoint, *args, **kwargs)
         self._assert_response(response, allowed_status_codes=(200, 202))
@@ -381,6 +387,33 @@ def _ws_exclude_origin(kwargs):
         kwargs["exclude_headers"] = ["origin"]
     elif not any(h.lower() == "origin" for h in existing):
         kwargs["exclude_headers"] = list(existing) + ["origin"]
+
+
+def _set_default_content_type(kwargs):
+    """Label a raw request body as ``application/octet-stream``.
+
+    LXD validates the ``Content-Type`` of request bodies and expects
+    ``application/octet-stream`` for raw uploads such as file pushes and
+    image or backup imports.  ``requests`` already sends ``application/json``
+    for ``json=`` bodies, but sends no ``Content-Type`` for raw ``data=``
+    bodies, so set it here.
+
+    The function mutates *kwargs* in place.  A ``Content-Type`` supplied by
+    the caller (checked case-insensitively) is left untouched, as are form
+    bodies given as a mapping, list or tuple and requests with ``files=``,
+    which ``requests`` encodes itself.
+    """
+    data = kwargs.get("data")
+    if data is None or isinstance(data, (Mapping, list, tuple)):
+        return
+    if kwargs.get("files"):
+        return
+
+    headers = kwargs.get("headers") or {}
+    if any(k.lower() == "content-type" for k in headers):
+        return
+
+    kwargs["headers"] = {**headers, "Content-Type": "application/octet-stream"}
 
 
 class _WebsocketClient(WebSocketBaseClient):
