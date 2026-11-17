@@ -99,7 +99,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Setup LXD
-      uses: canonical/setup-lxd@148b75cb43f4ac1356752fad771cc418cb215033
+      uses: canonical/setup-lxd@25c036d6aa7fd68c4d980887ad2c0fb122234cd0
       with:
         channel: ${{ matrix.track }}
 
