@@ -14,6 +14,7 @@
 import base64
 import json
 import os
+import ssl
 from types import MappingProxyType
 from unittest import TestCase, mock
 from urllib import parse
@@ -21,8 +22,12 @@ from urllib import parse
 import pytest
 import requests
 import requests.adapters
+import requests.certs
+from ws4py.client import WebSocketBaseClient
 
 from pylxd import client, exceptions
+
+CERT = os.path.join(os.path.dirname(__file__), "lxd.crt")
 
 
 class TestClient(TestCase):
@@ -412,6 +417,7 @@ class TestClient(TestCase):
 
         WebsocketClient.assert_called_once_with("ws://lxd.local", ssl_options=None)
 
+    @mock.patch.dict(os.environ, {"REQUESTS_CA_BUNDLE": "", "CURL_CA_BUNDLE": ""})
     def test_events_https(self):
         """An https compatible websocket client is returned."""
         websocket_client = mock.Mock(resource=None)
@@ -423,6 +429,8 @@ class TestClient(TestCase):
         ssl_options = {
             "certfile": client.DEFAULT_CERTS.cert,
             "keyfile": client.DEFAULT_CERTS.key,
+            "cert_reqs": ssl.CERT_REQUIRED,
+            "ca_certs": requests.certs.where(),
         }
         WebsocketClient.assert_called_once_with(
             "wss://lxd.local", ssl_options=ssl_options
@@ -1062,6 +1070,167 @@ class TestSetDefaultContentType:
         kwargs = {"data": b"raw", "headers": headers}
         client._set_default_content_type(kwargs)
         assert headers == {"X-LXD-mode": "0644"}
+
+
+class TestWsSslOptions:
+    """Tests for pylxd.client._ws_ssl_options."""
+
+    URL = "https://lxd.local:8443"
+    CA_VERIFIED = {"cert_reqs": ssl.CERT_REQUIRED}
+
+    @pytest.fixture(autouse=True)
+    def no_ca_bundle_in_environment(self, monkeypatch):
+        monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
+        monkeypatch.delenv("CURL_CA_BUNDLE", raising=False)
+
+    def options(self, verify):
+        session = client.get_session_for_url(self.URL, verify=verify)
+        return client._ws_ssl_options(session, self.URL, None)
+
+    def test_client_certificate_is_passed_through(self):
+        session = client.get_session_for_url(self.URL, verify=False)
+        options = client._ws_ssl_options(
+            session, self.URL, ("client.crt", "client.key")
+        )
+        assert options == {"certfile": "client.crt", "keyfile": "client.key"}
+
+    def test_verify_path_pins_the_server_certificate(self):
+        """The pin is checked by pylxd: no cert_reqs is set."""
+        assert self.options(CERT) == {"ca_certs": CERT}
+
+    def test_verify_true_uses_the_ca_bundle_requests_uses(self):
+        expected = {**self.CA_VERIFIED, "ca_certs": requests.certs.where()}
+        assert self.options(True) == expected
+
+    def test_ca_bundle_from_the_environment(self, monkeypatch):
+        monkeypatch.setenv("REQUESTS_CA_BUNDLE", "/etc/ca.pem")
+        expected = {**self.CA_VERIFIED, "ca_certs": "/etc/ca.pem"}
+        assert self.options(True) == expected
+
+    def test_ca_bundle_on_a_caller_supplied_session_is_not_a_pin(self):
+        """Without LXDSSLAdapter, requests reads a path as a CA bundle."""
+        session = requests.Session()
+        session.verify = "/etc/ca.pem"
+        expected = {**self.CA_VERIFIED, "ca_certs": "/etc/ca.pem"}
+        assert client._ws_ssl_options(session, self.URL, None) == expected
+
+    @pytest.mark.parametrize("verify", [False, None])
+    def test_falsy_verify_opts_out(self, verify):
+        """requests skips verification for None as well as for False."""
+        assert self.options(verify) == {}
+
+
+class TestLXDWebSocketBaseClient:
+    """Tests for pylxd.client._LXDWebSocketBaseClient."""
+
+    PINNED = {"ca_certs": CERT}
+    with open(CERT) as fd:
+        PEER = ssl.PEM_cert_to_DER_cert(fd.read())
+
+    @staticmethod
+    def connected(ssl_options, peer_cert, scheme="wss"):
+        """Return a client that looks as if its TLS handshake just finished."""
+        ws = client._LXDWebSocketBaseClient(
+            f"{scheme}://127.0.0.1:8443", ssl_options=ssl_options
+        )
+        ws.sock.close()
+        ws.sock = mock.Mock()
+        ws.sock.getpeercert.return_value = peer_cert
+        ws._is_secure = scheme == "wss"
+        return ws
+
+    def test_pinned_certificate_is_accepted(self):
+        ws = self.connected(self.PINNED, self.PEER)
+        ws._write(b"handshake")
+        ws._write(b"frame")
+        assert ws.sock.sendall.call_count == 2
+        ws.sock.getpeercert.assert_called_once_with(binary_form=True)
+
+    @pytest.mark.parametrize("peer_cert", [b"another certificate", None])
+    def test_other_certificate_is_refused_before_anything_is_sent(self, peer_cert):
+        ws = self.connected(self.PINNED, peer_cert)
+        sock = ws.sock
+        with pytest.raises(exceptions.ClientConnectionFailed):
+            ws._write(b"GET /1.0/operations/x/websocket?secret=hunter2")
+        sock.sendall.assert_not_called()
+        sock.close.assert_called_once_with()
+        assert ws.sock is None
+
+    @pytest.mark.parametrize(
+        "ssl_options",
+        [
+            {},  # verification declined
+            {"cert_reqs": ssl.CERT_REQUIRED, "ca_certs": CERT},  # done in TLS handshake
+        ],
+    )
+    def test_no_fingerprint_check_without_a_pin(self, ssl_options):
+        ws = self.connected(ssl_options, b"another certificate")
+        ws._write(b"handshake")
+        ws.sock.getpeercert.assert_not_called()
+        ws.sock.sendall.assert_called_once_with(b"handshake")
+
+    def test_plain_ws_has_no_peer_certificate_to_check(self):
+        ws = self.connected(self.PINNED, None, scheme="ws")
+        ws._write(b"handshake")
+        ws.sock.getpeercert.assert_not_called()
+        ws.sock.sendall.assert_called_once_with(b"handshake")
+
+    def test_origin_header_is_excluded_from_handshake(self):
+        ws = self.connected(None, None)
+        assert ws.exclude_headers == ["origin"]
+        assert all(h.lower() != "origin" for h, _ in ws.handshake_headers)
+
+    def test_connect_wss_verifies_with_ca_bundle_and_skips_ws4py_tls(self):
+        ws = self.connected(
+            {
+                "certfile": "client.crt",
+                "keyfile": "client.key",
+                "cert_reqs": ssl.CERT_REQUIRED,
+                "ca_certs": "/etc/ca.pem",
+            },
+            None,
+        )
+        raw_sock = ws.sock
+        seen_schemes = []
+        with (
+            mock.patch("pylxd.client.ssl.create_default_context") as create_ctx,
+            mock.patch.object(
+                WebSocketBaseClient,
+                "connect",
+                autospec=True,
+                side_effect=lambda self_ws: seen_schemes.append(self_ws.scheme),
+            ),
+        ):
+            ws.connect()
+
+        create_ctx.assert_called_once_with(cafile="/etc/ca.pem")
+        ctx = create_ctx.return_value
+        ctx.load_cert_chain.assert_called_once_with("client.crt", "client.key")
+        ctx.wrap_socket.assert_called_once_with(raw_sock, server_hostname="127.0.0.1")
+        assert seen_schemes == ["ws"]
+        assert ws.scheme == "wss"
+        assert ws._is_secure is True
+
+    def test_connect_wss_without_cert_reqs_uses_unverified_context(self):
+        ws = self.connected(self.PINNED, self.PEER)
+        with (
+            mock.patch("pylxd.client.ssl.SSLContext") as MockCtx,
+            mock.patch.object(WebSocketBaseClient, "connect"),
+        ):
+            ws.connect()
+
+        MockCtx.assert_called_once_with(ssl.PROTOCOL_TLS_CLIENT)
+        ctx = MockCtx.return_value
+        assert ctx.check_hostname is False
+        assert ctx.verify_mode == ssl.CERT_NONE
+        ctx.load_cert_chain.assert_not_called()
+        assert ws.scheme == "wss"
+
+    def test_connect_plain_ws_delegates_to_super(self):
+        ws = self.connected(None, None, scheme="ws")
+        with mock.patch.object(WebSocketBaseClient, "connect") as super_connect:
+            ws.connect()
+        super_connect.assert_called_once_with()
 
 
 class TestIsAToken(TestCase):
