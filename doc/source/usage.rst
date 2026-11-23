@@ -28,6 +28,13 @@ certificate to the `verify` argument:
     ...     cert=('/path/to/client.crt', '/path/to/client.key'),
     ...     verify='/path/to/server.crt')
 
+The `verify` setting applies to every connection the client makes, including
+the WebSocket connections used by :meth:`~pylxd.models.Instance.execute` and
+:meth:`~pylxd.client.Client.events`. A `verify` path pins the server
+certificate and is matched by fingerprint, the same way `lxc remote add`
+pins one; `verify=True` requires a certificate signed by a trusted CA and
+matching the endpoint hostname.
+
 In the case where the certificate is self-signed (LXD's default), you may
 opt to disable the TLS fingerprint verification with `verify=False`. As this
 disables an important security feature, doing so is strongly discouraged.
