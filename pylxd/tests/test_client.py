@@ -928,3 +928,13 @@ class TestIsAToken(TestCase):
         # These characters are never valid in strict base64 but b64decode without
         # validate=True would silently ignore them.
         self.assertFalse(client._is_a_token("not!valid@base64#"))
+
+    def test_json_string_containing_secret_is_not_a_token(self):
+        """A base64-encoded JSON string containing 'secret' is not a token."""
+        payload = base64.b64encode(json.dumps("my-secret-value").encode("utf-8"))
+        self.assertFalse(client._is_a_token(payload))
+
+    def test_json_list_containing_secret_is_not_a_token(self):
+        """A base64-encoded JSON list containing 'secret' is not a token."""
+        payload = base64.b64encode(json.dumps(["secret"]).encode("utf-8"))
+        self.assertFalse(client._is_a_token(payload))
