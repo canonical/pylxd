@@ -71,9 +71,9 @@ class TestClient(TestCase):
         an_client = client.Client()
         self.assertEqual(expected, an_client.api._api_endpoint)
 
+    @mock.patch.dict(os.environ, {"LXD_DIR": "/lxd"})
     def test_create_LXD_DIR(self):
         """When LXD_DIR is set, use it in the client."""
-        os.environ["LXD_DIR"] = "/lxd"
         expected = "http+unix://%2Flxd%2Funix.socket/1.0"
 
         an_client = client.Client()
@@ -328,12 +328,12 @@ class TestClient(TestCase):
 
         self.assertEqual("/1.0/events", ws_client.resource)
 
+    @mock.patch.dict(os.environ, {"LXD_DIR": "/lxd"})
     def test_events_unix_socket(self):
         """A unix socket compatible websocket client is returned."""
         websocket_client = mock.Mock(resource=None)
         WebsocketClient = mock.Mock()
         WebsocketClient.return_value = websocket_client
-        os.environ["LXD_DIR"] = "/lxd"
         an_client = client.Client()
 
         an_client.events(websocket_client=WebsocketClient)
