@@ -618,6 +618,48 @@ class TestImage(testing.PyLXDTestCase):
         self.assertEqual("an-pem-cert", body["source"]["certificate"])
         self.assertNotIn("secret", body["source"])
 
+    def test_copy_with_project(self):
+        """The legacy copy payload includes the source image's project when set."""
+        from pylxd.client import Client
+
+        self.add_rule(
+            {
+                "json": {
+                    "type": "sync",
+                    "metadata": {
+                        "fingerprint": FINGERPRINT,
+                        "public": False,
+                        "project": "p1",
+                        "aliases": [],
+                        "properties": {},
+                        "filename": "a_image.tar.bz2",
+                        "auto_update": False,
+                    },
+                },
+                "method": "GET",
+                "url": rf"^{IMAGES_URL}/{FINGERPRINT}$",
+            }
+        )
+        a_image = self.client.images.get(FINGERPRINT)
+        client2 = Client(endpoint="http://pylxd2.test")
+
+        a_image.copy(client2, wait=True)
+
+        body = self.last_matching_request("POST", IMAGES2_URL).json()
+        self.assertEqual(
+            {
+                "type": "image",
+                "mode": "pull",
+                "server": "http://pylxd.test",
+                "protocol": "lxd",
+                "fingerprint": FINGERPRINT,
+                "project": "p1",
+                "secret": "abcdefg",
+                "certificate": "an-pem-cert",
+            },
+            body["source"],
+        )
+
     def test_eq_same_fingerprint_no_project(self):
         """Two images with same fingerprint and no project are equal."""
         fp = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"

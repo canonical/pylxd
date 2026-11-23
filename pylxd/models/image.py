@@ -396,9 +396,6 @@ class Image(model.Model):
                 "fingerprint": self.fingerprint,
                 "copy_aliases": copy_aliases,
             }
-            project = self._raw_attr("project")
-            if project:
-                source["project"] = project
         else:
             if copy_aliases:
                 new_client.assert_has_api_extension("image_registries")
@@ -412,6 +409,10 @@ class Image(model.Model):
             }
             if copy_aliases:
                 source["copy_aliases"] = True
+
+        project = self._raw_attr("project")
+        if project:
+            source["project"] = project
 
         config = {
             "filename": self.filename,
