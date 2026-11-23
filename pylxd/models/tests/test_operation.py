@@ -142,7 +142,7 @@ class TestOperation(testing.PyLXDTestCase):
 
         with self.assertRaises(exceptions.LXDAPIException) as wait_cm:
             an_operation.wait()
-        assert str(wait_cm.exception) == "Could not proceed"
+        self.assertEqual(str(wait_cm.exception), "Could not proceed")
 
     def test_unknown_attribute(self):
         self.add_rule(
