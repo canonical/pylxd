@@ -493,8 +493,8 @@ class TestAPINode(TestCase):
         self.assertEqual("http://test.com/test", new_node._api_endpoint)
 
     def test_getitem_leave_underscores_alone(self):
-        """Bug 295 erronously changed underscores to '-' -- let's make sure
-        it doens't happend again
+        """Bug 295 erroneously changed underscores to '-' -- let's make sure
+        it doesn't happen again
         """
         node = client._APINode("http://test.com", mock.sentinel.session)
         new_node = node.thing["my_snapshot"]
@@ -507,7 +507,7 @@ class TestAPINode(TestCase):
         self.assertIs(node.session, session)
 
     def test_session_passed_to_child(self):
-        """session should be shared across path traversl"""
+        """session should be shared across path traversal"""
         parent_node = client._APINode("http+unix://test.com", mock.sentinel.session)
         child_node = parent_node.instances
         self.assertIs(parent_node.session, child_node.session)
