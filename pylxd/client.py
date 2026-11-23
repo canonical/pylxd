@@ -499,9 +499,12 @@ class _LXDWebSocketBaseClient(WebSocketBaseClient):
     def connect(self):
         if self.scheme == "wss":
             if "cert_reqs" in self.ssl_options:
-                context = ssl.create_default_context(
-                    cafile=self.ssl_options["ca_certs"]
-                )
+                ca_certs = self.ssl_options["ca_certs"]
+                # Like requests, accept a directory of CA certificates too.
+                if os.path.isdir(ca_certs):
+                    context = ssl.create_default_context(capath=ca_certs)
+                else:
+                    context = ssl.create_default_context(cafile=ca_certs)
             else:
                 context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
                 context.check_hostname = False
@@ -515,6 +518,9 @@ class _LXDWebSocketBaseClient(WebSocketBaseClient):
             self.scheme = "ws"
             try:
                 return super().connect()
+            except Exception:
+                self.close_connection()
+                raise
             finally:
                 self.scheme = "wss"
         return super().connect()
@@ -851,9 +857,9 @@ class Client:
         of events as they occur.
 
         :param websocket_client: Optional websocket client can be specified for
-         implementation-specific handling of events as they occur. Derive it
-         from ``pylxd.client._LXDWebSocketBaseClient`` so that TLS verification
-         is applied on the connection too.
+         implementation-specific handling of events as they occur. A subclass
+         of ``ws4py.client.WebSocketBaseClient`` gets the client's TLS
+         verification and ``Origin`` header policy applied to it.
         :type websocket_client: ws4py.client import WebSocketBaseClient
 
         :param event_types: Optional set of event types to propagate. Omit this
@@ -862,11 +868,36 @@ class Client:
 
         :returns: instance of the websocket client
         :rtype: Option[_WebsocketClient(), `websocket_client`]
+        :raises: :class:`pylxd.exceptions.ClientConnectionFailed` if the server
+         certificate has to be verified and `websocket_client` is not such a
+         subclass.
         """
         if websocket_client is None:
             websocket_client = _WebsocketClient
+        elif (
+            isinstance(websocket_client, type)
+            and issubclass(websocket_client, WebSocketBaseClient)
+            and not issubclass(websocket_client, _LXDWebSocketBaseClient)
+        ):
+            # A caller's class knows nothing about pylxd's TLS verification.
+            websocket_client = cast(
+                type[WebSocketBaseClient],
+                type(
+                    websocket_client.__name__,
+                    (_LXDWebSocketBaseClient, websocket_client),
+                    {},
+                ),
+            )
 
         client = websocket_client(self.websocket_url, ssl_options=self.ssl_options)
+        if (self.ssl_options or {}).get("ca_certs") and not isinstance(
+            client, _LXDWebSocketBaseClient
+        ):
+            # For instance a factory function, which hides the class.
+            raise exceptions.ClientConnectionFailed(
+                "websocket_client must be a ws4py WebSocketBaseClient subclass "
+                "for the server certificate to be verified"
+            )
         parsed = parse.urlparse(self.api.events._api_endpoint)
 
         resource = parsed.path
