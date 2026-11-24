@@ -13,6 +13,7 @@
 #    under the License.
 
 from integration.testing import IntegrationTestCase
+from pylxd.client import Client
 
 
 class TestInstanceWebSocket(IntegrationTestCase):
@@ -171,3 +172,47 @@ class TestInstances(IntegrationTestCase):
         instances = self.client.instances.all(recursion=2, fields=["state.disk"])
 
         self.assertIn(name, [i.name for i in instances])
+
+
+class TestInstanceRestrictedProject(IntegrationTestCase):
+    """Tests for instances in a restricted project."""
+
+    def test_save_twice(self):
+        """A second save works after LXD changed a volatile key (#569).
+
+        Changing security.idmap.isolated makes LXD recompute
+        volatile.idmap.next, and a restricted project rejects a save that
+        sends back the old value.
+        """
+        _, alias = self.create_image()
+        project = self.generate_object_name()
+        self.lxd.projects.post(
+            json={
+                "name": project,
+                "config": {"restricted": "true", "features.images": "false"},
+            }
+        )
+        self.addCleanup(self.delete_project, project)
+        client = Client(project=project)
+        root = self.client.profiles.get("default").devices["root"]
+        profile = client.profiles.get("default")
+        profile.devices = {"root": root}
+        profile.save(wait=True)
+        name = self.generate_object_name()
+        instance = client.instances.create(
+            {
+                "name": name,
+                "profiles": ["default"],
+                "source": {"type": "image", "alias": alias},
+            },
+            wait=True,
+        )
+        self.addCleanup(instance.delete, wait=True)
+
+        instance.config["security.idmap.isolated"] = "true"
+        instance.save(wait=True)
+        instance.description = "saved twice"
+        instance.save(wait=True)
+
+        instance = client.instances.get(name)
+        self.assertEqual("saved twice", instance.description)
