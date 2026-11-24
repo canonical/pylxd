@@ -311,6 +311,11 @@ class Model(metaclass=ModelType):
         This method should write the new data to the server via marshalling.
         It should be a no-op when the object is not dirty, to prevent needless
         I/O.
+
+        With ``wait=True`` the object is synced back once the update has
+        finished, as LXD may change some fields itself (for example volatile
+        keys on instances). With ``wait=False`` it is left as it was, so call
+        :meth:`sync` before saving it again.
         """
         marshalled = self.marshall()
         response = self.api.put(json=marshalled)
@@ -318,6 +323,12 @@ class Model(metaclass=ModelType):
         # Use helper method for JSON parsing
         self._handle_async_response(response, wait)
         self.__dirty__.clear()
+
+        # Without a refresh, the next save() would send the old values of
+        # fields the server changed and LXD can reject them, e.g. a stale
+        # volatile.idmap.next in a restricted project.
+        if wait:
+            self.sync(rollback=True)
 
     def delete(self, wait=False):
         """Delete an object from the server."""
