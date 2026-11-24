@@ -46,5 +46,6 @@ These are the contributors to pylxd according to the GitHub repository.
  gajeshbhat       Gajesh Bhat
  tugbataluy       Tuğba Taluy (Canonical)
  abdull-ah-med    Abdullah Ahmed
+ 18Abhinav07      Abhinav Pangaria
  ===============  ==================================
 
