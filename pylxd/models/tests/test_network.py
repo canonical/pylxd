@@ -256,7 +256,7 @@ class TestNetwork(testing.PyLXDTestCase):
             }
         )
         network = models.Network.get(self.client, "eth0")
-        assert dict(network.state()) == state
+        self.assertEqual(dict(network.state()), state)
 
     def test_str(self):
         """Network is printed in JSON format."""

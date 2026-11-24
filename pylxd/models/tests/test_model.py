@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from unittest import mock
+from unittest import TestCase, mock
 
 from pylxd.models import _model as model
 from pylxd.tests import testing
@@ -34,16 +34,16 @@ class ChildItem(Item):
     """A fake model child class."""
 
 
-class TestAttributeDict:
+class TestAttributeDict(TestCase):
     def test_from_dict(self):
         a = model.AttributeDict({"foo": "bar", "baz": "bza"})
-        assert a.foo == "bar"
-        assert a.baz == "bza"
+        self.assertEqual(a.foo, "bar")
+        self.assertEqual(a.baz, "bza")
 
     def test_iterable(self):
         d = {"foo": "bar", "baz": "bza"}
         a = model.AttributeDict(d)
-        assert dict(a) == d
+        self.assertEqual(dict(a), d)
 
 
 class TestModel(testing.PyLXDTestCase):

@@ -470,7 +470,7 @@ def _is_a_token(secret) -> bool:
     >>> _is_a_token(base64.b64encode("password".encode("utf-8")))
     False
     >>> token = '{"client_name":"foo","fingerprint":"abcd","addresses":["192.0.2.1:8443"],"secret":"I-am-a-secret","expires_at":"0001-01-01T00:00:00Z","type":""}'
-    >>> _is_a_token(base64.b64encode(json.dumps(token).encode("utf-8")))
+    >>> _is_a_token(base64.b64encode(token.encode("utf-8")))
     True
     """
     try:
@@ -480,7 +480,7 @@ def _is_a_token(secret) -> bool:
             secret = secret.strip()
         b64 = base64.b64decode(secret, validate=True)
         token = json.loads(b64.decode("utf-8"))
-        return "secret" in token
+        return isinstance(token, dict) and "secret" in token
     except (TypeError, ValueError, json.JSONDecodeError, binascii.Error):
         return False
 

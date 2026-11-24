@@ -71,9 +71,9 @@ class TestClient(TestCase):
         an_client = client.Client()
         self.assertEqual(expected, an_client.api._api_endpoint)
 
+    @mock.patch.dict(os.environ, {"LXD_DIR": "/lxd"})
     def test_create_LXD_DIR(self):
         """When LXD_DIR is set, use it in the client."""
-        os.environ["LXD_DIR"] = "/lxd"
         expected = "http+unix://%2Flxd%2Funix.socket/1.0"
 
         an_client = client.Client()
@@ -328,12 +328,12 @@ class TestClient(TestCase):
 
         self.assertEqual("/1.0/events", ws_client.resource)
 
+    @mock.patch.dict(os.environ, {"LXD_DIR": "/lxd"})
     def test_events_unix_socket(self):
         """A unix socket compatible websocket client is returned."""
         websocket_client = mock.Mock(resource=None)
         WebsocketClient = mock.Mock()
         WebsocketClient.return_value = websocket_client
-        os.environ["LXD_DIR"] = "/lxd"
         an_client = client.Client()
 
         an_client.events(websocket_client=WebsocketClient)
@@ -493,8 +493,8 @@ class TestAPINode(TestCase):
         self.assertEqual("http://test.com/test", new_node._api_endpoint)
 
     def test_getitem_leave_underscores_alone(self):
-        """Bug 295 erronously changed underscores to '-' -- let's make sure
-        it doens't happend again
+        """Bug 295 erroneously changed underscores to '-' -- let's make sure
+        it doesn't happen again
         """
         node = client._APINode("http://test.com", mock.sentinel.session)
         new_node = node.thing["my_snapshot"]
@@ -507,7 +507,7 @@ class TestAPINode(TestCase):
         self.assertIs(node.session, session)
 
     def test_session_passed_to_child(self):
-        """session should be shared across path traversl"""
+        """session should be shared across path traversal"""
         parent_node = client._APINode("http+unix://test.com", mock.sentinel.session)
         child_node = parent_node.instances
         self.assertIs(parent_node.session, child_node.session)
@@ -928,3 +928,13 @@ class TestIsAToken(TestCase):
         # These characters are never valid in strict base64 but b64decode without
         # validate=True would silently ignore them.
         self.assertFalse(client._is_a_token("not!valid@base64#"))
+
+    def test_json_string_containing_secret_is_not_a_token(self):
+        """A base64-encoded JSON string containing 'secret' is not a token."""
+        payload = base64.b64encode(json.dumps("my-secret-value").encode("utf-8"))
+        self.assertFalse(client._is_a_token(payload))
+
+    def test_json_list_containing_secret_is_not_a_token(self):
+        """A base64-encoded JSON list containing 'secret' is not a token."""
+        payload = base64.b64encode(json.dumps(["secret"]).encode("utf-8"))
+        self.assertFalse(client._is_a_token(payload))
