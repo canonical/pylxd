@@ -97,7 +97,8 @@ methods and attributes:
     considered "dirty".
   - `rollback()` - Discard all local changes to the object, opting
     for a representation taken from the server.
-  - `save()` - Save the object, writing changes to the server.
+  - `save()` - Save the object, writing changes to the server. With
+    `wait=True` the object is synced from the server afterwards.
 
 
 Returning again to the `Container` example

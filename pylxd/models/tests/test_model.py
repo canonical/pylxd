@@ -251,6 +251,32 @@ class TestModel(testing.PyLXDTestCase):
 
         self.assertFalse(item.dirty)
 
+    def test_save_wait_syncs(self):
+        """With wait=True the object is synced back after the save."""
+        item = Item(self.client, name="an-item", age=15, data={"key": "val"})
+
+        item.age = 69
+        item.save(wait=True)
+
+        # should sync back to 1000
+        self.assertEqual(item.age, 1000)
+        self.assertFalse(item.dirty)
+
+    def test_save_no_wait_does_not_sync(self):
+        """With wait=False the update may still be running, so no sync."""
+        item = Item(self.client, name="an-item", age=15, data={"key": "val"})
+
+        item.age = 69
+        item.save()
+
+        self.assertEqual(item.age, 69)
+        self.assertFalse(
+            any(
+                r.method == "GET" and r.url == "http://pylxd.test/1.0/items/an-item"
+                for r in self.requests_mock.request_history
+            )
+        )
+
     def test_put(self):
         item = Item(self.client, name="an-item", age=15, data={"key": "val"})
 

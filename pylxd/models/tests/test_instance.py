@@ -466,6 +466,38 @@ class TestInstance(testing.PyLXDTestCase):
 
         self.assertTrue(an_instance.ephemeral)
 
+    def test_save_twice_sends_current_volatile_keys(self):
+        """A second save sends the volatile keys LXD set on the first (#569)."""
+        url = "http://pylxd.test/1.0/instances/an-instance"
+        metadata = self.client.api.instances["an-instance"].get().json()["metadata"]
+
+        def serve(config):
+            self.add_rule(
+                {
+                    "json": {
+                        "type": "sync",
+                        "metadata": {**metadata, "config": config},
+                    },
+                    "method": "GET",
+                    "url": rf"^{url}$",
+                }
+            )
+
+        serve({"volatile.idmap.next": "old"})
+        an_instance = models.Instance.get(self.client, "an-instance")
+        an_instance.config["raw.idmap"] = "uid 1000 1000"
+        # LXD recomputes volatile.idmap.next when raw.idmap changes.
+        serve({"raw.idmap": "uid 1000 1000", "volatile.idmap.next": "new"})
+
+        an_instance.save(wait=True)
+        an_instance.save(wait=True)
+
+        put = self.last_matching_request("PUT", url)
+        self.assertEqual(
+            {"raw.idmap": "uid 1000 1000", "volatile.idmap.next": "new"},
+            put.json()["config"],
+        )
+
     def test_rename(self):
         an_instance = models.Instance(self.client, name="an-instance")
 
