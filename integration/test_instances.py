@@ -13,6 +13,7 @@
 #    under the License.
 
 from integration.testing import IntegrationTestCase
+from pylxd import exceptions
 from pylxd.client import Client
 
 
@@ -199,14 +200,21 @@ class TestInstanceRestrictedProject(IntegrationTestCase):
         profile.devices = {"root": root}
         profile.save(wait=True)
         name = self.generate_object_name()
-        instance = client.instances.create(
-            {
-                "name": name,
-                "profiles": ["default"],
-                "source": {"type": "image", "alias": alias},
-            },
-            wait=True,
-        )
+        try:
+            instance = client.instances.create(
+                {
+                    "name": name,
+                    "profiles": ["default"],
+                    "source": {"type": "image", "alias": alias},
+                },
+                wait=True,
+            )
+        except exceptions.LXDAPIException as e:
+            if "Unexpected instance type" in str(e):
+                self.skipTest(
+                    f"LXD does not support creating instances in restricted projects: {e}"
+                )
+            raise
         self.addCleanup(instance.delete, wait=True)
 
         instance.config["security.idmap.isolated"] = "true"
