@@ -617,11 +617,10 @@ class Client:
         # Verify the connection is valid.
         try:
             response = self.api.get()
-            if response.status_code != 200:
-                raise exceptions.ClientConnectionFailed()
             self.host_info = response.json()["metadata"]
 
         except (
+            exceptions.LXDAPIException,
             requests.exceptions.ConnectionError,
             requests.exceptions.InvalidURL,
         ) as e:

@@ -165,10 +165,29 @@ class TestClient(TestCase):
 
     def test_connection_404(self):
         """If the endpoint 404s, an exception is raised."""
-        response = mock.MagicMock(status_code=404)
-        self.get.return_value = response
+        import requests_mock
 
-        self.assertRaises(exceptions.ClientConnectionFailed, client.Client)
+        self.get_patcher.stop()
+        with requests_mock.Mocker() as m:
+            m.get("http://lxd/1.0", status_code=404, json={"error": "not found"})
+            with self.assertRaises(exceptions.ClientConnectionFailed) as ctx:
+                client.Client("http://lxd")
+        self.assertEqual("not found", str(ctx.exception))
+
+    def test_connection_api_error(self):
+        """If the endpoint returns an API error, ClientConnectionFailed is raised."""
+        import requests_mock
+
+        self.get_patcher.stop()
+        with requests_mock.Mocker() as m:
+            m.get(
+                "http://lxd/1.0",
+                status_code=500,
+                json={"error": "internal server error"},
+            )
+            with self.assertRaises(exceptions.ClientConnectionFailed) as ctx:
+                client.Client("http://lxd")
+        self.assertEqual("internal server error", str(ctx.exception))
 
     def test_connection_failed(self):
         """If the connection fails, an exception is raised."""
