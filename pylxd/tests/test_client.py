@@ -1021,13 +1021,41 @@ class TestGetSessionForUrl(TestCase):
 
     def test_session_verify_path_override_pathlike(self):
         """A request-level os.PathLike override pins that certificate's fingerprint."""
+        import datetime
         import pathlib
+        import tempfile
 
-        cert_path = os.path.join(os.path.dirname(__file__), "lxd.crt")
-        conn, _ = self._run_path_session_request(
-            verify_override=pathlib.Path(cert_path)
+        from cryptography import x509
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
+        from cryptography.x509.oid import NameOID
+
+        key = ec.generate_private_key(ec.SECP256R1())
+        subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "override.test")])
+        now = datetime.datetime.now(datetime.timezone.utc)
+        override_cert = (
+            x509.CertificateBuilder()
+            .subject_name(subject)
+            .issuer_name(subject)
+            .public_key(key.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(now - datetime.timedelta(minutes=5))
+            .not_valid_after(now + datetime.timedelta(days=1))
+            .sign(key, hashes.SHA256())
         )
-        self.assertEqual(conn.assert_fingerprint, self._cert_fingerprint(cert_path))
+        override_pem = override_cert.public_bytes(serialization.Encoding.PEM)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            override_path = pathlib.Path(tmpdir) / "override.crt"
+            override_path.write_bytes(override_pem)
+            conn, session_cert_path = self._run_path_session_request(
+                verify_override=override_path
+            )
+            override_fp = self._cert_fingerprint(override_path)
+
+        session_fp = self._cert_fingerprint(session_cert_path)
+        self.assertNotEqual(override_fp, session_fp)
+        self.assertEqual(conn.assert_fingerprint, override_fp)
         self.assertEqual(conn.cert_reqs, "CERT_NONE")
 
     def test_session_verify_path_override_true(self):
