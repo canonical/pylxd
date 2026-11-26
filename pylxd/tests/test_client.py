@@ -89,6 +89,46 @@ class TestClient(TestCase):
 
         self.assertEqual(expected, an_client.api._api_endpoint)
 
+    def test_create_endpoint_verify_false_ignores_saved_cert(self):
+        """An explicit verify=False is not replaced by a saved server cert."""
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            servercerts = os.path.join(tmpdir, "servercerts")
+            os.makedirs(servercerts)
+            cert_path = os.path.join(servercerts, "lxd.local.crt")
+            with open(cert_path, "w") as fd:
+                fd.write("dummy")
+
+            with mock.patch.object(client, "CERTS_PATH", tmpdir):
+                a_client = client.Client("https://lxd.local:8443", verify=False)
+
+        self.assertIs(a_client.api.session.verify, False)
+        self.assertNotIsInstance(
+            a_client.api.session.get_adapter("https://lxd.local:8443/1.0"),
+            client.LXDSSLAdapter,
+        )
+
+    def test_create_endpoint_verify_true_uses_saved_cert(self):
+        """verify=True discovers and uses an existing saved server cert."""
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            servercerts = os.path.join(tmpdir, "servercerts")
+            os.makedirs(servercerts)
+            cert_path = os.path.join(servercerts, "lxd.local.crt")
+            with open(cert_path, "w") as fd:
+                fd.write("dummy")
+
+            with mock.patch.object(client, "CERTS_PATH", tmpdir):
+                a_client = client.Client("https://lxd.local:8443", verify=True)
+
+        self.assertEqual(a_client.api.session.verify, cert_path)
+        self.assertIsInstance(
+            a_client.api.session.get_adapter("https://lxd.local:8443/1.0"),
+            client.LXDSSLAdapter,
+        )
+
     def test_create_endpoint_with_project(self):
         """Explicitly set the client endpoint."""
         response = mock.MagicMock(status_code=200)

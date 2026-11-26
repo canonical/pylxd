@@ -585,7 +585,7 @@ class Client:
                     cert = DEFAULT_CERTS
 
                 # Try to use an existing server certificate if one exists
-                if isinstance(verify, bool) and endpoint.startswith("https://"):
+                if verify is True and endpoint.startswith("https://"):
                     no_proto = re.sub(r"^https://\[?", "", endpoint)
                     remote = re.sub(r"]?(:[0-9]+)?$", "", no_proto)
                     remote_cert_path = os.path.join(
