@@ -184,6 +184,86 @@ class TestModel(testing.PyLXDTestCase):
         item.sync()
 
         self.assertEqual(250, item.age)
+        self.assertEqual({"age"}, item.__dirty__)
+
+    def test_sync_does_not_mark_dirty_and_refreshes_on_resync(self):
+        """Ordinary sync leaves fetched attributes clean so later syncs refresh."""
+        item = Item(self.client, name="an-item")
+
+        item.sync()
+
+        self.assertEqual(1000, item.age)
+        self.assertFalse(item.dirty)
+
+        self.add_rule(
+            {
+                "json": {
+                    "type": "sync",
+                    "metadata": {
+                        "name": "an-item",
+                        "age": 2000,
+                        "data": {"key": "val"},
+                    },
+                },
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/items/an-item",
+            }
+        )
+
+        item.sync()
+
+        self.assertEqual(2000, item.age)
+        self.assertFalse(item.dirty)
+
+    def test_sync_missing_validated_attribute(self):
+        """Omitted validated attributes store MISSING without invoking validator."""
+        self.add_rule(
+            {
+                "json": {
+                    "type": "sync",
+                    "metadata": {
+                        "name": "an-item",
+                        "data": {"key": "val"},
+                    },
+                },
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/items/an-item",
+            }
+        )
+        item = Item(self.client, name="an-item")
+
+        item.sync()
+
+        self.assertIs(model.MISSING, item.age)
+        self.assertFalse(item.dirty)
+
+    def test_sync_missing_attribute_preserves_dirty(self):
+        """Sync does not overwrite a dirty attribute missing from the response."""
+        self.add_rule(
+            {
+                "json": {
+                    "type": "sync",
+                    "metadata": {
+                        "name": "an-item",
+                        "data": {"key": "val"},
+                    },
+                },
+                "method": "GET",
+                "url": r"^http://pylxd.test/1.0/items/an-item",
+            }
+        )
+        item = Item(self.client, name="an-item")
+        item.age = 250
+
+        item.sync()
+
+        self.assertEqual(250, item.age)
+        self.assertEqual({"age"}, item.__dirty__)
+
+        item.sync(rollback=True)
+
+        self.assertIs(model.MISSING, item.age)
+        self.assertFalse(item.dirty)
 
     def test_rollback(self):
         """Rollback resets the object from the server."""
