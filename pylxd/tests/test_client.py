@@ -785,6 +785,89 @@ class TestGetSessionForUrl(TestCase):
         session.get("https://lxd.test:8443/1.0")
         self.assertIs(adapter.send.call_args.kwargs["verify"], False)
 
+    def _cert_fingerprint(self, cert_path):
+        """Return the SHA-256 hex digest of a PEM certificate file."""
+        from cryptography import x509
+        from cryptography.hazmat.primitives import hashes
+
+        with open(cert_path, "rb") as fd:
+            cert = x509.load_pem_x509_certificate(fd.read())
+        return cert.fingerprint(hashes.SHA256()).hex()
+
+    def _run_path_session_request(self, verify_override=None, conn=None):
+        """Send a mocked request through a path-verified session's LXDSSLAdapter."""
+        import io
+
+        import urllib3
+
+        cert_path = os.path.join(os.path.dirname(__file__), "lxd.crt")
+        session = client.get_session_for_url("https://lxd.test:8443", verify=cert_path)
+        adapter = session.get_adapter("https://lxd.test:8443/1.0")
+        self.assertIsInstance(adapter, client.LXDSSLAdapter)
+
+        if conn is None:
+            conn = urllib3.HTTPSConnectionPool("lxd.test", 8443)
+        conn.urlopen = mock.Mock(
+            return_value=urllib3.HTTPResponse(
+                body=io.BytesIO(b""), status=200, preload_content=False
+            )
+        )
+
+        kwargs = {}
+        if verify_override is not None:
+            kwargs["verify"] = verify_override
+
+        with mock.patch.object(
+            adapter, "get_connection_with_tls_context", return_value=conn
+        ):
+            session.get("https://lxd.test:8443/1.0", **kwargs)
+        return conn, cert_path
+
+    def test_session_verify_path_pins_fingerprint(self):
+        """A session initialized with a cert path pins its SHA-256 fingerprint."""
+        conn, cert_path = self._run_path_session_request()
+        self.assertEqual(conn.assert_fingerprint, self._cert_fingerprint(cert_path))
+        self.assertEqual(conn.cert_reqs, "CERT_NONE")
+
+    def test_session_verify_path_override_pathlike(self):
+        """A request-level os.PathLike override pins that certificate's fingerprint."""
+        import pathlib
+
+        cert_path = os.path.join(os.path.dirname(__file__), "lxd.crt")
+        conn, _ = self._run_path_session_request(
+            verify_override=pathlib.Path(cert_path)
+        )
+        self.assertEqual(conn.assert_fingerprint, self._cert_fingerprint(cert_path))
+        self.assertEqual(conn.cert_reqs, "CERT_NONE")
+
+    def test_session_verify_path_override_true(self):
+        """A request-level verify=True delegates to standard TLS verification."""
+        import urllib3
+
+        env = {
+            k: v
+            for k, v in os.environ.items()
+            if k not in ("REQUESTS_CA_BUNDLE", "CURL_CA_BUNDLE")
+        }
+        conn = urllib3.HTTPSConnectionPool("lxd.test", 8443)
+        conn.assert_fingerprint = "stale-fingerprint"
+        with mock.patch.dict(os.environ, env, clear=True):
+            self._run_path_session_request(verify_override=True, conn=conn)
+        self.assertIsNone(conn.assert_fingerprint)
+        self.assertEqual(conn.cert_reqs, "CERT_REQUIRED")
+        self.assertIsNotNone(conn.ca_certs)
+
+    def test_session_verify_path_override_false(self):
+        """A request-level verify=False disables verification without opening a fd."""
+        import urllib3
+
+        conn = urllib3.HTTPSConnectionPool("lxd.test", 8443)
+        conn.assert_fingerprint = "stale-fingerprint"
+        self._run_path_session_request(verify_override=False, conn=conn)
+        self.assertIsNone(conn.assert_fingerprint)
+        self.assertEqual(conn.cert_reqs, "CERT_NONE")
+        self.assertIsNone(conn.ca_certs)
+
 
 class TestWsExcludeOrigin:
     """Tests for pylxd.client._ws_exclude_origin."""

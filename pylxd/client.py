@@ -143,15 +143,20 @@ class LXDSSLAdapter(requests.adapters.HTTPAdapter):
         self,
         conn: urllib3.HTTPSConnectionPool,
         url: str,
-        verify: bool | str,
+        verify: bool | str | os.PathLike[str],
         cert: str | tuple[str, str] | None,
     ):
-        with open(verify, "rb") as fd:
-            servercert = x509.load_pem_x509_certificate(fd.read())
-            fingerprint = servercert.fingerprint(hashes.SHA256())
+        if isinstance(verify, (str, os.PathLike)):
+            with open(verify, "rb") as fd:
+                servercert = x509.load_pem_x509_certificate(fd.read())
+                fingerprint = servercert.fingerprint(hashes.SHA256())
 
-        conn.assert_fingerprint = "".join([f"{i:02x}" for i in fingerprint])
-        super().cert_verify(conn, url, False, cert)
+            conn.assert_fingerprint = "".join([f"{i:02x}" for i in fingerprint])
+            super().cert_verify(conn, url, False, cert)
+            return
+
+        conn.assert_fingerprint = None
+        super().cert_verify(conn, url, verify, cert)
 
 
 class _Session(requests.Session):
