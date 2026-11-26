@@ -111,13 +111,15 @@ class _UnixAdapter(requests.adapters.HTTPAdapter):
     def get_connection(
         self, url: str, proxies: dict[str, str] | None = None
     ) -> _UnixSocketHTTPConnectionPool:
+        parsed = parse.urlparse(url)
+        socket_url = f"{parsed.scheme}://{parsed.netloc}"
         with self.pools.lock:
-            conn = self.pools.get(url)
+            conn = self.pools.get(socket_url)
             if conn:
                 return conn
 
-            conn = _UnixSocketHTTPConnectionPool(url)
-            self.pools[url] = conn
+            conn = _UnixSocketHTTPConnectionPool(socket_url)
+            self.pools[socket_url] = conn
 
         return conn
 

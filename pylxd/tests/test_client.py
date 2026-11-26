@@ -853,6 +853,24 @@ class TestGetSessionForUrl(TestCase):
             session.get_adapter("http+unix://"), requests.adapters.HTTPAdapter
         )
 
+    def test_unix_adapter_reuses_pool_across_paths_and_queries(self):
+        """Requests to different paths on one Unix socket share a single pool."""
+        adapter = client._UnixAdapter()
+        pool_a = adapter.get_connection(
+            "http+unix://%2Fvar%2Flib%2Flxd%2Funix.socket/1.0/instances"
+        )
+        pool_b = adapter.get_connection(
+            "http+unix://%2Fvar%2Flib%2Flxd%2Funix.socket/1.0/networks?recursion=1"
+        )
+        pool_other = adapter.get_connection(
+            "http+unix://%2Fvar%2Fsnap%2Flxd%2Fcommon%2Flxd%2Funix.socket/1.0"
+        )
+
+        self.assertIs(pool_a, pool_b)
+        self.assertIsNot(pool_a, pool_other)
+        self.assertEqual(2, len(adapter.pools))
+        adapter.close()
+
     def test_session_http(self):
         """HTTP nodes return the default requests session."""
         session = client.get_session_for_url("http://test.com")
