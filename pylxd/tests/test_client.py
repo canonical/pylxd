@@ -89,6 +89,46 @@ class TestClient(TestCase):
 
         self.assertEqual(expected, an_client.api._api_endpoint)
 
+    def test_create_endpoint_verify_false_ignores_saved_cert(self):
+        """An explicit verify=False is not replaced by a saved server cert."""
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            servercerts = os.path.join(tmpdir, "servercerts")
+            os.makedirs(servercerts)
+            cert_path = os.path.join(servercerts, "lxd.local.crt")
+            with open(cert_path, "w") as fd:
+                fd.write("dummy")
+
+            with mock.patch.object(client, "CERTS_PATH", tmpdir):
+                a_client = client.Client("https://lxd.local:8443", verify=False)
+
+        self.assertIs(a_client.api.session.verify, False)
+        self.assertNotIsInstance(
+            a_client.api.session.get_adapter("https://lxd.local:8443/1.0"),
+            client.LXDSSLAdapter,
+        )
+
+    def test_create_endpoint_verify_true_uses_saved_cert(self):
+        """verify=True discovers and uses an existing saved server cert."""
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            servercerts = os.path.join(tmpdir, "servercerts")
+            os.makedirs(servercerts)
+            cert_path = os.path.join(servercerts, "lxd.local.crt")
+            with open(cert_path, "w") as fd:
+                fd.write("dummy")
+
+            with mock.patch.object(client, "CERTS_PATH", tmpdir):
+                a_client = client.Client("https://lxd.local:8443", verify=True)
+
+        self.assertEqual(a_client.api.session.verify, cert_path)
+        self.assertIsInstance(
+            a_client.api.session.get_adapter("https://lxd.local:8443/1.0"),
+            client.LXDSSLAdapter,
+        )
+
     def test_create_endpoint_with_project(self):
         """Explicitly set the client endpoint."""
         response = mock.MagicMock(status_code=200)
@@ -125,10 +165,29 @@ class TestClient(TestCase):
 
     def test_connection_404(self):
         """If the endpoint 404s, an exception is raised."""
-        response = mock.MagicMock(status_code=404)
-        self.get.return_value = response
+        import requests_mock
 
-        self.assertRaises(exceptions.ClientConnectionFailed, client.Client)
+        self.get_patcher.stop()
+        with requests_mock.Mocker() as m:
+            m.get("http://lxd/1.0", status_code=404, json={"error": "not found"})
+            with self.assertRaises(exceptions.ClientConnectionFailed) as ctx:
+                client.Client("http://lxd")
+        self.assertEqual("not found", str(ctx.exception))
+
+    def test_connection_api_error(self):
+        """If the endpoint returns an API error, ClientConnectionFailed is raised."""
+        import requests_mock
+
+        self.get_patcher.stop()
+        with requests_mock.Mocker() as m:
+            m.get(
+                "http://lxd/1.0",
+                status_code=500,
+                json={"error": "internal server error"},
+            )
+            with self.assertRaises(exceptions.ClientConnectionFailed) as ctx:
+                client.Client("http://lxd")
+        self.assertEqual("internal server error", str(ctx.exception))
 
     def test_connection_failed(self):
         """If the connection fails, an exception is raised."""
@@ -407,6 +466,47 @@ class TestClient(TestCase):
                 self.assertEqual(expect_types, actual_types)
             else:
                 self.assertEqual(expect_resource.query, actual_resource.query)
+
+    def test_events_with_project(self):
+        """The websocket resource includes the configured project query parameter."""
+        response = mock.MagicMock(status_code=200)
+        response.json.return_value = {
+            "metadata": {
+                "auth": "trusted",
+                "api_extensions": ["projects"],
+            }
+        }
+        self.get.return_value = response
+
+        a_client = client.Client(project="prj")
+
+        ws_client = a_client.events()
+        self.assertEqual("/1.0/events?project=prj", ws_client.resource)
+
+        ws_client_all = a_client.events(event_types={client.EventType.All})
+        self.assertEqual("/1.0/events?project=prj", ws_client_all.resource)
+
+    def test_events_with_project_and_type_filter(self):
+        """The websocket resource includes both project and event type filters."""
+        response = mock.MagicMock(status_code=200)
+        response.json.return_value = {
+            "metadata": {
+                "auth": "trusted",
+                "api_extensions": ["projects"],
+            }
+        }
+        self.get.return_value = response
+
+        a_client = client.Client(project="prj")
+        ws_client = a_client.events(
+            event_types={client.EventType.Lifecycle, client.EventType.Operation}
+        )
+
+        parsed = parse.urlparse(ws_client.resource)
+        self.assertEqual("/1.0/events", parsed.path)
+        qdict = parse.parse_qs(parsed.query)
+        self.assertEqual(["prj"], qdict["project"])
+        self.assertEqual({"lifecycle", "operation"}, set(qdict["type"][0].split(",")))
 
     def test_resources(self):
         a_client = client.Client()
@@ -784,6 +884,89 @@ class TestGetSessionForUrl(TestCase):
         session.mount("https://", adapter)
         session.get("https://lxd.test:8443/1.0")
         self.assertIs(adapter.send.call_args.kwargs["verify"], False)
+
+    def _cert_fingerprint(self, cert_path):
+        """Return the SHA-256 hex digest of a PEM certificate file."""
+        from cryptography import x509
+        from cryptography.hazmat.primitives import hashes
+
+        with open(cert_path, "rb") as fd:
+            cert = x509.load_pem_x509_certificate(fd.read())
+        return cert.fingerprint(hashes.SHA256()).hex()
+
+    def _run_path_session_request(self, verify_override=None, conn=None):
+        """Send a mocked request through a path-verified session's LXDSSLAdapter."""
+        import io
+
+        import urllib3
+
+        cert_path = os.path.join(os.path.dirname(__file__), "lxd.crt")
+        session = client.get_session_for_url("https://lxd.test:8443", verify=cert_path)
+        adapter = session.get_adapter("https://lxd.test:8443/1.0")
+        self.assertIsInstance(adapter, client.LXDSSLAdapter)
+
+        if conn is None:
+            conn = urllib3.HTTPSConnectionPool("lxd.test", 8443)
+        conn.urlopen = mock.Mock(
+            return_value=urllib3.HTTPResponse(
+                body=io.BytesIO(b""), status=200, preload_content=False
+            )
+        )
+
+        kwargs = {}
+        if verify_override is not None:
+            kwargs["verify"] = verify_override
+
+        with mock.patch.object(
+            adapter, "get_connection_with_tls_context", return_value=conn
+        ):
+            session.get("https://lxd.test:8443/1.0", **kwargs)
+        return conn, cert_path
+
+    def test_session_verify_path_pins_fingerprint(self):
+        """A session initialized with a cert path pins its SHA-256 fingerprint."""
+        conn, cert_path = self._run_path_session_request()
+        self.assertEqual(conn.assert_fingerprint, self._cert_fingerprint(cert_path))
+        self.assertEqual(conn.cert_reqs, "CERT_NONE")
+
+    def test_session_verify_path_override_pathlike(self):
+        """A request-level os.PathLike override pins that certificate's fingerprint."""
+        import pathlib
+
+        cert_path = os.path.join(os.path.dirname(__file__), "lxd.crt")
+        conn, _ = self._run_path_session_request(
+            verify_override=pathlib.Path(cert_path)
+        )
+        self.assertEqual(conn.assert_fingerprint, self._cert_fingerprint(cert_path))
+        self.assertEqual(conn.cert_reqs, "CERT_NONE")
+
+    def test_session_verify_path_override_true(self):
+        """A request-level verify=True delegates to standard TLS verification."""
+        import urllib3
+
+        env = {
+            k: v
+            for k, v in os.environ.items()
+            if k not in ("REQUESTS_CA_BUNDLE", "CURL_CA_BUNDLE")
+        }
+        conn = urllib3.HTTPSConnectionPool("lxd.test", 8443)
+        conn.assert_fingerprint = "stale-fingerprint"
+        with mock.patch.dict(os.environ, env, clear=True):
+            self._run_path_session_request(verify_override=True, conn=conn)
+        self.assertIsNone(conn.assert_fingerprint)
+        self.assertEqual(conn.cert_reqs, "CERT_REQUIRED")
+        self.assertIsNotNone(conn.ca_certs)
+
+    def test_session_verify_path_override_false(self):
+        """A request-level verify=False disables verification without opening a fd."""
+        import urllib3
+
+        conn = urllib3.HTTPSConnectionPool("lxd.test", 8443)
+        conn.assert_fingerprint = "stale-fingerprint"
+        self._run_path_session_request(verify_override=False, conn=conn)
+        self.assertIsNone(conn.assert_fingerprint)
+        self.assertEqual(conn.cert_reqs, "CERT_NONE")
+        self.assertIsNone(conn.ca_certs)
 
 
 class TestWsExcludeOrigin:

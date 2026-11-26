@@ -128,6 +128,7 @@ class TestInstance(testing.PyLXDTestCase):
 
     def test_all_with_fields_ignored_for_recursion_1(self):
         """fields is silently ignored when recursion is not 2."""
+        testing.add_api_extension_helper(self, ["instances_state_selective_recursion"])
         self.add_rule(
             {
                 "json": {

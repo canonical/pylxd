@@ -373,8 +373,22 @@ class TestModel(testing.PyLXDTestCase):
             }
         )
         item = Item(self.client, name="an-item", age=15, data={"key": "val"})
+        history_start = len(self.requests_mock.request_history)
         # wait=False is overridden by the extension presence
         item.put({"age": 69}, wait=False)
+
+        requests_made = [
+            (r.method, r.url)
+            for r in self.requests_mock.request_history[history_start:]
+        ]
+        wait_req = ("GET", "http://pylxd.test/1.0/operations/123456789/wait")
+        sync_req = ("GET", "http://pylxd.test/1.0/items/an-item")
+        self.assertIn(wait_req, requests_made)
+        self.assertIn(sync_req, requests_made)
+        self.assertLess(requests_made.index(wait_req), requests_made.index(sync_req))
+        self.assertEqual(item.age, 1000)
+
+    def test_patch(self):
         item = Item(self.client, name="an-item", age=15, data={"key": "val"})
 
         item.patch({"age": 69})
@@ -460,8 +474,20 @@ class TestModel(testing.PyLXDTestCase):
             }
         )
         item = Item(self.client, name="an-item", age=15, data={"key": "val"})
+        history_start = len(self.requests_mock.request_history)
         # wait=False is overridden by the extension presence
         item.patch({"age": 69}, wait=False)
+
+        requests_made = [
+            (r.method, r.url)
+            for r in self.requests_mock.request_history[history_start:]
+        ]
+        wait_req = ("GET", "http://pylxd.test/1.0/operations/123456789/wait")
+        sync_req = ("GET", "http://pylxd.test/1.0/items/an-item")
+        self.assertIn(wait_req, requests_made)
+        self.assertIn(sync_req, requests_made)
+        self.assertLess(requests_made.index(wait_req), requests_made.index(sync_req))
+        self.assertEqual(item.age, 1000)
 
     def test_raw_attr_set(self):
         """_raw_attr returns the value when the attribute is set."""

@@ -560,6 +560,18 @@ class TestNetworkAsync(TestCase):
         """Directly add API extensions to host_info without an HTTP round-trip."""
         self.client.host_info["api_extensions"].extend(extensions)
 
+    def _mock_network_get_after_wait(self, name, payload, mock_wait, operation_id):
+        """Mock GET /1.0/networks/<name>, asserting wait_for_operation ran first."""
+
+        def _get_network(request, context):
+            mock_wait.assert_called_once_with(operation_id)
+            return payload
+
+        self.mocker.get(
+            re.compile(rf"http://pylxd\.test/1\.0/networks/{re.escape(name)}$"),
+            json=_get_network,
+        )
+
     # ------------------------------------------------------------------
     # Network.create() - When the server returns an async response (202) the
     # create() flow should wait on the returned operation so subsequent
@@ -578,6 +590,9 @@ class TestNetworkAsync(TestCase):
         with mock.patch.object(
             self.client.operations, "wait_for_operation"
         ) as mock_wait:
+            self._mock_network_get_after_wait(
+                "eth1", self._NETWORK_ETH1, mock_wait, operation_id
+            )
             network = models.Network.create(self.client, "eth1")
             mock_wait.assert_called_once_with(operation_id)
 
@@ -744,6 +759,9 @@ class TestNetworkAsync(TestCase):
         with mock.patch.object(
             self.client.operations, "wait_for_operation"
         ) as mock_wait:
+            self._mock_network_get_after_wait(
+                "eth1", self._NETWORK_ETH1, mock_wait, operation_id
+            )
             network = models.Network.create(self.client, "eth1", wait=False)
             mock_wait.assert_called_once_with(operation_id)
 
@@ -798,15 +816,14 @@ class TestNetworkAsync(TestCase):
             json={"type": "async", "operation": operation_id},
             status_code=202,
         )
-        self.mocker.get(
-            re.compile(r"http://pylxd\.test/1\.0/networks/eth2$"),
-            json=self._NETWORK_ETH2,
-        )
         network = models.Network(self.client, name="eth0")
 
         with mock.patch.object(
             self.client.operations, "wait_for_operation"
         ) as mock_wait:
+            self._mock_network_get_after_wait(
+                "eth2", self._NETWORK_ETH2, mock_wait, operation_id
+            )
             renamed = network.rename("eth2")
             mock_wait.assert_called_once_with(operation_id)
 
@@ -827,15 +844,14 @@ class TestNetworkAsync(TestCase):
             json={"type": "async", "operation": operation_id},
             status_code=202,
         )
-        self.mocker.get(
-            re.compile(r"http://pylxd\.test/1\.0/networks/eth2$"),
-            json=self._NETWORK_ETH2,
-        )
         network = models.Network(self.client, name="eth0")
 
         with mock.patch.object(
             self.client.operations, "wait_for_operation"
         ) as mock_wait:
+            self._mock_network_get_after_wait(
+                "eth2", self._NETWORK_ETH2, mock_wait, operation_id
+            )
             renamed = network.rename("eth2", wait=False)
             mock_wait.assert_called_once_with(operation_id)
 

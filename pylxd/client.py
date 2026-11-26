@@ -143,15 +143,20 @@ class LXDSSLAdapter(requests.adapters.HTTPAdapter):
         self,
         conn: urllib3.HTTPSConnectionPool,
         url: str,
-        verify: bool | str,
+        verify: bool | str | os.PathLike[str],
         cert: str | tuple[str, str] | None,
     ):
-        with open(verify, "rb") as fd:
-            servercert = x509.load_pem_x509_certificate(fd.read())
-            fingerprint = servercert.fingerprint(hashes.SHA256())
+        if isinstance(verify, (str, os.PathLike)):
+            with open(verify, "rb") as fd:
+                servercert = x509.load_pem_x509_certificate(fd.read())
+                fingerprint = servercert.fingerprint(hashes.SHA256())
 
-        conn.assert_fingerprint = "".join([f"{i:02x}" for i in fingerprint])
-        super().cert_verify(conn, url, False, cert)
+            conn.assert_fingerprint = "".join([f"{i:02x}" for i in fingerprint])
+            super().cert_verify(conn, url, False, cert)
+            return
+
+        conn.assert_fingerprint = None
+        super().cert_verify(conn, url, verify, cert)
 
 
 class _Session(requests.Session):
@@ -580,7 +585,7 @@ class Client:
                     cert = DEFAULT_CERTS
 
                 # Try to use an existing server certificate if one exists
-                if isinstance(verify, bool) and endpoint.startswith("https://"):
+                if verify is True and endpoint.startswith("https://"):
                     no_proto = re.sub(r"^https://\[?", "", endpoint)
                     remote = re.sub(r"]?(:[0-9]+)?$", "", no_proto)
                     remote_cert_path = os.path.join(
@@ -612,11 +617,10 @@ class Client:
         # Verify the connection is valid.
         try:
             response = self.api.get()
-            if response.status_code != 200:
-                raise exceptions.ClientConnectionFailed()
             self.host_info = response.json()["metadata"]
 
         except (
+            exceptions.LXDAPIException,
             requests.exceptions.ConnectionError,
             requests.exceptions.InvalidURL,
         ) as e:
@@ -761,10 +765,15 @@ class Client:
 
         resource = parsed.path
 
+        query: dict[str, Any] = parse.parse_qs(parsed.query)
+        if self.project is not None:
+            query["project"] = self.project
+
         if event_types and EventType.All not in event_types:
-            query: dict[str, Any] = parse.parse_qs(parsed.query)
-            query.update({"type": ",".join(t.value for t in event_types)})
-            resource = f"{resource}?{parse.urlencode(query)}"
+            query["type"] = ",".join(t.value for t in event_types)
+
+        if query:
+            resource = f"{resource}?{parse.urlencode(query, doseq=True)}"
 
         client.resource = resource
 
