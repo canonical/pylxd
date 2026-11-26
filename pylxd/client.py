@@ -15,10 +15,12 @@ from __future__ import annotations
 
 import base64
 import binascii
+import hashlib
 import json
 import os
 import re
 import socket
+import ssl
 from collections.abc import Mapping
 from enum import Enum
 from typing import Any, NamedTuple, cast
@@ -26,6 +28,7 @@ from urllib import parse
 
 import requests
 import requests.adapters
+import requests.certs
 import urllib3
 import urllib3.connection
 from cryptography import x509
@@ -437,7 +440,120 @@ def _set_default_content_type(kwargs):
     kwargs["headers"] = {**headers, "Content-Type": "application/octet-stream"}
 
 
-class _WebsocketClient(WebSocketBaseClient):
+def _ws_ssl_options(
+    session: requests.Session, url: str, cert: tuple[str, str] | None
+) -> dict[str, Any]:
+    """Translate the TLS settings `session` uses for `url` into WebSocket options.
+
+    Settings are read the way requests reads them, ``REQUESTS_CA_BUNDLE``
+    included, so HTTP and WebSocket connections accept and refuse the same
+    servers. With ``cert_reqs``, ``ca_certs`` is a CA bundle verified during
+    the TLS handshake; without ``cert_reqs``, ``ca_certs`` is a server
+    certificate pinned by :class:`LXDSSLAdapter` and matched by fingerprint in
+    :class:`_LXDWebSocketBaseClient`.
+    """
+    options: dict[str, Any] = {"certfile": cert[0], "keyfile": cert[1]} if cert else {}
+
+    verify = session.merge_environment_settings(url, {}, None, None, None)["verify"]
+    # A falsy verify, None as well as False, makes requests skip verification.
+    if (
+        isinstance(verify, str)
+        and verify
+        and isinstance(session.get_adapter(url), LXDSSLAdapter)
+    ):
+        options["ca_certs"] = verify
+    elif verify:
+        options["cert_reqs"] = ssl.CERT_REQUIRED
+        options["ca_certs"] = (
+            verify if isinstance(verify, str) else requests.certs.where()
+        )
+    return options
+
+
+class _LXDWebSocketBaseClient(WebSocketBaseClient):
+    """Base class for pylxd's WebSocket clients.
+
+    Strips the ``Origin`` header, wraps ``wss://`` sockets with
+    :class:`ssl.SSLContext` directly (so ws4py < 0.6.0 and Python 3.12+ work
+    without ``ssl.wrap_socket``), and checks a pinned server certificate's
+    SHA-256 fingerprint before sending the WebSocket handshake.
+    """
+
+    _is_secure = False
+    _peer_verified = False
+
+    def __init__(self, *args, **kwargs):
+        _ws_exclude_origin(kwargs)
+        excluded = [h.lower() for h in kwargs.pop("exclude_headers")]
+        super().__init__(*args, **kwargs)
+        self.exclude_headers = excluded
+
+    @property
+    def handshake_headers(self):
+        return [
+            (h, v)
+            for h, v in super().handshake_headers
+            if h.lower() not in self.exclude_headers
+        ]
+
+    def connect(self):
+        if self.scheme == "wss":
+            if "cert_reqs" in self.ssl_options:
+                ca_certs = self.ssl_options["ca_certs"]
+                # Like requests, accept a directory of CA certificates too.
+                if os.path.isdir(ca_certs):
+                    context = ssl.create_default_context(capath=ca_certs)
+                else:
+                    context = ssl.create_default_context(cafile=ca_certs)
+            else:
+                context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+                context.check_hostname = False
+                context.verify_mode = ssl.CERT_NONE
+            context.minimum_version = ssl.TLSVersion.TLSv1_2
+            if "certfile" in self.ssl_options:
+                context.load_cert_chain(
+                    self.ssl_options["certfile"], self.ssl_options["keyfile"]
+                )
+            self.sock = context.wrap_socket(self.sock, server_hostname=self.host)
+            self._is_secure = True
+            self.scheme = "ws"
+            try:
+                return super().connect()
+            except Exception:
+                self.close_connection()
+                raise
+            finally:
+                self.scheme = "wss"
+        return super().connect()
+
+    def _write(self, b):
+        # The first write is the WebSocket handshake request, which carries
+        # the operation secret. The TLS handshake has completed by then, so
+        # the peer certificate is available and nothing has been sent yet.
+        if self._is_secure and not self._peer_verified:
+            self._verify_peer_certificate()
+            self._peer_verified = True
+        super()._write(b)
+
+    def _verify_peer_certificate(self):
+        """Match the peer against the pinned server certificate, if any."""
+        pinned = self.ssl_options.get("ca_certs")
+        if not pinned or "cert_reqs" in self.ssl_options:
+            return
+
+        with open(pinned, "rb") as fd:
+            expected = x509.load_pem_x509_certificate(fd.read()).fingerprint(
+                hashes.SHA256()
+            )
+        peer = hashlib.sha256(self.sock.getpeercert(binary_form=True) or b"").digest()
+        if peer != expected:
+            self.close_connection()
+            raise exceptions.ClientConnectionFailed(
+                f"Server certificate does not match the one pinned in {pinned}"
+            )
+
+
+class _WebsocketClient(_LXDWebSocketBaseClient):
     """A basic websocket client for the LXD API.
 
     This client is intentionally barebones, and serves
@@ -445,10 +561,6 @@ class _WebsocketClient(WebSocketBaseClient):
     all json messages to a messages attribute, which can
     then be read are parsed.
     """
-
-    def __init__(self, *args, **kwargs):
-        _ws_exclude_origin(kwargs)
-        super().__init__(*args, **kwargs)
 
     def handshake_ok(self):
         self.messages = []
@@ -607,10 +719,9 @@ class Client:
         self.api = _APINode(
             f"{endpoint}/{version}", session, timeout=timeout, project=project
         )
-        use_ssl = self.api.scheme == "https" and self.cert
         self.ssl_options = (
-            {"certfile": self.cert[0], "keyfile": self.cert[1]}
-            if use_ssl and self.cert
+            _ws_ssl_options(session, endpoint, self.cert)
+            if self.api.scheme == "https"
             else None
         )
 
@@ -747,7 +858,9 @@ class Client:
         of events as they occur.
 
         :param websocket_client: Optional websocket client can be specified for
-         implementation-specific handling of events as they occur.
+         implementation-specific handling of events as they occur. A subclass
+         of ``ws4py.client.WebSocketBaseClient`` gets the client's TLS
+         verification and ``Origin`` header policy applied to it.
         :type websocket_client: ws4py.client import WebSocketBaseClient
 
         :param event_types: Optional set of event types to propagate. Omit this
@@ -756,11 +869,36 @@ class Client:
 
         :returns: instance of the websocket client
         :rtype: Option[_WebsocketClient(), `websocket_client`]
+        :raises: :class:`pylxd.exceptions.ClientConnectionFailed` if the server
+         certificate has to be verified and `websocket_client` is not such a
+         subclass.
         """
         if websocket_client is None:
             websocket_client = _WebsocketClient
+        elif (
+            isinstance(websocket_client, type)
+            and issubclass(websocket_client, WebSocketBaseClient)
+            and not issubclass(websocket_client, _LXDWebSocketBaseClient)
+        ):
+            # A caller's class knows nothing about pylxd's TLS verification.
+            websocket_client = cast(
+                type[WebSocketBaseClient],
+                type(
+                    websocket_client.__name__,
+                    (_LXDWebSocketBaseClient, websocket_client),
+                    {},
+                ),
+            )
 
         client = websocket_client(self.websocket_url, ssl_options=self.ssl_options)
+        if (self.ssl_options or {}).get("ca_certs") and not isinstance(
+            client, _LXDWebSocketBaseClient
+        ):
+            # For instance a factory function, which hides the class.
+            raise exceptions.ClientConnectionFailed(
+                "websocket_client must be a ws4py WebSocketBaseClient subclass "
+                "for the server certificate to be verified"
+            )
         parsed = parse.urlparse(self.api.events._api_endpoint)
 
         resource = parsed.path

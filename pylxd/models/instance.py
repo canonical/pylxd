@@ -26,12 +26,11 @@ from typing import IO, Any, Callable, NamedTuple, Optional, cast
 from urllib import parse
 
 import requests
-from ws4py.client import WebSocketBaseClient
 from ws4py.manager import WebSocketManager
 from ws4py.messaging import BinaryMessage, Message
 
 from pylxd import managers
-from pylxd.client import Client, _APINode, _ws_exclude_origin
+from pylxd.client import Client, _APINode, _LXDWebSocketBaseClient
 from pylxd.exceptions import LXDAPIException
 from pylxd.models import _model as model
 from pylxd.models.image import Image
@@ -876,7 +875,7 @@ class Instance(model.Model):
         return response
 
 
-class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
+class _CommandWebsocketClient(_LXDWebSocketBaseClient):  # pragma: no cover
     """Handle a websocket for instance.execute(...) and manage decoding of the
     returned values depending on 'decode' and 'encoding' parameters.
     """
@@ -891,7 +890,6 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
         self.finished = False
         self.last_message_empty = False
         self.buffer = []
-        _ws_exclude_origin(kwargs)
         super().__init__(*args, **kwargs)
 
     def handshake_ok(self):
@@ -950,7 +948,7 @@ class _CommandWebsocketClient(WebSocketBaseClient):  # pragma: no cover
             logger.exception("Failed to receive data")
 
 
-class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
+class _StdinWebsocket(_LXDWebSocketBaseClient):  # pragma: no cover
     """A websocket client for handling stdin.
 
     Allow comunicate with instance commands via stdin
@@ -959,7 +957,6 @@ class _StdinWebsocket(WebSocketBaseClient):  # pragma: no cover
     def __init__(self, url, payload=None, **kwargs):
         self.encoding = kwargs.pop("encoding", None)
         self.payload = payload
-        _ws_exclude_origin(kwargs)
         super().__init__(url, **kwargs)
 
     def _smart_encode(
