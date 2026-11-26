@@ -192,9 +192,8 @@ def get_session_for_url(
         session.mount(DEFAULT_SCHEME, _UnixAdapter())
     else:
         session.cert = cert
-        # requests accepts None at runtime but its hints do not; None is kept
-        # as the default for backward compatibility.
-        session.verify = verify  # type: ignore[assignment]
+        if verify is not None:
+            session.verify = verify
 
         if isinstance(verify, str):
             session.mount(url, LXDSSLAdapter())

@@ -875,6 +875,30 @@ class TestGetSessionForUrl(TestCase):
         session = client.get_session_for_url("http://test.com", verify=True)
         self.assertIs(session.verify, True)
 
+    def test_session_verify_default_keeps_tls_verification_enabled(self):
+        """Omitting verify or passing None keeps requests' verify=True default."""
+        import urllib3
+
+        env = {
+            k: v
+            for k, v in os.environ.items()
+            if k not in ("REQUESTS_CA_BUNDLE", "CURL_CA_BUNDLE")
+        }
+        url = "https://lxd.test:8443"
+        with mock.patch.dict(os.environ, env, clear=True):
+            for session in (
+                client.get_session_for_url(url),
+                client.get_session_for_url(url, verify=None),
+            ):
+                self.assertIs(session.verify, True)
+                merged = self._merged_settings(session, f"{url}/1.0")
+                self.assertIs(merged["verify"], True)
+                conn = urllib3.HTTPSConnectionPool("lxd.test", 8443)
+                adapter = session.get_adapter(f"{url}/1.0")
+                adapter.cert_verify(conn, f"{url}/1.0", merged["verify"], None)
+                self.assertEqual(conn.cert_reqs, "CERT_REQUIRED")
+                self.assertIsNotNone(conn.ca_certs)
+
     def _merged_settings(self, session, url="https://lxd.test:8443/1.0"):
         """Return the settings requests resolves for a request on session."""
         return session.merge_environment_settings(url, {}, None, None, None)
@@ -1154,10 +1178,17 @@ class TestWsSslOptions:
         expected = {**self.CA_VERIFIED, "ca_certs": "/etc/ca.pem"}
         assert client._ws_ssl_options(session, self.URL, None) == expected
 
+    def test_verify_none_defaults_to_ca_verification(self):
+        """get_session_for_url(url, verify=None) retains verify=True."""
+        expected = {**self.CA_VERIFIED, "ca_certs": requests.certs.where()}
+        assert self.options(None) == expected
+
     @pytest.mark.parametrize("verify", [False, None])
     def test_falsy_verify_opts_out(self, verify):
         """requests skips verification for None as well as for False."""
-        assert self.options(verify) == {}
+        session = requests.Session()
+        session.verify = verify
+        assert client._ws_ssl_options(session, self.URL, None) == {}
 
 
 class TestLXDWebSocketBaseClient:
