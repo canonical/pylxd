@@ -657,14 +657,11 @@ class Instance(model.Model):
                 manager.close_all()
 
             while not stdout.finished or not stderr.finished:
-                time.sleep(0.1)  # progma: no cover
+                time.sleep(0.1)  # pragma: no cover
 
-            manager.stop()
-            manager.join()
-
-            return _InstanceExecuteResult(
-                operation.metadata["return"], stdout.data, stderr.data
-            )
+        return _InstanceExecuteResult(
+            operation.metadata["return"], stdout.data, stderr.data
+        )
 
     def raw_interactive_execute(
         self,

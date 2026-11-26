@@ -575,6 +575,38 @@ class TestInstance(testing.PyLXDTestCase):
         self.assertEqual(0, result.exit_code)
         self.assertEqual("test\n", result.stdout)
 
+    def test_web_socket_manager_joins_before_stop(self):
+        """web_socket_manager joins a running thread before calling stop()."""
+        import threading
+
+        from pylxd import managers
+
+        events = []
+        entered = threading.Event()
+
+        class FakeManager(threading.Thread):
+            def __init__(self):
+                super().__init__()
+                self.running = False
+
+            def run(self):
+                self.running = True
+                entered.set()
+                while self.running:
+                    threading.Event().wait(0.01)
+                events.append("thread-exiting")
+
+            def stop(self):
+                events.append(("stop", self.is_alive()))
+
+        fake_manager = FakeManager()
+        with managers.web_socket_manager(fake_manager) as mgr:
+            mgr.start()
+            self.assertTrue(entered.wait(timeout=2))
+
+        self.assertFalse(fake_manager.is_alive())
+        self.assertEqual(["thread-exiting", ("stop", False)], events)
+
     def test_execute_string(self):
         """A command passed as string raises a TypeError."""
         an_instance = models.Instance(self.client, name="an-instance")
