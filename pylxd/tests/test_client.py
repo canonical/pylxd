@@ -1245,6 +1245,7 @@ class TestLXDWebSocketBaseClient:
 
         create_ctx.assert_called_once_with(cafile="/etc/ca.pem")
         ctx = create_ctx.return_value
+        assert ctx.minimum_version == ssl.TLSVersion.TLSv1_2
         ctx.load_cert_chain.assert_called_once_with("client.crt", "client.key")
         ctx.wrap_socket.assert_called_once_with(raw_sock, server_hostname="127.0.0.1")
         assert seen_schemes == ["ws"]
@@ -1263,6 +1264,7 @@ class TestLXDWebSocketBaseClient:
         ctx = MockCtx.return_value
         assert ctx.check_hostname is False
         assert ctx.verify_mode == ssl.CERT_NONE
+        assert ctx.minimum_version == ssl.TLSVersion.TLSv1_2
         ctx.load_cert_chain.assert_not_called()
         assert ws.scheme == "wss"
 

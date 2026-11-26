@@ -509,6 +509,7 @@ class _LXDWebSocketBaseClient(WebSocketBaseClient):
                 context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
                 context.check_hostname = False
                 context.verify_mode = ssl.CERT_NONE
+            context.minimum_version = ssl.TLSVersion.TLSv1_2
             if "certfile" in self.ssl_options:
                 context.load_cert_chain(
                     self.ssl_options["certfile"], self.ssl_options["keyfile"]
