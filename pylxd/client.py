@@ -765,10 +765,15 @@ class Client:
 
         resource = parsed.path
 
+        query: dict[str, Any] = parse.parse_qs(parsed.query)
+        if self.project is not None:
+            query["project"] = self.project
+
         if event_types and EventType.All not in event_types:
-            query: dict[str, Any] = parse.parse_qs(parsed.query)
-            query.update({"type": ",".join(t.value for t in event_types)})
-            resource = f"{resource}?{parse.urlencode(query)}"
+            query["type"] = ",".join(t.value for t in event_types)
+
+        if query:
+            resource = f"{resource}?{parse.urlencode(query, doseq=True)}"
 
         client.resource = resource
 

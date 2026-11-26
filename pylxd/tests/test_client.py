@@ -467,6 +467,47 @@ class TestClient(TestCase):
             else:
                 self.assertEqual(expect_resource.query, actual_resource.query)
 
+    def test_events_with_project(self):
+        """The websocket resource includes the configured project query parameter."""
+        response = mock.MagicMock(status_code=200)
+        response.json.return_value = {
+            "metadata": {
+                "auth": "trusted",
+                "api_extensions": ["projects"],
+            }
+        }
+        self.get.return_value = response
+
+        a_client = client.Client(project="prj")
+
+        ws_client = a_client.events()
+        self.assertEqual("/1.0/events?project=prj", ws_client.resource)
+
+        ws_client_all = a_client.events(event_types={client.EventType.All})
+        self.assertEqual("/1.0/events?project=prj", ws_client_all.resource)
+
+    def test_events_with_project_and_type_filter(self):
+        """The websocket resource includes both project and event type filters."""
+        response = mock.MagicMock(status_code=200)
+        response.json.return_value = {
+            "metadata": {
+                "auth": "trusted",
+                "api_extensions": ["projects"],
+            }
+        }
+        self.get.return_value = response
+
+        a_client = client.Client(project="prj")
+        ws_client = a_client.events(
+            event_types={client.EventType.Lifecycle, client.EventType.Operation}
+        )
+
+        parsed = parse.urlparse(ws_client.resource)
+        self.assertEqual("/1.0/events", parsed.path)
+        qdict = parse.parse_qs(parsed.query)
+        self.assertEqual(["prj"], qdict["project"])
+        self.assertEqual({"lifecycle", "operation"}, set(qdict["type"][0].split(",")))
+
     def test_resources(self):
         a_client = client.Client()
         a_client.host_info["api_extensions"] = ["resources"]
