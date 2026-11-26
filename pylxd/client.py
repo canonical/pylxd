@@ -431,6 +431,8 @@ def _set_default_content_type(kwargs):
     data = kwargs.get("data")
     if data is None or isinstance(data, (Mapping, list, tuple)):
         return
+    if not data and kwargs.get("json") is not None:
+        return
     if kwargs.get("files"):
         return
 

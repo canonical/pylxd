@@ -1088,6 +1088,15 @@ class TestSetDefaultContentType:
             ({}, {}),
             ({"data": None}, {"data": None}),
             ({"json": {"a": 1}}, {"json": {"a": 1}}),
+            ({"data": b"", "json": {"a": 1}}, {"data": b"", "json": {"a": 1}}),
+            ({"data": "", "json": {"a": 1}}, {"data": "", "json": {"a": 1}}),
+            (
+                {"data": b""},
+                {
+                    "data": b"",
+                    "headers": {"Content-Type": "application/octet-stream"},
+                },
+            ),
             (
                 {"data": b"raw"},
                 {
@@ -1146,6 +1155,15 @@ class TestSetDefaultContentType:
         assert "headers" not in kwargs
         request = requests.Request("POST", "http://lxd.test", **kwargs).prepare()
         assert request.headers["Content-Type"].startswith("multipart/form-data")
+
+    def test_empty_data_with_json_stays_json(self):
+        """requests sends application/json when data is falsy and json is given."""
+        kwargs = {"data": b"", "json": {"a": 1}}
+        client._set_default_content_type(kwargs)
+        assert "headers" not in kwargs
+        request = requests.Request("POST", "http://lxd.test", **kwargs).prepare()
+        assert request.headers["Content-Type"] == "application/json"
+        assert request.body == b'{"a": 1}'
 
     def test_does_not_mutate_caller_headers(self):
         headers = {"X-LXD-mode": "0644"}
