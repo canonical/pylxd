@@ -673,9 +673,10 @@ class Client:
         :param version: (optional): API version string to use with LXD
         :param cert: (optional): A tuple of (cert, key) to use with
             the http socket for client authentication
-        :param verify: (optional): Either a boolean, in which case it controls
-            whether we verify the server's TLS certificate, or a string, in
-            which case it must be a path to a CA bundle to use.
+        :param verify: (optional): Either a boolean controlling standard TLS
+            certificate and hostname verification against trusted CAs, or a
+            string path to a PEM-encoded server certificate whose SHA-256
+            fingerprint is pinned via :class:`LXDSSLAdapter` (not a CA bundle).
             Defaults to ``True``.
         :param timeout: (optional) How long to wait for the server to send
             data before giving up, as a float, or a :ref:`(connect timeout,
