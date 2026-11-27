@@ -318,6 +318,68 @@ class Instance(model.Model):
                     if response.status_code != 200:
                         raise LXDAPIException(response)
 
+        def _recursive_get(self, remote_path: str, local_name: str, dir_fd: int | None):
+            response = self._endpoint.get(params={"path": remote_path}, is_api=False)
+
+            if "X-LXD-type" in response.headers and "X-LXD-mode" in response.headers:
+                unix_permissions = int(response.headers["X-LXD-mode"], 8)
+                if response.headers["X-LXD-type"] == "directory":
+                    if dir_fd is None:
+                        if os.path.islink(local_name):
+                            raise OSError(
+                                errno.ELOOP,
+                                "Refusing to follow symlink destination",
+                                local_name,
+                            )
+                        os.makedirs(local_name, unix_permissions, exist_ok=True)
+                        child_fd = os.open(
+                            local_name,
+                            os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                        )
+                    else:
+                        try:
+                            os.mkdir(local_name, unix_permissions, dir_fd=dir_fd)
+                        except FileExistsError:
+                            pass
+                        child_fd = os.open(
+                            local_name,
+                            os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                            dir_fd=dir_fd,
+                        )
+                    try:
+                        content = json.loads(response.content)
+                        if "metadata" in content and content["metadata"]:
+                            for entry in content["metadata"]:
+                                # Reject entries that are empty, are dot-dirs, are
+                                # absolute paths, or contain path separators. Any
+                                # of these could escape the intended local directory.
+                                if (
+                                    not entry
+                                    or entry in (".", "..")
+                                    or "/" in entry
+                                    or "\\" in entry
+                                ):
+                                    continue
+                                self._recursive_get(
+                                    os.path.join(remote_path, entry),
+                                    entry,
+                                    child_fd,
+                                )
+                    finally:
+                        os.close(child_fd)
+                elif response.headers["X-LXD-type"] == "file":
+                    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW
+                    fd = os.open(
+                        local_name, flags, mode=unix_permissions, dir_fd=dir_fd
+                    )
+                    try:
+                        f = os.fdopen(fd, "wb")
+                    except Exception:  # pragma: no cover
+                        os.close(fd)
+                        raise
+                    with f:
+                        f.write(response.content)
+
         def recursive_get(self, remote_path: str, local_path: str):
             """Recursively pulls a directory from the container.
             Pulls the directory named `remote_path` from the container and
@@ -331,36 +393,10 @@ class Instance(model.Model):
             :type local_path: str
             :raises: LXDAPIException if an error occurs
             """
-            response = self._endpoint.get(params={"path": remote_path}, is_api=False)
-
-            if "X-LXD-type" in response.headers and "X-LXD-mode" in response.headers:
-                unix_permissions = int(response.headers["X-LXD-mode"], 8)
-                if response.headers["X-LXD-type"] == "directory":
-                    os.makedirs(local_path, unix_permissions, exist_ok=True)
-                    content = json.loads(response.content)
-                    if "metadata" in content and content["metadata"]:
-                        for file in content["metadata"]:
-                            # Reject entries that are empty, are dot-dirs, are
-                            # absolute paths, or contain path separators. Any
-                            # of these could escape the intended local directory.
-                            if (
-                                not file
-                                or file in (".", "..")
-                                or "/" in file
-                                or "\\" in file
-                            ):
-                                continue
-                            self.recursive_get(
-                                os.path.join(remote_path, file),
-                                os.path.join(local_path, file),
-                            )
-                elif response.headers["X-LXD-type"] == "file":
-
-                    def opener(path, flags):
-                        return os.open(path, flags, mode=unix_permissions)
-
-                    with open(local_path, "wb", opener=opener) as f:
-                        f.write(response.content)
+            # Strip trailing separators so symlinked destinations are not
+            # followed by os.path.islink() / O_NOFOLLOW.
+            target = local_path.rstrip(os.path.sep) or local_path
+            self._recursive_get(remote_path, target, dir_fd=None)
 
     @classmethod
     def exists(cls, client: Client, name: str) -> bool:

@@ -1052,15 +1052,6 @@ class TestFiles(testing.PyLXDTestCase):
         super().setUp()
         self.instance = models.Instance.get(self.client, "an-instance")
 
-    @staticmethod
-    def _mock_open_side_effect(path, mode="r", **kwargs):
-        """Mock open that invokes the opener if provided."""
-        opener = kwargs.pop("opener", None)
-        if opener is not None:
-            # Call the opener to get the file descriptor
-            _ = opener(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
-        return mock.mock_open()(path, mode, **kwargs)
-
     def test_put_delete(self):
         """A file is put on the instance and then deleted"""
         # we are mocked, so delete should initially not be available
@@ -1324,7 +1315,9 @@ class TestFiles(testing.PyLXDTestCase):
         response.status_code = 200
         response.headers["X-LXD-type"] = "directory"
         response.headers["X-LXD-mode"] = "750"
-        response._content = json.dumps({"metadata": ["file1", "file2"]}).encode("utf-8")
+        response._content = json.dumps({"metadata": ["file1", "subdir"]}).encode(
+            "utf-8"
+        )
 
         response1 = requests.models.Response()
         response1.status_code = 200
@@ -1332,32 +1325,32 @@ class TestFiles(testing.PyLXDTestCase):
         response1.headers["X-LXD-mode"] = "762"
         response1._content = b"This is file1"
 
+        response_subdir = requests.models.Response()
+        response_subdir.status_code = 200
+        response_subdir.headers["X-LXD-type"] = "directory"
+        response_subdir.headers["X-LXD-mode"] = "750"
+        response_subdir._content = json.dumps({"metadata": ["file2"]}).encode("utf-8")
+
         response2 = requests.models.Response()
         response2.status_code = 200
         response2.headers["X-LXD-type"] = "file"
         response2.headers["X-LXD-mode"] = "744"
         response2._content = b"This is file2"
 
-        return_values = [response, response1, response2]
-
         with (
+            tempfile.TemporaryDirectory() as tmpdir,
             mock.patch("pylxd.client._APINode.get") as get_mocked,
-            mock.patch("os.makedirs") as makedirs_mocked,
-            mock.patch("os.open") as mock_os_open,
-            mock.patch("builtins.open", side_effect=self._mock_open_side_effect),
         ):
-            get_mocked.side_effect = return_values
-            # Return dummy file descriptors
-            mock_os_open.side_effect = [11, 12]
+            get_mocked.side_effect = [response, response1, response_subdir, response2]
+            dst = os.path.join(tmpdir, "out")
+            os.makedirs(os.path.join(dst, "subdir"))
 
-            self.instance.files.recursive_get("/tmp/getted", "/tmp")
+            self.instance.files.recursive_get("/tmp/getted", dst)
 
-            makedirs_mocked.assert_called_once_with("/tmp", 0o750, exist_ok=True)
-
-            flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
-            mock_os_open.assert_any_call("/tmp/file1", flags, mode=0o762)
-            mock_os_open.assert_any_call("/tmp/file2", flags, mode=0o744)
-            self.assertEqual(mock_os_open.call_count, 2)
+            with open(os.path.join(dst, "file1"), "rb") as f:
+                self.assertEqual(b"This is file1", f.read())
+            with open(os.path.join(dst, "subdir", "file2"), "rb") as f:
+                self.assertEqual(b"This is file2", f.read())
 
     def test_recursive_get_sanitizes_traversal_entries(self):
         """Path traversal entries in directory listings are skipped."""
@@ -1376,22 +1369,100 @@ class TestFiles(testing.PyLXDTestCase):
         response1._content = b"safe content"
 
         with (
+            tempfile.TemporaryDirectory() as tmpdir,
             mock.patch("pylxd.client._APINode.get") as get_mocked,
-            mock.patch("os.makedirs"),
-            mock.patch("os.open") as mock_os_open,
-            mock.patch("builtins.open", side_effect=self._mock_open_side_effect),
         ):
             get_mocked.side_effect = [response, response1]
-            mock_os_open.return_value = 11
+            dst = os.path.join(tmpdir, "local")
 
-            self.instance.files.recursive_get("/tmp/dir", "/local/dir")
+            self.instance.files.recursive_get("/tmp/dir", dst)
 
-            # Only safe_file should be fetched; traversal entries must be skipped.
-            self.assertEqual(mock_os_open.call_count, 1)
-            flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
-            mock_os_open.assert_called_once_with(
-                "/local/dir/safe_file", flags, mode=0o644
-            )
+            self.assertEqual(["safe_file"], os.listdir(dst))
+            with open(os.path.join(dst, "safe_file"), "rb") as f:
+                self.assertEqual(b"safe content", f.read())
+            self.assertFalse(os.path.exists(os.path.join(tmpdir, "evil")))
+
+    def test_recursive_get_rejects_symlink_subdir(self):
+        """Existing symlink subdirectories in the destination are not followed."""
+        root_resp = requests.models.Response()
+        root_resp.status_code = 200
+        root_resp.headers["X-LXD-type"] = "directory"
+        root_resp.headers["X-LXD-mode"] = "750"
+        root_resp._content = json.dumps({"metadata": ["subdir"]}).encode("utf-8")
+
+        sub_resp = requests.models.Response()
+        sub_resp.status_code = 200
+        sub_resp.headers["X-LXD-type"] = "directory"
+        sub_resp.headers["X-LXD-mode"] = "750"
+        sub_resp._content = json.dumps({"metadata": ["pwned"]}).encode("utf-8")
+
+        with (
+            tempfile.TemporaryDirectory() as tmpdir,
+            mock.patch("pylxd.client._APINode.get") as get_mocked,
+        ):
+            outside = os.path.join(tmpdir, "outside")
+            dst = os.path.join(tmpdir, "dst")
+            os.makedirs(outside)
+            os.makedirs(dst)
+            os.symlink(outside, os.path.join(dst, "subdir"))
+
+            get_mocked.side_effect = [root_resp, sub_resp]
+            with self.assertRaises(OSError):
+                self.instance.files.recursive_get("/tmp/dir", dst)
+            self.assertEqual([], os.listdir(outside))
+
+    def test_recursive_get_rejects_symlink_file(self):
+        """Existing symlink files in the destination are not followed."""
+        root_resp = requests.models.Response()
+        root_resp.status_code = 200
+        root_resp.headers["X-LXD-type"] = "directory"
+        root_resp.headers["X-LXD-mode"] = "750"
+        root_resp._content = json.dumps({"metadata": ["file1"]}).encode("utf-8")
+
+        file_resp = requests.models.Response()
+        file_resp.status_code = 200
+        file_resp.headers["X-LXD-type"] = "file"
+        file_resp.headers["X-LXD-mode"] = "644"
+        file_resp._content = b"overwritten"
+
+        with (
+            tempfile.TemporaryDirectory() as tmpdir,
+            mock.patch("pylxd.client._APINode.get") as get_mocked,
+        ):
+            outside_file = os.path.join(tmpdir, "outside.txt")
+            with open(outside_file, "wb") as f:
+                f.write(b"original")
+            dst = os.path.join(tmpdir, "dst")
+            os.makedirs(dst)
+            os.symlink(outside_file, os.path.join(dst, "file1"))
+
+            get_mocked.side_effect = [root_resp, file_resp]
+            with self.assertRaises(OSError):
+                self.instance.files.recursive_get("/tmp/dir", dst)
+            with open(outside_file, "rb") as f:
+                self.assertEqual(b"original", f.read())
+
+    def test_recursive_get_rejects_symlink_root(self):
+        """A symlinked top-level destination directory is rejected."""
+        root_resp = requests.models.Response()
+        root_resp.status_code = 200
+        root_resp.headers["X-LXD-type"] = "directory"
+        root_resp.headers["X-LXD-mode"] = "750"
+        root_resp._content = json.dumps({"metadata": ["file1"]}).encode("utf-8")
+
+        with (
+            tempfile.TemporaryDirectory() as tmpdir,
+            mock.patch("pylxd.client._APINode.get") as get_mocked,
+        ):
+            outside = os.path.join(tmpdir, "outside")
+            os.makedirs(outside)
+            dst_link = os.path.join(tmpdir, "dst_link")
+            os.symlink(outside, dst_link)
+
+            get_mocked.side_effect = [root_resp]
+            with self.assertRaises(OSError):
+                self.instance.files.recursive_get("/tmp/dir", dst_link + os.path.sep)
+            self.assertEqual([], os.listdir(outside))
 
     def test_get_not_found(self):
         """LXDAPIException is raised on bogus filenames."""
