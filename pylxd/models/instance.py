@@ -286,11 +286,13 @@ class Instance(model.Model):
                             mode=current_mode, uid=uid, gid=gid
                         )
                         headers["X-LXD-type"] = "symlink"
-                        self._endpoint.post(
+                        response = self._endpoint.post(
                             params={"path": os.path.join(dst_path, d)},
                             data=os.readlink(src_dir).encode("utf-8"),
                             headers=headers,
                         )
+                        if response.status_code != 200:
+                            raise LXDAPIException(response)
 
                 # copy files and non-directory symlinks
                 for f in files:
@@ -337,10 +339,8 @@ class Instance(model.Model):
                             os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
                         )
                     else:
-                        try:
+                        with suppress(FileExistsError):
                             os.mkdir(local_name, unix_permissions, dir_fd=dir_fd)
-                        except FileExistsError:
-                            pass
                         child_fd = os.open(
                             local_name,
                             os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
