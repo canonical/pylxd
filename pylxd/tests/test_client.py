@@ -448,6 +448,27 @@ class TestClient(TestCase):
             "wss://lxd.local", ssl_options=ssl_options
         )
 
+    @mock.patch.dict(os.environ, {"REQUESTS_CA_BUNDLE": "", "CURL_CA_BUNDLE": ""})
+    def test_events_https_uses_supplied_session_cert(self):
+        """A caller-supplied session's cert is used for WebSockets, ignoring cert=."""
+        session = requests.Session()
+        session.verify = False
+        session.cert = ("/session/client.crt", "/session/client.key")
+
+        an_client = client.Client(
+            "https://lxd.local",
+            cert=("/ignored/client.crt", "/ignored/client.key"),
+            session=session,
+        )
+
+        self.assertEqual(
+            {
+                "certfile": "/session/client.crt",
+                "keyfile": "/session/client.key",
+            },
+            an_client.ssl_options,
+        )
+
     def test_events_protects_a_callers_websocket_class(self):
         """A caller's ws4py class gets pylxd's TLS verification mixed in."""
 
@@ -1213,14 +1234,21 @@ class TestWsSslOptions:
 
     def options(self, verify):
         session = client.get_session_for_url(self.URL, verify=verify)
-        return client._ws_ssl_options(session, self.URL, None)
+        return client._ws_ssl_options(session, self.URL)
 
     def test_client_certificate_is_passed_through(self):
-        session = client.get_session_for_url(self.URL, verify=False)
-        options = client._ws_ssl_options(
-            session, self.URL, ("client.crt", "client.key")
+        session = client.get_session_for_url(
+            self.URL, verify=False, cert=("client.crt", "client.key")
         )
+        options = client._ws_ssl_options(session, self.URL)
         assert options == {"certfile": "client.crt", "keyfile": "client.key"}
+
+    def test_combined_client_certificate_file_is_passed_through(self):
+        session = requests.Session()
+        session.verify = False
+        session.cert = "combined.pem"
+        options = client._ws_ssl_options(session, self.URL)
+        assert options == {"certfile": "combined.pem"}
 
     def test_verify_path_pins_the_server_certificate(self):
         """The pin is checked by pylxd: no cert_reqs is set."""
@@ -1240,7 +1268,7 @@ class TestWsSslOptions:
         session = requests.Session()
         session.verify = "/etc/ca.pem"
         expected = {**self.CA_VERIFIED, "ca_certs": "/etc/ca.pem"}
-        assert client._ws_ssl_options(session, self.URL, None) == expected
+        assert client._ws_ssl_options(session, self.URL) == expected
 
     def test_verify_none_defaults_to_ca_verification(self):
         """get_session_for_url(url, verify=None) retains verify=True."""
@@ -1252,7 +1280,7 @@ class TestWsSslOptions:
         """requests skips verification for None as well as for False."""
         session = requests.Session()
         session.verify = verify
-        assert client._ws_ssl_options(session, self.URL, None) == {}
+        assert client._ws_ssl_options(session, self.URL) == {}
 
 
 class TestLXDWebSocketBaseClient:
@@ -1393,6 +1421,36 @@ class TestLXDWebSocketBaseClient:
                 ws.connect()
 
         MockCtx.return_value.wrap_socket.return_value.close.assert_called_once_with()
+        assert ws.sock is None
+        assert ws.scheme == "wss"
+
+    def test_connect_wss_loads_combined_cert_file(self):
+        ws = self.connected({"certfile": "combined.pem"}, None)
+        with (
+            mock.patch("pylxd.client.ssl.SSLContext") as MockCtx,
+            mock.patch.object(WebSocketBaseClient, "connect"),
+        ):
+            ws.connect()
+
+        MockCtx.return_value.load_cert_chain.assert_called_once_with(
+            "combined.pem", None
+        )
+
+    @pytest.mark.parametrize("failing_method", ["load_cert_chain", "wrap_socket"])
+    def test_connect_wss_closes_the_socket_when_tls_setup_fails(self, failing_method):
+        ws = self.connected(
+            {"certfile": "client.crt", "keyfile": "client.key", **self.PINNED},
+            self.PEER,
+        )
+        raw_sock = ws.sock
+        with mock.patch("pylxd.client.ssl.SSLContext") as MockCtx:
+            getattr(MockCtx.return_value, failing_method).side_effect = ssl.SSLError(
+                "tls setup failed"
+            )
+            with pytest.raises(ssl.SSLError):
+                ws.connect()
+
+        raw_sock.close.assert_called_once_with()
         assert ws.sock is None
         assert ws.scheme == "wss"
 

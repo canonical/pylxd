@@ -443,9 +443,7 @@ def _set_default_content_type(kwargs):
     kwargs["headers"] = {**headers, "Content-Type": "application/octet-stream"}
 
 
-def _ws_ssl_options(
-    session: requests.Session, url: str, cert: tuple[str, str] | None
-) -> dict[str, Any]:
+def _ws_ssl_options(session: requests.Session, url: str) -> dict[str, Any]:
     """Translate the TLS settings `session` uses for `url` into WebSocket options.
 
     Settings are read the way requests reads them, ``REQUESTS_CA_BUNDLE``
@@ -455,7 +453,11 @@ def _ws_ssl_options(
     certificate pinned by :class:`LXDSSLAdapter` and matched by fingerprint in
     :class:`_LXDWebSocketBaseClient`.
     """
-    options: dict[str, Any] = {"certfile": cert[0], "keyfile": cert[1]} if cert else {}
+    options: dict[str, Any] = {}
+    if isinstance(session.cert, str):
+        options["certfile"] = session.cert
+    elif session.cert:
+        options["certfile"], options["keyfile"] = session.cert
 
     verify = session.merge_environment_settings(url, {}, None, None, None)["verify"]
     # A falsy verify, None as well as False, makes requests skip verification.
@@ -501,26 +503,27 @@ class _LXDWebSocketBaseClient(WebSocketBaseClient):
 
     def connect(self):
         if self.scheme == "wss":
-            if "cert_reqs" in self.ssl_options:
-                ca_certs = self.ssl_options["ca_certs"]
-                # Like requests, accept a directory of CA certificates too.
-                if os.path.isdir(ca_certs):
-                    context = ssl.create_default_context(capath=ca_certs)
-                else:
-                    context = ssl.create_default_context(cafile=ca_certs)
-            else:
-                context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-                context.check_hostname = False
-                context.verify_mode = ssl.CERT_NONE
-            context.minimum_version = ssl.TLSVersion.TLSv1_2
-            if "certfile" in self.ssl_options:
-                context.load_cert_chain(
-                    self.ssl_options["certfile"], self.ssl_options["keyfile"]
-                )
-            self.sock = context.wrap_socket(self.sock, server_hostname=self.host)
-            self._is_secure = True
-            self.scheme = "ws"
             try:
+                if "cert_reqs" in self.ssl_options:
+                    ca_certs = self.ssl_options["ca_certs"]
+                    # Like requests, accept a directory of CA certificates too.
+                    if os.path.isdir(ca_certs):
+                        context = ssl.create_default_context(capath=ca_certs)
+                    else:
+                        context = ssl.create_default_context(cafile=ca_certs)
+                else:
+                    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+                    context.check_hostname = False
+                    context.verify_mode = ssl.CERT_NONE
+                context.minimum_version = ssl.TLSVersion.TLSv1_2
+                if "certfile" in self.ssl_options:
+                    context.load_cert_chain(
+                        self.ssl_options["certfile"],
+                        self.ssl_options.get("keyfile"),
+                    )
+                self.sock = context.wrap_socket(self.sock, server_hostname=self.host)
+                self._is_secure = True
+                self.scheme = "ws"
                 return super().connect()
             except Exception:
                 self.close_connection()
@@ -684,7 +687,10 @@ class Client:
         :param project: (optional) Name of the LXD project to interact with.
         :param session: (optional) A requests.Session to use for
             interactions with the endpoint. If given, cert and verify
-            arguments are ignored - see get_session_for_url().
+            arguments are ignored - see get_session_for_url(). For standard
+            CA-bundle verification instead of single-certificate fingerprint
+            pinning, pass a plain :class:`requests.Session` with
+            ``session.verify`` set to the CA bundle path.
         """
 
         self.project = project
@@ -724,9 +730,7 @@ class Client:
             f"{endpoint}/{version}", session, timeout=timeout, project=project
         )
         self.ssl_options = (
-            _ws_ssl_options(session, endpoint, self.cert)
-            if self.api.scheme == "https"
-            else None
+            _ws_ssl_options(session, endpoint) if self.api.scheme == "https" else None
         )
 
         # Verify the connection is valid.
