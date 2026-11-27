@@ -252,23 +252,26 @@ class Model(metaclass=ModelType):
         # on existing attributes.
         response = self.api.get()
         payload = response.json()["metadata"]
-        for key, val in payload.items():
-            if key not in self.__dirty__ or rollback:
-                try:
-                    setattr(self, key, val)
-                except AttributeError:
-                    # We have received an attribute from the server that we
-                    # don't support in our model. Ignore this error, it
-                    # doesn't hurt us.
-                    pass
+        dirty = set() if rollback else set(self.__dirty__)
+        try:
+            for key, val in payload.items():
+                if key not in dirty:
+                    try:
+                        setattr(self, key, val)
+                    except AttributeError:
+                        # We have received an attribute from the server that we
+                        # don't support in our model. Ignore this error, it
+                        # doesn't hurt us.
+                        pass
 
-        # Make sure that *all* supported attributes are set, even those that
-        # aren't supported by the server.
-        missing_attrs = set(self.__attributes__.keys()) - set(payload.keys())
-        for missing_attr in missing_attrs:
-            setattr(self, missing_attr, MISSING)
-        if rollback:
-            self.__dirty__.clear()
+            # Make sure that *all* supported attributes are set, even those that
+            # aren't supported by the server.
+            missing_attrs = set(self.__attributes__.keys()) - set(payload.keys())
+            for missing_attr in missing_attrs:
+                if missing_attr not in dirty:
+                    super().__setattr__(missing_attr, MISSING)
+        finally:
+            self.__dirty__ = dirty
 
     def rollback(self):
         """Reset the object from the server."""

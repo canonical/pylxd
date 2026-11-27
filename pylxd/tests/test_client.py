@@ -853,6 +853,24 @@ class TestGetSessionForUrl(TestCase):
             session.get_adapter("http+unix://"), requests.adapters.HTTPAdapter
         )
 
+    def test_unix_adapter_reuses_pool_across_paths_and_queries(self):
+        """Requests to different paths on one Unix socket share a single pool."""
+        adapter = client._UnixAdapter()
+        pool_a = adapter.get_connection(
+            "http+unix://%2Fvar%2Flib%2Flxd%2Funix.socket/1.0/instances"
+        )
+        pool_b = adapter.get_connection(
+            "http+unix://%2Fvar%2Flib%2Flxd%2Funix.socket/1.0/networks?recursion=1"
+        )
+        pool_other = adapter.get_connection(
+            "http+unix://%2Fvar%2Fsnap%2Flxd%2Fcommon%2Flxd%2Funix.socket/1.0"
+        )
+
+        self.assertIs(pool_a, pool_b)
+        self.assertIsNot(pool_a, pool_other)
+        self.assertEqual(2, len(adapter.pools))
+        adapter.close()
+
     def test_session_http(self):
         """HTTP nodes return the default requests session."""
         session = client.get_session_for_url("http://test.com")
@@ -1003,13 +1021,41 @@ class TestGetSessionForUrl(TestCase):
 
     def test_session_verify_path_override_pathlike(self):
         """A request-level os.PathLike override pins that certificate's fingerprint."""
+        import datetime
         import pathlib
+        import tempfile
 
-        cert_path = os.path.join(os.path.dirname(__file__), "lxd.crt")
-        conn, _ = self._run_path_session_request(
-            verify_override=pathlib.Path(cert_path)
+        from cryptography import x509
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
+        from cryptography.x509.oid import NameOID
+
+        key = ec.generate_private_key(ec.SECP256R1())
+        subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "override.test")])
+        now = datetime.datetime.now(datetime.timezone.utc)
+        override_cert = (
+            x509.CertificateBuilder()
+            .subject_name(subject)
+            .issuer_name(subject)
+            .public_key(key.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(now - datetime.timedelta(minutes=5))
+            .not_valid_after(now + datetime.timedelta(days=1))
+            .sign(key, hashes.SHA256())
         )
-        self.assertEqual(conn.assert_fingerprint, self._cert_fingerprint(cert_path))
+        override_pem = override_cert.public_bytes(serialization.Encoding.PEM)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            override_path = pathlib.Path(tmpdir) / "override.crt"
+            override_path.write_bytes(override_pem)
+            conn, session_cert_path = self._run_path_session_request(
+                verify_override=override_path
+            )
+            override_fp = self._cert_fingerprint(override_path)
+
+        session_fp = self._cert_fingerprint(session_cert_path)
+        self.assertNotEqual(override_fp, session_fp)
+        self.assertEqual(conn.assert_fingerprint, override_fp)
         self.assertEqual(conn.cert_reqs, "CERT_NONE")
 
     def test_session_verify_path_override_true(self):
@@ -1070,6 +1116,15 @@ class TestSetDefaultContentType:
             ({}, {}),
             ({"data": None}, {"data": None}),
             ({"json": {"a": 1}}, {"json": {"a": 1}}),
+            ({"data": b"", "json": {"a": 1}}, {"data": b"", "json": {"a": 1}}),
+            ({"data": "", "json": {"a": 1}}, {"data": "", "json": {"a": 1}}),
+            (
+                {"data": b""},
+                {
+                    "data": b"",
+                    "headers": {"Content-Type": "application/octet-stream"},
+                },
+            ),
             (
                 {"data": b"raw"},
                 {
@@ -1128,6 +1183,15 @@ class TestSetDefaultContentType:
         assert "headers" not in kwargs
         request = requests.Request("POST", "http://lxd.test", **kwargs).prepare()
         assert request.headers["Content-Type"].startswith("multipart/form-data")
+
+    def test_empty_data_with_json_stays_json(self):
+        """requests sends application/json when data is falsy and json is given."""
+        kwargs = {"data": b"", "json": {"a": 1}}
+        client._set_default_content_type(kwargs)
+        assert "headers" not in kwargs
+        request = requests.Request("POST", "http://lxd.test", **kwargs).prepare()
+        assert request.headers["Content-Type"] == "application/json"
+        assert request.body == b'{"a": 1}'
 
     def test_does_not_mutate_caller_headers(self):
         headers = {"X-LXD-mode": "0644"}

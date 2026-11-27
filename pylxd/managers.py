@@ -124,4 +124,11 @@ def web_socket_manager(manager):
     try:
         yield manager
     finally:
+        # Signal the WebSocketManager loop to exit and wait for its thread
+        # before calling stop(), because ws4py's stop() closes the epoll
+        # poller while run() may still call poll() or unregister().
+        # Re-clear running in case run() had just started and set it True.
+        while manager.is_alive():
+            manager.running = False
+            manager.join(timeout=0.05)
         manager.stop()

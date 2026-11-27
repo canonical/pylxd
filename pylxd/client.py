@@ -111,13 +111,15 @@ class _UnixAdapter(requests.adapters.HTTPAdapter):
     def get_connection(
         self, url: str, proxies: dict[str, str] | None = None
     ) -> _UnixSocketHTTPConnectionPool:
+        parsed = parse.urlparse(url)
+        socket_url = f"{parsed.scheme}://{parsed.netloc}"
         with self.pools.lock:
-            conn = self.pools.get(url)
+            conn = self.pools.get(socket_url)
             if conn:
                 return conn
 
-            conn = _UnixSocketHTTPConnectionPool(url)
-            self.pools[url] = conn
+            conn = _UnixSocketHTTPConnectionPool(socket_url)
+            self.pools[socket_url] = conn
 
         return conn
 
@@ -429,6 +431,8 @@ def _set_default_content_type(kwargs):
     data = kwargs.get("data")
     if data is None or isinstance(data, (Mapping, list, tuple)):
         return
+    if not data and kwargs.get("json") is not None:
+        return
     if kwargs.get("files"):
         return
 
@@ -669,9 +673,10 @@ class Client:
         :param version: (optional): API version string to use with LXD
         :param cert: (optional): A tuple of (cert, key) to use with
             the http socket for client authentication
-        :param verify: (optional): Either a boolean, in which case it controls
-            whether we verify the server's TLS certificate, or a string, in
-            which case it must be a path to a CA bundle to use.
+        :param verify: (optional): Either a boolean controlling standard TLS
+            certificate and hostname verification against trusted CAs, or a
+            string path to a PEM-encoded server certificate whose SHA-256
+            fingerprint is pinned via :class:`LXDSSLAdapter` (not a CA bundle).
             Defaults to ``True``.
         :param timeout: (optional) How long to wait for the server to send
             data before giving up, as a float, or a :ref:`(connect timeout,
