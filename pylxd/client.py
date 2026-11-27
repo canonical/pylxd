@@ -439,9 +439,7 @@ def _set_default_content_type(kwargs):
     kwargs["headers"] = {**headers, "Content-Type": "application/octet-stream"}
 
 
-def _ws_ssl_options(
-    session: requests.Session, url: str, cert: tuple[str, str] | None
-) -> dict[str, Any]:
+def _ws_ssl_options(session: requests.Session, url: str) -> dict[str, Any]:
     """Translate the TLS settings `session` uses for `url` into WebSocket options.
 
     Settings are read the way requests reads them, ``REQUESTS_CA_BUNDLE``
@@ -451,7 +449,11 @@ def _ws_ssl_options(
     certificate pinned by :class:`LXDSSLAdapter` and matched by fingerprint in
     :class:`_LXDWebSocketBaseClient`.
     """
-    options: dict[str, Any] = {"certfile": cert[0], "keyfile": cert[1]} if cert else {}
+    options: dict[str, Any] = {}
+    if isinstance(session.cert, str):
+        options["certfile"] = session.cert
+    elif session.cert:
+        options["certfile"], options["keyfile"] = session.cert
 
     verify = session.merge_environment_settings(url, {}, None, None, None)["verify"]
     # A falsy verify, None as well as False, makes requests skip verification.
@@ -720,9 +722,7 @@ class Client:
             f"{endpoint}/{version}", session, timeout=timeout, project=project
         )
         self.ssl_options = (
-            _ws_ssl_options(session, endpoint, self.cert)
-            if self.api.scheme == "https"
-            else None
+            _ws_ssl_options(session, endpoint) if self.api.scheme == "https" else None
         )
 
         # Verify the connection is valid.
