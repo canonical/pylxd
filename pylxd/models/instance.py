@@ -258,43 +258,65 @@ class Instance(model.Model):
             idx = len(norm_src)
             dst_items = set()
 
-            for path, dirname, files in os.walk(norm_src):
+            for path, dirnames, files in os.walk(norm_src):
                 dst_path = os.path.normpath(
                     os.path.join(dst, path[idx:].lstrip(os.path.sep))
                 )
-                # create directory or symlink (depending on what's there)
+                # create directory
                 if path not in dst_items:
                     dst_items.add(path)
-                    fmode = os.stat(path).st_mode
+                    fmode = os.lstat(path).st_mode
                     current_mode = mode
                     if isinstance(mode, bool):
                         current_mode = fmode if mode else None
                     headers = self._resolve_headers(mode=current_mode, uid=uid, gid=gid)
-                    # determine what the file is: a directory or a symlink
-                    if stat.S_ISLNK(fmode):
-                        headers["X-LXD-type"] = "symlink"
-                    else:
-                        headers["X-LXD-type"] = "directory"
+                    headers["X-LXD-type"] = "directory"
                     self._endpoint.post(params={"path": dst_path}, headers=headers)
 
-                # copy files
-                for f in files:
-                    src_file = os.path.join(path, f)
-                    with open(src_file, "rb") as fp:
-                        filepath = os.path.join(dst_path, f)
+                # create symlinked directories (os.walk does not descend into them)
+                for d in dirnames:
+                    src_dir = os.path.join(path, d)
+                    fmode = os.lstat(src_dir).st_mode
+                    if stat.S_ISLNK(fmode):
+                        dst_items.add(src_dir)
                         current_mode = mode
                         if isinstance(mode, bool):
-                            current_mode = os.stat(src_file).st_mode if mode else None
+                            current_mode = fmode if mode else None
                         headers = self._resolve_headers(
                             mode=current_mode, uid=uid, gid=gid
                         )
+                        headers["X-LXD-type"] = "symlink"
+                        self._endpoint.post(
+                            params={"path": os.path.join(dst_path, d)},
+                            data=os.readlink(src_dir).encode("utf-8"),
+                            headers=headers,
+                        )
+
+                # copy files and non-directory symlinks
+                for f in files:
+                    src_file = os.path.join(path, f)
+                    filepath = os.path.join(dst_path, f)
+                    fmode = os.lstat(src_file).st_mode
+                    current_mode = mode
+                    if isinstance(mode, bool):
+                        current_mode = fmode if mode else None
+                    headers = self._resolve_headers(mode=current_mode, uid=uid, gid=gid)
+                    if stat.S_ISLNK(fmode):
+                        headers["X-LXD-type"] = "symlink"
                         response = self._endpoint.post(
                             params={"path": filepath},
-                            data=fp.read(),
-                            headers=headers or None,
+                            data=os.readlink(src_file).encode("utf-8"),
+                            headers=headers,
                         )
-                        if response.status_code != 200:
-                            raise LXDAPIException(response)
+                    else:
+                        with open(src_file, "rb") as fp:
+                            response = self._endpoint.post(
+                                params={"path": filepath},
+                                data=fp.read(),
+                                headers=headers or None,
+                            )
+                    if response.status_code != 200:
+                        raise LXDAPIException(response)
 
         def recursive_get(self, remote_path: str, local_path: str):
             """Recursively pulls a directory from the container.

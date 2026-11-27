@@ -1264,6 +1264,54 @@ class TestFiles(testing.PyLXDTestCase):
             self.assertEqual(_captures[2]["headers"]["X-LXD-type"], "directory")
             self.assertEqual(_captures[3]["body"], b"This is file2")
 
+    def test_recursive_put_symlinks(self):
+        """File, broken, and directory symlinks are uploaded with X-LXD-type: symlink."""
+        captured = {}
+
+        def capture(request, context):
+            path = request.qs["path"][0]
+            captured[path] = {
+                "headers": dict(request._request.headers),
+                "body": request._request.body,
+            }
+            context.status_code = 200
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            os.makedirs(os.path.join(tmpdir, "subdir"))
+            with open(os.path.join(tmpdir, "file1"), "w") as f:
+                f.write("hello")
+            os.symlink("file1", os.path.join(tmpdir, "file_link"))
+            os.symlink("/nonexistent/target", os.path.join(tmpdir, "broken_link"))
+            os.symlink("subdir", os.path.join(tmpdir, "dir_link"))
+
+            self.add_rule(
+                {
+                    "text": capture,
+                    "method": "POST",
+                    "url": r"^http://pylxd.test/1.0/instances/an-instance/files\?path=",
+                }
+            )
+
+            self.instance.files.recursive_put(tmpdir, "target")
+
+        self.assertEqual(captured["target"]["headers"]["X-LXD-type"], "directory")
+        self.assertEqual(
+            captured["target/subdir"]["headers"]["X-LXD-type"], "directory"
+        )
+        self.assertEqual(captured["target/file1"]["body"], b"hello")
+        self.assertEqual(
+            captured["target/file_link"]["headers"]["X-LXD-type"], "symlink"
+        )
+        self.assertEqual(captured["target/file_link"]["body"], b"file1")
+        self.assertEqual(
+            captured["target/broken_link"]["headers"]["X-LXD-type"], "symlink"
+        )
+        self.assertEqual(captured["target/broken_link"]["body"], b"/nonexistent/target")
+        self.assertEqual(
+            captured["target/dir_link"]["headers"]["X-LXD-type"], "symlink"
+        )
+        self.assertEqual(captured["target/dir_link"]["body"], b"subdir")
+
     def test_get(self):
         """A file is retrieved from the instance."""
         data = self.instance.files.get("/tmp/getted")
