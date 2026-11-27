@@ -682,7 +682,10 @@ class Client:
         :param project: (optional) Name of the LXD project to interact with.
         :param session: (optional) A requests.Session to use for
             interactions with the endpoint. If given, cert and verify
-            arguments are ignored - see get_session_for_url().
+            arguments are ignored - see get_session_for_url(). For standard
+            CA-bundle verification instead of single-certificate fingerprint
+            pinning, pass a plain :class:`requests.Session` with
+            ``session.verify`` set to the CA bundle path.
         """
 
         self.project = project
