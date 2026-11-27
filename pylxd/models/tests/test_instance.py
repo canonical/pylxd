@@ -633,11 +633,50 @@ class TestInstance(testing.PyLXDTestCase):
 
         client2 = Client(endpoint="http://pylxd2.test")
         an_instance = models.Instance(self.client, name="an-instance")
+        history_start = len(self.requests_mock.request_history)
 
         an_migrated_instance = an_instance.migrate(client2)
 
         self.assertEqual("an-instance", an_migrated_instance.name)
         self.assertEqual(client2, an_migrated_instance.client)
+
+        requests_made = [
+            (r.method, r.url)
+            for r in self.requests_mock.request_history[history_start:]
+        ]
+        dest_wait = ("GET", "http://pylxd2.test/1.0/operations/operation-abc/wait")
+        src_delete = ("DELETE", "http://pylxd.test/1.0/instances/an-instance")
+        self.assertIn(dest_wait, requests_made)
+        self.assertIn(src_delete, requests_made)
+        self.assertLess(requests_made.index(dest_wait), requests_made.index(src_delete))
+
+    def test_migrate_does_not_delete_source_if_destination_fails(self):
+        """Source instance is preserved when destination creation fails."""
+        from pylxd.client import Client
+        from pylxd.exceptions import LXDAPIException
+
+        self.add_rule(
+            {
+                "json": {"type": "error", "error": "migration failed"},
+                "status_code": 500,
+                "method": "GET",
+                "url": r"^http://pylxd2.test/1.0/operations/operation-abc/wait$",
+            }
+        )
+        client2 = Client(endpoint="http://pylxd2.test")
+        an_instance = models.Instance(self.client, name="an-instance")
+        history_start = len(self.requests_mock.request_history)
+
+        with self.assertRaises(LXDAPIException):
+            an_instance.migrate(client2)
+
+        requests_made = [
+            (r.method, r.url)
+            for r in self.requests_mock.request_history[history_start:]
+        ]
+        self.assertNotIn(
+            ("DELETE", "http://pylxd.test/1.0/instances/an-instance"), requests_made
+        )
 
     @mock.patch("pylxd.models.instance.Instance.generate_migration_data")
     def test_migrate_exception_error(self, generate_migration_data):

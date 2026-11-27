@@ -743,7 +743,9 @@ class Instance(model.Model):
         :type new_client: :class:`pylxd.client.Client`
         :param live: whether to perform a live migration
         :type live: bool
-        :param wait: if True, wait for the migration to complete
+        :param wait: if True, wait for source deletion to complete after
+            migration finishes. Destination creation is always awaited
+            before deleting the source instance.
         :type wait: bool
         :raises: LXDAPIException if any of the API calls fail.
         :raises: ValueError if source of target are local connections
@@ -757,11 +759,11 @@ class Instance(model.Model):
         if self.status_code == 103:
             try:
                 res = getattr(new_client, self._endpoint).create(
-                    self.generate_migration_data(live), wait=wait
+                    self.generate_migration_data(live), wait=True
                 )
             except LXDAPIException as e:
                 if e.response.status_code == 103:
-                    self.delete()
+                    self.delete(wait=wait)
                     return cast(
                         Instance, getattr(new_client, self._endpoint).get(self.name)
                     )
@@ -769,9 +771,9 @@ class Instance(model.Model):
                     raise e
         else:
             res = getattr(new_client, self._endpoint).create(
-                self.generate_migration_data(live), wait=wait
+                self.generate_migration_data(live), wait=True
             )
-        self.delete()
+        self.delete(wait=wait)
         return cast(Instance, res)
 
     def generate_migration_data(self, live: bool = False) -> dict[str, Any]:
