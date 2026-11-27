@@ -804,8 +804,8 @@ class Instance(model.Model):
             "architecture": self.architecture,
             "config": self.config,
             "devices": self.devices,
-            "epehemeral": self.ephemeral,
-            "default": self.profiles,
+            "ephemeral": self.ephemeral,
+            "profiles": self.profiles,
             "source": {
                 "type": "migration",
                 "operation": operation_url,

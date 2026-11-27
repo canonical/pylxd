@@ -722,6 +722,17 @@ class TestInstance(testing.PyLXDTestCase):
 
         self.assertRaises(ValueError, an_instance.migrate, self.client)
 
+    def test_generate_migration_data(self):
+        """Migration data uses the LXD API keys ephemeral and profiles."""
+        an_instance = models.Instance.get(self.client, name="an-instance")
+
+        data = an_instance.generate_migration_data()
+
+        self.assertEqual(an_instance.ephemeral, data["ephemeral"])
+        self.assertEqual(an_instance.profiles, data["profiles"])
+        self.assertNotIn("epehemeral", data)
+        self.assertNotIn("default", data)
+
     def test_publish(self):
         """Instances can be published."""
         self.add_rule(
