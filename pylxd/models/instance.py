@@ -258,43 +258,127 @@ class Instance(model.Model):
             idx = len(norm_src)
             dst_items = set()
 
-            for path, dirname, files in os.walk(norm_src):
+            for path, dirnames, files in os.walk(norm_src):
                 dst_path = os.path.normpath(
                     os.path.join(dst, path[idx:].lstrip(os.path.sep))
                 )
-                # create directory or symlink (depending on what's there)
+                # create directory
                 if path not in dst_items:
                     dst_items.add(path)
-                    fmode = os.stat(path).st_mode
+                    fmode = os.lstat(path).st_mode
                     current_mode = mode
                     if isinstance(mode, bool):
                         current_mode = fmode if mode else None
                     headers = self._resolve_headers(mode=current_mode, uid=uid, gid=gid)
-                    # determine what the file is: a directory or a symlink
-                    if stat.S_ISLNK(fmode):
-                        headers["X-LXD-type"] = "symlink"
-                    else:
-                        headers["X-LXD-type"] = "directory"
+                    headers["X-LXD-type"] = "directory"
                     self._endpoint.post(params={"path": dst_path}, headers=headers)
 
-                # copy files
-                for f in files:
-                    src_file = os.path.join(path, f)
-                    with open(src_file, "rb") as fp:
-                        filepath = os.path.join(dst_path, f)
+                # create symlinked directories (os.walk does not descend into them)
+                for d in dirnames:
+                    src_dir = os.path.join(path, d)
+                    fmode = os.lstat(src_dir).st_mode
+                    if stat.S_ISLNK(fmode):
+                        dst_items.add(src_dir)
                         current_mode = mode
                         if isinstance(mode, bool):
-                            current_mode = os.stat(src_file).st_mode if mode else None
+                            current_mode = fmode if mode else None
                         headers = self._resolve_headers(
                             mode=current_mode, uid=uid, gid=gid
                         )
+                        headers["X-LXD-type"] = "symlink"
                         response = self._endpoint.post(
-                            params={"path": filepath},
-                            data=fp.read(),
-                            headers=headers or None,
+                            params={"path": os.path.join(dst_path, d)},
+                            data=os.readlink(src_dir).encode("utf-8"),
+                            headers=headers,
                         )
                         if response.status_code != 200:
                             raise LXDAPIException(response)
+
+                # copy files and non-directory symlinks
+                for f in files:
+                    src_file = os.path.join(path, f)
+                    filepath = os.path.join(dst_path, f)
+                    fmode = os.lstat(src_file).st_mode
+                    current_mode = mode
+                    if isinstance(mode, bool):
+                        current_mode = fmode if mode else None
+                    headers = self._resolve_headers(mode=current_mode, uid=uid, gid=gid)
+                    if stat.S_ISLNK(fmode):
+                        headers["X-LXD-type"] = "symlink"
+                        response = self._endpoint.post(
+                            params={"path": filepath},
+                            data=os.readlink(src_file).encode("utf-8"),
+                            headers=headers,
+                        )
+                    else:
+                        with open(src_file, "rb") as fp:
+                            response = self._endpoint.post(
+                                params={"path": filepath},
+                                data=fp.read(),
+                                headers=headers or None,
+                            )
+                    if response.status_code != 200:
+                        raise LXDAPIException(response)
+
+        def _recursive_get(self, remote_path: str, local_name: str, dir_fd: int | None):
+            response = self._endpoint.get(params={"path": remote_path}, is_api=False)
+
+            if "X-LXD-type" in response.headers and "X-LXD-mode" in response.headers:
+                unix_permissions = int(response.headers["X-LXD-mode"], 8)
+                if response.headers["X-LXD-type"] == "directory":
+                    if dir_fd is None:
+                        if os.path.islink(local_name):
+                            raise OSError(
+                                errno.ELOOP,
+                                "Refusing to follow symlink destination",
+                                local_name,
+                            )
+                        os.makedirs(local_name, unix_permissions, exist_ok=True)
+                        child_fd = os.open(
+                            local_name,
+                            os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                        )
+                    else:
+                        with suppress(FileExistsError):
+                            os.mkdir(local_name, unix_permissions, dir_fd=dir_fd)
+                        child_fd = os.open(
+                            local_name,
+                            os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                            dir_fd=dir_fd,
+                        )
+                    try:
+                        content = json.loads(response.content)
+                        if "metadata" in content and content["metadata"]:
+                            for entry in content["metadata"]:
+                                # Reject entries that are empty, are dot-dirs, are
+                                # absolute paths, or contain path separators. Any
+                                # of these could escape the intended local directory.
+                                if (
+                                    not entry
+                                    or entry in (".", "..")
+                                    or "/" in entry
+                                    or "\\" in entry
+                                ):
+                                    continue
+                                self._recursive_get(
+                                    os.path.join(remote_path, entry),
+                                    entry,
+                                    child_fd,
+                                )
+                    finally:
+                        os.close(child_fd)
+                elif response.headers["X-LXD-type"] == "file":
+                    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW
+                    fd = os.open(
+                        local_name, flags, mode=unix_permissions, dir_fd=dir_fd
+                    )
+                    try:
+                        f = os.fdopen(fd, "wb")
+                    except Exception:  # pragma: no cover
+                        os.close(fd)
+                        raise
+                    with f:
+                        f.write(response.content)
 
         def recursive_get(self, remote_path: str, local_path: str):
             """Recursively pulls a directory from the container.
@@ -309,36 +393,10 @@ class Instance(model.Model):
             :type local_path: str
             :raises: LXDAPIException if an error occurs
             """
-            response = self._endpoint.get(params={"path": remote_path}, is_api=False)
-
-            if "X-LXD-type" in response.headers and "X-LXD-mode" in response.headers:
-                unix_permissions = int(response.headers["X-LXD-mode"], 8)
-                if response.headers["X-LXD-type"] == "directory":
-                    os.makedirs(local_path, unix_permissions, exist_ok=True)
-                    content = json.loads(response.content)
-                    if "metadata" in content and content["metadata"]:
-                        for file in content["metadata"]:
-                            # Reject entries that are empty, are dot-dirs, are
-                            # absolute paths, or contain path separators. Any
-                            # of these could escape the intended local directory.
-                            if (
-                                not file
-                                or file in (".", "..")
-                                or "/" in file
-                                or "\\" in file
-                            ):
-                                continue
-                            self.recursive_get(
-                                os.path.join(remote_path, file),
-                                os.path.join(local_path, file),
-                            )
-                elif response.headers["X-LXD-type"] == "file":
-
-                    def opener(path, flags):
-                        return os.open(path, flags, mode=unix_permissions)
-
-                    with open(local_path, "wb", opener=opener) as f:
-                        f.write(response.content)
+            # Strip trailing separators so symlinked destinations are not
+            # followed by os.path.islink() / O_NOFOLLOW.
+            target = local_path.rstrip(os.path.sep) or local_path
+            self._recursive_get(remote_path, target, dir_fd=None)
 
     @classmethod
     def exists(cls, client: Client, name: str) -> bool:
@@ -740,7 +798,9 @@ class Instance(model.Model):
         :type new_client: :class:`pylxd.client.Client`
         :param live: whether to perform a live migration
         :type live: bool
-        :param wait: if True, wait for the migration to complete
+        :param wait: if True, wait for source deletion to complete after
+            migration finishes. Destination creation is always awaited
+            before deleting the source instance.
         :type wait: bool
         :raises: LXDAPIException if any of the API calls fail.
         :raises: ValueError if source of target are local connections
@@ -754,11 +814,11 @@ class Instance(model.Model):
         if self.status_code == 103:
             try:
                 res = getattr(new_client, self._endpoint).create(
-                    self.generate_migration_data(live), wait=wait
+                    self.generate_migration_data(live), wait=True
                 )
             except LXDAPIException as e:
                 if e.response.status_code == 103:
-                    self.delete()
+                    self.delete(wait=wait)
                     return cast(
                         Instance, getattr(new_client, self._endpoint).get(self.name)
                     )
@@ -766,9 +826,9 @@ class Instance(model.Model):
                     raise e
         else:
             res = getattr(new_client, self._endpoint).create(
-                self.generate_migration_data(live), wait=wait
+                self.generate_migration_data(live), wait=True
             )
-        self.delete()
+        self.delete(wait=wait)
         return cast(Instance, res)
 
     def generate_migration_data(self, live: bool = False) -> dict[str, Any]:
@@ -801,8 +861,8 @@ class Instance(model.Model):
             "architecture": self.architecture,
             "config": self.config,
             "devices": self.devices,
-            "epehemeral": self.ephemeral,
-            "default": self.profiles,
+            "ephemeral": self.ephemeral,
+            "profiles": self.profiles,
             "source": {
                 "type": "migration",
                 "operation": operation_url,
