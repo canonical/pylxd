@@ -497,26 +497,27 @@ class _LXDWebSocketBaseClient(WebSocketBaseClient):
 
     def connect(self):
         if self.scheme == "wss":
-            if "cert_reqs" in self.ssl_options:
-                ca_certs = self.ssl_options["ca_certs"]
-                # Like requests, accept a directory of CA certificates too.
-                if os.path.isdir(ca_certs):
-                    context = ssl.create_default_context(capath=ca_certs)
-                else:
-                    context = ssl.create_default_context(cafile=ca_certs)
-            else:
-                context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-                context.check_hostname = False
-                context.verify_mode = ssl.CERT_NONE
-            context.minimum_version = ssl.TLSVersion.TLSv1_2
-            if "certfile" in self.ssl_options:
-                context.load_cert_chain(
-                    self.ssl_options["certfile"], self.ssl_options["keyfile"]
-                )
-            self.sock = context.wrap_socket(self.sock, server_hostname=self.host)
-            self._is_secure = True
-            self.scheme = "ws"
             try:
+                if "cert_reqs" in self.ssl_options:
+                    ca_certs = self.ssl_options["ca_certs"]
+                    # Like requests, accept a directory of CA certificates too.
+                    if os.path.isdir(ca_certs):
+                        context = ssl.create_default_context(capath=ca_certs)
+                    else:
+                        context = ssl.create_default_context(cafile=ca_certs)
+                else:
+                    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+                    context.check_hostname = False
+                    context.verify_mode = ssl.CERT_NONE
+                context.minimum_version = ssl.TLSVersion.TLSv1_2
+                if "certfile" in self.ssl_options:
+                    context.load_cert_chain(
+                        self.ssl_options["certfile"],
+                        self.ssl_options.get("keyfile"),
+                    )
+                self.sock = context.wrap_socket(self.sock, server_hostname=self.host)
+                self._is_secure = True
+                self.scheme = "ws"
                 return super().connect()
             except Exception:
                 self.close_connection()

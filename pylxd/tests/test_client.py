@@ -1332,6 +1332,24 @@ class TestLXDWebSocketBaseClient:
         assert ws.sock is None
         assert ws.scheme == "wss"
 
+    @pytest.mark.parametrize("failing_method", ["load_cert_chain", "wrap_socket"])
+    def test_connect_wss_closes_the_socket_when_tls_setup_fails(self, failing_method):
+        ws = self.connected(
+            {"certfile": "client.crt", "keyfile": "client.key", **self.PINNED},
+            self.PEER,
+        )
+        raw_sock = ws.sock
+        with mock.patch("pylxd.client.ssl.SSLContext") as MockCtx:
+            getattr(MockCtx.return_value, failing_method).side_effect = ssl.SSLError(
+                "tls setup failed"
+            )
+            with pytest.raises(ssl.SSLError):
+                ws.connect()
+
+        raw_sock.close.assert_called_once_with()
+        assert ws.sock is None
+        assert ws.scheme == "wss"
+
 
 def self_signed(directory, name, san):
     """Write a self-signed certificate valid for `san`.
